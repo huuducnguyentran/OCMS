@@ -1,35 +1,42 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import HomePage from "./page/HomePage";
+import CoursePage from "./page/CoursePage";
+import Navbar from "./component/NabBar";
+
+import { Layout } from "antd";
+import SchedulePage from "./page/SchedulePage";
+import CourseDetailPage from "./page/CourseDetailPage";
+import LoginPage from "./page/LoginPage";
+import Header from "./component/header";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Router>
+      <Layout className="min-h-screen flex w-screen">
+        <Routes>
+          {/* Exclude Navbar for Login Page */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/*"
+            element={
+              <>
+                <Navbar />
+                <Layout className="flex flex-col w-full">
+                  <Header />
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/course" element={<CoursePage />} />
+                    <Route path="/schedule" element={<SchedulePage />} />
+                    <Route path="/course/:id" element={<CourseDetailPage />} />
+                  </Routes>
+                </Layout>
+              </>
+            }
+          />
+        </Routes>
+      </Layout>
+    </Router>
+  );
 }
 
-export default App
+export default App;
