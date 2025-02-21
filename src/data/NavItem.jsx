@@ -21,6 +21,12 @@ const navItems = [
     icon: "QuestionCircleOutlined",
     path: "/help",
   },
+  {
+    key: "7",
+    label: "Accounts",
+    icon: "MacCommandOutlined",
+    path: "/accounts",
+  },
 ];
 
 export default navItems;

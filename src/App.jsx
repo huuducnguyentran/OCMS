@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import HomePage from "./page/HomePage";
 import CoursePage from "./page/CoursePage";
+import AccountPage from "./page/AccountPage";
 import Navbar from "./component/NabBar";
 
 import { Layout } from "antd";
@@ -27,6 +28,7 @@ function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/course" element={<CoursePage />} />
                     <Route path="/schedule" element={<SchedulePage />} />
+                    <Route path="/accounts" element={<AccountPage/>}/>
                     <Route path="/course/:id" element={<CourseDetailPage />} />
                   </Routes>
                 </Layout>
