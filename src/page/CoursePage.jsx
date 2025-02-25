@@ -1,50 +1,57 @@
 // src/pages/CoursePage.jsx
-import { Layout, Table } from "antd";
-import { useParams } from "react-router-dom";
+import { Layout, Card } from "antd";
+import { useNavigate, useParams } from "react-router-dom";
 import { courseData } from "../data/CourseData";
-
-const columns = [
-  { title: "Semester", dataIndex: "semester", key: "semester" },
-  { title: "Course Title", dataIndex: "title", key: "title" },
-  { title: "Duration", dataIndex: "duration", key: "duration" },
-  { title: "Major", dataIndex: "major", key: "major" },
-  { title: "Room", dataIndex: "room", key: "room" },
-  {
-    title: "Days",
-    dataIndex: "days",
-    key: "days",
-    render: (days) => days.join(", "),
-  },
-];
 
 const CoursePage = () => {
   const { semester } = useParams();
-  const course = courseData.find((c) => c.semester.toString() === semester);
+  courseData.find((c) => c.semester.toString() === semester);
+  const navigate = useNavigate();
 
   return (
-    <Layout className="min-h-screen flex w-screen">
-      <Layout className="flex flex-col w-full h-screen">
-        <Layout.Content className="p-6 bg-gray-100 flex-grow">
-          <h2 className="text-2xl font-semibold">Training Course Curriculum</h2>
-          <p className="text-lg mb-6">Major: Aviation Science</p>
-          <Table dataSource={courseData} columns={columns} rowKey="semester" />
-          {course && (
-            <div className="mt-8 p-4 border rounded bg-white">
-              <h3 className="text-xl font-semibold">{course.title}</h3>
-              <p>
-                <strong>Duration:</strong> {course.duration}
-              </p>
-              <p>
-                <strong>Major:</strong> {course.major}
-              </p>
-              <p>
-                <strong>Room:</strong> {course.room}
-              </p>
-              <p>
-                <strong>Days:</strong> {course.days.join(", ")}
-              </p>
-            </div>
-          )}
+    <Layout className="min-h-screen flex w-screen bg-gray-100 p-6">
+      <Layout className="w-full">
+        <Layout.Content className="flex flex-col items-center">
+          {/* Page Title */}
+          <h2 className="text-3xl font-bold mb-4">
+            Training Course Curriculum
+          </h2>
+          <p className="text-lg text-gray-600 mb-8">Major: Aviation Science</p>
+
+          {/* Course Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2  gap-6">
+            {courseData.map((course) => (
+              <Card
+                key={course.semester}
+                hoverable
+                className="rounded-xl shadow-lg overflow-hidden flex flex-col h-full"
+                cover={
+                  <img
+                    alt={course.title}
+                    src="https://source.unsplash.com/400x250/?airplane,aviation"
+                    className="h-48 w-full object-cover"
+                  />
+                }
+                onClick={() => navigate(`/course/${course.semester}`)}
+              >
+                <div className="flex flex-col flex-grow bg-indigo-950 p-4 h-full">
+                  <h3 className="text-lg font-bold text-white">
+                    {course.title}
+                  </h3>
+                  <p className="text-gray-100">{course.major}</p>
+                  <p className="text-sm text-gray-300">
+                    <strong>Duration:</strong> {course.duration}
+                  </p>
+                  <p className="text-sm text-gray-300">
+                    <strong>Room:</strong> {course.room}
+                  </p>
+                  <p className="text-sm text-gray-300">
+                    <strong>Days:</strong> {course.days.join(", ")}
+                  </p>
+                </div>
+              </Card>
+            ))}
+          </div>
         </Layout.Content>
       </Layout>
     </Layout>

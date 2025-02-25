@@ -2,9 +2,11 @@
 import { Layout, Avatar } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
+import { useAvatar } from "../context/AvatarContext"; // Import Avatar context
 
 const Header = () => {
   const navigate = useNavigate();
+  const { avatar } = useAvatar(); // Get avatar from context
 
   return (
     <Layout.Header className="bg-white shadow-md px-6 py-4 flex items-center justify-between w-full">
@@ -24,7 +26,10 @@ const Header = () => {
           onClick={() => navigate("/profile")}
         >
           <span className="text-gray-700 font-medium text-lg">Subash</span>
-          <Avatar src="https://via.placeholder.com/40" size="large" />
+          <Avatar
+            src={avatar || "https://via.placeholder.com/40"}
+            size="large"
+          />
         </div>
       </div>
     </Layout.Header>
