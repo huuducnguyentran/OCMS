@@ -1,57 +1,167 @@
-// src/pages/CoursePage.jsx
-import { Layout, Card } from "antd";
-import { useNavigate, useParams } from "react-router-dom";
-import { courseData } from "../data/CourseData";
+
+// import { Layout, Card, Button, Empty } from "antd";
+// import { useNavigate } from "react-router-dom";
+// import { PlusOutlined } from "@ant-design/icons";
+// import { useState, useEffect } from "react";
+
+// const CoursePage = () => {
+//   const navigate = useNavigate();
+//   const [storedCourses, setStoredCourses] = useState([]);
+
+//   useEffect(() => {
+//     const courses = JSON.parse(localStorage.getItem("courses")) || [];
+//     setStoredCourses(courses);
+//   }, []);
+
+//   return (
+//     <Layout className="min-h-screen flex w-screen bg-gray-100 p-6">
+//       <Layout className="w-full">
+//         <Layout.Content className="flex flex-col items-center">
+//           {/* Page Title */}
+//           <div className="flex justify-between items-center w-full max-w-4xl mb-8">
+//             <h2 className="text-3xl font-bold mb-4 text-center items-center">
+//               Training Course Curriculum
+//             </h2>
+//             <Button
+//               type="primary"
+//               shape="circle"
+//               icon={<PlusOutlined />}
+//               size="large"
+//               className="fixed bottom-6 right-6 shadow-lg bg-blue-500 hover:bg-blue-600"
+//               onClick={() => navigate("/course/create")}
+//             />
+//           </div>
+//           <p className="text-lg text-gray-600 mb-8">Major: Aviation Science</p>
+
+//           {/* Kiểm tra nếu không có khóa học nào */}
+//           {storedCourses.length === 0 ? (
+//             <div className="flex justify-center items-center h-96">
+//               <Empty description="No courses available" />
+//             </div>
+//           ) : (
+//             // Course Grid
+//             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+//               {storedCourses.map((course) => (
+//                 <Card
+//                   key={course.id}
+//                   hoverable
+//                   className="rounded-xl shadow-lg overflow-hidden flex flex-col h-full"
+//                   cover={
+//                     <img
+//                       alt={course.title}
+//                       src={course.image || "https://via.placeholder.com/600x400?text=Course+Image"}
+//                       className="h-48 w-full object-cover"
+//                     />
+//                   }
+//                   onClick={() => navigate(`/course/${course.id}`)}
+//                 >
+//                   <div className="flex flex-col flex-grow bg-indigo-950 p-4 h-full">
+//                     <h3 className="text-lg font-bold text-white">
+//                       {course.title}
+//                     </h3>
+//                     <p className="text-gray-100">{course.major || "N/A"}</p>
+//                     <p className="text-sm text-gray-300">
+//                       <strong>Duration:</strong> {course.duration || "N/A"}
+//                     </p>
+//                     <p className="text-sm text-gray-300">
+//                       <strong>Room:</strong> {course.room || "N/A"}
+//                     </p>
+//                     <p className="text-sm text-gray-300">
+//                       <strong>Days:</strong> {Array.isArray(course.days) ? course.days.join(", ") : "N/A"}
+//                     </p>
+//                     <p className="text-sm text-gray-300">
+//                       <strong>Start Date:</strong> {course.startDate || "N/A"}
+//                     </p>
+//                     <p className="text-sm text-gray-300">
+//                       <strong>End Date:</strong> {course.endDate || "N/A"}
+//                     </p>
+//                   </div>
+//                 </Card>
+//               ))}
+//             </div>
+//           )}
+//         </Layout.Content>
+//       </Layout>
+//     </Layout>
+//   );
+// };
+
+// export default CoursePage;
+
+import { Layout, Card, Button, Empty } from "antd";
+import { useNavigate } from "react-router-dom";
+import { PlusOutlined } from "@ant-design/icons";
+import { useState, useEffect } from "react";
+import "animate.css";
 
 const CoursePage = () => {
-  const { semester } = useParams();
-  courseData.find((c) => c.semester.toString() === semester);
   const navigate = useNavigate();
+  const [storedCourses, setStoredCourses] = useState([]);
+
+  useEffect(() => {
+    const courses = JSON.parse(localStorage.getItem("courses")) || [];
+    setStoredCourses(courses);
+  }, []);
 
   return (
-    <Layout className="min-h-screen flex w-screen bg-gray-100 p-6">
-      <Layout className="w-full">
+    <Layout className="min-h-screen flex w-screen bg-gradient-to-b from-gray-100 to-indigo-200 p-10 animate__animated animate__fadeIn">
+      <Layout className="w-full max-w-6xl">
         <Layout.Content className="flex flex-col items-center">
           {/* Page Title */}
-          <h2 className="text-3xl font-bold mb-4">
-            Training Course Curriculum
-          </h2>
-          <p className="text-lg text-gray-600 mb-8">Major: Aviation Science</p>
-
-          {/* Course Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2  gap-6">
-            {courseData.map((course) => (
-              <Card
-                key={course.semester}
-                hoverable
-                className="rounded-xl shadow-lg overflow-hidden flex flex-col h-full"
-                cover={
-                  <img
-                    alt={course.title}
-                    src="https://source.unsplash.com/400x250/?airplane,aviation"
-                    className="h-48 w-full object-cover"
-                  />
-                }
-                onClick={() => navigate(`/course/${course.semester}`)}
-              >
-                <div className="flex flex-col flex-grow bg-indigo-950 p-4 h-full">
-                  <h3 className="text-lg font-bold text-white">
-                    {course.title}
-                  </h3>
-                  <p className="text-gray-100">{course.major}</p>
-                  <p className="text-sm text-gray-300">
-                    <strong>Duration:</strong> {course.duration}
-                  </p>
-                  <p className="text-sm text-gray-300">
-                    <strong>Room:</strong> {course.room}
-                  </p>
-                  <p className="text-sm text-gray-300">
-                    <strong>Days:</strong> {course.days.join(", ")}
-                  </p>
-                </div>
-              </Card>
-            ))}
+          <div className="w-full flex flex-col items-center text-center mb-10">
+            <h2 className="text-4xl font-extrabold text-indigo-900 animate__animated animate__fadeInDown">
+              Training Course Curriculum
+            </h2>
+            <p className="text-lg text-gray-700 mt-2">Explore our latest courses available.</p>
           </div>
+
+          {/* Add Course Button */}
+          <Button
+            type="primary"
+            shape="circle"
+            icon={<PlusOutlined />}
+            size="large"
+            className="fixed bottom-6 right-6 shadow-lg bg-blue-500 hover:bg-blue-600 animate__animated animate__bounceIn"
+            onClick={() => navigate("/course/create")}
+          />
+
+          {/* Check if there are courses */}
+          {storedCourses.length === 0 ? (
+            <div className="flex justify-center items-center h-96 animate__animated animate__fadeIn">
+              <Empty description={<span className="text-lg text-gray-600">No courses available</span>} />
+            </div>
+          ) : (
+            // Course Grid
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full animate__animated animate__fadeInUp">
+              {storedCourses.map((course) => (
+                <Card
+                  key={course.id}
+                  hoverable
+                  className="rounded-xl shadow-xl overflow-hidden flex flex-col transform transition duration-500 hover:scale-105 bg-white"
+                  cover={
+                    <div className="h-52 overflow-hidden">
+                      <img
+                        alt={course.title}
+                        src={course.image || "https://via.placeholder.com/600x400?text=Course+Image"}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  }
+                  onClick={() => navigate(`/course/${course.id}`)}
+                >
+                  <div className="flex flex-col flex-grow p-5">
+                    <h3 className="text-xl font-bold text-indigo-900">{course.title}</h3>
+                    <p className="text-gray-700 mt-1"><strong>Major:</strong> {course.major || "Not specified"}</p>
+<p className="text-gray-600 mt-1"><strong>Duration:</strong> {course.duration || "Not specified"}</p>
+                    <p className="text-gray-600"><strong>Room:</strong> {course.room || "Not specified"}</p>
+                    <p className="text-gray-600"><strong>Days:</strong> {Array.isArray(course.days) ? course.days.join(", ") : "Not specified"}</p>
+                    <p className="text-gray-600 mt-2"><strong>Start Date:</strong> {course.startDate || "Not specified"}</p>
+                    <p className="text-gray-600"><strong>End Date:</strong> {course.endDate || "Not specified"}</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </Layout.Content>
       </Layout>
     </Layout>
@@ -59,3 +169,5 @@ const CoursePage = () => {
 };
 
 export default CoursePage;
+
+
