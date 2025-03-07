@@ -3,7 +3,6 @@ import HomePage from "./page/HomePage";
 import CoursePage from "./page/CoursePage";
 import AccountPage from "./page/AccountPage";
 import Navbar from "./component/NabBar";
-
 import { Layout } from "antd";
 import SchedulePage from "./page/SchedulePage";
 import CourseDetailPage from "./page/CourseDetailPage";
@@ -13,6 +12,8 @@ import PersonalProfilePage from "./page/PersonalProfilePage";
 import { AvatarProvider } from "./context/AvatarContext";
 import AccomplishmentsPage from "./page/AccomplishmentPage";
 import AccomplishmentDetail from "./page/AccompishmentDetailPage";
+import CreateNewCoursePage from "./page/CreateNewCoursePage";
+
 
 function App() {
   return (
@@ -32,6 +33,8 @@ function App() {
                     <Routes>
                       <Route path="/" element={<HomePage />} />
                       <Route path="/course" element={<CoursePage />} />
+                      <Route path="course/create" element={<CreateNewCoursePage/>}/>
+                      <Route path="/course/:id" element={<CourseDetailPage />} />
                       <Route path="/schedule" element={<SchedulePage />} />
                       <Route path="/accounts" element={<AccountPage />} />
                       <Route
