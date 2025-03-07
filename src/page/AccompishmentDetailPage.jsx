@@ -21,7 +21,7 @@ const AccomplishmentDetail = () => {
       {/* Content */}
       <div className="flex gap-8">
         {/* Certificate Image */}
-        <div className="w-2/3 bg-gray-300 h-64 rounded-lg"></div>
+        <div className="w-2/3 bg-gray-300  rounded-lg"></div>
 
         {/* User Information */}
         <div className="w-1/3 bg-gray-200 p-6 rounded-lg shadow-lg">
