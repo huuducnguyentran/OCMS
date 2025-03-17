@@ -8,6 +8,8 @@ import {
   BellOutlined,
   LineChartOutlined,
   QuestionCircleOutlined,
+  AccountBookOutlined,
+  FileExcelOutlined,
 } from "@ant-design/icons";
 import "tailwindcss";
 
@@ -20,6 +22,8 @@ const iconMap = {
   BellOutlined: <BellOutlined />,
   LineChartOutlined: <LineChartOutlined />,
   QuestionCircleOutlined: <QuestionCircleOutlined />,
+  AccountBookOutlined: <AccountBookOutlined />,
+  FileExcelOutlined: <FileExcelOutlined />,
 };
 
 // Convert navItems to Ant Design Menu format

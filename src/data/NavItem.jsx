@@ -24,8 +24,14 @@ const navItems = [
   {
     key: "7",
     label: "Accounts",
-    icon: "MacCommandOutlined",
+    icon: "AccountBookOutlined",
     path: "/accounts",
+  },
+  {
+    key: "8",
+    label: "Grade",
+    icon: "FileExcelOutlined",
+    path: "/grade",
   },
 ];
 

@@ -13,7 +13,7 @@ import { AvatarProvider } from "./context/AvatarContext";
 import AccomplishmentsPage from "./page/AccomplishmentPage";
 import AccomplishmentDetail from "./page/AccompishmentDetailPage";
 import CreateNewCoursePage from "./page/CreateNewCoursePage";
-
+import GradeImportPage from "./page/GradeImportPage";
 
 function App() {
   return (
@@ -53,6 +53,7 @@ function App() {
                         path="/accomplishment/:id"
                         element={<AccomplishmentDetail />}
                       />
+                      <Route path="/grade" element={<GradeImportPage/>}/>
                     </Routes>
                   </Layout>
                 </>
