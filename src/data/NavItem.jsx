@@ -33,6 +33,12 @@ const navItems = [
     icon: "ImportOutlined",
     path: "/candidates",
   },
+  {
+    key: "8",
+    label: "Grade",
+    icon: "FileExcelOutlined",
+    path: "/grade",
+  },
 ];
 
 export default navItems;

@@ -16,6 +16,7 @@ import CreateNewCoursePage from "./page/CreateNewCoursePage";
 import ImportCandidate from "./page/ImportCandidatePage";
 import Footer from "./component/Footer";
 import ProtectedRoute from "./component/ProtectedRoute";
+import GradeImportPage from "./page/GradeImportPage";
 
 function App() {
   return (
@@ -64,6 +65,7 @@ function App() {
                           path="/accomplishment/:id"
                           element={<AccomplishmentDetail />}
                         />
+                        <Route path="/grade" element={<GradeImportPage />} />
                       </Routes>
                       <Footer />
                     </Layout>
