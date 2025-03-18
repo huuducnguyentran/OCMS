@@ -2,30 +2,54 @@
 import { Table } from "antd";
 import { useNavigate } from "react-router-dom";
 import { courseData, slotData } from "../data/CourseData";
+import { CalendarOutlined, ClockCircleOutlined } from "@ant-design/icons";
 
 const SchedulePage = () => {
   const navigate = useNavigate();
 
   const columns = [
     {
-      title: "Time Slot",
+      title: (
+        <div className="flex items-center gap-2 text-indigo-700">
+          <ClockCircleOutlined />
+          <span>Time Slot</span>
+        </div>
+      ),
       dataIndex: "timeFrame",
       key: "timeFrame",
       fixed: "left",
       width: 150,
+      render: (text) => (
+        <div className="font-medium text-gray-700 bg-gray-50 p-2 rounded-lg">
+          {text}
+        </div>
+      ),
     },
-    { title: "Monday", dataIndex: "Monday", key: "Monday", width: 180 },
-    { title: "Tuesday", dataIndex: "Tuesday", key: "Tuesday", width: 180 },
-    {
-      title: "Wednesday",
-      dataIndex: "Wednesday",
-      key: "Wednesday",
-      width: 180,
-    },
-    { title: "Thursday", dataIndex: "Thursday", key: "Thursday", width: 180 },
-    { title: "Friday", dataIndex: "Friday", key: "Friday", width: 180 },
-    { title: "Saturday", dataIndex: "Saturday", key: "Saturday", width: 180 },
-    { title: "Sunday", dataIndex: "Sunday", key: "Sunday", width: 180 },
+    ...["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(
+      (day) => ({
+        title: (
+          <div className="text-center font-semibold text-indigo-700">
+            <div className="text-lg">{day}</div>
+          </div>
+        ),
+        dataIndex: day,
+        key: day,
+        width: 200,
+        render: (content) => (
+          <div className="p-2">
+            {content !== "-" ? (
+              <div className="bg-white hover:bg-blue-50 p-4 rounded-xl shadow-sm 
+                            border border-blue-100 transition-all duration-300
+                            hover:shadow-md cursor-pointer">
+                {content}
+              </div>
+            ) : (
+              <div className="text-center text-gray-400 p-4">No Class</div>
+            )}
+          </div>
+        ),
+      })
+    ),
   ];
 
   const tableData = slotData.map((slot) => {
@@ -43,12 +67,17 @@ const SchedulePage = () => {
         (course) => course.slot === slot.slot && course.days.includes(day)
       );
       row[day] = course ? (
-        <span
-          className="cursor-pointer text-blue-500 underline"
+        <div
           onClick={() => navigate(`/course/${course.semester}`)}
+          className="space-y-2"
         >
-          {course.title} <br /> (Room {course.room})
-        </span>
+          <div className="font-semibold text-blue-600 hover:text-blue-700">
+            {course.title}
+          </div>
+          <div className="text-sm text-gray-500">
+            Room {course.room}
+          </div>
+        </div>
       ) : (
         "-"
       );
@@ -57,16 +86,34 @@ const SchedulePage = () => {
   });
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen overflow-auto">
-      <h2 className="text-2xl font-semibold mb-4">Trainee Schedule</h2>
-      <div className="overflow-x-auto">
-        <Table
-          dataSource={tableData}
-          columns={columns}
-          bordered
-          scroll={{ x: "max-content" }}
-          pagination={false}
-        />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
+      <div className="max-w-[1500px] mx-auto">
+        {/* Header Section với logo đậm hơn */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-indigo-600 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
+              <CalendarOutlined className="text-3xl text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+                Weekly Schedule
+              </h2>
+              <p className="text-gray-600">View your weekly training schedule</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Table Section */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 overflow-hidden">
+          <Table
+            dataSource={tableData}
+            columns={columns}
+            bordered={true}
+            scroll={{ x: "max-content" }}
+            pagination={false}
+            className="custom-schedule-table"
+          />
+        </div>
       </div>
     </div>
   );
