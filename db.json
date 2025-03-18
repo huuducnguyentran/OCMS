@@ -1,0 +1,28 @@
+{
+  "candidates": [
+    {
+      "id": "58d8",
+      "FullName": "Lê Thị D",
+      "Gender": "Female",
+      "DateOfBirth": 33147,
+      "Address": "123 Nguyễn Du - Quận 1 - TP.HCM",
+      "Email": "hoangvanc@example.com",
+      "PhoneNumber": 901234567,
+      "PersonalID": 12291219921,
+      "SpecialtyName": "Admin Specialty",
+      "Note": "Ứng viên có 3 năm kinh nghiệm"
+    },
+    {
+      "id": "54e6",
+      "FullName": "Nguyễn Hoàng D",
+      "Gender": "Male",
+      "DateOfBirth": 33948,
+      "Address": "TP.HCM",
+      "Email": "tranthib@example.com",
+      "PhoneNumber": 987654321,
+      "PersonalID": 99210032100,
+      "SpecialtyName": "Admin Specialty",
+      "Note": "Ứng viên có 2 năm kinh nghiệm"
+    }
+  ]
+}

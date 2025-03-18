@@ -24,8 +24,14 @@ const navItems = [
   {
     key: "7",
     label: "Accounts",
-    icon: "MacCommandOutlined",
+    icon: "UserOutlined",
     path: "/accounts",
+  },
+  {
+    key: "8",
+    label: "Candidates",
+    icon: "ImportOutlined",
+    path: "/candidates",
   },
 ];
 

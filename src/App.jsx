@@ -13,7 +13,9 @@ import { AvatarProvider } from "./context/AvatarContext";
 import AccomplishmentsPage from "./page/AccomplishmentPage";
 import AccomplishmentDetail from "./page/AccompishmentDetailPage";
 import CreateNewCoursePage from "./page/CreateNewCoursePage";
-
+import ImportCandidate from "./page/ImportCandidatePage";
+import Footer from "./component/Footer";
+import ProtectedRoute from "./component/ProtectedRoute";
 
 function App() {
   return (
@@ -21,41 +23,52 @@ function App() {
       <Router>
         <Layout className="min-h-screen flex w-screen">
           <Routes>
-            {/* Exclude Navbar for Login Page */}
+            {/* Public Route - Login */}
             <Route path="/login" element={<LoginPage />} />
+
+            {/* Protected Routes */}
             <Route
               path="/*"
               element={
-                <>
-                  <Navbar />
-                  <Layout className="flex flex-col w-full">
-                    <Header />
-                    <Routes>
-                      <Route path="/" element={<HomePage />} />
-                      <Route path="/course" element={<CoursePage />} />
-                      <Route path="course/create" element={<CreateNewCoursePage/>}/>
-                      <Route path="/course/:id" element={<CourseDetailPage />} />
-                      <Route path="/schedule" element={<SchedulePage />} />
-                      <Route path="/accounts" element={<AccountPage />} />
-                      <Route
-                        path="/course/:id"
-                        element={<CourseDetailPage />}
-                      />
-                      <Route
-                        path="/profile"
-                        element={<PersonalProfilePage />}
-                      />
-                      <Route
-                        path="/accomplishments"
-                        element={<AccomplishmentsPage />}
-                      />
-                      <Route
-                        path="/accomplishment/:id"
-                        element={<AccomplishmentDetail />}
-                      />
-                    </Routes>
-                  </Layout>
-                </>
+                <ProtectedRoute>
+                  <>
+                    <Navbar />
+                    <Layout className="flex flex-col w-full">
+                      <Header />
+                      <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/course" element={<CoursePage />} />
+                        <Route
+                          path="/course/create"
+                          element={<CreateNewCoursePage />}
+                        />
+                        <Route
+                          path="/course/:id"
+                          element={<CourseDetailPage />}
+                        />
+                        <Route path="/schedule" element={<SchedulePage />} />
+                        <Route path="/accounts" element={<AccountPage />} />
+                        <Route
+                          path="/candidates"
+                          element={<ImportCandidate />}
+                        />
+                        <Route
+                          path="/profile"
+                          element={<PersonalProfilePage />}
+                        />
+                        <Route
+                          path="/accomplishments"
+                          element={<AccomplishmentsPage />}
+                        />
+                        <Route
+                          path="/accomplishment/:id"
+                          element={<AccomplishmentDetail />}
+                        />
+                      </Routes>
+                      <Footer />
+                    </Layout>
+                  </>
+                </ProtectedRoute>
               }
             />
           </Routes>
