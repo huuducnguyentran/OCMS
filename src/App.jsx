@@ -17,6 +17,8 @@ import ImportCandidate from "./page/ImportCandidatePage";
 import Footer from "./component/Footer";
 import ProtectedRoute from "./component/ProtectedRoute";
 import GradeImportPage from "./page/GradeImportPage";
+import CandidateInfoPage from "./page/CandidateInfoPage";
+import CandidatePage from "./page/CandidatePage";
 
 function App() {
   return (
@@ -51,7 +53,11 @@ function App() {
                         <Route path="/accounts" element={<AccountPage />} />
                         <Route
                           path="/candidates"
-                          element={<ImportCandidate />}
+                          element={
+                            <ProtectedRoute roles={["admin"]}>
+                              <CandidatePage />
+                            </ProtectedRoute>
+                          }
                         />
                         <Route
                           path="/profile"
@@ -66,6 +72,14 @@ function App() {
                           element={<AccomplishmentDetail />}
                         />
                         <Route path="/grade" element={<GradeImportPage />} />
+                        <Route
+                          path="/candidate-info/:candidateId"
+                          element={<CandidateInfoPage />}
+                        />
+                        <Route
+                          path="/candidates-import"
+                          element={<ImportCandidate />}
+                        />
                       </Routes>
                       <Footer />
                     </Layout>

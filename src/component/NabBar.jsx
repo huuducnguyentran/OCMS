@@ -30,17 +30,31 @@ const iconMap = {
   FileExcelOutlined: <FileExcelOutlined />,
 };
 
-// Convert navItems to Ant Design Menu format
-const menuItems = navItems.map((item) => ({
-  key: item.key,
-  icon: iconMap[item.icon],
-  label: (
-    <Link to={item.path}>
-      {item.label}
-      {item.key === "4" && <Badge count={1} offset={[10, 0]} />}
-    </Link>
-  ),
-}));
+// Convert navItems to Ant Design Menu format with submenu support
+const menuItems = navItems.map((item) => {
+  if (item.children) {
+    return {
+      key: item.key,
+      icon: iconMap[item.icon],
+      label: item.label,
+      children: item.children.map((child) => ({
+        key: child.key,
+        label: <Link to={child.path}>{child.label}</Link>,
+      })),
+    };
+  }
+
+  return {
+    key: item.key,
+    icon: iconMap[item.icon],
+    label: (
+      <Link to={item.path}>
+        {item.label}
+        {item.key === "4" && <Badge count={1} offset={[10, 0]} />}
+      </Link>
+    ),
+  };
+});
 
 const Navbar = () => (
   <Sider theme="dark" style={{ overflow: "auto", height: "auto" }}>
