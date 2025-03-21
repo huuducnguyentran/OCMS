@@ -22,7 +22,7 @@ const CandidateInfoPage = () => {
           <Button
             type="link"
             icon={<ArrowLeftOutlined />}
-            onClick={() => navigate("/candidates")}
+            onClick={() => navigate(-1)}
             className="text-blue-600 hover:text-blue-800 px-0"
           >
             Candidate List

@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import { useAvatar } from "../context/AvatarContext";
 import { useEffect, useState } from "react";
+import { logoutUser } from "../services/authServices";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -19,10 +20,15 @@ const Header = () => {
     if (storedRole) setRole(storedRole);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    message.success("Logged out successfully.");
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logoutUser(); // ✅ Call the logout API
+      localStorage.clear();
+      message.success("Logged out successfully.");
+      navigate("/login");
+    } catch {
+      message.error("Logout failed. Please try again.");
+    }
   };
 
   const isLoggedIn = !!localStorage.getItem("token");

@@ -1,16 +1,7 @@
-import { createContext, useState, useContext } from "react";
+import { createContext, useContext } from "react";
 
-const AvatarContext = createContext();
+// Create context
+export const AvatarContext = createContext();
 
-export const AvatarProvider = ({ children }) => {
-  const [avatar, setAvatar] = useState(null);
-
-  return (
-    <AvatarContext.Provider value={{ avatar, setAvatar }}>
-      {children}
-    </AvatarContext.Provider>
-  );
-};
-
-// Custom hook for easy access
+// Custom hook
 export const useAvatar = () => useContext(AvatarContext);

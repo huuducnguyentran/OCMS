@@ -2,7 +2,7 @@
 import { Input, Button, message } from "antd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { authServices } from "../../services/authServices";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
@@ -11,23 +11,17 @@ const LoginPage = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post(
-        "https://ocms-vjvn.azurewebsites.net/api/Login/login",
-        { username, password }
-      );
+      const response = await authServices.loginUser({ username, password });
 
       const { token, userID, roles } = response.data;
 
-      // Save token & role in localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("userID", userID);
-      localStorage.setItem("role", roles[0]); // Assuming first role is primary
-      // After login
-      localStorage.setItem("tokenExpiry", Date.now() + 60 * 60 * 1000); // 1 hour expiry
+      localStorage.setItem("role", roles?.[0] || "user");
+      localStorage.setItem("tokenExpiry", Date.now() + 60 * 60 * 1000); // 1hr
 
       message.success("Login successful!");
-
-      navigate("/"); // Redirect to homepage
+      navigate("/");
     } catch {
       message.error("Invalid username or password.");
     }
