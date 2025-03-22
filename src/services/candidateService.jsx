@@ -45,3 +45,20 @@ export const getCandidates = async () => {
     throw error;
   }
 };
+
+export const getCandidateById = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await axiosInstance.get(`/${API.CANDIDATE_BY_ID}/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching candidates:", error);
+    throw error;
+  }
+};

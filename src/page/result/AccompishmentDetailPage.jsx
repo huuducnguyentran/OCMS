@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import accomplishments from "../data/AccomplishmentData";
+import accomplishments from "../../data/AccomplishmentData";
 import { Button } from "antd";
 import { DownloadOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 
@@ -16,8 +16,8 @@ const AccomplishmentDetail = () => {
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
         <div className="flex items-center mb-8 space-x-2">
-          <Button 
-            type="link" 
+          <Button
+            type="link"
             icon={<ArrowLeftOutlined />}
             onClick={() => window.history.back()}
             className="text-blue-600 hover:text-blue-800 px-0"
@@ -25,7 +25,9 @@ const AccomplishmentDetail = () => {
             All Completed Certification
           </Button>
           <span className="text-gray-400">/</span>
-          <span className="font-semibold text-gray-800">{accomplishment.title}</span>
+          <span className="font-semibold text-gray-800">
+            {accomplishment.title}
+          </span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -33,7 +35,9 @@ const AccomplishmentDetail = () => {
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
               <div className="aspect-w-16 aspect-h-12 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 p-8">
                 <div className="w-full h-full bg-white/50 rounded-xl flex items-center justify-center">
-                  <span className="text-2xl text-gray-400">Certificate Preview</span>
+                  <span className="text-2xl text-gray-400">
+                    Certificate Preview
+                  </span>
                 </div>
               </div>
             </div>
@@ -58,11 +62,20 @@ const AccomplishmentDetail = () => {
               <div className="space-y-4">
                 {[
                   { label: "Date of birth", value: accomplishment.user.dob },
-                  { label: "Certification number", value: accomplishment.user.certNumber },
+                  {
+                    label: "Certification number",
+                    value: accomplishment.user.certNumber,
+                  },
                   { label: "Date issue", value: accomplishment.user.issueDate },
-                  { label: "Training time frame", value: accomplishment.user.trainingTime },
+                  {
+                    label: "Training time frame",
+                    value: accomplishment.user.trainingTime,
+                  },
                   { label: "Complete score", value: accomplishment.user.score },
-                  { label: "Academic ranking", value: accomplishment.user.ranking }
+                  {
+                    label: "Academic ranking",
+                    value: accomplishment.user.ranking,
+                  },
                 ].map((item, index) => (
                   <div key={index} className="bg-gray-50 rounded-xl p-4">
                     <p className="text-sm text-gray-500">{item.label}</p>
@@ -70,7 +83,7 @@ const AccomplishmentDetail = () => {
                   </div>
                 ))}
               </div>
-              
+
               <Button
                 type="primary"
                 icon={<DownloadOutlined />}

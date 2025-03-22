@@ -2,9 +2,11 @@
 import { useEffect, useState } from "react";
 import { Table } from "antd";
 import { getCandidates } from "../../services/candidateService";
+import { useNavigate } from "react-router-dom";
 
 const CandidatePage = () => {
   const [candidates, setCandidates] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCandidates = async () => {
@@ -20,7 +22,19 @@ const CandidatePage = () => {
   }, []);
 
   const columns = [
-    { title: "Candidate ID", dataIndex: "candidateId", key: "candidateId" },
+    {
+      title: "Candidate ID",
+      dataIndex: "candidateId",
+      key: "candidateId",
+      render: (text, record) => (
+        <button
+          className="text-blue-600 hover:underline"
+          onClick={() => navigate(`/candidates/${record.candidateId}`)}
+        >
+          {text}
+        </button>
+      ),
+    },
     { title: "Full Name", dataIndex: "fullName", key: "fullName" },
     { title: "Gender", dataIndex: "gender", key: "gender" },
     {

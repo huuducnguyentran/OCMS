@@ -7,7 +7,7 @@ import {
   DeleteOutlined,
   EyeInvisibleOutlined,
 } from "@ant-design/icons";
-import { useAvatar } from "../context/AvatarContext"; // Import Avatar context
+import { useAvatar } from "../../context/AvatarContext"; // Import Avatar context
 
 const PersonalProfilePage = () => {
   const { avatar, setAvatar } = useAvatar(); // Use context to set avatar
