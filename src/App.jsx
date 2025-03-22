@@ -19,6 +19,7 @@ import ProtectedRoute from "./component/ProtectedRoute";
 import GradeImportPage from "./page/GradeImportPage";
 import CandidateInfoPage from "./page/CandidateInfoPage";
 import CandidatePage from "./page/CandidatePage";
+import NotificationsPage from "./page/NotificationsPage";
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
                           element={<CourseDetailPage />}
                         />
                         <Route path="/schedule" element={<SchedulePage />} />
+                        <Route path="/notifications" element={<NotificationsPage />} />
                         <Route path="/accounts" element={<AccountPage />} />
                         <Route
                           path="/candidates"

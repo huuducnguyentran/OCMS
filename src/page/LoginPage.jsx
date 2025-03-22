@@ -27,7 +27,12 @@ const LoginPage = () => {
 
       message.success("Login successful!");
 
-      navigate("/"); // Redirect to homepage
+      // Kiểm tra nếu userID là HM-1, chuyển đến trang notifications
+      if (userID === "HM-1") {
+        navigate("/notifications");
+      } else {
+        navigate("/");
+      }
     } catch {
       message.error("Invalid username or password.");
     }
