@@ -1,25 +1,28 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import HomePage from "./page/HomePage";
-import CoursePage from "./page/CoursePage";
-import AccountPage from "./page/AccountPage";
+import CoursePage from "./page/course//CoursePage";
+import AccountPage from "./page/user/AccountPage";
 import Navbar from "./component/NabBar";
 import { Layout } from "antd";
-import SchedulePage from "./page/SchedulePage";
-import CourseDetailPage from "./page/CourseDetailPage";
-import LoginPage from "./page/LoginPage";
+import SchedulePage from "./page/course/SchedulePage";
+import CourseDetailPage from "./page/course/CourseDetailPage";
+import LoginPage from "./page/auth/LoginPage";
 import Header from "./component/Header";
-import PersonalProfilePage from "./page/PersonalProfilePage";
-import { AvatarProvider } from "./context/AvatarContext";
-import AccomplishmentsPage from "./page/AccomplishmentPage";
-import AccomplishmentDetail from "./page/AccompishmentDetailPage";
-import CreateNewCoursePage from "./page/CreateNewCoursePage";
-import ImportCandidate from "./page/ImportCandidatePage";
+import PersonalProfilePage from "./page/user/PersonalProfilePage";
+import AccomplishmentsPage from "./page/result/AccomplishmentPage";
+import AccomplishmentDetail from "./page/result/AccompishmentDetailPage";
+import CreateNewCoursePage from "./page/course/CreateNewCoursePage";
+import ImportCandidate from "./page/training_plan/ImportCandidatePage";
 import Footer from "./component/Footer";
-import ProtectedRoute from "./component/ProtectedRoute";
-import GradeImportPage from "./page/GradeImportPage";
-import CandidateInfoPage from "./page/CandidateInfoPage";
-import CandidatePage from "./page/CandidatePage";
+import GradeImportPage from "./page/result/GradeImportPage";
+import CandidateInfoPage from "./page/training_plan/CandidateInfoPage";
+import CandidatePage from "./page/training_plan/CandidatePage";
+import RequestListPage from "./page/request/RequestPage";
+import AvatarProvider from "./context/AvatarProvider";
+import AuthProvider from "./context/AuthContext";
+import CandidateDetailPage from "./page/training_plan/CandidateDetail";
 import NotificationsPage from "./page/NotificationsPage";
+
 
 function App() {
   return (
@@ -34,7 +37,7 @@ function App() {
             <Route
               path="/*"
               element={
-                <ProtectedRoute>
+                <AuthProvider>
                   <>
                     <Navbar />
                     <Layout className="flex flex-col w-full">
@@ -54,11 +57,11 @@ function App() {
                         <Route path="/notifications" element={<NotificationsPage />} />
                         <Route path="/accounts" element={<AccountPage />} />
                         <Route
-                          path="/candidates"
+                          path="/candidates-view"
                           element={
-                            <ProtectedRoute roles={["admin"]}>
+                            <AuthProvider roles={["admin"]}>
                               <CandidatePage />
-                            </ProtectedRoute>
+                            </AuthProvider>
                           }
                         />
                         <Route
@@ -82,11 +85,16 @@ function App() {
                           path="/candidates-import"
                           element={<ImportCandidate />}
                         />
+                        <Route path="/request" element={<RequestListPage />} />
+                        <Route
+                          path="/candidates/:id"
+                          element={<CandidateDetailPage />}
+                        />
                       </Routes>
                       <Footer />
                     </Layout>
                   </>
-                </ProtectedRoute>
+                </AuthProvider>
               }
             />
           </Routes>

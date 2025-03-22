@@ -1,7 +1,7 @@
 // src/pages/SchedulePage.jsx
 import { Table } from "antd";
 import { useNavigate } from "react-router-dom";
-import { courseData, slotData } from "../data/CourseData";
+import { courseData, slotData } from "../../data/CourseData";
 import { CalendarOutlined, ClockCircleOutlined } from "@ant-design/icons";
 
 const SchedulePage = () => {
@@ -25,31 +25,39 @@ const SchedulePage = () => {
         </div>
       ),
     },
-    ...["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(
-      (day) => ({
-        title: (
-          <div className="text-center font-semibold text-indigo-700">
-            <div className="text-lg">{day}</div>
-          </div>
-        ),
-        dataIndex: day,
-        key: day,
-        width: 200,
-        render: (content) => (
-          <div className="p-2">
-            {content !== "-" ? (
-              <div className="bg-white hover:bg-blue-50 p-4 rounded-xl shadow-sm 
+    ...[
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ].map((day) => ({
+      title: (
+        <div className="text-center font-semibold text-indigo-700">
+          <div className="text-lg">{day}</div>
+        </div>
+      ),
+      dataIndex: day,
+      key: day,
+      width: 200,
+      render: (content) => (
+        <div className="p-2">
+          {content !== "-" ? (
+            <div
+              className="bg-white hover:bg-blue-50 p-4 rounded-xl shadow-sm 
                             border border-blue-100 transition-all duration-300
-                            hover:shadow-md cursor-pointer">
-                {content}
-              </div>
-            ) : (
-              <div className="text-center text-gray-400 p-4">No Class</div>
-            )}
-          </div>
-        ),
-      })
-    ),
+                            hover:shadow-md cursor-pointer"
+            >
+              {content}
+            </div>
+          ) : (
+            <div className="text-center text-gray-400 p-4">No Class</div>
+          )}
+        </div>
+      ),
+    })),
   ];
 
   const tableData = slotData.map((slot) => {
@@ -74,9 +82,7 @@ const SchedulePage = () => {
           <div className="font-semibold text-blue-600 hover:text-blue-700">
             {course.title}
           </div>
-          <div className="text-sm text-gray-500">
-            Room {course.room}
-          </div>
+          <div className="text-sm text-gray-500">Room {course.room}</div>
         </div>
       ) : (
         "-"
@@ -98,7 +104,9 @@ const SchedulePage = () => {
               <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
                 Weekly Schedule
               </h2>
-              <p className="text-gray-600">View your weekly training schedule</p>
+              <p className="text-gray-600">
+                View your weekly training schedule
+              </p>
             </div>
           </div>
         </div>

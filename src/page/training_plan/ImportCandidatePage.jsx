@@ -4,6 +4,7 @@ import { read, utils } from "xlsx";
 import { message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
+import { importCandidate } from "../../services/candidateService";
 
 const CandidateImportPage = () => {
   // State management
@@ -13,6 +14,7 @@ const CandidateImportPage = () => {
   const [loading, setLoading] = useState(false); // Loading state during file reading
   const [error, setError] = useState(null); // Error message
   const [isDragging, setIsDragging] = useState(false); // Drag-drop UI indicator
+  const [selectedFile, setSelectedFile] = useState(null);
 
   // Handle file upload via input or drag-drop
   const handleFileUpload = async (file) => {
@@ -20,47 +22,65 @@ const CandidateImportPage = () => {
       setLoading(true);
       setError(null);
 
-      // Check file type
       if (!file.type.includes("sheet") && !file.type.includes("excel")) {
         throw new Error("Chỉ chấp nhận file Excel (.xlsx, .xls)");
       }
 
-      const data = await file.arrayBuffer(); // Read file as ArrayBuffer
-      const workbook = read(data); // Parse the Excel file
+      setSelectedFile(file); // Save file to submit later
 
-      // Read "Candidate" sheet
+      // ✅ Only read locally for preview, don't call API yet
+      const data = await file.arrayBuffer();
+      const workbook = read(data);
       const candidateSheet = workbook.Sheets["Candidate"];
       if (!candidateSheet) throw new Error("Không tìm thấy sheet 'Candidate'");
-      const jsonCandidate = utils.sheet_to_json(candidateSheet); // Convert to JSON
-
+      const jsonCandidate = utils.sheet_to_json(candidateSheet);
       if (jsonCandidate.length === 0) {
         throw new Error("Sheet 'Candidate' không có dữ liệu");
       }
 
-      // Read "ExternalCertificate" sheet (optional)
       const externalCertifySheet = workbook.Sheets["ExternalCertificate"];
       const jsonExternalCertify = externalCertifySheet
         ? utils.sheet_to_json(externalCertifySheet)
         : [];
 
-      // Generate table columns dynamically
       const tableColumns = Object.keys(jsonCandidate[0]).map((key) => ({
         title: key,
         dataIndex: key,
         key: key,
       }));
 
-      // Update state
       setColumns(tableColumns);
       setCandidateData(jsonCandidate);
       setExternalCertifyData(jsonExternalCertify);
-      message.success("Import dữ liệu ứng viên thành công");
     } catch (err) {
+      console.error(err);
       setError("Lỗi: " + err.message);
       message.error("Không thể đọc file");
     } finally {
       setLoading(false);
       setIsDragging(false);
+    }
+  };
+
+  const handleSubmitToServer = async () => {
+    try {
+      setLoading(true);
+      if (!selectedFile) {
+        message.warning("Please select a file before uploading.");
+        return;
+      }
+
+      const response = await importCandidate(selectedFile);
+
+      if (response?.message) {
+        message.success(response.message);
+      } else {
+        message.success("File uploaded successfully.");
+      }
+    } catch (error) {
+      message.error(error?.response?.data?.message || "Import failed.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -159,18 +179,27 @@ const CandidateImportPage = () => {
                 <h2 className="text-xl font-semibold text-gray-700">
                   Candidate: {candidateData.length}
                 </h2>
-                <button
-                  onClick={() => {
-                    // Reset all state to re-import
-                    setCandidateData([]);
-                    setExternalCertifyData([]);
-                    setColumns([]);
-                    setError(null);
-                  }}
-                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-                >
-                  Re-import
-                </button>
+                <div className="space-x-3">
+                  <button
+                    onClick={() => {
+                      // Reset all
+                      setCandidateData([]);
+                      setExternalCertifyData([]);
+                      setColumns([]);
+                      setSelectedFile(null);
+                      setError(null);
+                    }}
+                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                  >
+                    Re-import
+                  </button>
+                  <button
+                    onClick={handleSubmitToServer}
+                    className="px-4 py-2 text-sm !bg-blue-500 text-white hover:bg-blue-700 rounded-lg transition-colors duration-200"
+                  >
+                    Submit to Server
+                  </button>
+                </div>
               </div>
 
               {/* Table rendering */}

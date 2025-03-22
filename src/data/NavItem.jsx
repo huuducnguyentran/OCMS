@@ -32,7 +32,7 @@ const navItems = [
     path: "/candidates",
     icon: "ImportOutlined",
     children: [
-      { key: "8-1", label: "View Candidates", path: "/candidates" },
+      { key: "8-1", label: "View Candidates", path: "/candidates-view" },
       { key: "8-2", label: "Import Candidates", path: "/candidates-import" },
     ],
   },
@@ -41,6 +41,12 @@ const navItems = [
     label: "Grade",
     icon: "FileExcelOutlined",
     path: "/grade",
+  },
+  {
+    key: "10",
+    label: "Request",
+    icon: "FileExcelOutlined",
+    path: "/request",
   },
 ];
 

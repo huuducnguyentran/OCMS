@@ -1,4 +1,4 @@
-// src/components/Header.jsx
+
 import { Layout, Avatar, Button, message } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";

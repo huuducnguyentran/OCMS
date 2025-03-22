@@ -1,45 +1,40 @@
 // src/pages/CandidatePage.jsx
 import { useEffect, useState } from "react";
 import { Table } from "antd";
-import axios from "axios";
+import { getCandidates } from "../../services/candidateService";
+import { useNavigate } from "react-router-dom";
 
 const CandidatePage = () => {
   const [candidates, setCandidates] = useState([]);
-  const [token, setToken] = useState("");
+  const navigate = useNavigate();
 
-  // Get token from localStorage on page load
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    if (storedToken) {
-      setToken(storedToken);
-    }
-  }, []);
-
-  // Fetch candidate data
   useEffect(() => {
     const fetchCandidates = async () => {
       try {
-        const response = await axios.get(
-          "https://ocms-vjvn.azurewebsites.net/api/Candidate",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setCandidates(response.data || []);
+        const data = await getCandidates();
+        setCandidates(data || []);
       } catch (error) {
-        console.error(" Failed to fetch candidates:", error);
+        console.error("Failed to fetch candidates:", error);
       }
     };
 
-    if (token) {
-      fetchCandidates();
-    }
-  }, [token]);
+    fetchCandidates();
+  }, []);
 
   const columns = [
-    { title: "Candidate ID", dataIndex: "candidateId", key: "candidateId" },
+    {
+      title: "Candidate ID",
+      dataIndex: "candidateId",
+      key: "candidateId",
+      render: (text, record) => (
+        <button
+          className="text-blue-600 hover:underline"
+          onClick={() => navigate(`/candidates/${record.candidateId}`)}
+        >
+          {text}
+        </button>
+      ),
+    },
     { title: "Full Name", dataIndex: "fullName", key: "fullName" },
     { title: "Gender", dataIndex: "gender", key: "gender" },
     {
@@ -60,7 +55,6 @@ const CandidatePage = () => {
       <div className="max-w-7xl mx-auto">
         <h2 className="text-xl font-semibold mb-4">Candidate List</h2>
 
-        {/* Candidate table */}
         <Table
           columns={columns}
           dataSource={candidates.map((item, index) => ({

@@ -69,7 +69,7 @@
 
 // export default AccountList;
 
-import { AccountData } from "../data/AccountData";
+import { AccountData } from "../../data/AccountData";
 import { useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
 
@@ -90,7 +90,7 @@ const AccountList = () => {
             />
             <SearchOutlined className="absolute right-3 top-3 text-gray-500" />
           </div>
-          <button className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold shadow-md">
+          <button className="!bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold shadow-md">
             Edit
           </button>
         </div>
@@ -111,9 +111,14 @@ const AccountList = () => {
             </thead>
             <tbody>
               {AccountData.filter((account) =>
-                account.FullName.toLowerCase().includes(searchTerm.toLowerCase())
+                account.FullName.toLowerCase().includes(
+                  searchTerm.toLowerCase()
+                )
               ).map((account) => (
-                <tr key={account.Id} className="bg-white hover:bg-gray-100 transition duration-200">
+                <tr
+                  key={account.Id}
+                  className="bg-white hover:bg-gray-100 transition duration-200"
+                >
                   <td className="border p-4">{account.Id}</td>
                   <td className="border p-4">
                     <img
@@ -122,14 +127,20 @@ const AccountList = () => {
                       className="w-14 h-14 rounded-full border-2 border-blue-500 shadow-sm"
                     />
                   </td>
-                  <td className="border p-4 font-medium text-gray-800">{account.FullName}</td>
-                  <td className="border p-4 text-gray-600">{account.DateOfBirth}</td>
+                  <td className="border p-4 font-medium text-gray-800">
+                    {account.FullName}
+                  </td>
+                  <td className="border p-4 text-gray-600">
+                    {account.DateOfBirth}
+                  </td>
                   <td className="border p-4 text-gray-600">{account.Email}</td>
                   <td className="border p-4 text-gray-600">{account.Phone}</td>
                   <td className="border p-4">
                     <span
                       className={`px-4 py-1 rounded-full text-white text-sm font-semibold shadow-md transition duration-300 ${
-                        account.Status === "Active" ? "bg-green-500" : "bg-red-500"
+                        account.Status === "Active"
+                          ? "bg-green-500"
+                          : "bg-red-500"
                       }`}
                     >
                       {account.Status}
