@@ -9,4 +9,9 @@ export const API = {
   CHECK_NOTI: "/api/notifications/mark-as-read/",
   VIEW_NOTI_BY_USER_ID: "/api/notifications/",
   GET_EXTERNAL_CERTIFICATE_BY_ID: "ExternalCertificate/candidate",
+  GET_ALL_REQUEST: "Requests",
+  GET_REQUEST_BY_ID: "Requests",
+  APPROVE_REQUEST: "Requests",
+  REJECT_REQUEST: "Requests",
+  CREATE_CANDIDATE_ACCOUNT: "User/create-from-candidate",
 };

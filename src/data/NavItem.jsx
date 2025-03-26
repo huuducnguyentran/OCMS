@@ -45,7 +45,7 @@ const navItems = [
   {
     key: "10",
     label: "Request",
-    icon: "FileExcelOutlined",
+    icon: "SelectOutlined",
     path: "/request",
   },
 ];

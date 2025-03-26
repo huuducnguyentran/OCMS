@@ -3,20 +3,19 @@ import { useState } from "react";
 import { read, utils } from "xlsx";
 import { message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom";
 import { importCandidate } from "../../services/candidateService";
 
 const CandidateImportPage = () => {
-  // State management
-  const [candidateData, setCandidateData] = useState([]); // Stores data from "Candidate" sheet
-  const [externalCertifyData, setExternalCertifyData] = useState([]); // Stores data from "ExternalCertificate" sheet
-  const [columns, setColumns] = useState([]); // Dynamically generated columns from Excel header
-  const [loading, setLoading] = useState(false); // Loading state during file reading
-  const [error, setError] = useState(null); // Error message
-  const [isDragging, setIsDragging] = useState(false); // Drag-drop UI indicator
+  const [candidateData, setCandidateData] = useState([]);
+  const [externalCertifyData, setExternalCertifyData] = useState([]);
+  const [columns, setColumns] = useState([]);
+  const [externalColumns, setExternalColumns] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [activeSheet, setActiveSheet] = useState("Candidate"); // Toggle state
 
-  // Handle file upload via input or drag-drop
   const handleFileUpload = async (file) => {
     try {
       setLoading(true);
@@ -26,30 +25,40 @@ const CandidateImportPage = () => {
         throw new Error("Chỉ chấp nhận file Excel (.xlsx, .xls)");
       }
 
-      setSelectedFile(file); // Save file to submit later
+      setSelectedFile(file);
 
-      // ✅ Only read locally for preview, don't call API yet
       const data = await file.arrayBuffer();
       const workbook = read(data);
+
+      // Candidate Sheet
       const candidateSheet = workbook.Sheets["Candidate"];
       if (!candidateSheet) throw new Error("Không tìm thấy sheet 'Candidate'");
       const jsonCandidate = utils.sheet_to_json(candidateSheet);
       if (jsonCandidate.length === 0) {
         throw new Error("Sheet 'Candidate' không có dữ liệu");
       }
-
-      const externalCertifySheet = workbook.Sheets["ExternalCertificate"];
-      const jsonExternalCertify = externalCertifySheet
-        ? utils.sheet_to_json(externalCertifySheet)
-        : [];
-
-      const tableColumns = Object.keys(jsonCandidate[0]).map((key) => ({
+      const candidateCols = Object.keys(jsonCandidate[0]).map((key) => ({
         title: key,
         dataIndex: key,
         key: key,
       }));
 
-      setColumns(tableColumns);
+      // External Certificate Sheet
+      const externalCertifySheet = workbook.Sheets["ExternalCertificate"];
+      const jsonExternalCertify = externalCertifySheet
+        ? utils.sheet_to_json(externalCertifySheet)
+        : [];
+      const externalCols =
+        jsonExternalCertify.length > 0
+          ? Object.keys(jsonExternalCertify[0]).map((key) => ({
+              title: key,
+              dataIndex: key,
+              key: key,
+            }))
+          : [];
+
+      setColumns(candidateCols);
+      setExternalColumns(externalCols);
       setCandidateData(jsonCandidate);
       setExternalCertifyData(jsonExternalCertify);
     } catch (err) {
@@ -71,7 +80,6 @@ const CandidateImportPage = () => {
       }
 
       const response = await importCandidate(selectedFile);
-
       if (response?.message) {
         message.success(response.message);
       } else {
@@ -84,7 +92,6 @@ const CandidateImportPage = () => {
     }
   };
 
-  // Drag events
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragging(true);
@@ -108,7 +115,6 @@ const CandidateImportPage = () => {
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <h2 className="text-4xl font-bold mb-4">Candidate Import Page</h2>
 
-          {/* Drag-and-Drop Upload Section */}
           {!candidateData.length && (
             <div
               className={`border-2 border-dashed rounded-lg p-8 mb-6 text-center transition-all duration-200 ${
@@ -135,13 +141,12 @@ const CandidateImportPage = () => {
                   </label>
                 </div>
                 <p className="text-sm text-gray-500">
-                  Only except .xlsx hoặc .xls file
+                  Only accept .xlsx or .xls files
                 </p>
               </div>
             </div>
           )}
 
-          {/* Error Display */}
           {error && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
               <div className="flex">
@@ -165,29 +170,55 @@ const CandidateImportPage = () => {
             </div>
           )}
 
-          {/* Loading Spinner */}
           {loading && (
             <div className="flex justify-center items-center py-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
           )}
 
-          {/* Display Imported Candidate Table */}
           {candidateData.length > 0 && (
             <div>
+              {/* Switch View Tabs */}
+              <div className="flex mb-4 space-x-3">
+                <button
+                  onClick={() => setActiveSheet("Candidate")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                    activeSheet === "Candidate"
+                      ? "!bg-blue-600 text-white"
+                      : "!bg-gray-200 text-gray-700 hover:!bg-gray-300"
+                  }`}
+                >
+                  Candidate ({candidateData.length})
+                </button>
+                <button
+                  onClick={() => setActiveSheet("ExternalCertificate")}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                    activeSheet === "ExternalCertificate"
+                      ? "!bg-blue-600 text-white"
+                      : "!bg-gray-200 text-gray-700 hover:!bg-gray-300"
+                  }`}
+                >
+                  External Certificate ({externalCertifyData.length})
+                </button>
+              </div>
+
+              {/* Actions */}
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-700">
-                  Candidate: {candidateData.length}
+                  {activeSheet === "Candidate"
+                    ? `Candidate Data (${candidateData.length})`
+                    : `External Certificate Data (${externalCertifyData.length})`}
                 </h2>
                 <div className="space-x-3">
                   <button
                     onClick={() => {
-                      // Reset all
                       setCandidateData([]);
                       setExternalCertifyData([]);
                       setColumns([]);
+                      setExternalColumns([]);
                       setSelectedFile(null);
                       setError(null);
+                      setActiveSheet("Candidate");
                     }}
                     className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors duration-200"
                   >
@@ -195,19 +226,22 @@ const CandidateImportPage = () => {
                   </button>
                   <button
                     onClick={handleSubmitToServer}
-                    className="px-4 py-2 text-sm !bg-blue-500 text-white hover:bg-blue-700 rounded-lg transition-colors duration-200"
+                    className="px-4 py-2 text-sm !bg-blue-500 text-white hover:!bg-blue-700 rounded-lg transition-colors duration-200"
                   >
                     Submit to Server
                   </button>
                 </div>
               </div>
 
-              {/* Table rendering */}
+              {/* Table Rendering */}
               <div className="overflow-x-auto shadow-md rounded-lg">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      {columns.map((col) => (
+                      {(activeSheet === "Candidate"
+                        ? columns
+                        : externalColumns
+                      ).map((col) => (
                         <th
                           key={col.key}
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -218,8 +252,14 @@ const CandidateImportPage = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {candidateData.map((row, index) => {
-                      const personalId = row["PersonalID"]; // Identify unique ID
+                    {(activeSheet === "Candidate"
+                      ? candidateData
+                      : externalCertifyData
+                    ).map((row, index) => {
+                      const rowCols =
+                        activeSheet === "Candidate" ? columns : externalColumns;
+                      const personalId = row["PersonalID"];
+
                       return (
                         <tr
                           key={index}
@@ -227,26 +267,14 @@ const CandidateImportPage = () => {
                             index % 2 === 0 ? "bg-white" : "bg-gray-50"
                           }
                         >
-                          {columns.map((column, colIndex) => (
+                          {rowCols.map((column, colIndex) => (
                             <td
                               key={colIndex}
                               className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                             >
-                              {/* Wrap in Link only if PersonalID exists */}
-                              {personalId ? (
-                                <Link
-                                  to={`/candidate-info/${personalId}`}
-                                  state={{
-                                    candidate: row,
-                                    externalCertifyData: externalCertifyData,
-                                  }}
-                                  className="text-blue-500 hover:underline"
-                                >
-                                  {row[column.dataIndex]}
-                                </Link>
-                              ) : (
-                                row[column.dataIndex] || "-"
-                              )}
+                              {activeSheet === "Candidate" && personalId
+                                ? row[column.dataIndex]
+                                : row[column.dataIndex] || "-"}
                             </td>
                           ))}
                         </tr>

@@ -62,3 +62,22 @@ export const getCandidateById = async (id) => {
     throw error;
   }
 };
+
+export const createCandidateAccount = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await axiosInstance.post(
+      `/${API.CREATE_CANDIDATE_ACCOUNT}/${id}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error creating candidate account:", error);
+    throw error;
+  }
+};

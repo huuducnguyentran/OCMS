@@ -12,6 +12,7 @@ import {
   UserOutlined,
   AccountBookOutlined,
   FileExcelOutlined,
+  SelectOutlined,
 } from "@ant-design/icons";
 import "tailwindcss";
 
@@ -28,6 +29,7 @@ const iconMap = {
   UserOutlined: <UserOutlined />,
   AccountBookOutlined: <AccountBookOutlined />,
   FileExcelOutlined: <FileExcelOutlined />,
+  SelectOutlined: <SelectOutlined />,
 };
 
 // Convert navItems to Ant Design Menu format with submenu support

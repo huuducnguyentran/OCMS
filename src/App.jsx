@@ -15,12 +15,12 @@ import CreateNewCoursePage from "./page/course/CreateNewCoursePage";
 import ImportCandidate from "./page/training_plan/ImportCandidatePage";
 import Footer from "./component/Footer";
 import GradeImportPage from "./page/result/GradeImportPage";
-import CandidateInfoPage from "./page/training_plan/CandidateInfoPage";
 import CandidatePage from "./page/training_plan/CandidatePage";
 import RequestListPage from "./page/request/RequestPage";
 import AvatarProvider from "./context/AvatarProvider";
 import AuthProvider from "./context/AuthContext";
 import CandidateDetailPage from "./page/training_plan/CandidateDetail";
+import RequestDetail from "./page/request/RequestDetailPage";
 
 function App() {
   return (
@@ -75,14 +75,14 @@ function App() {
                         />
                         <Route path="/grade" element={<GradeImportPage />} />
                         <Route
-                          path="/candidate-info/:candidateId"
-                          element={<CandidateInfoPage />}
-                        />
-                        <Route
                           path="/candidates-import"
                           element={<ImportCandidate />}
                         />
                         <Route path="/request" element={<RequestListPage />} />
+                        <Route
+                          path="/requests/:id"
+                          element={<RequestDetail />}
+                        />
                         <Route
                           path="/candidates/:id"
                           element={<CandidateDetailPage />}

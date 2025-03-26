@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Spin, Descriptions, message, Button } from "antd";
-import { getCandidateById } from "../../services/candidateService";
+import {
+  createCandidateAccount,
+  getCandidateById,
+} from "../../services/candidateService";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { getExternalCertificatesByCandidateId } from "../../services/certifcationService";
 
@@ -12,6 +15,7 @@ const CandidateDetailPage = () => {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [certLoading, setCertLoading] = useState(true);
+  const [creatingAccount, setCreatingAccount] = useState(false);
 
   useEffect(() => {
     const fetchCandidate = async () => {
@@ -41,6 +45,22 @@ const CandidateDetailPage = () => {
     fetchCandidate();
     fetchCertificates();
   }, [id]);
+
+  const handleCreateAccount = async () => {
+    if (!candidate) return;
+    setCreatingAccount(true);
+    try {
+      await createCandidateAccount(id);
+      message.success(
+        "Account created successfully. Credentials sent to email."
+      );
+    } catch (error) {
+      message.error("Failed to create account.");
+      console.error(error);
+    } finally {
+      setCreatingAccount(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -110,12 +130,25 @@ const CandidateDetailPage = () => {
                       ? new Date(cert.expirationDate).toLocaleDateString()
                       : "-"}
                   </p>
-                  {cert.certificateFileURL && (
+                  {cert.certificateFileURL ? (
                     <img
                       src={cert.certificateFileURL}
                       alt="Certificate"
                       className="mt-2 w-full h-auto rounded-lg border"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        const parent = e.target.parentNode;
+                        const errorText = document.createElement("p");
+                        errorText.className = "text-red-500 text-sm mt-2";
+                        errorText.innerText =
+                          "Certificate file not accessible or requires authentication.";
+                        parent.appendChild(errorText);
+                      }}
                     />
+                  ) : (
+                    <p className="text-gray-500">
+                      No certificate file uploaded.
+                    </p>
                   )}
                 </div>
               ))}
@@ -178,6 +211,14 @@ const CandidateDetailPage = () => {
             {candidate.importRequestId}
           </Descriptions.Item>
         </Descriptions>
+        <Button
+          type="primary"
+          onClick={handleCreateAccount}
+          loading={creatingAccount}
+          className="mt-4"
+        >
+          Create Account
+        </Button>
       </div>
     </div>
   );
