@@ -69,15 +69,33 @@
 
 // export default AccountList;
 
-import { AccountData } from "../../data/AccountData";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SearchOutlined } from "@ant-design/icons";
+import { getAllUsers } from "../../services/userService";
 
 const AccountList = () => {
+  const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const userData = await getAllUsers();
+        setUsers(userData);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-b from-gray-100 to-indigo-200 p-8 animate__animated animate__fadeIn">
+    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-indigo-200 p-8 animate__animated animate__fadeIn">
       <div className="max-w-7xl mx-auto bg-white p-8 rounded-lg shadow-xl">
         {/* Header Section */}
         <div className="flex justify-between items-center mb-6">
@@ -97,59 +115,57 @@ const AccountList = () => {
 
         {/* Table Section */}
         <div className="overflow-auto max-h-[500px] rounded-lg border border-gray-300 shadow-lg">
-          <table className="w-full border-collapse">
-            <thead className="bg-blue-900 text-white sticky top-0">
-              <tr>
-                <th className="border p-4 text-left">Id</th>
-                <th className="border p-4 text-left">Image</th>
-                <th className="border p-4 text-left">Full Name</th>
-                <th className="border p-4 text-left">Date of Birth</th>
-                <th className="border p-4 text-left">Email</th>
-                <th className="border p-4 text-left">Phone</th>
-                <th className="border p-4 text-left">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {AccountData.filter((account) =>
-                account.FullName.toLowerCase().includes(
-                  searchTerm.toLowerCase()
-                )
-              ).map((account) => (
-                <tr
-                  key={account.Id}
-                  className="bg-white hover:bg-gray-100 transition duration-200"
-                >
-                  <td className="border p-4">{account.Id}</td>
-                  <td className="border p-4">
-                    <img
-                      src={account.Image}
-                      alt={account.FullName}
-                      className="w-14 h-14 rounded-full border-2 border-blue-500 shadow-sm"
-                    />
-                  </td>
-                  <td className="border p-4 font-medium text-gray-800">
-                    {account.FullName}
-                  </td>
-                  <td className="border p-4 text-gray-600">
-                    {account.DateOfBirth}
-                  </td>
-                  <td className="border p-4 text-gray-600">{account.Email}</td>
-                  <td className="border p-4 text-gray-600">{account.Phone}</td>
-                  <td className="border p-4">
-                    <span
-                      className={`px-4 py-1 rounded-full text-white text-sm font-semibold shadow-md transition duration-300 ${
-                        account.Status === "Active"
-                          ? "bg-green-500"
-                          : "bg-red-500"
-                      }`}
-                    >
-                      {account.Status}
-                    </span>
-                  </td>
+          {loading ? (
+            <div className="text-center p-4">Loading users...</div>
+          ) : (
+            <table className="w-full border-collapse">
+              <thead className="bg-blue-900 text-white sticky top-0">
+                <tr>
+                  <th className="border p-4 text-left">User ID</th>
+                  <th className="border p-4 text-left">Username</th>
+                  <th className="border p-4 text-left">Full Name</th>
+                  <th className="border p-4 text-left">Gender</th>
+                  <th className="border p-4 text-left">Date of Birth</th>
+                  <th className="border p-4 text-left">Email</th>
+                  <th className="border p-4 text-left">Phone</th>
+                  <th className="border p-4 text-left">Address</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {users
+                  .filter((user) =>
+                    user.fullName
+                      .toLowerCase()
+                      .includes(searchTerm.toLowerCase())
+                  )
+                  .map((user) => (
+                    <tr
+                      key={user.userId}
+                      className="bg-white hover:bg-gray-100 transition duration-200"
+                    >
+                      <td className="border p-4">{user.userId}</td>
+                      <td className="border p-4">{user.username}</td>
+                      <td className="border p-4 font-medium text-gray-800">
+                        {user.fullName}
+                      </td>
+                      <td className="border p-4 text-gray-600">
+                        {user.gender}
+                      </td>
+                      <td className="border p-4 text-gray-600">
+                        {new Date(user.dateOfBirth).toLocaleDateString()}
+                      </td>
+                      <td className="border p-4 text-gray-600">{user.email}</td>
+                      <td className="border p-4 text-gray-600">
+                        {user.phoneNumber}
+                      </td>
+                      <td className="border p-4 text-gray-600">
+                        {user.address}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

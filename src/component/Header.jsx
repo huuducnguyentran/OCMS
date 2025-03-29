@@ -92,14 +92,14 @@ import { useEffect, useState } from "react";
 const Header = () => {
   const navigate = useNavigate();
   const { avatar } = useAvatar();
-  const [username, setUsername] = useState("");
+  const [userID, setUserID] = useState("");
   const [role, setRole] = useState("");
 
   useEffect(() => {
-    const storedUsername = localStorage.getItem("userID");
+    const storedUserID = localStorage.getItem("userID");
     const storedRole = localStorage.getItem("role");
 
-    if (storedUsername) setUsername(storedUsername);
+    if (storedUserID) setUserID(storedUserID);
     if (storedRole) setRole(storedRole);
   }, []);
 
@@ -123,28 +123,33 @@ const Header = () => {
           </span>
         )}
 
-        {/* Username display */}
-        {username && (
+        {/* UserID display */}
+        {userID && (
           <span className="text-gray-700 font-medium text-sm">
-            Welcome, {username}
+            Welcome, {userID}
           </span>
         )}
 
         {isLoggedIn ? (
           <>
+            {/* Profile redirect */}
+            <div
+              onClick={() => navigate(`/profile/${userID}`)}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <Avatar
+                src={avatar || "https://via.placeholder.com/40"}
+                size="large"
+              />
+              <span className="text-blue-500 font-medium hover:underline">
+                Profile
+              </span>
+            </div>
+
             {/* Logout button */}
-            <Avatar
-              src={avatar || "https://via.placeholder.com/40"}
-              size="large"
-            />
             <Button type="primary" danger onClick={handleLogout}>
               Logout
             </Button>
-            {/* Profile redirect */}
-            <div
-              onClick={() => navigate("/profile")}
-              className="flex items-center gap-2 cursor-pointer"
-            ></div>
           </>
         ) : (
           <Link

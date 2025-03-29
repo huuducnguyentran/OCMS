@@ -32,17 +32,27 @@ const iconMap = {
   SelectOutlined: <SelectOutlined />,
 };
 
-// Convert navItems to Ant Design Menu format with submenu support
-const menuItems = navItems.map((item) => {
+// Get the logged-in user's role
+const userRole = localStorage.getItem("role") || "user";
+
+// Filter `navItems` based on role
+const filteredNavItems = navItems.filter((item) =>
+  item.roles.includes(userRole)
+);
+
+// Convert filtered items to Ant Design Menu format
+const menuItems = filteredNavItems.map((item) => {
   if (item.children) {
     return {
       key: item.key,
       icon: iconMap[item.icon],
       label: item.label,
-      children: item.children.map((child) => ({
-        key: child.key,
-        label: <Link to={child.path}>{child.label}</Link>,
-      })),
+      children: item.children
+        .filter((child) => child.roles.includes(userRole))
+        .map((child) => ({
+          key: child.key,
+          label: <Link to={child.path}>{child.label}</Link>,
+        })),
     };
   }
 

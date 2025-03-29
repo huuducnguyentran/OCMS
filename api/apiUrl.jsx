@@ -14,4 +14,10 @@ export const API = {
   APPROVE_REQUEST: "Requests",
   REJECT_REQUEST: "Requests",
   CREATE_CANDIDATE_ACCOUNT: "User/create-from-candidate",
+  GET_ALL_USER: "User",
+  GET_USER_BY_ID: "User",
+  UPDATE_USER: "User",
+  UPDATE_PASSWORD: "User",
+  FORGOT_PASSWORD: "User/forgot-password",
+  RESET_PASSWORD: "User/reset-password",
 };

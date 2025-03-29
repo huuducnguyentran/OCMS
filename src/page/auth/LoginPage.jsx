@@ -1,13 +1,15 @@
 // src/pages/LoginPage.jsx
-import { Input, Button, message } from "antd";
+import { Input, Button, message, Layout } from "antd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authServices } from "../../services/authServices";
+import { useAuth } from "../../context/useAuth";
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { setIsAuthenticated } = useAuth();
 
   const handleLogin = async () => {
     try {
@@ -20,16 +22,17 @@ const LoginPage = () => {
       localStorage.setItem("role", roles?.[0] || "user");
       localStorage.setItem("tokenExpiry", Date.now() + 60 * 60 * 1000); // 1hr
 
+      setIsAuthenticated(true);
       message.success("Login successful!");
-      navigate("/");
+      navigate("/home");
     } catch {
       message.error("Invalid username or password.");
     }
   };
 
   return (
-    <div className="w-full h-screen flex items-center justify-center bg-gray-900">
-      <div className="w-full max-w-4xl bg-gray-800 flex rounded-lg shadow-lg overflow-hidden h-[80vh]">
+    <Layout className="w-screen h-screen flex items-center justify-center !bg-gray-900">
+      <Layout.Content className="w-full max-w-4xl bg-gray-800 flex  shadow-lg h-[80vh]">
         {/* Left Side - Login Form */}
         <div className="w-1/2 p-8 flex flex-col justify-center">
           <h2 className="text-white text-3xl font-semibold mb-6">Login</h2>
@@ -51,12 +54,6 @@ const LoginPage = () => {
           <Button type="primary" className="w-full py-2" onClick={handleLogin}>
             Login
           </Button>
-          <div className="text-white text-sm mt-4 text-center">
-            Don&apos;t have an account?{" "}
-            <a href="/register" className="font-bold">
-              Create one
-            </a>
-          </div>
         </div>
 
         {/* Right Side - Branding */}
@@ -73,8 +70,8 @@ const LoginPage = () => {
             Choose your paths to the sky
           </p>
         </div>
-      </div>
-    </div>
+      </Layout.Content>
+    </Layout>
   );
 };
 
