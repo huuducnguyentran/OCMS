@@ -113,7 +113,9 @@ const CandidateImportPage = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-          <h2 className="text-4xl font-bold mb-4">Candidate Import Page</h2>
+          <h2 className="text-4xl text-gray-900 font-bold mb-4">
+            Candidate Import Page
+          </h2>
 
           {!candidateData.length && (
             <div

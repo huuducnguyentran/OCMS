@@ -27,12 +27,12 @@ const CandidatePage = () => {
       dataIndex: "candidateId",
       key: "candidateId",
       render: (text, record) => (
-        <button
+        <a
           className="text-blue-600 hover:underline"
           onClick={() => navigate(`/candidates/${record.candidateId}`)}
         >
           {text}
-        </button>
+        </a>
       ),
     },
     { title: "Full Name", dataIndex: "fullName", key: "fullName" },

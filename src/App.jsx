@@ -30,12 +30,17 @@ import CandidateDetailPage from "./page/training_plan/CandidateDetail";
 import RequestDetail from "./page/request/RequestDetailPage";
 import ForgotPassword from "./page/auth/ForgotPasswordPage";
 import ResetPassword from "./page/auth/ResetPassword";
+import AssignTraineePage from "./page/course/AssignTraineePage";
+import SubjectPage from "./page/subject/SubjectPage";
+import CreateSubjectPage from "./page/subject/CreateSubjectPage";
+import SubjectDetailPage from "./page/subject/SubjectDetailPage";
 
 function App() {
   return (
-    <AuthProvider>
-      <AvatarProvider>
-        <Router>
+    <Router>
+      {/* ✅ Router should wrap AuthProvider */}
+      <AuthProvider>
+        <AvatarProvider>
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
@@ -99,6 +104,19 @@ function App() {
                             path="/candidates/:id"
                             element={<CandidateDetailPage />}
                           />
+                          <Route
+                            path="/assign-trainee"
+                            element={<AssignTraineePage />}
+                          />
+                          <Route path="/subject" element={<SubjectPage />} />
+                          <Route
+                            path="/subject-create"
+                            element={<CreateSubjectPage />}
+                          />
+                          <Route
+                            path="/subject/:subjectId"
+                            element={<SubjectDetailPage />}
+                          />
                         </Routes>
                         <Footer />
                       </Layout>
@@ -108,9 +126,9 @@ function App() {
               }
             />
           </Routes>
-        </Router>
-      </AvatarProvider>
-    </AuthProvider>
+        </AvatarProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

@@ -62,7 +62,7 @@ const menuItems = filteredNavItems.map((item) => {
     label: (
       <Link to={item.path}>
         {item.label}
-        {item.key === "4" && <Badge count={1} offset={[10, 0]} />}
+        {item.key === "4" && <Badge count={1} offset={[20, 0]} />}
       </Link>
     ),
   };

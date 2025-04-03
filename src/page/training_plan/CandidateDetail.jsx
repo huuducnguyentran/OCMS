@@ -97,7 +97,9 @@ const CandidateDetailPage = () => {
           </span>
         </div>
         <div className="mt-10">
-          <h2 className="text-2xl font-semibold mb-4">External Certificates</h2>
+          <h2 className="text-2xl text-gray-800 font-semibold mb-4">
+            External Certificates
+          </h2>
           {certLoading ? (
             <Spin />
           ) : certificates.length === 0 ? (
@@ -107,7 +109,7 @@ const CandidateDetailPage = () => {
               {certificates.map((cert, index) => (
                 <div
                   key={index}
-                  className="border rounded-xl p-4 shadow-sm bg-white hover:shadow-md transition"
+                  className="border rounded-xl p-4 shadow-sm bg-white hover:shadow-md transition mb-4"
                 >
                   <p>
                     <strong>Certificate Code:</strong> {cert.certificateCode}
@@ -156,7 +158,9 @@ const CandidateDetailPage = () => {
           )}
         </div>
 
-        <h2 className="text-2xl font-semibold mb-6">Candidate Detail</h2>
+        <h2 className="text-2xl text-gray-800 font-semibold mb-6">
+          Candidate Detail
+        </h2>
         <Descriptions
           bordered
           column={1}

@@ -14,7 +14,7 @@ export const getAllUsers = async () => {
 export const getUserById = async (id) => {
   try {
     const response = await axiosInstance.get(`/${API.GET_USER_BY_ID}/${id}`);
-    return response.data;
+    return response.data.user;
   } catch (error) {
     console.error("Error fetching requests:", error?.response || error.message);
     throw error;

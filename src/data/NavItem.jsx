@@ -76,6 +76,20 @@ const navItems = [
     path: "/request",
     roles: ["Admin", "HeadMaster", "user"],
   },
+  {
+    key: "10",
+    label: "Assign Trainee",
+    icon: "SelectOutlined",
+    path: "/assign-trainee",
+    roles: ["Admin", "HeadMaster", "user"],
+  },
+  {
+    key: "11",
+    label: "Subject",
+    icon: "ImportOutlined",
+    path: "/subject",
+    roles: ["Admin", "Training staff", "user"],
+  },
 ];
 
 export default navItems;

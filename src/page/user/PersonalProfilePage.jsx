@@ -32,6 +32,7 @@ const PersonalProfilePage = () => {
 
         const userData = await getUserById(userId);
         setFormData({
+          userId: userData.userId || "",
           fullName: userData.fullName || "",
           gender: userData.gender || "",
           dateOfBirth: userData.dateOfBirth
@@ -135,10 +136,20 @@ const PersonalProfilePage = () => {
         {/* Profile Details Form */}
         <div className="grid grid-cols-2 gap-4">
           <div>
+            <label className="block font-medium">User ID</label>
+            <Input
+              name="userID"
+              value={formData.userId}
+              disabled
+              onChange={handleInputChange}
+            />
+          </div>
+          <div>
             <label className="block font-medium">Full Name</label>
             <Input
               name="fullName"
               value={formData.fullName}
+              disabled
               onChange={handleInputChange}
             />
           </div>

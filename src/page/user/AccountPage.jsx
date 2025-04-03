@@ -143,8 +143,12 @@ const AccountList = () => {
                       key={user.userId}
                       className="bg-white hover:bg-gray-100 transition duration-200"
                     >
-                      <td className="border p-4">{user.userId}</td>
-                      <td className="border p-4">{user.username}</td>
+                      <td className="border p-4 text-gray-600">
+                        {user.userId}
+                      </td>
+                      <td className="border p-4 text-gray-600">
+                        {user.username}
+                      </td>
                       <td className="border p-4 font-medium text-gray-800">
                         {user.fullName}
                       </td>

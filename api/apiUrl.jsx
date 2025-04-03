@@ -20,4 +20,10 @@ export const API = {
   UPDATE_PASSWORD: "User",
   FORGOT_PASSWORD: "User/forgot-password",
   RESET_PASSWORD: "User/reset-password",
+  ASSIGN_TRAINEE: "TraineeAssign/import",
+  VIEW_SUBJECT: "Subject",
+  CREATE_SUBJECT: "Subject",
+  UPDATE_SUBJECT: "Subject",
+  DELETE_SUBJECT: "Subject",
+  GET_SUBJECT_BY_ID: "Subject",
 };
