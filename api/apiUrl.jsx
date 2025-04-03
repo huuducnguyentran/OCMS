@@ -14,4 +14,18 @@ export const API = {
   APPROVE_REQUEST: "Requests",
   REJECT_REQUEST: "Requests",
   CREATE_CANDIDATE_ACCOUNT: "User/create-from-candidate",
+  
+  // Training Plan 
+  GET_ALL_TRAINING_PLANS: "TrainingPlan",
+  GET_TRAINING_PLAN_BY_ID: "TrainingPlan",
+  CREATE_TRAINING_PLAN: "TrainingPlan",
+  UPDATE_TRAINING_PLAN: "TrainingPlan",
+  DELETE_TRAINING_PLAN: "TrainingPlan",
+
+  // Subject 
+  GET_ALL_SUBJECTS: "Subject",
+  GET_SUBJECT_BY_ID: "Subject",
+  CREATE_SUBJECT: "Subject",
+  UPDATE_SUBJECT: "Subject", 
+  DELETE_SUBJECT: "Subject"
 };

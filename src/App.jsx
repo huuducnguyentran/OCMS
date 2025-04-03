@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import HomePage from "./page/HomePage";
-import CoursePage from "./page/course//CoursePage";
 import AccountPage from "./page/user/AccountPage";
 import Navbar from "./component/NabBar";
 import { Layout } from "antd";
@@ -11,7 +10,6 @@ import Header from "./component/Header";
 import PersonalProfilePage from "./page/user/PersonalProfilePage";
 import AccomplishmentsPage from "./page/result/AccomplishmentPage";
 import AccomplishmentDetail from "./page/result/AccompishmentDetailPage";
-import CreateNewCoursePage from "./page/course/CreateNewCoursePage";
 import ImportCandidate from "./page/training_plan/ImportCandidatePage";
 import Footer from "./component/Footer";
 import GradeImportPage from "./page/result/GradeImportPage";
@@ -21,6 +19,9 @@ import AvatarProvider from "./context/AvatarProvider";
 import AuthProvider from "./context/AuthContext";
 import CandidateDetailPage from "./page/training_plan/CandidateDetail";
 import RequestDetail from "./page/request/RequestDetailPage";
+import PlanPage from "./page/training_plan/PlanPage";
+import CreateTrainingPlanPage from "./page/training_plan/CreateTrainingPlanPage";
+import EditPlanPage from "./page/training_plan/EditPlanPage";
 
 function App() {
   return (
@@ -42,10 +43,14 @@ function App() {
                       <Header />
                       <Routes>
                         <Route path="/" element={<HomePage />} />
-                        <Route path="/course" element={<CoursePage />} />
+                        <Route path="/plan" element={<PlanPage />} />
                         <Route
-                          path="/course/create"
-                          element={<CreateNewCoursePage />}
+                          path="/plan/create"
+                          element={<CreateTrainingPlanPage />}
+                        />
+                        <Route
+                          path="/plan/edit/:planId"
+                          element={<EditPlanPage />}
                         />
                         <Route
                           path="/course/:id"

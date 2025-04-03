@@ -1,6 +1,6 @@
 const navItems = [
   { key: "1", label: "Home", icon: "HomeOutlined", path: "/" },
-  { key: "2", label: "Course", icon: "BookOutlined", path: "/course" },
+  { key: "2", label: "Plan", icon: "BookOutlined", path: "/plan" },
   { key: "3", label: "Schedule", icon: "ScheduleOutlined", path: "/schedule" },
   {
     key: "4",
