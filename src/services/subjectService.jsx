@@ -4,7 +4,7 @@ import axiosInstance from "../../utils/axiosInstance";
 // Get all subjects
 export const getAllSubject = async () => {
   try {
-    const response = await axiosInstance.get(`/${API.VIEW_SUBJECT}`);
+    const response = await axiosInstance.get(`/${API.GET_ALL_SUBJECTS}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching subjects:", error?.response || error.message);
