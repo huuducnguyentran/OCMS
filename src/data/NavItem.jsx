@@ -48,6 +48,13 @@ const navItems = [
     icon: "SelectOutlined",
     path: "/request",
   },
+  {
+    key: "11",
+    label: "Course",
+    icon: "BookOutlined",
+    path: "/course",
+  },
+  
 ];
 
 export default navItems;

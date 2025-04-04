@@ -4,7 +4,6 @@ import AccountPage from "./page/user/AccountPage";
 import Navbar from "./component/NabBar";
 import { Layout } from "antd";
 import SchedulePage from "./page/course/SchedulePage";
-import CourseDetailPage from "./page/course/CourseDetailPage";
 import LoginPage from "./page/auth/LoginPage";
 import Header from "./component/Header";
 import PersonalProfilePage from "./page/user/PersonalProfilePage";
@@ -22,6 +21,9 @@ import RequestDetail from "./page/request/RequestDetailPage";
 import PlanPage from "./page/training_plan/PlanPage";
 import CreateTrainingPlanPage from "./page/training_plan/CreateTrainingPlanPage";
 import EditPlanPage from "./page/training_plan/EditPlanPage";
+import CreateCoursePage from "./page/course/CreateCoursePage";
+import CoursePage from "./page/course/CoursePage";
+import EditCoursePage from "./page/course/EditCoursePage";
 
 function App() {
   return (
@@ -51,10 +53,6 @@ function App() {
                         <Route
                           path="/plan/edit/:planId"
                           element={<EditPlanPage />}
-                        />
-                        <Route
-                          path="/course/:id"
-                          element={<CourseDetailPage />}
                         />
                         <Route path="/schedule" element={<SchedulePage />} />
                         <Route path="/accounts" element={<AccountPage />} />
@@ -92,6 +90,9 @@ function App() {
                           path="/candidates/:id"
                           element={<CandidateDetailPage />}
                         />
+                        <Route path="/course/create" element={<CreateCoursePage />} />
+                        <Route path="/course" element={<CoursePage />} />
+                         <Route path="/course/edit/:id" element={<EditCoursePage />} />
                       </Routes>
                       <Footer />
                     </Layout>
