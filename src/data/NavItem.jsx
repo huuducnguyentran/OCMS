@@ -8,9 +8,9 @@ const navItems = [
   },
   {
     key: "2",
-    label: "Course",
+    label: "Plan",
     icon: "BookOutlined",
-    path: "/course",
+    path: "/plan",
     roles: ["Admin"],
   },
   {

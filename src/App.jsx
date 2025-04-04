@@ -9,18 +9,15 @@ import ProtectedRoute from "./component/ProtectedRoute";
 import AvatarProvider from "./context/AvatarProvider";
 import { AuthProvider } from "./context/AuthContext";
 import HomePage from "./page/HomePage";
-import CoursePage from "./page/course/CoursePage";
 import AccountPage from "./page/user/AccountPage";
 import Navbar from "./component/NabBar";
 import { Layout } from "antd";
 import SchedulePage from "./page/course/SchedulePage";
-import CourseDetailPage from "./page/course/CourseDetailPage";
 import LoginPage from "./page/auth/LoginPage";
 import Header from "./component/Header";
 import PersonalProfilePage from "./page/user/PersonalProfilePage";
 import AccomplishmentsPage from "./page/result/AccomplishmentPage";
 import AccomplishmentDetail from "./page/result/AccompishmentDetailPage";
-import CreateNewCoursePage from "./page/course/CreateNewCoursePage";
 import ImportCandidate from "./page/training_plan/ImportCandidatePage";
 import Footer from "./component/Footer";
 import GradeImportPage from "./page/result/GradeImportPage";
@@ -35,6 +32,12 @@ import SubjectPage from "./page/subject/SubjectPage";
 import CreateSubjectPage from "./page/subject/CreateSubjectPage";
 import SubjectDetailPage from "./page/subject/SubjectDetailPage";
 import AssignedTraineePage from "./page/course/AssignedTraineePage";
+import PlanPage from "./page/training_plan/PlanPage";
+import CreateTrainingPlanPage from "./page/training_plan/CreateTrainingPlanPage";
+import EditPlanPage from "./page/training_plan/EditPlanPage";
+import CreateCoursePage from "./page/course/CreateCoursePage";
+import CoursePage from "./page/course/CoursePage";
+import EditCoursePage from "./page/course/EditCoursePage";
 
 function App() {
   return (
@@ -62,14 +65,10 @@ function App() {
                         <Routes>
                           <Route path="/home" element={<HomePage />} />
                           <Route path="/course" element={<CoursePage />} />
-                          <Route
-                            path="/course/create"
-                            element={<CreateNewCoursePage />}
-                          />
-                          <Route
+                          {/* <Route
                             path="/course/:id"
                             element={<CourseDetailPage />}
-                          />
+                          /> */}
                           <Route path="/schedule" element={<SchedulePage />} />
                           <Route path="/accounts" element={<AccountPage />} />
                           <Route
@@ -121,6 +120,24 @@ function App() {
                           <Route
                             path="/subject/:subjectId"
                             element={<SubjectDetailPage />}
+                          />
+                          <Route path="/plan" element={<PlanPage />} />
+                          <Route
+                            path="/plan/create"
+                            element={<CreateTrainingPlanPage />}
+                          />
+                          <Route
+                            path="/plan/edit/:planId"
+                            element={<EditPlanPage />}
+                          />
+                          <Route
+                            path="/course/create"
+                            element={<CreateCoursePage />}
+                          />
+                          <Route path="/course" element={<CoursePage />} />
+                          <Route
+                            path="/course/edit/:id"
+                            element={<EditCoursePage />}
                           />
                         </Routes>
                         <Footer />
