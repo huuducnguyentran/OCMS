@@ -34,6 +34,7 @@ import AssignTraineePage from "./page/course/AssignTraineePage";
 import SubjectPage from "./page/subject/SubjectPage";
 import CreateSubjectPage from "./page/subject/CreateSubjectPage";
 import SubjectDetailPage from "./page/subject/SubjectDetailPage";
+import AssignedTraineePage from "./page/course/AssignedTraineePage";
 
 function App() {
   return (
@@ -105,8 +106,12 @@ function App() {
                             element={<CandidateDetailPage />}
                           />
                           <Route
-                            path="/assign-trainee"
+                            path="/import-assign-trainee"
                             element={<AssignTraineePage />}
+                          />
+                          <Route
+                            path="/assigned-trainee"
+                            element={<AssignedTraineePage />}
                           />
                           <Route path="/subject" element={<SubjectPage />} />
                           <Route

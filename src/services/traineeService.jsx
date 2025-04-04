@@ -21,7 +21,20 @@ export const assignTrainee = async (file) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error importing candidate:", error);
+    console.error("Error importing trainee:", error);
+    throw error;
+  }
+};
+
+export const getAllAssignedTrainee = async () => {
+  try {
+    const response = await axiosInstance.get(
+      `/${API.GET_ALL_ASSIGNED_TRAINEE}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching assigned trainee:", error);
     throw error;
   }
 };

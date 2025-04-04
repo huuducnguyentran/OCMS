@@ -74,14 +74,28 @@ const navItems = [
     label: "Request",
     icon: "SelectOutlined",
     path: "/request",
-    roles: ["Admin", "HeadMaster", "user"],
+    roles: ["Admin", "Training staff", "HeadMaster", "user"],
   },
   {
     key: "10",
     label: "Assign Trainee",
     icon: "SelectOutlined",
     path: "/assign-trainee",
-    roles: ["Admin", "HeadMaster", "user"],
+    roles: ["Admin", "Training staff", "HeadMaster", "user"],
+    children: [
+      {
+        key: "10-1",
+        label: "Import Assign Trainee",
+        path: "/import-assign-trainee",
+        roles: ["Admin", "Training staff", "HeadMaster", "user"],
+      },
+      {
+        key: "10-2",
+        label: "Assigned Trainee",
+        path: "/assigned-trainee",
+        roles: ["Admin", "Training staff", "HeadMaster", "user"],
+      },
+    ],
   },
   {
     key: "11",

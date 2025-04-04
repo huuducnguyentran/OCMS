@@ -53,7 +53,9 @@ const CandidatePage = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <h2 className="text-xl font-semibold mb-4">Candidate List</h2>
+        <h2 className="text-xl text-gray-900 font-semibold mb-4">
+          Candidate List
+        </h2>
 
         <Table
           columns={columns}

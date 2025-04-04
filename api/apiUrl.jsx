@@ -21,6 +21,8 @@ export const API = {
   FORGOT_PASSWORD: "User/forgot-password",
   RESET_PASSWORD: "User/reset-password",
   ASSIGN_TRAINEE: "TraineeAssign/import",
+  GET_ALL_ASSIGNED_TRAINEE: "TraineeAssign",
+  GET_ASSIGNED_TRAINEE_BY_ID: "TraineeAssign",
   VIEW_SUBJECT: "Subject",
   CREATE_SUBJECT: "Subject",
   UPDATE_SUBJECT: "Subject",
