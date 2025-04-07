@@ -27,17 +27,18 @@ import CandidateDetailPage from "./page/training_plan/CandidateDetail";
 import RequestDetail from "./page/request/RequestDetailPage";
 import ForgotPassword from "./page/auth/ForgotPasswordPage";
 import ResetPassword from "./page/auth/ResetPassword";
-import AssignTraineePage from "./page/course/AssignTraineePage";
+import AssignTraineePage from "./page/assigned_trainee/AssignTraineePage";
 import SubjectPage from "./page/subject/SubjectPage";
 import CreateSubjectPage from "./page/subject/CreateSubjectPage";
 import SubjectDetailPage from "./page/subject/SubjectDetailPage";
-import AssignedTraineePage from "./page/course/AssignedTraineePage";
+import AssignedTraineePage from "./page/assigned_trainee/AssignedTraineePage";
 import PlanPage from "./page/training_plan/PlanPage";
 import CreateTrainingPlanPage from "./page/training_plan/CreateTrainingPlanPage";
 import EditPlanPage from "./page/training_plan/EditPlanPage";
 import CreateCoursePage from "./page/course/CreateCoursePage";
 import CoursePage from "./page/course/CoursePage";
 import EditCoursePage from "./page/course/EditCoursePage";
+import AssignedTraineeDetailPage from "./page/assigned_trainee/AssignedTraineeDetailPage";
 
 function App() {
   return (
@@ -138,6 +139,10 @@ function App() {
                           <Route
                             path="/course/edit/:id"
                             element={<EditCoursePage />}
+                          />
+                          <Route
+                            path="/assigned-trainee/:id"
+                            element={<AssignedTraineeDetailPage />}
                           />
                         </Routes>
                         <Footer />

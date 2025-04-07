@@ -38,3 +38,35 @@ export const getAllAssignedTrainee = async () => {
     throw error;
   }
 };
+
+export const getAssignedTraineeById = async (id) => {
+  try {
+    const response = await axiosInstance.get(
+      `/${API.GET_ASSIGNED_TRAINEE_BY_ID}/${id}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching assigned trainee:", error);
+    throw error;
+  }
+};
+
+export const UpdateAssignedTrainee = async (id, payload) => {
+  try {
+    const response = await axiosInstance.put(
+      `/${API.UPDATE_ASSIGNED_TRAINEE}/${id}`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json", // 👈 this is important!
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error updating assigned trainee:", error);
+    throw error;
+  }
+};

@@ -1,12 +1,12 @@
 // src/pages/AssignedTraineePage.jsx
 import { useEffect, useState } from "react";
 import { Table, Tooltip } from "antd";
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getAllAssignedTrainee } from "../../services/traineeService";
 
 const AssignedTraineePage = () => {
   const [assignments, setAssignments] = useState([]);
-  //   const navigate = useNavigate();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAssignments = async () => {
@@ -35,9 +35,14 @@ const AssignedTraineePage = () => {
       key: "traineeId",
       width: 140,
       ellipsis: true,
-      render: (text) => (
+      render: (text, record) => (
         <Tooltip title={text}>
-          <span className="text-blue-600 cursor-pointer hover:underline">
+          <span
+            className="text-blue-600 cursor-pointer hover:underline"
+            onClick={() =>
+              navigate(`/assigned-trainee/${record.traineeAssignId}`)
+            }
+          >
             {text}
           </span>
         </Tooltip>

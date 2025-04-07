@@ -21,9 +21,12 @@ export const API = {
   UPDATE_PASSWORD: "User",
   FORGOT_PASSWORD: "User/forgot-password",
   RESET_PASSWORD: "User/reset-password",
+
+  // Trainee Assign
   ASSIGN_TRAINEE: "TraineeAssign/import",
   GET_ALL_ASSIGNED_TRAINEE: "TraineeAssign",
   GET_ASSIGNED_TRAINEE_BY_ID: "TraineeAssign",
+  UPDATE_ASSIGNED_TRAINEE: "TraineeAssign",
 
   // Training Plan
   GET_ALL_TRAINING_PLANS: "TrainingPlan",
