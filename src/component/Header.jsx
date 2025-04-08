@@ -1,22 +1,26 @@
-
+// src/components/Header.jsx
 import { Layout, Avatar, Button, message } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import { useAvatar } from "../context/AvatarContext";
 import { useEffect, useState } from "react";
+import { getUserById } from "../services/userService";
 
 const Header = () => {
   const navigate = useNavigate();
   const { avatar } = useAvatar();
   const [userID, setUserID] = useState("");
-  const [role, setRole] = useState("");
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     const storedUserID = localStorage.getItem("userID");
-    const storedRole = localStorage.getItem("role");
 
-    if (storedUserID) setUserID(storedUserID);
-    if (storedRole) setRole(storedRole);
+    if (storedUserID) {
+      setUserID(storedUserID);
+      getUserById(storedUserID)
+        .then((data) => setUserData(data))
+        .catch(console.error);
+    }
   }, []);
 
   const handleLogout = () => {
@@ -31,18 +35,10 @@ const Header = () => {
     <Layout.Header className="bg-white shadow-md px-6 py-4 flex items-center justify-between w-full">
       <SearchBar />
 
-      <div className="flex items-center gap-4">
-        {/* Role display */}
-        {role && (
-          <span className="text-gray-600 text-sm font-semibold">
-            Role: {role}
-          </span>
-        )}
-
-        {/* UserID display */}
-        {userID && (
+      <div className="flex items-center gap-4 ml-4">
+        {userData && (
           <span className="text-gray-700 font-medium text-sm">
-            Welcome, {userID}
+            {userData.username}
           </span>
         )}
 

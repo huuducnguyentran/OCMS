@@ -24,7 +24,6 @@ export const courseService = {
     }
   },
 
-
   createCourse: async (courseData) => {
     try {
       const response = await axiosInstance.post("Course/create", courseData);
@@ -34,7 +33,6 @@ export const courseService = {
       throw error;
     }
   },
-
 
   updateCourse: async (courseId, courseData) => {
     try {
@@ -49,7 +47,6 @@ export const courseService = {
     }
   },
 
-  
   deleteCourse: async (courseId) => {
     try {
       const response = await axiosInstance.delete(
@@ -62,7 +59,6 @@ export const courseService = {
     }
   },
 
- 
   getCourseSubjects: async (courseId) => {
     try {
       const response = await axiosInstance.get(
@@ -75,7 +71,6 @@ export const courseService = {
     }
   },
 
-  
   assignTraineeToCourse: async (courseId, traineeData) => {
     try {
       const response = await axiosInstance.post(
@@ -89,7 +84,6 @@ export const courseService = {
     }
   },
 
-
   addSubjectToCourse: async (courseId, subjectData) => {
     try {
       const response = await axiosInstance.post(
@@ -99,6 +93,18 @@ export const courseService = {
       return response.data;
     } catch (error) {
       console.error(`Error adding subject to course ${courseId}:`, error);
+      throw error;
+    }
+  },
+
+  getAssignedTraineeCourse: async (id) => {
+    try {
+      const response = await axiosInstance.get(
+        `${API.GET_ASSIGNED_TRAINEE_COURSE}/${id}/courses`
+      );
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching course ${id}:`, error);
       throw error;
     }
   },

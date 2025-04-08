@@ -27,6 +27,7 @@ export const API = {
   GET_ALL_ASSIGNED_TRAINEE: "TraineeAssign",
   GET_ASSIGNED_TRAINEE_BY_ID: "TraineeAssign",
   UPDATE_ASSIGNED_TRAINEE: "TraineeAssign",
+  GET_ASSIGNED_TRAINEE_COURSE: "TraineeAssign/trainee",
 
   // Training Plan
   GET_ALL_TRAINING_PLANS: "TrainingPlan",
