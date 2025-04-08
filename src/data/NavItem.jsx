@@ -117,26 +117,47 @@ const navItems = [
   },
   {
     key: "11",
+    label: "Assign Instructor",
+    icon: "SelectOutlined",
+    path: "/assign-instructor",
+    roles: ["Admin", "Training staff", "HeadMaster", "user"],
+    children: [
+      {
+        key: "11-1",
+        label: "Import Assign Instructor",
+        path: "/import-assign-instructor",
+        roles: ["Admin", "Training staff", "HeadMaster", "user"],
+      },
+      {
+        key: "11-2",
+        label: "Assigned Instructor",
+        path: "/assigned-instructor",
+        roles: ["Admin", "Training staff", "HeadMaster", "user"],
+      },
+    ],
+  },
+  {
+    key: "12",
     label: "Subject",
     icon: "ImportOutlined",
     path: "/subject",
     roles: ["Admin", "Training staff", "user"],
   },
   {
-    key: "12",
+    key: "13",
     label: "Course",
     icon: "ImportOutlined",
     path: "/course",
     roles: ["Training staff", "Trainee"],
     children: [
       {
-        key: "12-1",
+        key: "13-1",
         label: "All Courses",
         path: "/all courses",
         roles: ["Training staff"],
       },
       {
-        key: "12-2",
+        key: "13-2",
         label: "Trainee Courses",
         path: "/assigned-trainee-courses/:id",
         roles: ["Trainee"],

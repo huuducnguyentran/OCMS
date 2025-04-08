@@ -1,5 +1,5 @@
 // src/components/Header.jsx
-import { Layout, Avatar, Button, message } from "antd";
+import { Layout, Avatar } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import { useAvatar } from "../context/AvatarContext";
@@ -22,12 +22,6 @@ const Header = () => {
         .catch(console.error);
     }
   }, []);
-
-  const handleLogout = () => {
-    localStorage.clear();
-    message.success("Logged out successfully.");
-    navigate("/login");
-  };
 
   const isLoggedIn = !!localStorage.getItem("token");
 
@@ -57,11 +51,6 @@ const Header = () => {
                 Profile
               </span>
             </div>
-
-            {/* Logout button */}
-            <Button type="primary" danger onClick={handleLogout}>
-              Logout
-            </Button>
           </>
         ) : (
           <Link

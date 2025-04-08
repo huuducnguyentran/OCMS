@@ -40,6 +40,7 @@ import CoursePage from "./page/course/CoursePage";
 import EditCoursePage from "./page/course/EditCoursePage";
 import AssignedTraineeDetailPage from "./page/assigned_trainee/AssignedTraineeDetailPage";
 import AssignedTraineeCoursePage from "./page/assigned_trainee/AssignedTraineeCoursePage";
+import AssignInstructorPage from "./page/assigned_instructor/AssignInstructorPage";
 
 function App() {
   return (
@@ -117,6 +118,10 @@ function App() {
                           <Route
                             path="/assigned-trainee"
                             element={<AssignedTraineePage />}
+                          />
+                          <Route
+                            path="/import-assign-instructor"
+                            element={<AssignInstructorPage />}
                           />
                           <Route path="/subject" element={<SubjectPage />} />
                           <Route
