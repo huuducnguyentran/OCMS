@@ -52,4 +52,14 @@ export const API = {
   GET_COURSE_SUBJECTS: "Course/subjects",
   ASSIGN_TRAINEE_TO_COURSE: "Course/assign-trainee",
   ADD_SUBJECT_TO_COURSE: "Course/add-subject",
+
+  // Training Schedule
+  GET_ALL_TRAINING_SCHEDULE: "TrainingSchedule",
+  GET_TRAINING_SCHEDULE_BY_ID: "TrainingSchedule",
+  CREATE_TRAINING_SCHEDULE: "TrainingSchedule",
+  UPDATE_TRAINING_SCHEDULE: "TrainingSchedule",
+  DELETE_TRAINING_SCHEDULE: "TrainingSchedule",
+  GET_INSTRUCTOR_SUBJECTS: "TrainingSchedule/instructor/subjects",
+  GET_TRAINEE_SUBJECTS: "TrainingSchedule/trainee/subjects",
+  GET_SCHEDULE_BY_SUBJECT: 'TrainingSchedule/subject',
 };
