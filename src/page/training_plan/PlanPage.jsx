@@ -1,6 +1,6 @@
-import { Layout, Card, Button, Empty, Tag, Popconfirm, message } from "antd";
+import { Layout, Card, Button, Empty, Tag, Popconfirm, message, Tooltip, Modal, Form, Input } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, DeleteOutlined, SendOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { trainingPlanService } from '../../services/trainingPlanService';
 import "animate.css";
@@ -10,6 +10,10 @@ const PlanPage = () => {
   const location = useLocation();
   const [trainingPlans, setTrainingPlans] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [requestModalVisible, setRequestModalVisible] = useState(false);
+  const [requestForm] = Form.useForm();
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchTrainingPlans = async () => {
     try {
@@ -62,6 +66,66 @@ const PlanPage = () => {
     }
   };
 
+  const handleRequest = (planId, planName) => {
+    setSelectedPlan({ id: planId, name: planName });
+    requestForm.resetFields();
+    setRequestModalVisible(true);
+  };
+
+  const handleRequestSubmit = async () => {
+    try {
+      const values = await requestForm.validateFields();
+      setSubmitting(true);
+      
+      await trainingPlanService.createRequest(
+        selectedPlan.id,
+        values.description,
+        values.notes
+      );
+      
+      message.success(`Request sent for plan: ${selectedPlan.name}`);
+      setRequestModalVisible(false);
+    } catch (error) {
+      console.error("Failed to send request:", error);
+      message.error("Failed to send request for this plan");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const renderRequestModal = () => {
+    return (
+      <Modal
+        title={`Send Request for Plan: ${selectedPlan?.name || ''}`}
+        open={requestModalVisible}
+        onCancel={() => setRequestModalVisible(false)}
+        onOk={handleRequestSubmit}
+        confirmLoading={submitting}
+        okText="Submit Request"
+      >
+        <Form
+          form={requestForm}
+          layout="vertical"
+        >
+          <Form.Item
+            name="description"
+            label="Description"
+            rules={[{ required: true, message: 'Please enter a description' }]}
+          >
+            <Input.TextArea rows={4} placeholder="Enter request description" />
+          </Form.Item>
+          
+          <Form.Item
+            name="notes"
+            label="Notes"
+          >
+            <Input.TextArea rows={3} placeholder="Additional notes (optional)" />
+          </Form.Item>
+        </Form>
+      </Modal>
+    );
+  };
+
   return (
     <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
       <Layout className="max-w-[1500px] mx-auto">
@@ -106,6 +170,19 @@ const PlanPage = () => {
                     >
                       Edit
                     </Button>,
+                    <Tooltip title="Send request for this plan">
+                      <Button
+                        icon={<SendOutlined />}
+                        type="link"
+                        style={{ color: '#1890ff' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRequest(plan.planId, plan.planName);
+                        }}
+                      >
+                        Request
+                      </Button>
+                    </Tooltip>,
                     <Popconfirm
                       title="Delete Training Plan"
                       description="Are you sure you want to delete this training plan?"
@@ -165,6 +242,7 @@ const PlanPage = () => {
           )}
         </Layout.Content>
       </Layout>
+      {renderRequestModal()}
     </Layout>
   );
 };
