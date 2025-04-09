@@ -81,3 +81,16 @@ export const createCandidateAccount = async (id) => {
     throw error;
   }
 };
+
+export const updateCandidate = async (id, payload) => {
+  try {
+    const response = await axiosInstance.put(
+      `/${API.UPDATE_CANDIDATE}/${id}`,
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating subject:", error?.response || error.message);
+    throw error;
+  }
+};

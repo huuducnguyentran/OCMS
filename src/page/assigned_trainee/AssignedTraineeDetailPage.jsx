@@ -38,7 +38,7 @@ const AssignedTraineeDetailPage = () => {
 
   const handleEditClick = (field) => {
     setEditingField(field);
-    setEditValue(assignment[field]);
+    setEditValue(assignment[field] || "");
   };
 
   const handleCancelEdit = () => {
@@ -50,20 +50,18 @@ const AssignedTraineeDetailPage = () => {
     try {
       const cleanedValue = editValue.trim() === "" ? null : editValue;
 
-      await UpdateAssignedTrainee(id, {
-        traineeId: assignment.traineeId,
-        courseId: assignment.courseId,
+      const updatedData = {
+        traineeId:
+          editingField === "traineeId" ? cleanedValue : assignment.traineeId,
+        courseId:
+          editingField === "courseId" ? cleanedValue : assignment.courseId,
         notes: editingField === "notes" ? cleanedValue : assignment.notes,
-        requestStatus:
-          editingField === "requestStatus"
-            ? cleanedValue
-            : assignment.requestStatus,
-      });
+      };
 
-      // Re-fetch updated data
+      await UpdateAssignedTrainee(id, updatedData);
+
       const updatedAssignment = await getAssignedTraineeById(id);
       setAssignment(updatedAssignment);
-
       message.success("Updated successfully!");
     } catch (error) {
       message.error("Failed to update data.");
@@ -89,12 +87,12 @@ const AssignedTraineeDetailPage = () => {
     );
   }
 
-  const renderEditableItem = (label, field, isEditable = true) => (
+  const renderEditableItem = (label, field) => (
     <Descriptions.Item
       label={
         <div className="flex items-center justify-between">
           <span>{label}</span>
-          {isEditable && editingField !== field && (
+          {editingField !== field && (
             <EditOutlined
               className="text-blue-500 ml-2 cursor-pointer"
               onClick={() => handleEditClick(field)}
@@ -152,14 +150,14 @@ const AssignedTraineeDetailPage = () => {
           <Descriptions.Item label="Trainee Assign ID">
             {assignment.traineeAssignId}
           </Descriptions.Item>
-          <Descriptions.Item label="Trainee ID">
-            {assignment.traineeId}
-          </Descriptions.Item>
-          <Descriptions.Item label="Course ID">
-            {assignment.courseId}
-          </Descriptions.Item>
+
+          {renderEditableItem("Trainee ID", "traineeId")}
+          {renderEditableItem("Course ID", "courseId")}
           {renderEditableItem("Notes", "notes")}
-          {renderEditableItem("Request Status", "requestStatus")}
+
+          <Descriptions.Item label="Request Status">
+            {assignment.requestStatus}
+          </Descriptions.Item>
           <Descriptions.Item label="Assign By User ID">
             {assignment.assignByUserId}
           </Descriptions.Item>
