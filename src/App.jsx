@@ -40,8 +40,10 @@ import CoursePage from "./page/course/CoursePage";
 import EditCoursePage from "./page/course/EditCoursePage";
 import AssignedTraineeDetailPage from "./page/assigned_trainee/AssignedTraineeDetailPage";
 import AssignedTraineeCoursePage from "./page/assigned_trainee/AssignedTraineeCoursePage";
+// import AssignInstructorPage from "./page/assigned_instructor/AssignInstructorPage";
 import SendRequestPage from "./page/request/SendRequestPage";
 import UpdateSubjectPage from "./page/subject/UpdateSubjectPage";
+import CreateSchedulePage from "./page/course/CreateSchedulePage";
 
 function App() {
   return (
@@ -78,6 +80,10 @@ function App() {
                             element={<CourseDetailPage />}
                           /> */}
                           <Route path="/schedule" element={<SchedulePage />} />
+                          <Route
+                            path="/schedule/create"
+                            element={<CreateSchedulePage />}
+                          />
                           <Route path="/accounts" element={<AccountPage />} />
                           <Route
                             path="/candidates-view"
@@ -124,6 +130,10 @@ function App() {
                             path="/assigned-trainee"
                             element={<AssignedTraineePage />}
                           />
+                          {/* <Route
+                            path="/import-assign-instructor"
+                            element={<AssignInstructorPage />}
+                          /> */}
                           <Route path="/subject" element={<SubjectPage />} />
                           <Route
                             path="/subject-create"

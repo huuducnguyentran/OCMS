@@ -29,6 +29,14 @@ const navItems = [
     icon: "ScheduleOutlined",
     path: "/schedule",
     roles: ["Training staff", "Trainee", "Instructor"],
+    children: [
+      {
+        key: "3-1",
+        label: "All Schedule",
+        path: "/schedule",
+        roles: ["Training staff", "Trainee", "Instructor"],
+      },
+    ]
   },
   {
     key: "4",

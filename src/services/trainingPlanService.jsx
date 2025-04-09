@@ -45,4 +45,25 @@ export const trainingPlanService = {
     );
     return response.data;
   },
+
+  createRequest: async (planId, description, notes) => {
+    try {
+      const requestData = {
+        requestType: 0,
+        requestEntityId: planId,
+        description: description || "",
+        notes: notes || ""
+      };
+      console.log("Creating request with data:", requestData);
+      
+      const response = await axiosInstance.post(
+        API.GET_ALL_REQUEST,
+        requestData
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error creating request:", error);
+      throw error;
+    }
+  }
 };
