@@ -1,21 +1,15 @@
-import { Card, Empty, message, Spin, Modal, Form, Input, Button } from "antd";
+import { Card, Empty, message, Spin } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "animate.css";
 import { courseService } from "../../services/courseService";
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import { UpdateAssignedTrainee } from "../../services/traineeService"; // You’ll need to create this service
 
 const AssignedTraineeCoursePage = () => {
   const navigate = useNavigate();
 
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [selectedTrainee, setSelectedTrainee] = useState(null);
-
-  const [form] = Form.useForm();
-
   useEffect(() => {
     fetchCourses();
   }, []);
@@ -29,28 +23,6 @@ const AssignedTraineeCoursePage = () => {
       message.error("Failed to fetch assigned courses.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleEdit = (trainee, courseId) => {
-    setSelectedTrainee({ ...trainee, courseId });
-    form.setFieldsValue({
-      traineeId: trainee.traineeId,
-      courseId,
-      notes: trainee.notes || "",
-    });
-    setIsModalVisible(true);
-  };
-
-  const handleUpdate = async () => {
-    try {
-      const values = await form.validateFields();
-      await UpdateAssignedTrainee(selectedTrainee.traineeAssignId, values);
-      message.success("Trainee assignment updated.");
-      setIsModalVisible(false);
-      fetchCourses(); // Refresh the list
-    } catch {
-      message.error("Failed to update trainee assignment.");
     }
   };
 
@@ -139,14 +111,6 @@ const AssignedTraineeCoursePage = () => {
                     <p>
                       <strong>Request ID:</strong> {t.requestId}
                     </p>
-
-                    <Button
-                      type="link"
-                      className="absolute top-2 right-2"
-                      onClick={() => handleEdit(t, course.courseId)}
-                    >
-                      Edit
-                    </Button>
                   </div>
                 ))}
               </Card>
@@ -154,34 +118,6 @@ const AssignedTraineeCoursePage = () => {
           </div>
         )}
       </div>
-
-      <Modal
-        title="Update Trainee Assignment"
-        visible={isModalVisible}
-        onOk={handleUpdate}
-        onCancel={() => setIsModalVisible(false)}
-        okText="Update"
-      >
-        <Form layout="vertical" form={form}>
-          <Form.Item
-            label="Trainee ID"
-            name="traineeId"
-            rules={[{ required: true, message: "Trainee ID is required" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Course ID"
-            name="courseId"
-            rules={[{ required: true, message: "Course ID is required" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item label="Notes" name="notes">
-            <Input.TextArea />
-          </Form.Item>
-        </Form>
-      </Modal>
     </div>
   );
 };

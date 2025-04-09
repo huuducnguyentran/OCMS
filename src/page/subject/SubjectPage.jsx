@@ -85,7 +85,6 @@ const SubjectPage = () => {
                 key={subject.subjectId}
                 hoverable
                 className="rounded-xl shadow-xl overflow-hidden flex flex-col transform transition duration-500 hover:scale-105 bg-white relative"
-                onClick={() => navigate(`/subject/${subject.subjectId}`)}
               >
                 {/* Clickable Icon for Dropdown */}
                 <Dropdown
@@ -94,7 +93,7 @@ const SubjectPage = () => {
                       <Menu.Item
                         key="edit"
                         onClick={(e) => {
-                          e.stopPropagation();
+                          e.domEvent.stopPropagation();
                           navigate(`/subject-edit/${subject.subjectId}`);
                         }}
                       >
@@ -104,7 +103,7 @@ const SubjectPage = () => {
                         key="delete"
                         danger
                         onClick={(e) => {
-                          e.stopPropagation();
+                          e.domEvent.stopPropagation();
                           handleDelete(subject.subjectId);
                         }}
                       >
@@ -115,11 +114,17 @@ const SubjectPage = () => {
                   trigger={["click"]}
                   placement="bottomRight"
                 >
-                  <MoreOutlined className="absolute top-3 right-3 text-xl text-gray-600 cursor-pointer hover:text-gray-900" />
+                  <MoreOutlined
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute top-3 right-3 text-xl text-gray-600 cursor-pointer hover:text-gray-900"
+                  />
                 </Dropdown>
 
-                {/* Subject Info */}
-                <div className="flex flex-col flex-grow p-5">
+                {/* Subject Info with click handler */}
+                <div
+                  className="flex flex-col flex-grow p-5 cursor-pointer"
+                  onClick={() => navigate(`/subject/${subject.subjectId}`)}
+                >
                   <h3 className="text-xl font-bold text-indigo-900">
                     {subject.subjectName}
                   </h3>

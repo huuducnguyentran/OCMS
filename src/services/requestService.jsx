@@ -29,7 +29,10 @@ export const getRequestById = async (id) => {
     const response = await axiosInstance.get(`/${API.GET_REQUEST_BY_ID}/${id}`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching requests:", error?.response || error.message);
+    console.error(
+      "Error fetching request by id:",
+      error?.response || error.message
+    );
     throw error;
   }
 };
@@ -42,7 +45,10 @@ export const approveRequest = async (id) => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error fetching requests:", error?.response || error.message);
+    console.error(
+      "Error approving requests:",
+      error?.response || error.message
+    );
     throw error;
   }
 };
@@ -61,7 +67,30 @@ export const rejectRequest = async (id, reason = "") => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error fetching requests:", error?.response || error.message);
+    console.error(
+      "Error rejecting requests:",
+      error?.response || error.message
+    );
+    throw error;
+  }
+};
+
+export const createRequest = async (data) => {
+  try {
+    const response = await axiosInstance.post(`/${API.CREATE_REQUEST}`, data);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating subject:", error?.response || error.message);
+    throw error;
+  }
+};
+
+export const deleteRequest = async (id) => {
+  try {
+    const response = await axiosInstance.delete(`/${API.DELETE_REQUEST}/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting subject:", error?.response || error.message);
     throw error;
   }
 };

@@ -13,6 +13,7 @@ const navItems = [
       "Reviewer",
       "Trainee",
       "Instructor",
+      "AOC Manager",
     ],
   },
   {
@@ -43,6 +44,7 @@ const navItems = [
       "Reviewer",
       "Trainee",
       "Instructor",
+      "AOC Manager",
     ],
   },
   {
@@ -92,46 +94,32 @@ const navItems = [
     label: "Request",
     icon: "SelectOutlined",
     path: "/request",
-    roles: ["Admin", "Training staff", "HeadMaster", "user"],
+    roles: ["Admin", "Training staff", "HeadMaster"],
   },
   {
     key: "10",
+    label: "Send Request",
+    icon: "SelectOutlined",
+    path: "/send-request",
+    roles: ["Trainee", "Training staff", "HR", "AOC Manager"],
+  },
+  {
+    key: "11",
     label: "Assign Trainee",
     icon: "SelectOutlined",
     path: "/assign-trainee",
     roles: ["Admin", "Training staff", "HeadMaster", "user"],
     children: [
       {
-        key: "10-1",
+        key: "11-1",
         label: "Import Assign Trainee",
         path: "/import-assign-trainee",
         roles: ["Admin", "Training staff", "HeadMaster", "user"],
       },
       {
-        key: "10-2",
+        key: "11-2",
         label: "Assigned Trainee",
         path: "/assigned-trainee",
-        roles: ["Admin", "Training staff", "HeadMaster", "user"],
-      },
-    ],
-  },
-  {
-    key: "11",
-    label: "Assign Instructor",
-    icon: "SelectOutlined",
-    path: "/assign-instructor",
-    roles: ["Admin", "Training staff", "HeadMaster", "user"],
-    children: [
-      {
-        key: "11-1",
-        label: "Import Assign Instructor",
-        path: "/import-assign-instructor",
-        roles: ["Admin", "Training staff", "HeadMaster", "user"],
-      },
-      {
-        key: "11-2",
-        label: "Assigned Instructor",
-        path: "/assigned-instructor",
         roles: ["Admin", "Training staff", "HeadMaster", "user"],
       },
     ],
@@ -151,13 +139,13 @@ const navItems = [
     roles: ["Training staff", "Trainee"],
     children: [
       {
-        key: "13-1",
+        key: "14-1",
         label: "All Courses",
         path: "/all courses",
         roles: ["Training staff"],
       },
       {
-        key: "13-2",
+        key: "14-2",
         label: "Trainee Courses",
         path: "/assigned-trainee-courses/:id",
         roles: ["Trainee"],

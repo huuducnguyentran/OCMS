@@ -18,6 +18,7 @@ export const API = {
   REJECT_REQUEST: "Requests",
   DELETE_REQUEST: "Requests",
   GET_ALL_EDU_OFFICER_REQUEST: "Requests/edu-officer/requests",
+  CREATE_REQUEST: "Requests",
 
   GET_ALL_USER: "User",
   GET_USER_BY_ID: "User",
@@ -56,11 +57,4 @@ export const API = {
   GET_COURSE_SUBJECTS: "Course/subjects",
   ASSIGN_TRAINEE_TO_COURSE: "Course/assign-trainee",
   ADD_SUBJECT_TO_COURSE: "Course/add-subject",
-
-  // Assign Instructor
-  ASSIGN_INSTRUCTOR: "InstructorAssignment",
-  GET_ALL_ASSIGN_INSTRUCTOR: "AssignInstructor",
-  GET_ASSIGN_INSTRUCTOR_BY_ID: "AssignInstructor",
-  UPDATE_ASSIGN_INSTRUCTOR: "AssignInstructor",
-  GET_ASSIGN_INSTRUCTOR_BY_COURSE: "AssignInstructor/course",
 };

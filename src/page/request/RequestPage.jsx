@@ -7,11 +7,13 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   ClockCircleOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import {
   getAllRequests,
   getAllEduOfficerRequests,
+  deleteRequest,
 } from "../../services/requestService";
 
 const RequestList = () => {
@@ -42,6 +44,15 @@ const RequestList = () => {
 
     fetchRequests();
   }, []);
+
+  const handleDelete = async (requestId) => {
+    try {
+      await deleteRequest(requestId);
+      setRequests((prev) => prev.filter((r) => r.requestId !== requestId));
+    } catch (error) {
+      console.error("Failed to delete request", error);
+    }
+  };
 
   const renderRequestCards = (list) => (
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100 mb-10">
@@ -101,6 +112,14 @@ const RequestList = () => {
                     >
                       {item.status}
                     </Tag>
+
+                    <DeleteOutlined
+                      onClick={(e) => {
+                        e.preventDefault(); // prevent navigating to detail page
+                        handleDelete(item.requestId);
+                      }}
+                      className="text-red-500 hover:text-red-700 cursor-pointer text-lg"
+                    />
                   </div>
                 </div>
               </div>

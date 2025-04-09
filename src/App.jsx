@@ -40,7 +40,8 @@ import CoursePage from "./page/course/CoursePage";
 import EditCoursePage from "./page/course/EditCoursePage";
 import AssignedTraineeDetailPage from "./page/assigned_trainee/AssignedTraineeDetailPage";
 import AssignedTraineeCoursePage from "./page/assigned_trainee/AssignedTraineeCoursePage";
-import AssignInstructorPage from "./page/assigned_instructor/AssignInstructorPage";
+import SendRequestPage from "./page/request/SendRequestPage";
+import UpdateSubjectPage from "./page/subject/UpdateSubjectPage";
 
 function App() {
   return (
@@ -108,6 +109,10 @@ function App() {
                             element={<RequestDetail />}
                           />
                           <Route
+                            path="/send-request"
+                            element={<SendRequestPage />}
+                          />
+                          <Route
                             path="/candidates/:id"
                             element={<CandidateDetailPage />}
                           />
@@ -119,10 +124,6 @@ function App() {
                             path="/assigned-trainee"
                             element={<AssignedTraineePage />}
                           />
-                          <Route
-                            path="/import-assign-instructor"
-                            element={<AssignInstructorPage />}
-                          />
                           <Route path="/subject" element={<SubjectPage />} />
                           <Route
                             path="/subject-create"
@@ -131,6 +132,10 @@ function App() {
                           <Route
                             path="/subject/:subjectId"
                             element={<SubjectDetailPage />}
+                          />
+                          <Route
+                            path="/subject-edit/:subjectId"
+                            element={<UpdateSubjectPage />}
                           />
                           <Route path="/plan" element={<PlanPage />} />
                           <Route
