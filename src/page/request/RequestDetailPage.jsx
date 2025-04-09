@@ -79,7 +79,9 @@ const RequestDetail = () => {
           </span>
         </div>
         <div className="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100">
-          <h2 className="text-2xl font-semibold mb-4">Request detail</h2>
+          <h2 className="text-2xl text-gray-800 font-semibold mb-4">
+            Request detail
+          </h2>
           <div className="flex gap-4 mt-4">
             {!loading && request?.status === "Pending" && (
               <div className="flex ml-auto gap-4 mt-4 mb-1">

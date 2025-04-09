@@ -12,6 +12,18 @@ export const getAllRequests = async () => {
   }
 };
 
+export const getAllEduOfficerRequests = async () => {
+  try {
+    const response = await axiosInstance.get(
+      `/${API.GET_ALL_EDU_OFFICER_REQUEST}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching requests:", error?.response || error.message);
+    throw error;
+  }
+};
+
 export const getRequestById = async (id) => {
   try {
     const response = await axiosInstance.get(`/${API.GET_REQUEST_BY_ID}/${id}`);

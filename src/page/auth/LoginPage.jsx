@@ -1,20 +1,18 @@
 // src/pages/LoginPage.jsx
-import { Input, Button, message, Layout } from "antd";
-import { useState } from "react";
+import { Input, Button, message, Layout, Form } from "antd";
 import { useNavigate } from "react-router-dom";
 import { authServices } from "../../services/authServices";
 import { useAuth } from "../../context/useAuth";
+import { Formik } from "formik";
+import { LoginSchema } from "../../../utils/validationSchemas";
 
 const LoginPage = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { setIsAuthenticated } = useAuth();
 
-  const handleLogin = async () => {
+  const handleLogin = async (values, { setSubmitting }) => {
     try {
-      const response = await authServices.loginUser({ username, password });
-
+      const response = await authServices.loginUser(values);
       const { token, userID, roles } = response.data;
 
       localStorage.setItem("token", token);
@@ -27,33 +25,80 @@ const LoginPage = () => {
       navigate("/home");
     } catch {
       message.error("Invalid username or password.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
     <Layout className="w-screen h-screen flex items-center justify-center !bg-gray-900">
-      <Layout.Content className="w-full max-w-4xl bg-gray-800 flex  shadow-lg h-[80vh]">
+      <Layout.Content className="w-full max-w-4xl bg-gray-800 flex shadow-lg h-[80vh]">
         {/* Left Side - Login Form */}
         <div className="w-1/2 p-8 flex flex-col justify-center">
           <h2 className="text-white text-3xl font-semibold mb-6">Login</h2>
-          <Input
-            className="mb-5 p-3"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <Input.Password
-            className="mt-2 p-3"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <div className="text-right text-white text-sm mb-4">
-            <a href="/forgot-password">Forgot password?</a>
-          </div>
-          <Button type="primary" className="w-full py-2" onClick={handleLogin}>
-            Login
-          </Button>
+
+          <Formik
+            initialValues={{ username: "", password: "" }}
+            validationSchema={LoginSchema}
+            onSubmit={handleLogin}
+          >
+            {({
+              values,
+              errors,
+              touched,
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              isSubmitting,
+            }) => (
+              <Form layout="vertical" onFinish={handleSubmit}>
+                <Form.Item
+                  validateStatus={
+                    errors.username && touched.username ? "error" : ""
+                  }
+                  help={touched.username && errors.username}
+                >
+                  <Input
+                    name="username"
+                    placeholder="Username"
+                    className="p-3"
+                    value={values.username}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  validateStatus={
+                    errors.password && touched.password ? "error" : ""
+                  }
+                  help={touched.password && errors.password}
+                >
+                  <Input.Password
+                    name="password"
+                    placeholder="Password"
+                    className="p-3"
+                    value={values.password}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                  />
+                </Form.Item>
+
+                <div className="text-right text-white text-sm mb-4">
+                  <a href="/forgot-password">Forgot password?</a>
+                </div>
+
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  className="w-full py-2"
+                  loading={isSubmitting}
+                >
+                  Login
+                </Button>
+              </Form>
+            )}
+          </Formik>
         </div>
 
         {/* Right Side - Branding */}

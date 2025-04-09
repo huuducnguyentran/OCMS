@@ -60,3 +60,13 @@ export const deleteSubject = async (id) => {
     throw error;
   }
 };
+
+export const assignInstructor = async () => {
+  try {
+    const response = await axiosInstance.post(`${API.ASSIGN_INSTRUCTOR}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error assigning Instructor to course :`, error);
+    throw error;
+  }
+};

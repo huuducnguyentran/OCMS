@@ -1,6 +1,18 @@
 // src\page\PersonalProfilePage.jsx
 import { useEffect, useState } from "react";
-import { Layout, Avatar, Input, Button, Upload, message, Tabs, Form, Select, DatePicker, InputNumber, Modal } from "antd";
+import {
+  Layout,
+  Avatar,
+  Input,
+  Button,
+  Upload,
+  message,
+  Tabs,
+  Form,
+  Select,
+  DatePicker,
+  Modal,
+} from "antd";
 import {
   UserOutlined,
   EditOutlined,
@@ -26,7 +38,7 @@ const PersonalProfilePage = () => {
   const { avatar, setAvatar } = useAvatar();
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({}); // Stores editable user details
-  const [activeTab, setActiveTab] = useState("1");
+  const [setActiveTab] = useState("1");
   const [profileForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
 
@@ -50,7 +62,7 @@ const PersonalProfilePage = () => {
           address: userData.address || "",
           phoneNumber: userData.phoneNumber || "",
         };
-        
+
         setFormData(profileData);
         profileForm.setFieldsValue(profileData);
       } catch {
@@ -75,12 +87,12 @@ const PersonalProfilePage = () => {
 
   // Validate date of birth (18 years from today)
   const disabledDate = (current) => {
-    return current && current > moment().subtract(18, 'years');
+    return current && current > moment().subtract(18, "years");
   };
 
   // Phone number input handler - only allow numbers
   const handlePhoneNumberChange = (e) => {
-    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+    const value = e.target.value.replace(/\D/g, ""); // Remove non-digits
     profileForm.setFieldsValue({ phoneNumber: value });
   };
 
@@ -94,7 +106,9 @@ const PersonalProfilePage = () => {
 
       const profileData = {
         ...values,
-        dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : null,
+        dateOfBirth: values.dateOfBirth
+          ? values.dateOfBirth.format("YYYY-MM-DD")
+          : null,
       };
 
       await updateUser(userId, profileData);
@@ -116,7 +130,7 @@ const PersonalProfilePage = () => {
         currentPassword: values.currentPassword,
         newPassword: values.newPassword,
       });
-      
+
       message.success("Password updated successfully.");
       passwordForm.resetFields();
     } catch {
@@ -126,18 +140,18 @@ const PersonalProfilePage = () => {
 
   const handleLogout = () => {
     confirm({
-      title: 'Are you sure you want to logout?',
+      title: "Are you sure you want to logout?",
       icon: <LogoutOutlined />,
-      content: 'You will need to login again to access your account.',
-      okText: 'Yes',
-      okType: 'danger',
-      cancelText: 'No',
+      content: "You will need to login again to access your account.",
+      okText: "Yes",
+      okType: "danger",
+      cancelText: "No",
       onOk() {
         // Clear any stored user data
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
         // Redirect to login page
-        navigate('/login');
+        navigate("/login");
       },
     });
   };
@@ -183,9 +197,9 @@ const PersonalProfilePage = () => {
         </div>
 
         {/* Tab Navigation */}
-        <Tabs 
-          defaultActiveKey="1" 
-          centered 
+        <Tabs
+          defaultActiveKey="1"
+          centered
           className="mt-4 mb-4"
           onChange={(key) => setActiveTab(key)}
         >
@@ -198,22 +212,16 @@ const PersonalProfilePage = () => {
               className="flex flex-col"
             >
               <div className="grid grid-cols-2 gap-2 flex-grow">
-                <Form.Item 
-                  name="userId" 
-                  label="User ID"
-                >
+                <Form.Item name="userId" label="User ID">
                   <Input disabled />
                 </Form.Item>
-                <Form.Item 
-                  name="fullName" 
-                  label="Full Name"
-                >
+                <Form.Item name="fullName" label="Full Name">
                   <Input disabled />
                 </Form.Item>
-                <Form.Item 
-                  name="gender" 
+                <Form.Item
+                  name="gender"
                   label="Gender"
-                  rules={[{ required: true, message: 'Please select gender' }]}
+                  rules={[{ required: true, message: "Please select gender" }]}
                 >
                   <Select>
                     <Select.Option value="Male">Male</Select.Option>
@@ -221,29 +229,31 @@ const PersonalProfilePage = () => {
                     <Select.Option value="Other">Other</Select.Option>
                   </Select>
                 </Form.Item>
-                <Form.Item 
-                  name="dateOfBirth" 
+                <Form.Item
+                  name="dateOfBirth"
                   label="Date of Birth"
-                  rules={[{ required: true, message: 'Please select date of birth' }]}
+                  rules={[
+                    { required: true, message: "Please select date of birth" },
+                  ]}
                 >
-                  <DatePicker 
-                    style={{ width: '100%' }} 
+                  <DatePicker
+                    style={{ width: "100%" }}
                     disabledDate={disabledDate}
                     format="YYYY-MM-DD"
                   />
                 </Form.Item>
-                <Form.Item 
-                  name="phoneNumber" 
+                <Form.Item
+                  name="phoneNumber"
                   label="Phone Number"
                   rules={[
-                    { required: true, message: 'Please input phone number' },
-                    { 
-                      pattern: /^[0-9]{10}$/, 
-                      message: 'Phone number must be exactly 10 digits' 
-                    }
+                    { required: true, message: "Please input phone number" },
+                    {
+                      pattern: /^[0-9]{10}$/,
+                      message: "Phone number must be exactly 10 digits",
+                    },
                   ]}
                 >
-                  <Input 
+                  <Input
                     maxLength={10}
                     onChange={handlePhoneNumberChange}
                     onKeyPress={(e) => {
@@ -253,33 +263,44 @@ const PersonalProfilePage = () => {
                     }}
                   />
                 </Form.Item>
-                <Form.Item 
-                  name="address" 
+                <Form.Item
+                  name="address"
                   label="Address"
                   rules={[
-                    { required: true, message: 'Please input address' },
-                    { min: 10, message: 'Address must be at least 10 characters' },
-                    { max: 100, message: 'Address must be at most 100 characters' }
+                    { required: true, message: "Please input address" },
+                    {
+                      min: 10,
+                      message: "Address must be at least 10 characters",
+                    },
+                    {
+                      max: 100,
+                      message: "Address must be at most 100 characters",
+                    },
                   ]}
                 >
                   <Input.TextArea rows={4} />
                 </Form.Item>
               </div>
-              
+
               {/* Save Button for Profile */}
               <Form.Item className="mt-4">
                 <div className="flex justify-between">
                   <Button type="primary" htmlType="submit">
                     Save Profile
                   </Button>
-                  <Button type="default" danger onClick={handleLogout} icon={<LogoutOutlined />}>
+                  <Button
+                    type="default"
+                    danger
+                    onClick={handleLogout}
+                    icon={<LogoutOutlined />}
+                  >
                     Logout
                   </Button>
                 </div>
               </Form.Item>
             </Form>
           </TabPane>
-          
+
           <TabPane tab="Change Password" key="2">
             <Form
               form={passwordForm}
@@ -288,45 +309,60 @@ const PersonalProfilePage = () => {
               className="flex flex-col"
             >
               <div className="grid grid-cols-2 gap-2 flex-grow">
-                <Form.Item 
-                  name="currentPassword" 
+                <Form.Item
+                  name="currentPassword"
                   label="Current Password"
                   rules={[
-                    { required: true, message: 'Please input current password' }
+                    {
+                      required: true,
+                      message: "Please input current password",
+                    },
                   ]}
                 >
                   <Input.Password />
                 </Form.Item>
-                <Form.Item 
-                  name="newPassword" 
+                <Form.Item
+                  name="newPassword"
                   label="New Password"
-                  dependencies={['currentPassword']}
+                  dependencies={["currentPassword"]}
                   rules={[
-                    { required: true, message: 'Please input new password' },
+                    { required: true, message: "Please input new password" },
                     ({ getFieldValue }) => ({
                       validator(_, value) {
-                        if (!value || getFieldValue('currentPassword') !== value) {
+                        if (
+                          !value ||
+                          getFieldValue("currentPassword") !== value
+                        ) {
                           return Promise.resolve();
                         }
-                        return Promise.reject(new Error('New password cannot be the same as current password'));
+                        return Promise.reject(
+                          new Error(
+                            "New password cannot be the same as current password"
+                          )
+                        );
                       },
                     }),
                   ]}
                 >
                   <Input.Password />
                 </Form.Item>
-                <Form.Item 
-                  name="confirmPassword" 
+                <Form.Item
+                  name="confirmPassword"
                   label="Confirm New Password"
-                  dependencies={['newPassword']}
+                  dependencies={["newPassword"]}
                   rules={[
-                    { required: true, message: 'Please confirm your new password' },
+                    {
+                      required: true,
+                      message: "Please confirm your new password",
+                    },
                     ({ getFieldValue }) => ({
                       validator(_, value) {
-                        if (!value || getFieldValue('newPassword') === value) {
+                        if (!value || getFieldValue("newPassword") === value) {
                           return Promise.resolve();
                         }
-                        return Promise.reject(new Error('The two passwords do not match'));
+                        return Promise.reject(
+                          new Error("The two passwords do not match")
+                        );
                       },
                     }),
                   ]}
@@ -334,14 +370,19 @@ const PersonalProfilePage = () => {
                   <Input.Password />
                 </Form.Item>
               </div>
-              
+
               {/* Save Button for Password */}
               <Form.Item className="mt-4">
                 <div className="flex justify-between">
                   <Button type="primary" htmlType="submit">
                     Update Password
                   </Button>
-                  <Button type="default" danger onClick={handleLogout} icon={<LogoutOutlined />}>
+                  <Button
+                    type="default"
+                    danger
+                    onClick={handleLogout}
+                    icon={<LogoutOutlined />}
+                  >
                     Logout
                   </Button>
                 </div>

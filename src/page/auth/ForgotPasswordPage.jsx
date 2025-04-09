@@ -3,6 +3,7 @@ import { Input, Button, message, Layout } from "antd";
 import { useState } from "react";
 import { forgotPassword } from "../../services/authServices";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -32,6 +33,17 @@ const ForgotPassword = () => {
       <Layout.Content className="w-full max-w-4xl bg-gray-800 flex  shadow-lg h-[80vh]">
         {/* Left Side - Forgot Password Form */}
         <div className="w-1/2 p-8 flex flex-col justify-center">
+          {/* Breadcrumb positioned at top-left */}
+          <div className="absolute top-4 left-4">
+            <Button
+              type="link"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate(-1)}
+              className="text-blue-400 hover:text-blue-600 px-0"
+            >
+              Back
+            </Button>
+          </div>
           <h2 className="text-white text-3xl font-semibold mb-6">
             Forgot Password
           </h2>
