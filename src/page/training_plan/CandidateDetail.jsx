@@ -1,12 +1,21 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Spin, Descriptions, message, Button } from "antd";
+import { Spin, Descriptions, message, Button, Input, Tag } from "antd";
 import {
   createCandidateAccount,
   getCandidateById,
+  updateCandidate,
 } from "../../services/candidateService";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import {
+  ArrowLeftOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  EditOutlined,
+} from "@ant-design/icons";
 import { getExternalCertificatesByCandidateId } from "../../services/certifcationService";
+import { DatePicker, Select } from "antd";
+import dayjs from "dayjs";
+import { CandidateDetailSchema } from "../../../utils/validationSchemas";
 
 const CandidateDetailPage = () => {
   const { id } = useParams();
@@ -16,6 +25,8 @@ const CandidateDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [certLoading, setCertLoading] = useState(true);
   const [creatingAccount, setCreatingAccount] = useState(false);
+  const [editingField, setEditingField] = useState(null);
+  const [editValue, setEditValue] = useState("");
 
   useEffect(() => {
     const fetchCandidate = async () => {
@@ -77,6 +88,125 @@ const CandidateDetailPage = () => {
       </div>
     );
   }
+
+  const handleSaveEdit = async () => {
+    if (!editingField) return;
+
+    try {
+      // Validate only the current editing field
+      await CandidateDetailSchema.validateAt(editingField, {
+        ...candidate,
+        [editingField]: editValue,
+      });
+
+      const newCandidate = {
+        ...candidate,
+        [editingField]: editValue,
+      };
+
+      if (editingField === "dateOfBirth") {
+        newCandidate.dateOfBirth = new Date(editValue).toISOString();
+      }
+
+      const updated = await updateCandidate(id, {
+        fullName: newCandidate.fullName,
+        gender: newCandidate.gender,
+        dateOfBirth: newCandidate.dateOfBirth,
+        address: newCandidate.address,
+        email: newCandidate.email,
+        phoneNumber: newCandidate.phoneNumber,
+        personalID: newCandidate.personalID,
+        note: newCandidate.note,
+        specialtyId: newCandidate.specialtyId,
+      });
+
+      setCandidate(updated.candidate);
+      message.success("Candidate updated successfully.");
+      setEditingField(null);
+      setEditValue("");
+    } catch (err) {
+      console.error(err);
+      message.error(err.message || "Validation or update failed.");
+    }
+  };
+
+  const handleEditClick = (field) => {
+    if (field === "dateOfBirth" && candidate[field]) {
+      setEditValue(candidate[field]);
+    } else {
+      setEditValue(candidate[field] || "");
+    }
+    setEditingField(field);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingField(null);
+    setEditValue("");
+  };
+
+  const renderEditableItem = (label, field) => (
+    <Descriptions.Item
+      label={
+        <div className="flex items-center justify-between">
+          <span>{label}</span>
+          {editingField !== field && (
+            <EditOutlined
+              className="text-blue-500 ml-2 cursor-pointer"
+              onClick={() => handleEditClick(field)}
+            />
+          )}
+        </div>
+      }
+    >
+      {editingField === field ? (
+        <div className="flex items-center gap-2">
+          {field === "gender" ? (
+            <Select
+              value={editValue}
+              onChange={(value) => setEditValue(value)}
+              size="small"
+              style={{ minWidth: 100 }}
+              options={[
+                { label: "Male", value: "Male" },
+                { label: "Female", value: "Female" },
+                { label: "Other", value: "Other" },
+              ]}
+            />
+          ) : field === "dateOfBirth" ? (
+            <DatePicker
+              value={dayjs(editValue)}
+              onChange={(date) => setEditValue(date ? date.toISOString() : "")}
+              size="small"
+              allowClear={false}
+              inputReadOnly
+            />
+          ) : (
+            <Input
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              size="small"
+            />
+          )}
+          <CheckOutlined
+            className="text-green-600 cursor-pointer"
+            onClick={handleSaveEdit}
+          />
+          <CloseOutlined
+            className="text-red-500 cursor-pointer"
+            onClick={handleCancelEdit}
+          />
+        </div>
+      ) : field === "dateOfBirth" ? (
+        candidate[field] ? (
+          new Date(candidate[field]).toLocaleDateString()
+        ) : (
+          "-"
+        )
+      ) : (
+        candidate[field] || "-"
+      )}
+    </Descriptions.Item>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
@@ -174,30 +304,23 @@ const CandidateDetailPage = () => {
           <Descriptions.Item label="Candidate ID">
             {candidate.candidateId}
           </Descriptions.Item>
-          <Descriptions.Item label="Full Name">
-            {candidate.fullName}
-          </Descriptions.Item>
-          <Descriptions.Item label="Gender">
-            {candidate.gender}
-          </Descriptions.Item>
-          <Descriptions.Item label="Date of Birth">
-            {new Date(candidate.dateOfBirth).toLocaleDateString()}
-          </Descriptions.Item>
-          <Descriptions.Item label="Address">
-            {candidate.address}
-          </Descriptions.Item>
-          <Descriptions.Item label="Email">{candidate.email}</Descriptions.Item>
-          <Descriptions.Item label="Phone Number">
-            {candidate.phoneNumber}
-          </Descriptions.Item>
-          <Descriptions.Item label="Personal ID">
-            {candidate.personalID}
-          </Descriptions.Item>
-          <Descriptions.Item label="Note">
-            {candidate.note || "-"}
-          </Descriptions.Item>
+          {renderEditableItem("Full Name", "fullName")}
+          {renderEditableItem("Gender", "gender")}
+          {renderEditableItem("Date of Birth", "dateOfBirth")}
+          {renderEditableItem("Address", "address")}
+          {renderEditableItem("Email", "email")}
+          {renderEditableItem("Phone Number", "phoneNumber")}
+          {renderEditableItem("Personal ID", "personalID")}
+          {renderEditableItem("Note", "note")}
+          {renderEditableItem("Specialty ID", "specialtyId")}
           <Descriptions.Item label="Candidate Status">
-            {candidate.candidateStatus}
+            {candidate.candidateStatus === 0 && (
+              <Tag color="orange">Pending</Tag>
+            )}
+            {candidate.candidateStatus === 1 && (
+              <Tag color="green">Approved</Tag>
+            )}
+            {candidate.candidateStatus === 2 && <Tag color="red">Rejected</Tag>}
           </Descriptions.Item>
           <Descriptions.Item label="Created At">
             {new Date(candidate.createdAt).toLocaleString()}
@@ -207,9 +330,6 @@ const CandidateDetailPage = () => {
           </Descriptions.Item>
           <Descriptions.Item label="Imported By User ID">
             {candidate.importByUserID}
-          </Descriptions.Item>
-          <Descriptions.Item label="Specialty ID">
-            {candidate.specialtyId}
           </Descriptions.Item>
           <Descriptions.Item label="Import Request ID">
             {candidate.importRequestId}

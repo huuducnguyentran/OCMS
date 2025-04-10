@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
-import { Layout, Input, Button, message } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { Layout, Input, Button, message, Form, Breadcrumb, Tag, Typography, Row, Col, Card } from "antd";
+import { ArrowLeftOutlined, EditOutlined, BookOutlined, TrophyOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import { getSubjectById, updateSubject } from "../../services/subjectService";
+import { applySubjectValidation } from "../../../utils/validationSchemas";
 
 const { TextArea } = Input;
+const { Title, Paragraph, Text } = Typography;
 
 const UpdateSubjectPage = () => {
-  const [subjectData, setSubjectData] = useState(null);
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const { subjectId } = useParams();
   const navigate = useNavigate();
@@ -16,135 +18,180 @@ const UpdateSubjectPage = () => {
     const fetchSubject = async () => {
       try {
         const data = await getSubjectById(subjectId);
-        setSubjectData(data.subject);
+        form.setFieldsValue(data.subject);
       } catch {
         message.error("Failed to load subject data.");
       }
     };
     fetchSubject();
-  }, [subjectId]);
+  }, [subjectId, form]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setSubjectData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async () => {
-    if (!subjectData) return;
-
-    const requiredFields = [
-      "subjectName",
-      "description",
-      "credits",
-      "passingScore",
-    ];
-    const hasEmpty = requiredFields.some((field) => !subjectData[field]);
-
-    if (hasEmpty) {
-      return message.error("Please fill in all required fields.");
-    }
-
-    setLoading(true);
+  const handleSubmit = async (values) => {
     try {
-      await updateSubject(subjectId, {
-        ...subjectData,
-        credits: Number(subjectData.credits),
-        passingScore: Number(subjectData.passingScore),
+      setLoading(true);
+      await applySubjectValidation({
+        ...values,
+        subjectId
       });
+      
+      await updateSubject(subjectId, {
+        ...values,
+        credits: Number(values.credits),
+        passingScore: Number(values.passingScore),
+      });
+      
       message.success("Subject updated successfully!");
       navigate("/subject");
-    } catch {
-      message.error("Failed to update subject. Please try again.");
+    } catch (error) {
+      if (error.name === 'ValidationError') {
+        message.error(error.message);
+      } else {
+        message.error("Failed to update subject");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  if (!subjectData) {
-    return <div className="p-10 text-lg">Loading subject details...</div>;
-  }
-
   return (
-    <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
-      <div className="flex items-center mb-8 space-x-2">
-        <Button
-          type="link"
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate(-1)}
-          className="text-blue-600 hover:text-blue-800 px-0"
-        >
-          Back to Subjects
-        </Button>
-        <span className="text-gray-400">/</span>
-        <span className="font-semibold text-gray-800">Edit Subject</span>
-      </div>
+    <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Header Section - Full width gradient */}
+      
+      {/* Main Content - Full width */}
+      <div className="w-full px-6 py-12">
+        <div className="bg-white p-12 shadow-xl rounded-xl min-h-[calc(100vh-200px)]">
+          <div className="flex justify-between items-start mb-6">
+            
+            <div >
+              <h2 className="text-4xl font-bold text-gray-800 m-0">Edit Subject</h2>
+              <p className="text-gray-500 text-xl mt-2">Update the subject information below</p>
+              <Tag color="blue" className="mt-2 text-lg px-4 py-1">{subjectId}</Tag>
+            </div>
+                  <Button
+              type="link"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate("/subject")}
+              className="text-white hover:text-blue-200 px-0 text-lg"
+            >
+              Back to Subjects
+            </Button> 
+          </div>
+          
 
-      <div className="bg-white p-10 shadow-xl rounded-lg w-full max-w-4xl space-y-6">
-        <h2 className="text-3xl font-bold text-gray-800 mb-4">Edit Subject</h2>
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSubmit}
+            className="space-y-10 max-w-full"
+          >
+            {/* Subject Name - Full width */}
+            <Form.Item
+              name="subjectName"
+              label={<span className="text-gray-700 font-medium text-xl">Subject Name</span>}
+              rules={[{ required: true, message: "Subject name is required" }]}
+            >
+              <Input
+                placeholder="Enter subject name"
+                className="rounded-xl py-4 text-lg"
+                size="large"
+              />
+            </Form.Item>
 
-        {/* Subject Name */}
-        <div>
-          <label className="block text-lg font-semibold mb-2 text-gray-700">
-            Subject Name
-          </label>
-          <Input
-            name="subjectName"
-            value={subjectData.subjectName}
-            onChange={handleChange}
-            className="text-lg p-3 rounded-lg border border-gray-300 w-full"
-          />
+            {/* Description - Full width with larger height */}
+            <Form.Item
+              name="description"
+              label={<span className="text-gray-700 font-medium text-xl">Description</span>}
+              rules={[{ required: true, message: "Description is required" }]}
+            >
+              <TextArea
+                rows={8}
+                placeholder="Enter subject description"
+                className="rounded-xl text-lg"
+                size="large"
+              />
+            </Form.Item>
+
+            {/* Stats Cards */}
+            <Row gutter={16} className="mt-8">
+              <Col xs={24} sm={12}>
+                <Card className="rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                  <Form.Item
+                    name="credits"
+                    label={<span className="text-gray-700 font-medium text-xl">Credits (1-10)</span>}
+                    rules={[
+                      { required: true, message: "Credits are required" },
+                      () => ({
+                        validator(_, value) {
+                          if (!value) return Promise.resolve();
+                          const num = Number(value);
+                          if (num < 1 || num > 10 || !Number.isInteger(num)) {
+                            return Promise.reject('Credits must be between 1 and 10');
+                          }
+                          return Promise.resolve();
+                        }
+                      })
+                    ]}
+                    className="mb-0"
+                  >
+                    <Input
+                      type="number"
+                      min={1}
+                      max={10}
+                      placeholder="Enter credits"
+                      prefix={<BookOutlined className="text-gray-400 text-xl" />}
+                      className="rounded-xl py-4 text-lg"
+                      size="large"
+                    />
+                  </Form.Item>
+                </Card>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Card className="rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                  <Form.Item
+                    name="passingScore"
+                    label={<span className="text-gray-700 font-medium text-xl">Passing Score (0-10)</span>}
+                    rules={[
+                      { required: true, message: "Passing score is required" },
+                      () => ({
+                        validator(_, value) {
+                          if (!value) return Promise.resolve();
+                          const num = Number(value);
+                          if (num < 0 || num > 10) {
+                            return Promise.reject('Passing score must be between 0 and 10');
+                          }
+                          return Promise.resolve();
+                        }
+                      })
+                    ]}
+                    className="mb-0"
+                  >
+                    <Input
+                      type="number"
+                      min={0}
+                      max={10}
+                      placeholder="Enter passing score"
+                      prefix={<TrophyOutlined className="text-yellow-500 text-xl" />}
+                      className="rounded-xl py-4 text-lg"
+                      size="large"
+                    />
+                  </Form.Item>
+                </Card>
+              </Col>
+            </Row>
+
+            {/* Submit Button - Wider and more prominent */}
+            <Form.Item className="mt-8">
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                className="w-full h-20 text-2xl bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-0 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                {loading ? "Updating..." : "Update Subject"}
+              </Button>
+            </Form.Item>
+          </Form>
         </div>
-
-        {/* Description */}
-        <div>
-          <label className="block text-lg font-semibold mb-2 text-gray-700">
-            Description
-          </label>
-          <TextArea
-            rows={4}
-            name="description"
-            value={subjectData.description}
-            onChange={handleChange}
-            className="text-lg p-3 rounded-lg border border-gray-300 w-full"
-          />
-        </div>
-
-        {/* Credits */}
-        <div>
-          <label className="block text-lg font-semibold mb-2 text-gray-700">
-            Credits
-          </label>
-          <Input
-            type="number"
-            name="credits"
-            value={subjectData.credits}
-            onChange={handleChange}
-            className="text-lg p-3 rounded-lg border border-gray-300 w-full"
-          />
-        </div>
-
-        {/* Passing Score */}
-        <div>
-          <label className="block text-lg font-semibold mb-2 text-gray-700">
-            Passing Score
-          </label>
-          <Input
-            type="number"
-            name="passingScore"
-            value={subjectData.passingScore}
-            onChange={handleChange}
-            className="text-lg p-3 rounded-lg border border-gray-300 w-full"
-          />
-        </div>
-
-        <Button
-          type="primary"
-          loading={loading}
-          onClick={handleSubmit}
-          className="w-full bg-green-500 text-white text-lg hover:bg-green-600 rounded-lg py-3"
-        >
-          {loading ? "Updating..." : "Update Subject"}
-        </Button>
       </div>
     </Layout>
   );

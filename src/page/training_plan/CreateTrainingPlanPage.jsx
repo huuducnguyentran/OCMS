@@ -7,6 +7,7 @@ import { ArrowLeftOutlined, SaveOutlined, ReloadOutlined } from "@ant-design/ico
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { trainingPlanService } from '../../services/trainingPlanService';
+import { getTrainingPlanSchema, applyTrainingPlanValidation } from "../../../utils/validationSchemas";
 import axiosInstance from "../../../utils/axiosInstance";
 
 const { TextArea } = Input;
@@ -41,9 +42,19 @@ const CreateTrainingPlanPage = () => {
     }
   };
 
-  // Form submission
+  // Cập nhật hàm disablePastDates
+  const disablePastDates = (current) => {
+    // Allow current minute and future, disable past
+    const today = dayjs().startOf('day');
+    return current && current.isBefore(today);
+  };
+
+  // Form submission với validation
   const handleCreateTrainingPlan = async (values) => {
     try {
+      // Validate using Yup schema before submission
+      await applyTrainingPlanValidation(values);
+      
       setLoading(true);
       const formattedData = {
         "planName": values.planName.trim(),
@@ -58,8 +69,12 @@ const CreateTrainingPlanPage = () => {
       message.success("Training Plan created successfully!");
       navigate("/plan", { state: { refresh: true } });
     } catch (error) {
-      console.error('Error details:', error.response?.data || error);
-      message.error(`Failed to create Training Plan: ${error.response?.data?.message || error.message}`);
+      if (error.name === 'ValidationError') {
+        message.error(`Validation error: ${error.message}`);
+      } else {
+        console.error('Error details:', error.response?.data || error);
+        message.error(`Failed to create Training Plan: ${error.response?.data?.message || error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -89,7 +104,7 @@ const CreateTrainingPlanPage = () => {
   return (
     <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
       <Card 
-        className="max-w-5xl mx-auto shadow-lg rounded-xl overflow-hidden"
+        className="max-w-6xl mx-auto shadow-lg rounded-xl overflow-hidden"
         title={
           <div className="flex items-center justify-between">
             <Title level={3} className="m-0 text-blue-700">Create Training Plan</Title>
@@ -175,12 +190,54 @@ const CreateTrainingPlanPage = () => {
               <Form.Item
                 name="startDate"
                 label={<Text strong>Start Date</Text>}
-                rules={[{ required: true, message: "Start date is required" }]}
+                rules={[
+                  { required: true, message: "Start date is required" },
+                  () => ({
+                    validator(_, value) {
+                      if (!value) return Promise.resolve();
+                      const now = dayjs();
+                      // Compare by minute precision
+                      if (value.isBefore(now, 'minute')) {
+                        return Promise.reject(new Error('Start date cannot be in the past'));
+                      }
+                      return Promise.resolve();
+                    }
+                  })
+                ]}
               >
                 <DatePicker
                   className="w-full rounded-lg py-2 px-3 text-base"
-                  showTime
-                  format="YYYY-MM-DD HH:mm:ss"
+                  showTime={{ 
+                    format: 'HH:mm',
+                    minuteStep: 5,
+                    showNow: true 
+                  }}
+                  format="YYYY-MM-DD HH:mm"
+                  disabledDate={disablePastDates}
+                  disabledTime={(date) => {
+                    if (date && date.isSame(dayjs(), 'day')) {
+                      return {
+                        disabledHours: () => {
+                          const hours = [];
+                          for (let i = 0; i < dayjs().hour(); i++) {
+                            hours.push(i);
+                          }
+                          return hours;
+                        },
+                        disabledMinutes: (selectedHour) => {
+                          if (selectedHour === dayjs().hour()) {
+                            const minutes = [];
+                            for (let i = 0; i < dayjs().minute(); i++) {
+                              minutes.push(i);
+                            }
+                            return minutes;
+                          }
+                          return [];
+                        }
+                      };
+                    }
+                    return {};
+                  }}
                 />
               </Form.Item>
               
@@ -191,18 +248,38 @@ const CreateTrainingPlanPage = () => {
                   { required: true, message: "End date is required" },
                   ({ getFieldValue }) => ({
                     validator(_, value) {
-                      if (!value || !getFieldValue('startDate') || value.isAfter(getFieldValue('startDate'))) {
-                        return Promise.resolve();
+                      if (!value) return Promise.resolve();
+                      const startDate = getFieldValue('startDate');
+                      
+                      if (startDate && (value.isBefore(startDate) || value.isSame(startDate))) {
+                        return Promise.reject(new Error('End date must be after start date'));
                       }
-                      return Promise.reject(new Error('End date must be after start date'));
-                    },
-                  }),
+                      
+                      if (startDate) {
+                        const diffDays = value.diff(startDate, 'days');
+                        if (diffDays < 1 || diffDays > 365) {
+                          return Promise.reject(new Error('Training plan duration should be between 1 day and 365 days'));
+                        }
+                      }
+                      
+                      return Promise.resolve();
+                    }
+                  })
                 ]}
               >
                 <DatePicker
                   className="w-full rounded-lg py-2 px-3 text-base"
-                  showTime
-                  format="YYYY-MM-DD HH:mm:ss"
+                  showTime={{ 
+                    format: 'HH:mm',
+                    minuteStep: 5,
+                    showNow: true 
+                  }}
+                  format="YYYY-MM-DD HH:mm"
+                  disabledDate={(current) => {
+                    const startDate = form.getFieldValue('startDate');
+                    return disablePastDates(current) || 
+                           (startDate && (current.isBefore(startDate) || current.isSame(startDate, 'day')));
+                  }}
                 />
               </Form.Item>
             </div>

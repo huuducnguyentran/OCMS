@@ -13,6 +13,7 @@ import { trainingScheduleService } from "../../services/trainingScheduleService"
 import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
 import dayjs from "dayjs";
+import { getTrainingPlanSchema, applyTrainingPlanValidation } from "../../../utils/validationSchemas";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -26,17 +27,17 @@ const CreateSchedulePage = () => {
   const [subjects, setSubjects] = useState([]);
   const [instructors, setInstructors] = useState([]);
 
-  // Lấy danh sách môn học và giảng viên khi component mount
+  // Fetch subjects and instructors when component mounts
   useEffect(() => {
     fetchSubjects();
     fetchInstructors();
   }, []);
 
-  // Lấy danh sách môn học từ API
+  // Fetch subjects from API
   const fetchSubjects = async () => {
     try {
       setLoading(true);
-      // Gọi API lấy danh sách môn học
+      // Call API to get list of subjects
       const token = localStorage.getItem("token");
       const response = await axiosInstance.get(API.GET_ALL_SUBJECTS, {
         headers: { Authorization: `Bearer ${token}` }
@@ -45,10 +46,10 @@ const CreateSchedulePage = () => {
       console.log("Subject API response:", response.data);
 
       if (response.data && response.data.subjects) {
-        // Xử lý dữ liệu theo cấu trúc API thực tế
+        // Process data according to API structure
         const subjectData = response.data.subjects;
         
-        // Lọc bỏ các môn học có subjectId là "string" (dữ liệu không hợp lệ)
+        // Filter out subjects with subjectId as "string" (invalid data)
         const filteredSubjects = subjectData.filter(subject => 
           subject.subjectId !== "string" && subject.subjectName !== "string"
         );
@@ -62,7 +63,7 @@ const CreateSchedulePage = () => {
         
         console.log("Processed subjects:", subjects);
       } else if (response.data && Array.isArray(response.data)) {
-        // Phòng trường hợp API trả về mảng trực tiếp
+        // In case API returns array directly
         setSubjects(response.data.map(subject => ({
           id: subject.subjectId || subject.id,
           name: subject.subjectName || subject.name
@@ -73,9 +74,9 @@ const CreateSchedulePage = () => {
       }
     } catch (error) {
       console.error("Error fetching subjects:", error);
-      message.error("Không thể tải danh sách môn học");
+      message.error("Unable to load subject list");
       
-      // Dữ liệu mẫu dựa trên API thực tế
+      // Sample data based on actual API
       setSubjects([
         { id: "S-0002", name: "Air plane daily journey" },
         { id: "S-0003", name: "Air plane basic rule" },
@@ -87,11 +88,11 @@ const CreateSchedulePage = () => {
     }
   };
 
-  // Lấy danh sách giảng viên từ API
+  // Fetch instructors from API
   const fetchInstructors = async () => {
     try {
       setLoading(true);
-      // Gọi API lấy danh sách giảng viên có role là Instructor
+      // Call API to get list of instructors with role "Instructor"
       const token = localStorage.getItem("token");
       const response = await axiosInstance.get(API.GET_ALL_USER, {
         headers: { Authorization: `Bearer ${token}` },
@@ -117,9 +118,9 @@ const CreateSchedulePage = () => {
       }
     } catch (error) {
       console.error("Error fetching instructors:", error);
-      message.error("Không thể tải danh sách giảng viên");
+      message.error("Unable to load instructor list");
       
-      // Dữ liệu mẫu dựa trên API thực tế
+      // Sample data based on actual API
       setInstructors([
         { id: "INST-1", name: "Instructor User" },
       ]);
@@ -128,7 +129,7 @@ const CreateSchedulePage = () => {
     }
   };
 
-  // Xử lý khi submit form
+  // Handle form submission
   const handleSubmit = async (values) => {
     try {
       setSubmitting(true);
@@ -141,13 +142,13 @@ const CreateSchedulePage = () => {
       const classTime = values.classTime.format("HH:mm:ss");
       const subjectPeriod = values.subjectPeriod ? values.subjectPeriod.format("HH:mm:ss") : "01:30:00";
       
-      // Chuyển đổi daysOfWeek thành mảng số nguyên
+      // Convert daysOfWeek to array of integers
       const daysOfWeek = values.daysOfWeek.map(day => parseInt(day));
       
-      // Tìm thông tin subject được chọn
+      // Find selected subject information
       const selectedSubject = subjects.find(s => s.id === values.subjectID);
       
-      // Tạo dữ liệu theo định dạng API yêu cầu
+      // Create data according to API format
       const scheduleData = {
         subjectID: values.subjectID,
         instructorID: values.instructorID,
@@ -159,26 +160,26 @@ const CreateSchedulePage = () => {
         daysOfWeek: daysOfWeek,
         classTime: classTime,
         subjectPeriod: subjectPeriod,
-        createdBy: localStorage.getItem("userId") // Thêm thông tin người tạo
+        createdBy: localStorage.getItem("userId") // Add creator information
       };
       
       console.log("Submitting schedule data:", scheduleData);
       
-      // Gọi API tạo lịch trình
+      // Call API to create schedule
       const response = await axiosInstance.post(API.CREATE_TRAINING_SCHEDULE, scheduleData);
       
       if (response.data) {
-        message.success("Tạo lịch trình thành công!");
-        // Chuyển về view "created" trong SchedulePage
+        message.success("Schedule created successfully!");
+        // Navigate to "created" view in SchedulePage
         navigate("/schedule", { state: { viewMode: "created" } });
       }
     } catch (error) {
       console.error("Error creating schedule:", error);
       
       if (error.response?.data?.message) {
-        message.error(`Lỗi: ${error.response.data.message}`);
+        message.error(`Error: ${error.response.data.message}`);
       } else {
-        message.error("Không thể tạo lịch trình. Vui lòng thử lại sau.");
+        message.error("Unable to create schedule. Please try again later.");
       }
     } finally {
       setSubmitting(false);
@@ -186,13 +187,13 @@ const CreateSchedulePage = () => {
   };
 
   const daysOfWeekOptions = [
-    { label: "Thứ Hai", value: "1" },
-    { label: "Thứ Ba", value: "2" },
-    { label: "Thứ Tư", value: "3" },
-    { label: "Thứ Năm", value: "4" },
-    { label: "Thứ Sáu", value: "5" },
-    { label: "Thứ Bảy", value: "6" },
-    { label: "Chủ Nhật", value: "0" },
+    { label: "Monday", value: "1" },
+    { label: "Tuesday", value: "2" },
+    { label: "Wednesday", value: "3" },
+    { label: "Thursday", value: "4" },
+    { label: "Friday", value: "5" },
+    { label: "Saturday", value: "6" },
+    { label: "Sunday", value: "0" },
   ];
 
   return (
@@ -206,10 +207,10 @@ const CreateSchedulePage = () => {
             </div>
             <div>
               <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
-                Tạo Lịch Trình Mới
+                Create New Schedule
               </h2>
               <p className="text-gray-600">
-                Thêm lịch trình học mới vào hệ thống
+                Add a new training schedule to the system
               </p>
             </div>
           </div>
@@ -231,17 +232,17 @@ const CreateSchedulePage = () => {
               }}
             >
               <Row gutter={24}>
-                {/* Cột 1 */}
+                {/* Column 1 */}
                 <Col xs={24} md={12}>
-                  <Title level={4} className="mb-4">Thông tin chung</Title>
+                  <Title level={4} className="mb-4">General Information</Title>
                   
                   <Form.Item 
                     name="subjectID" 
-                    label="Môn học"
-                    rules={[{ required: true, message: "Vui lòng chọn môn học" }]}
+                    label="Subject"
+                    rules={[{ required: true, message: "Please select a subject" }]}
                   >
                     <Select 
-                      placeholder="Chọn môn học"
+                      placeholder="Select subject"
                       loading={loading}
                       showSearch
                       optionFilterProp="children"
@@ -256,11 +257,11 @@ const CreateSchedulePage = () => {
                   
                   <Form.Item 
                     name="instructorID" 
-                    label="Giảng viên"
-                    rules={[{ required: true, message: "Vui lòng chọn giảng viên" }]}
+                    label="Instructor"
+                    rules={[{ required: true, message: "Please select an instructor" }]}
                   >
                     <Select 
-                      placeholder="Chọn giảng viên"
+                      placeholder="Select instructor"
                       loading={loading}
                       showSearch
                       optionFilterProp="children"
@@ -277,63 +278,100 @@ const CreateSchedulePage = () => {
                     <Col span={12}>
                       <Form.Item 
                         name="location" 
-                        label="Địa điểm"
-                        rules={[{ required: true, message: "Vui lòng nhập địa điểm" }]}
+                        label="Location"
+                        rules={[{ required: true, message: "Please enter a location" }]}
                       >
-                        <Input placeholder="Ví dụ: Cơ sở ABC" />
+                        <Input placeholder="Example: ABC Campus" />
                       </Form.Item>
                     </Col>
                     <Col span={12}>
                       <Form.Item 
                         name="room" 
-                        label="Phòng học"
-                        rules={[{ required: true, message: "Vui lòng nhập phòng học" }]}
+                        label="Room"
+                        rules={[{ required: true, message: "Please enter a room" }]}
                       >
-                        <Input placeholder="Ví dụ: 101" />
+                        <Input placeholder="Example: 101" />
                       </Form.Item>
                     </Col>
                   </Row>
                   
                   <Form.Item 
                     name="notes" 
-                    label="Ghi chú"
+                    label="Notes"
                   >
-                    <TextArea rows={3} placeholder="Ghi chú về lịch học" />
+                    <TextArea rows={3} placeholder="Notes about the schedule" />
                   </Form.Item>
                 </Col>
                 
-                {/* Cột 2 */}
+                {/* Column 2 */}
                 <Col xs={24} md={12}>
-                  <Title level={4} className="mb-4">Thời gian học</Title>
+                  <Title level={4} className="mb-4">Class Schedule</Title>
                   
                   <Row gutter={16}>
                     <Col span={12}>
-                      <Form.Item 
-                        name="startDate" 
-                        label="Ngày bắt đầu"
-                        rules={[{ required: true, message: "Vui lòng chọn ngày bắt đầu" }]}
+                      <Form.Item
+                        name="startDate"
+                        label={<Text strong>Start Date</Text>}
+                        rules={[
+                          { required: true, message: "Start date is required" },
+                          () => ({
+                            validator(_, value) {
+                              if (!value) return Promise.resolve();
+                              const now = new Date();
+                              if (value.isBefore(dayjs(now))) {
+                                return Promise.reject(new Error('Start date and time must be in the future'));
+                              }
+                              return Promise.resolve();
+                            }
+                          })
+                        ]}
                       >
-                        <DatePicker className="w-full" placeholder="Chọn ngày bắt đầu" />
+                        <DatePicker
+                          className="w-full rounded-lg py-2 px-3 text-base"
+                          showTime
+                          format="YYYY-MM-DD HH:mm:ss"
+                          disabledDate={(current) => current && current < dayjs().startOf('day')}
+                        />
                       </Form.Item>
                     </Col>
                     <Col span={12}>
-                      <Form.Item 
-                        name="endDate" 
-                        label="Ngày kết thúc"
+                      <Form.Item
+                        name="endDate"
+                        label={<Text strong>End Date</Text>}
                         rules={[
-                          { required: true, message: "Vui lòng chọn ngày kết thúc" },
+                          { required: true, message: "End date is required" },
                           ({ getFieldValue }) => ({
                             validator(_, value) {
-                              if (!value || !getFieldValue('startDate') || 
-                                value.isAfter(getFieldValue('startDate'))) {
-                                return Promise.resolve();
+                              if (!value) return Promise.resolve();
+                              
+                              // Check if end date is after start date
+                              const startDate = getFieldValue('startDate');
+                              if (startDate && value.isBefore(startDate)) {
+                                return Promise.reject(new Error('End date must be after start date'));
                               }
-                              return Promise.reject(new Error('Ngày kết thúc phải sau ngày bắt đầu'));
+                              
+                              // Check duration is reasonable
+                              if (startDate) {
+                                const diffDays = value.diff(startDate, 'days');
+                                if (diffDays < 1 || diffDays > 365) {
+                                  return Promise.reject(new Error('Training plan duration should be between 1 day and 365 days'));
+                                }
+                              }
+                              
+                              return Promise.resolve();
                             },
                           }),
                         ]}
                       >
-                        <DatePicker className="w-full" placeholder="Chọn ngày kết thúc" />
+                        <DatePicker
+                          className="w-full rounded-lg py-2 px-3 text-base"
+                          showTime
+                          format="YYYY-MM-DD HH:mm:ss"
+                          disabledDate={(current) => {
+                            const startDate = form.getFieldValue('startDate');
+                            return current && (current < dayjs().startOf('day') || (startDate && current < startDate));
+                          }}
+                        />
                       </Form.Item>
                     </Col>
                   </Row>
@@ -342,27 +380,27 @@ const CreateSchedulePage = () => {
                     <Col span={12}>
                       <Form.Item 
                         name="classTime" 
-                        label="Giờ học"
-                        rules={[{ required: true, message: "Vui lòng chọn giờ học" }]}
+                        label="Class Time"
+                        rules={[{ required: true, message: "Please select a class time" }]}
                       >
-                        <TimePicker className="w-full" format="HH:mm" placeholder="Chọn giờ học" />
+                        <TimePicker className="w-full" format="HH:mm" placeholder="Select class time" />
                       </Form.Item>
                     </Col>
                     <Col span={12}>
                       <Form.Item 
                         name="subjectPeriod" 
-                        label="Thời lượng"
-                        rules={[{ required: true, message: "Vui lòng chọn thời lượng" }]}
+                        label="Duration"
+                        rules={[{ required: true, message: "Please select a duration" }]}
                       >
-                        <TimePicker className="w-full" format="HH:mm" placeholder="Chọn thời lượng" />
+                        <TimePicker className="w-full" format="HH:mm" placeholder="Select duration" />
                       </Form.Item>
                     </Col>
                   </Row>
                   
                   <Form.Item 
                     name="daysOfWeek" 
-                    label="Các ngày học trong tuần"
-                    rules={[{ required: true, message: "Vui lòng chọn ít nhất một ngày học" }]}
+                    label="Days of Week"
+                    rules={[{ required: true, message: "Please select at least one day" }]}
                   >
                     <Checkbox.Group options={daysOfWeekOptions} className="grid grid-cols-2 sm:grid-cols-4" />
                   </Form.Item>
@@ -375,7 +413,7 @@ const CreateSchedulePage = () => {
                   onClick={() => navigate("/schedule")}
                   size="large"
                 >
-                  Quay lại
+                  Back
                 </Button>
                 <Button 
                   type="primary" 
@@ -385,7 +423,7 @@ const CreateSchedulePage = () => {
                   size="large"
                   className="bg-blue-600"
                 >
-                  Tạo lịch trình
+                  Create Schedule
                 </Button>
               </div>
             </Form>

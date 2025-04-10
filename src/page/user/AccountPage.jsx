@@ -70,7 +70,11 @@
 // export default AccountList;
 
 import { useState, useEffect } from "react";
-import { SearchOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 import { getAllUsers, updateUser } from "../../services/userService";
 import { Modal, Form, Input, Select, DatePicker, message, Button } from "antd";
 import moment from "moment";
@@ -110,13 +114,13 @@ const AccountList = () => {
 
   const handleDeactivate = (user) => {
     Modal.confirm({
-      title: 'Are you sure you want to deactivate this account?',
+      title: "Are you sure you want to deactivate this account?",
       content: `This will deactivate ${user.fullName}'s account.`,
-      okText: 'Yes',
-      okType: 'danger',
-      cancelText: 'No',
+      okText: "Yes",
+      okType: "danger",
+      cancelText: "No",
       onOk: () => {
-        message.info('Deactivate function is not implemented yet');
+        message.info("Deactivate function is not implemented yet");
       },
     });
   };
@@ -125,15 +129,17 @@ const AccountList = () => {
     try {
       await updateUser(selectedUser.userId, {
         ...values,
-        dateOfBirth: values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : null,
+        dateOfBirth: values.dateOfBirth
+          ? values.dateOfBirth.format("YYYY-MM-DD")
+          : null,
       });
-      message.success('Account updated successfully');
+      message.success("Account updated successfully");
       setIsEditModalVisible(false);
       // Refresh user list
       const updatedUsers = await getAllUsers();
       setUsers(updatedUsers);
     } catch (error) {
-      message.error('Failed to update account');
+      message.error("Failed to update account", error);
     }
   };
 
@@ -169,76 +175,82 @@ const AccountList = () => {
                   <th className="border p-4 text-left">Email</th>
                   <th className="border p-4 text-left">Phone</th>
                   <th className="border p-4 text-left">Address</th>
+                  <th className="border p-4 text-left">Role</th>
                   <th className="border p-4 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {users
-                  .filter((user) =>
-                    user.fullName
-                      .toLowerCase()
-                      .includes(searchTerm.toLowerCase())
-                  ).length === 0 ? (
-                    <tr>
-                      <td colSpan="9" className="border p-4 text-center text-red-500 font-medium">
-                        No result for "{searchTerm}"
-                      </td>
-                    </tr>
-                  ) : (
-                    users
-                      .filter((user) =>
-                        user.fullName
-                          .toLowerCase()
-                          .includes(searchTerm.toLowerCase())
-                      )
-                      .map((user) => (
-                        <tr
-                          key={user.userId}
-                          className="bg-white hover:bg-gray-100 transition duration-200"
-                        >
-                          <td className="border p-4 text-gray-600">
-                            {user.userId}
-                          </td>
-                          <td className="border p-4 text-gray-600">
-                            {user.username}
-                          </td>
-                          <td className="border p-4 font-medium text-gray-800">
-                            {user.fullName}
-                          </td>
-                          <td className="border p-4 text-gray-600">
-                            {user.gender}
-                          </td>
-                          <td className="border p-4 text-gray-600">
-                            {new Date(user.dateOfBirth).toLocaleDateString()}
-                          </td>
-                          <td className="border p-4 text-gray-600">{user.email}</td>
-                          <td className="border p-4 text-gray-600">
-                            {user.phoneNumber}
-                          </td>
-                          <td className="border p-4 text-gray-600">
-                            {user.address}
-                          </td>
-                          <td className="border p-4 text-gray-600">
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => handleEdit(user)}
-                                className="text-blue-600 hover:text-blue-800 bg-transparent border-0 outline-none shadow-none"
-                                style={{ background: 'transparent' }}
-                              >
-                                <EditOutlined />
-                              </button>
-                              <button
-                                onClick={() => handleDeactivate(user)}
-                                className="text-red-600 hover:text-red-800 bg-transparent border-0 outline-none shadow-none"
-                                style={{ background: 'transparent' }}
-                              >
-                                <DeleteOutlined />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                  )}
+                {users.filter((user) =>
+                  user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+                ).length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="9"
+                      className="border p-4 text-center text-red-500 font-medium"
+                    >
+                      No result for {searchTerm}
+                    </td>
+                  </tr>
+                ) : (
+                  users
+                    .filter((user) =>
+                      user.fullName
+                        .toLowerCase()
+                        .includes(searchTerm.toLowerCase())
+                    )
+                    .map((user) => (
+                      <tr
+                        key={user.userId}
+                        className="bg-white hover:bg-gray-100 transition duration-200"
+                      >
+                        <td className="border p-4 text-gray-600">
+                          {user.userId}
+                        </td>
+                        <td className="border p-4 text-gray-600">
+                          {user.username}
+                        </td>
+                        <td className="border p-4 font-medium text-gray-800">
+                          {user.fullName}
+                        </td>
+                        <td className="border p-4 text-gray-600">
+                          {user.gender}
+                        </td>
+                        <td className="border p-4 text-gray-600">
+                          {new Date(user.dateOfBirth).toLocaleDateString()}
+                        </td>
+                        <td className="border p-4 text-gray-600">
+                          {user.email}
+                        </td>
+                        <td className="border p-4 text-gray-600">
+                          {user.phoneNumber}
+                        </td>
+                        <td className="border p-4 text-gray-600">
+                          {user.address}
+                        </td>
+                        <td className="border p-4 text-gray-600">
+                          {user.roleName}
+                        </td>
+                        <td className="border p-4 text-gray-600">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleEdit(user)}
+                              className="text-blue-600 hover:text-blue-800 bg-transparent border-0 outline-none shadow-none"
+                              style={{ background: "transparent" }}
+                            >
+                              <EditOutlined />
+                            </button>
+                            <button
+                              onClick={() => handleDeactivate(user)}
+                              className="text-red-600 hover:text-red-800 bg-transparent border-0 outline-none shadow-none"
+                              style={{ background: "transparent" }}
+                            >
+                              <DeleteOutlined />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                )}
               </tbody>
             </table>
           )}
@@ -256,26 +268,26 @@ const AccountList = () => {
           form={form}
           layout="vertical"
           onFinish={handleEditSubmit}
-          validateTrigger={['onChange', 'onBlur']}
+          validateTrigger={["onChange", "onBlur"]}
         >
-          <Form.Item 
-            name="fullName" 
+          <Form.Item
+            name="fullName"
             label="Full Name"
             rules={[
-              { required: true, message: 'Please input full name' },
-              { max: 100, message: 'Full name cannot exceed 100 characters' },
-              { 
+              { required: true, message: "Please input full name" },
+              { max: 100, message: "Full name cannot exceed 100 characters" },
+              {
                 pattern: /^[A-Za-zÀ-ỹ\s]+$/,
-                message: 'Full name can only contain letters and spaces' 
-              }
+                message: "Full name can only contain letters and spaces",
+              },
             ]}
           >
             <Input />
           </Form.Item>
-          <Form.Item 
-            name="gender" 
+          <Form.Item
+            name="gender"
             label="Gender"
-            rules={[{ required: true, message: 'Please select gender' }]}
+            rules={[{ required: true, message: "Please select gender" }]}
           >
             <Select>
               <Select.Option value="Male">Male</Select.Option>
@@ -283,55 +295,59 @@ const AccountList = () => {
               <Select.Option value="Other">Other</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item 
-            name="dateOfBirth" 
+          <Form.Item
+            name="dateOfBirth"
             label="Date of Birth"
             rules={[
-              { required: true, message: 'Please select date of birth' },
+              { required: true, message: "Please select date of birth" },
               {
                 validator: (_, value) => {
                   if (!value) return Promise.resolve();
-                  const age = moment().diff(value, 'years', true);
+                  const age = moment().diff(value, "years", true);
                   if (age >= 18) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error('Must be at least 18 years old'));
-                }
-              }
+                  return Promise.reject(
+                    new Error("Must be at least 18 years old")
+                  );
+                },
+              },
             ]}
           >
-            <DatePicker 
-              style={{ width: '100%' }} 
+            <DatePicker
+              style={{ width: "100%" }}
               disabledDate={(current) => {
-                const eighteenYearsAgo = moment().subtract(18, 'years');
-                return current && (current > eighteenYearsAgo || current > moment());
+                const eighteenYearsAgo = moment().subtract(18, "years");
+                return (
+                  current && (current > eighteenYearsAgo || current > moment())
+                );
               }}
               format="YYYY-MM-DD"
             />
           </Form.Item>
-          <Form.Item 
-            name="email" 
+          <Form.Item
+            name="email"
             label="Email"
             rules={[
-              { required: true, message: 'Please input email' },
-              { type: 'email', message: 'Please enter a valid email' },
-              { max: 100, message: 'Email cannot exceed 100 characters' }
+              { required: true, message: "Please input email" },
+              { type: "email", message: "Please enter a valid email" },
+              { max: 100, message: "Email cannot exceed 100 characters" },
             ]}
           >
             <Input />
           </Form.Item>
-          <Form.Item 
-            name="phoneNumber" 
+          <Form.Item
+            name="phoneNumber"
             label="Phone Number"
             rules={[
-              { required: true, message: 'Please input phone number' },
-              { 
-                pattern: /^[0-9]{10}$/, 
-                message: 'Phone number must be exactly 10 digits' 
-              }
+              { required: true, message: "Please input phone number" },
+              {
+                pattern: /^[0-9]{10}$/,
+                message: "Phone number must be exactly 10 digits",
+              },
             ]}
           >
-            <Input 
+            <Input
               maxLength={10}
               onKeyPress={(e) => {
                 if (!/[0-9]/.test(e.key)) {
@@ -339,18 +355,18 @@ const AccountList = () => {
                 }
               }}
               onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, '');
+                const value = e.target.value.replace(/\D/g, "");
                 form.setFieldsValue({ phoneNumber: value });
               }}
             />
           </Form.Item>
-          <Form.Item 
-            name="address" 
+          <Form.Item
+            name="address"
             label="Address"
             rules={[
-              { required: true, message: 'Please input address' },
-              { min: 10, message: 'Address must be at least 10 characters' },
-              { max: 100, message: 'Address cannot exceed 100 characters' }
+              { required: true, message: "Please input address" },
+              { min: 10, message: "Address must be at least 10 characters" },
+              { max: 100, message: "Address cannot exceed 100 characters" },
             ]}
           >
             <Input.TextArea />

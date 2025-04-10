@@ -1,36 +1,56 @@
 import { useState, useEffect } from "react";
-import { Layout, Input, Button, DatePicker, message } from "antd";
+import { 
+  Layout, Input, Button, DatePicker, message, 
+  Select, Spin, Card, Typography, Divider, Form 
+} from "antd";
 import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeftOutlined, SaveOutlined, ReloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { trainingPlanService } from '../../services/trainingPlanService';
+import { applyTrainingPlanValidation } from "../../../utils/validationSchemas";
+import axiosInstance from "../../../utils/axiosInstance";
 
 const { TextArea } = Input;
+const { Option } = Select;
+const { Title, Text } = Typography;
 
 const EditPlanPage = () => {
   const { planId } = useParams();
-  console.log("EditPlanPage - planId from params:", planId);
   const navigate = useNavigate();
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [trainingPlanData, setTrainingPlanData] = useState({
-    planName: "",
-    Desciption: "",
-    planLevel: 0,
-    startDate: null,
-    endDate: null,
-    specialtyId: ""
-  });
+  const [specialties, setSpecialties] = useState([]);
+  const [loadingSpecialties, setLoadingSpecialties] = useState(false);
+
+  // Fetch specialties data
+  useEffect(() => {
+    fetchSpecialties();
+  }, []);
+
+  const fetchSpecialties = async () => {
+    try {
+      setLoadingSpecialties(true);
+      const response = await axiosInstance.get("Specialty");
+      if (response.data.success && response.data.data) {
+        setSpecialties(response.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch specialties:", error);
+      message.error("Failed to load specialties");
+    } finally {
+      setLoadingSpecialties(false);
+    }
+  };
 
   useEffect(() => {
     const fetchPlanData = async () => {
       try {
         setLoading(true);
-        console.log("Fetching data for planId:", planId);
         const response = await trainingPlanService.getTrainingPlanById(planId);
-        console.log("Fetched plan data:", response);
         
-        setTrainingPlanData({
+        form.setFieldsValue({
           planName: response.planName,
-          Desciption: response.desciption,
+          description: response.desciption,
           planLevel: response.planLevel,
           startDate: dayjs(response.startDate),
           endDate: dayjs(response.endDate),
@@ -39,7 +59,7 @@ const EditPlanPage = () => {
       } catch (error) {
         console.error("Error fetching plan:", error);
         message.error("Failed to load plan data");
-        navigate("/plan"); // Navigate back on error
+        navigate("/plan");
       } finally {
         setLoading(false);
       }
@@ -48,112 +68,267 @@ const EditPlanPage = () => {
     if (planId) {
       fetchPlanData();
     }
-  }, [planId]);
+  }, [planId, form]);
 
-  const handleChange = (e) => {
-    setTrainingPlanData({ ...trainingPlanData, [e.target.name]: e.target.value });
+  const disablePastDates = (current) => {
+    const today = dayjs().startOf('day');
+    return current && current.isBefore(today);
   };
 
-  const handleDateChange = (name, date) => {
-    setTrainingPlanData({ ...trainingPlanData, [name]: date });
-  };
-
-  const handleUpdatePlan = async () => {
+  const handleUpdatePlan = async (values) => {
     try {
+      // Validate using Yup schema before submission
+      await applyTrainingPlanValidation(values);
+      
       setLoading(true);
       const formattedData = {
-        planName: trainingPlanData.planName,
-        Desciption: trainingPlanData.Desciption,
-        planLevel: 0,
-        startDate: trainingPlanData.startDate.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]"),
-        endDate: trainingPlanData.endDate.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]"),
-        specialtyId: trainingPlanData.specialtyId
+        planName: values.planName.trim(),
+        Desciption: values.description.trim(),
+        planLevel: parseInt(values.planLevel),
+        startDate: values.startDate.toISOString(),
+        endDate: values.endDate.toISOString(),
+        specialtyId: values.specialtyId
       };
 
       await trainingPlanService.updateTrainingPlan(planId, formattedData);
       message.success("Training plan updated successfully");
       navigate("/plan", { state: { refresh: true } });
     } catch (error) {
-      console.error("Failed to update plan:", error);
-      message.error("Failed to update training plan");
+      if (error.name === 'ValidationError') {
+        message.error(`Validation error: ${error.message}`);
+      } else {
+        console.error('Error details:', error.response?.data || error);
+        message.error(`Failed to update Training Plan: ${error.response?.data?.message || error.message}`);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  const renderSpecialtyOptions = (specialties) => {
+    return specialties.map(specialty => {
+      if (specialty.children && specialty.children.length > 0) {
+        return (
+          <Select.OptGroup key={specialty.specialtyId} label={specialty.specialtyName}>
+            <Option key={specialty.specialtyId} value={specialty.specialtyId}>
+              {specialty.specialtyName} ({specialty.specialtyId})
+            </Option>
+            {renderSpecialtyOptions(specialty.children)}
+          </Select.OptGroup>
+        );
+      }
+      return (
+        <Option key={specialty.specialtyId} value={specialty.specialtyId}>
+          {specialty.specialtyName} ({specialty.specialtyId})
+        </Option>
+      );
+    });
+  };
+
   return (
-    <Layout className="min-h-screen flex items-center justify-center bg-gray-200 p-10">
-      <div className="bg-white p-10 shadow-xl rounded-lg w-full max-w-6xl">
-        <div className="space-y-6">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">
-            Edit Training Plan: {planId}
-          </h2>
-
-          <div>
-            <label className="block text-lg font-semibold text-gray-700 mb-2">Plan Name</label>
-            <Input 
-              name="planName" 
-              placeholder="Plan Name" 
-              value={trainingPlanData.planName} 
-              onChange={handleChange} 
-              className="p-3 text-lg rounded-lg border border-gray-300 w-full" 
-            />
+    <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
+      <Card 
+        className="max-w-6xl mx-auto shadow-lg rounded-xl overflow-hidden"
+        title={
+          <div className="flex items-center justify-between">
+            <Title level={3} className="m-0 text-blue-700">Edit Training Plan</Title>
+            <Button 
+              type="text" 
+              icon={<ArrowLeftOutlined />} 
+              onClick={() => navigate("/plan")}
+              className="flex items-center"
+            >
+              Back to Plans
+            </Button>
           </div>
-
-          <div>
-            <label className="block text-lg font-semibold text-gray-700 mb-2">Description</label>
-            <TextArea 
-              rows={5} 
-              name="Desciption" 
-              placeholder="Description" 
-              value={trainingPlanData.Desciption} 
-              onChange={handleChange} 
-              className="p-3 text-lg rounded-lg border border-gray-300 w-full" 
-            />
-          </div>
-
-          <div>
-            <label className="block text-lg font-semibold text-gray-700 mb-2">Specialty ID</label>
-            <Input 
-              name="specialtyId" 
-              placeholder="Specialty ID" 
-              value={trainingPlanData.specialtyId} 
-              onChange={handleChange} 
-              className="p-3 text-lg rounded-lg border border-gray-300 w-full" 
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block text-lg font-semibold text-gray-700 mb-2">Start Date</label>
-              <DatePicker
-                className="p-3 text-lg w-full rounded-lg border border-gray-300"
-                value={trainingPlanData.startDate}
-                onChange={(date) => handleDateChange("startDate", date)}
-                showTime
-              />
-            </div>
-            <div>
-              <label className="block text-lg font-semibold text-gray-700 mb-2">End Date</label>
-              <DatePicker
-                className="p-3 text-lg w-full rounded-lg border border-gray-300"
-                value={trainingPlanData.endDate}
-                onChange={(date) => handleDateChange("endDate", date)}
-                showTime
-              />
-            </div>
-          </div>
-
-          <Button 
-            type="primary" 
-            className="mt-8 px-6 py-3 text-lg bg-blue-500 text-white rounded-lg hover:bg-blue-600 w-full" 
-            onClick={handleUpdatePlan} 
-            loading={loading}
+        }
+      >
+        <Spin spinning={loading || loadingSpecialties}>
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleUpdatePlan}
+            className="p-2"
           >
-            {loading ? "Updating..." : "Update Training Plan"}
-          </Button>
-        </div>
-      </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              <Form.Item
+                name="planName"
+                label={<Text strong>Plan Name</Text>}
+                rules={[{ required: true, message: "Plan name is required" }]}
+                className="col-span-2"
+              >
+                <Input 
+                  placeholder="Enter plan name" 
+                  className="rounded-lg py-2 px-3 text-base" 
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="description"
+                label={<Text strong>Description</Text>}
+                rules={[{ required: true, message: "Description is required" }]}
+                className="col-span-2"
+              >
+                <TextArea 
+                  rows={5} 
+                  placeholder="Enter description" 
+                  className="rounded-lg py-2 px-3 text-base" 
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="planLevel"
+                label={<Text strong>Plan Level</Text>}
+                rules={[{ required: true, message: "Plan level is required" }]}
+              >
+                <Select
+                  placeholder="Select level"
+                  className="rounded-lg"
+                  dropdownClassName="rounded-lg shadow-md"
+                >
+                  <Option value={0}>Initial</Option>
+                  <Option value={1}>Recurrent</Option>
+                  <Option value={2}>Relearn</Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item
+                name="specialtyId"
+                label={<Text strong>Specialty</Text>}
+                rules={[{ required: true, message: "Specialty is required" }]}
+              >
+                <Select
+                  placeholder="Select specialty"
+                  loading={loadingSpecialties}
+                  showSearch
+                  optionFilterProp="children"
+                  className="rounded-lg"
+                  dropdownClassName="rounded-lg shadow-md"
+                  notFoundContent={loadingSpecialties ? <Spin size="small" /> : "No specialties found"}
+                >
+                  {renderSpecialtyOptions(specialties)}
+                </Select>
+              </Form.Item>
+
+              <Form.Item
+                name="startDate"
+                label={<Text strong>Start Date</Text>}
+                rules={[
+                  { required: true, message: "Start date is required" },
+                  () => ({
+                    validator(_, value) {
+                      if (!value) return Promise.resolve();
+                      const now = dayjs();
+                      if (value.isBefore(now, 'minute')) {
+                        return Promise.reject(new Error('Start date cannot be in the past'));
+                      }
+                      return Promise.resolve();
+                    }
+                  })
+                ]}
+              >
+                <DatePicker
+                  className="w-full rounded-lg py-2 px-3 text-base"
+                  showTime={{ 
+                    format: 'HH:mm',
+                    minuteStep: 5,
+                    showNow: true 
+                  }}
+                  format="YYYY-MM-DD HH:mm"
+                  disabledDate={disablePastDates}
+                  disabledTime={(date) => {
+                    if (date && date.isSame(dayjs(), 'day')) {
+                      return {
+                        disabledHours: () => {
+                          const hours = [];
+                          for (let i = 0; i < dayjs().hour(); i++) {
+                            hours.push(i);
+                          }
+                          return hours;
+                        },
+                        disabledMinutes: (selectedHour) => {
+                          if (selectedHour === dayjs().hour()) {
+                            const minutes = [];
+                            for (let i = 0; i < dayjs().minute(); i++) {
+                              minutes.push(i);
+                            }
+                            return minutes;
+                          }
+                          return [];
+                        }
+                      };
+                    }
+                    return {};
+                  }}
+                />
+              </Form.Item>
+              
+              <Form.Item
+                name="endDate"
+                label={<Text strong>End Date</Text>}
+                rules={[
+                  { required: true, message: "End date is required" },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value) return Promise.resolve();
+                      const startDate = getFieldValue('startDate');
+                      
+                      if (startDate && (value.isBefore(startDate) || value.isSame(startDate))) {
+                        return Promise.reject(new Error('End date must be after start date'));
+                      }
+                      
+                      if (startDate) {
+                        const diffDays = value.diff(startDate, 'days');
+                        if (diffDays < 1 || diffDays > 365) {
+                          return Promise.reject(new Error('Training plan duration should be between 1 day and 365 days'));
+                        }
+                      }
+                      
+                      return Promise.resolve();
+                    }
+                  })
+                ]}
+              >
+                <DatePicker
+                  className="w-full rounded-lg py-2 px-3 text-base"
+                  showTime={{ 
+                    format: 'HH:mm',
+                    minuteStep: 5,
+                    showNow: true 
+                  }}
+                  format="YYYY-MM-DD HH:mm"
+                  disabledDate={(current) => {
+                    const startDate = form.getFieldValue('startDate');
+                    return disablePastDates(current) || 
+                           (startDate && (current.isBefore(startDate) || current.isSame(startDate, 'day')));
+                  }}
+                />
+              </Form.Item>
+            </div>
+
+            <Divider />
+
+            <div className="flex justify-end space-x-4 mt-6">
+              <Button 
+                icon={<ReloadOutlined />}
+                onClick={() => form.resetFields()}
+                className="rounded-lg border-gray-300 hover:border-gray-400 hover:text-gray-700"
+              >
+                Reset
+              </Button>
+              <Button 
+                type="primary" 
+                htmlType="submit"
+                icon={<SaveOutlined />}
+                loading={loading}
+                className="bg-green-500 hover:bg-green-600 rounded-lg border-0 px-6 py-2 h-auto"
+              >
+                {loading ? "Updating..." : "Update Plan"}
+              </Button>
+            </div>
+          </Form>
+        </Spin>
+      </Card>
     </Layout>
   );
 };

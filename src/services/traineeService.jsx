@@ -26,6 +26,19 @@ export const assignTrainee = async (file) => {
   }
 };
 
+export const assignTraineeManual = async (data) => {
+  try {
+    const response = await axiosInstance.post(
+      `${API.ASSIGN_TRAINEE_MANUAL}`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Error assigning trainee :`, error);
+    throw error;
+  }
+};
+
 export const getAllAssignedTrainee = async () => {
   try {
     const response = await axiosInstance.get(
@@ -59,7 +72,7 @@ export const UpdateAssignedTrainee = async (id, payload) => {
       payload,
       {
         headers: {
-          "Content-Type": "application/json", // 👈 this is important!
+          "Content-Type": "application/json",
         },
       }
     );
