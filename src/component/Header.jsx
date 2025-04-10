@@ -5,7 +5,7 @@ import SearchBar from "./SearchBar";
 import { useAvatar } from "../context/AvatarContext";
 import { useEffect, useState } from "react";
 import { getUserById } from "../services/userService";
-import { BellOutlined } from "@ant-design/icons";
+import { BellOutlined, UserOutlined } from "@ant-design/icons";
 import { notificationService } from "../services/notificationService";
 
 const Header = () => {
@@ -82,23 +82,11 @@ const Header = () => {
 
       <div className="flex items-center gap-4 ml-4">
         {userData && (
-          <span className="text-gray-700 font-medium text-sm">
-            {userData.username}
+          <span className="text-white font-medium text-sm">
+            Welcome, {userData.fullName}
           </span>
         )}
-
-        {isLoggedIn && (
-          <Badge count={unreadCount} overflowCount={99}>
-            <div 
-              className="cursor-pointer text-xl text-gray-600"
-              onClick={() => navigate('/notifications')}
-            >
-              <BellOutlined />
-            </div>
-          </Badge>
-        )}
-
-        {isLoggedIn ? (
+{isLoggedIn ? (
           <>
             {/* Profile redirect */}
             <div
@@ -106,12 +94,10 @@ const Header = () => {
               className="flex items-center gap-2 cursor-pointer"
             >
               <Avatar
-                // src={avatar || "https://via.placeholder.com/40"}
-                // size="large"
+                src={avatar || "https://via.placeholder.com/40"}
+                size="large"
+                icon={!avatar && <UserOutlined />}
               />
-              <span className="text-blue-500 font-medium hover:underline">
-                Profile
-              </span>
             </div>
           </>
         ) : (
@@ -122,6 +108,18 @@ const Header = () => {
             Login
           </Link>
         )}
+        {isLoggedIn && (
+          <Badge count={unreadCount} overflowCount={99}>
+            <div 
+              className="cursor-pointer text-xl text-white"
+              onClick={() => navigate('/notifications')}
+            >
+              <BellOutlined />
+            </div>
+          </Badge>
+        )}
+
+        
       </div>
     </Layout.Header>
   );
