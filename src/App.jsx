@@ -20,7 +20,6 @@ import AccomplishmentsPage from "./page/result/AccomplishmentPage";
 import AccomplishmentDetail from "./page/result/AccompishmentDetailPage";
 import ImportCandidate from "./page/training_plan/ImportCandidatePage";
 import Footer from "./component/Footer";
-import GradeImportPage from "./page/result/GradeImportPage";
 import CandidatePage from "./page/training_plan/CandidatePage";
 import RequestListPage from "./page/request/RequestPage";
 import CandidateDetailPage from "./page/training_plan/CandidateDetail";
@@ -44,6 +43,8 @@ import AssignedTraineeCoursePage from "./page/assigned_trainee/AssignedTraineeCo
 import SendRequestPage from "./page/request/SendRequestPage";
 import UpdateSubjectPage from "./page/subject/UpdateSubjectPage";
 import CreateSchedulePage from "./page/course/CreateSchedulePage";
+import GradeImportPage from "./page/grade/GradeImportPage";
+import ViewGradePage from "./page/grade/ViewGradePage";
 
 function App() {
   return (
@@ -102,6 +103,7 @@ function App() {
                             element={<AccomplishmentDetail />}
                           />
                           <Route path="/grade" element={<GradeImportPage />} />
+                          <Route path="/grade-view" element={<ViewGradePage />} />
                           <Route
                             path="/candidates-import"
                             element={<ImportCandidate />}

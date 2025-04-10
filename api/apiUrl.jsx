@@ -72,4 +72,15 @@ export const API = {
   GET_INSTRUCTOR_SUBJECTS: "TrainingSchedule/instructor/subjects",
   GET_TRAINEE_SUBJECTS: "TrainingSchedule/trainee/subjects",
   GET_SCHEDULE_BY_SUBJECT: "TrainingSchedule/subject",
+
+  // Grade
+  IMPORT_GRADE: "Grade/import",
+  GET_ALL_GRADES: "Grade",
+  CREATE_GRADE: "Grade",
+  GET_PASSED_GRADES: "Grade/passed",
+  GET_FAILED_GRADES: "Grade/failed",
+  GET_GRADE_BY_ID: "Grade",
+  UPDATE_GRADE: "Grade",
+  DELETE_GRADE: "Grade",
+
 };
