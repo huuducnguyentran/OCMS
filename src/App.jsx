@@ -45,6 +45,8 @@ import SendRequestPage from "./page/request/SendRequestPage";
 import UpdateSubjectPage from "./page/subject/UpdateSubjectPage";
 import CreateSchedulePage from "./page/course/CreateSchedulePage";
 import NotificationPage from "./page/user/NotificationPage";
+import ImportCertificatePage from "./page/certificate/ImportCertificatePage";
+import CertificateTemplateListPage from "./page/certificate/CertificateTemplatePage";
 
 function App() {
   return (
@@ -173,6 +175,14 @@ function App() {
                           <Route
                             path="/assigned-trainee/:id"
                             element={<AssignedTraineeDetailPage />}
+                          />
+                          <Route
+                            path="/certificate-import"
+                            element={<ImportCertificatePage />}
+                          />
+                          <Route
+                            path="/certificate"
+                            element={<CertificateTemplateListPage />}
                           />
                         </Routes>
                         <Footer />

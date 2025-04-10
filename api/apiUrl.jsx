@@ -72,4 +72,10 @@ export const API = {
   GET_INSTRUCTOR_SUBJECTS: "TrainingSchedule/instructor/subjects",
   GET_TRAINEE_SUBJECTS: "TrainingSchedule/trainee/subjects",
   GET_SCHEDULE_BY_SUBJECT: "TrainingSchedule/subject",
+
+  // Certificate Template
+  IMPORT_CERTIFICATE_TEMPLATE: "CertificateTemplate",
+  GET_ALL_CERTIFICATE_TEMPLATE: "CertificateTemplate",
+  GET_CERTIFICATE_TEMPLATE_BY_ID: "CertificateTemplate",
+  DELETE_CERTIFICATE_TEMPLATE: "Certificate",
 };

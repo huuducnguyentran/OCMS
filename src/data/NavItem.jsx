@@ -36,7 +36,7 @@ const navItems = [
         path: "/schedule",
         roles: ["Training staff", "Trainee", "Instructor"],
       },
-    ]
+    ],
   },
   {
     key: "4",
@@ -159,6 +159,13 @@ const navItems = [
         roles: ["Trainee"],
       },
     ],
+  },
+  {
+    key: "15",
+    label: "Certificate",
+    icon: "ImportOutlined",
+    path: "/certificate",
+    roles: ["Admin", "Training staff", "HR", "AOC Manager"],
   },
 ];
 
