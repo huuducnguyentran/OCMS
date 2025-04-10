@@ -106,8 +106,8 @@ const Header = () => {
               className="flex items-center gap-2 cursor-pointer"
             >
               <Avatar
-                src={avatar || "https://via.placeholder.com/40"}
-                size="large"
+                // src={avatar || "https://via.placeholder.com/40"}
+                // size="large"
               />
               <span className="text-blue-500 font-medium hover:underline">
                 Profile

@@ -4,8 +4,6 @@ import { Table, Spin, Empty, message, Select, Tag, Button } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import { CalendarOutlined, ClockCircleOutlined, UserSwitchOutlined, PlusOutlined } from "@ant-design/icons";
 import { trainingScheduleService } from "../../services/trainingScheduleService";
-import { API } from "../../../api/apiUrl";
-import { getAllSubject } from "../../services/subjectService";
 
 
 const { Option } = Select;
@@ -42,8 +40,6 @@ const SchedulePage = () => {
     if (role) {
       setUserRole(role);
     } else {
-      // Nếu không có role trong localStorage, có thể lấy từ token JWT
-      // (thêm code giải mã JWT nếu cần)
       
       // Hoặc kiểm tra userId
       const userId = localStorage.getItem("userId");
@@ -427,7 +423,7 @@ const SchedulePage = () => {
           className="bg-green-600 hover:bg-green-700"
           size="large"
         >
-          Tạo lịch trình mới
+          Create Schedule
         </Button>
       );
     }

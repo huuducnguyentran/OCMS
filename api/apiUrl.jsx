@@ -73,6 +73,16 @@ export const API = {
   GET_TRAINEE_SUBJECTS: "TrainingSchedule/trainee/subjects",
   GET_SCHEDULE_BY_SUBJECT: "TrainingSchedule/subject",
 
+  // Grade
+  IMPORT_GRADE: "Grade/import",
+  GET_ALL_GRADES: "Grade",
+  CREATE_GRADE: "Grade",
+  GET_PASSED_GRADES: "Grade/passed",
+  GET_FAILED_GRADES: "Grade/failed",
+  GET_GRADE_BY_ID: "Grade",
+  UPDATE_GRADE: "Grade",
+  DELETE_GRADE: "Grade",
+
   // Certificate Template
   IMPORT_CERTIFICATE_TEMPLATE: "CertificateTemplate",
   GET_ALL_CERTIFICATE_TEMPLATE: "CertificateTemplate",

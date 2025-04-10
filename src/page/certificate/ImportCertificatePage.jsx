@@ -21,6 +21,7 @@ const ImportCertificatePage = () => {
     try {
       const result = await importCertificate(formData);
       message.success("Certificate Template uploaded successfully!");
+      navigate("/certificate");
       setTemplateUrl(result.templateFile); // Server-provided URL
       form.resetFields();
     } catch (error) {

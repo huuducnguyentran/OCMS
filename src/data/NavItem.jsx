@@ -95,7 +95,34 @@ const navItems = [
     label: "Grade",
     icon: "FileExcelOutlined",
     path: "/grade",
-    roles: ["Instructor", "Trainee"],
+    roles: ["Instructor","Admin","Training staff","Reviewer"],
+    children: [
+      {
+        key: "8-1",
+        label: "Import Grade",
+        path: "/grade",
+        roles: ["Admin","Instructor"],
+      },
+      {
+        key: "8-2",
+        label: "Update Grade",
+        path: "/grade-update",
+        roles: ["Admin","Instructor"],
+      },
+       {
+        key: "8-3",
+        label: "Delete Grade",
+        path: "/grade-delete",
+        roles: ["Admin","Instructor","Training staff"],
+      },
+      {
+        key: "8-4",
+        label: "View Grade",
+        path: "/grade-view",
+        roles: ["Admin","Instructor","Training staff","Reviewer"],
+    },
+
+    ],
   },
   {
     key: "9",
@@ -116,19 +143,19 @@ const navItems = [
     label: "Assign Trainee",
     icon: "SelectOutlined",
     path: "/assign-trainee",
-    roles: ["Admin", "Training staff", "HeadMaster", "user"],
+    roles: ["Admin", "Training staff", "HeadMaster", "Trainee"],
     children: [
       {
         key: "11-1",
         label: "Import Assign Trainee",
         path: "/import-assign-trainee",
-        roles: ["Admin", "Training staff", "HeadMaster", "user"],
+        roles: ["Admin", "Training staff", "HeadMaster", "Trainee"],
       },
       {
         key: "11-2",
         label: "Assigned Trainee",
         path: "/assigned-trainee",
-        roles: ["Admin", "Training staff", "HeadMaster", "user"],
+        roles: ["Admin", "Training staff", "HeadMaster", "Trainee"],
       },
     ],
   },
