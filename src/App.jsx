@@ -1,82 +1,191 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
+
+import ProtectedRoute from "./component/ProtectedRoute";
+import AvatarProvider from "./context/AvatarProvider";
+import { AuthProvider } from "./context/AuthContext";
 import HomePage from "./page/HomePage";
-import CoursePage from "./page/CoursePage";
-import AccountPage from "./page/AccountPage";
+import AccountPage from "./page/user/AccountPage";
 import Navbar from "./component/NabBar";
 import { Layout } from "antd";
-import SchedulePage from "./page/SchedulePage";
-import CourseDetailPage from "./page/CourseDetailPage";
-import LoginPage from "./page/LoginPage";
+import SchedulePage from "./page/course/SchedulePage";
+import LoginPage from "./page/auth/LoginPage";
 import Header from "./component/Header";
-import PersonalProfilePage from "./page/PersonalProfilePage";
-import { AvatarProvider } from "./context/AvatarContext";
-import AccomplishmentsPage from "./page/AccomplishmentPage";
-import AccomplishmentDetail from "./page/AccompishmentDetailPage";
-import CreateNewCoursePage from "./page/CreateNewCoursePage";
-import ImportCandidate from "./page/ImportCandidatePage";
+import PersonalProfilePage from "./page/user/PersonalProfilePage";
+import AccomplishmentsPage from "./page/result/AccomplishmentPage";
+import AccomplishmentDetail from "./page/result/AccompishmentDetailPage";
+import ImportCandidate from "./page/training_plan/ImportCandidatePage";
 import Footer from "./component/Footer";
-import ProtectedRoute from "./component/ProtectedRoute";
-import GradeImportPage from "./page/GradeImportPage";
+import GradeImportPage from "./page/result/GradeImportPage";
+import CandidatePage from "./page/training_plan/CandidatePage";
+import RequestListPage from "./page/request/RequestPage";
+import CandidateDetailPage from "./page/training_plan/CandidateDetail";
+import RequestDetail from "./page/request/RequestDetailPage";
+import ForgotPassword from "./page/auth/ForgotPasswordPage";
+import ResetPassword from "./page/auth/ResetPassword";
+import AssignTraineePage from "./page/assigned_trainee/AssignTraineePage";
+import SubjectPage from "./page/subject/SubjectPage";
+import CreateSubjectPage from "./page/subject/CreateSubjectPage";
+import SubjectDetailPage from "./page/subject/SubjectDetailPage";
+import AssignedTraineePage from "./page/assigned_trainee/AssignedTraineePage";
+import PlanPage from "./page/training_plan/PlanPage";
+import CreateTrainingPlanPage from "./page/training_plan/CreateTrainingPlanPage";
+import EditPlanPage from "./page/training_plan/EditPlanPage";
+import CreateCoursePage from "./page/course/CreateCoursePage";
+import CoursePage from "./page/course/CoursePage";
+import EditCoursePage from "./page/course/EditCoursePage";
+import AssignedTraineeDetailPage from "./page/assigned_trainee/AssignedTraineeDetailPage";
+import AssignedTraineeCoursePage from "./page/assigned_trainee/AssignedTraineeCoursePage";
+// import AssignInstructorPage from "./page/assigned_instructor/AssignInstructorPage";
+import SendRequestPage from "./page/request/SendRequestPage";
+import UpdateSubjectPage from "./page/subject/UpdateSubjectPage";
+import CreateSchedulePage from "./page/course/CreateSchedulePage";
+import NotificationPage from "./page/user/NotificationPage";
 
 function App() {
   return (
-    <AvatarProvider>
-      <Router>
-        <Layout className="min-h-screen flex w-screen">
+    <Router>
+      {/* ✅ Router should wrap AuthProvider */}
+      <AuthProvider>
+        <AvatarProvider>
           <Routes>
-            {/* Public Route - Login */}
+            {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/" element={<Navigate to="/login" replace />} />
 
             {/* Protected Routes */}
             <Route
               path="/*"
               element={
-                <ProtectedRoute>
-                  <>
-                    <Navbar />
-                    <Layout className="flex flex-col w-full">
-                      <Header />
-                      <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/course" element={<CoursePage />} />
-                        <Route
-                          path="/course/create"
-                          element={<CreateNewCoursePage />}
-                        />
-                        <Route
-                          path="/course/:id"
-                          element={<CourseDetailPage />}
-                        />
-                        <Route path="/schedule" element={<SchedulePage />} />
-                        <Route path="/accounts" element={<AccountPage />} />
-                        <Route
-                          path="/candidates"
-                          element={<ImportCandidate />}
-                        />
-                        <Route
-                          path="/profile"
-                          element={<PersonalProfilePage />}
-                        />
-                        <Route
-                          path="/accomplishments"
-                          element={<AccomplishmentsPage />}
-                        />
-                        <Route
-                          path="/accomplishment/:id"
-                          element={<AccomplishmentDetail />}
-                        />
-                        <Route path="/grade" element={<GradeImportPage />} />
-                      </Routes>
-                      <Footer />
+                <ProtectedRoute
+                  element={
+                    <Layout className="min-h-screen flex w-screen">
+                      <Navbar />
+                      <Layout className="flex flex-col w-full">
+                        <Header />
+                        <Routes>
+                          <Route path="/home" element={<HomePage />} />
+                          <Route path="/all courses" element={<CoursePage />} />
+                          <Route
+                            path="/assigned-trainee-courses/:id"
+                            element={<AssignedTraineeCoursePage />}
+                          />
+                          {/* <Route
+                            path="/course/:id"
+                            element={<CourseDetailPage />}
+                          /> */}
+                          <Route path="/schedule" element={<SchedulePage />} />
+                          <Route
+                            path="/schedule/create"
+                            element={<CreateSchedulePage />}
+                          />
+                          <Route path="/accounts" element={<AccountPage />} />
+                          <Route
+                            path="/candidates-view"
+                            element={<CandidatePage />}
+                          />
+                          <Route
+                            path="/profile/:userId"
+                            element={<PersonalProfilePage />}
+                          />
+                          <Route
+                            path="/accomplishments"
+                            element={<AccomplishmentsPage />}
+                          />
+                          <Route
+                            path="/accomplishment/:id"
+                            element={<AccomplishmentDetail />}
+                          />
+                          <Route path="/grade" element={<GradeImportPage />} />
+                          <Route
+                            path="/candidates-import"
+                            element={<ImportCandidate />}
+                          />
+                          <Route
+                            path="/notifications"
+                            element={<NotificationPage />}
+                          />
+                          <Route
+                            path="/request"
+                            element={<RequestListPage />}
+                          />
+                          <Route
+                            path="/requests/:id"
+                            element={<RequestDetail />}
+                          />
+                          <Route
+                            path="/send-request"
+                            element={<SendRequestPage />}
+                          />
+                          <Route
+                            path="/candidates/:id"
+                            element={<CandidateDetailPage />}
+                          />
+                          <Route
+                            path="/import-assign-trainee"
+                            element={<AssignTraineePage />}
+                          />
+                          <Route
+                            path="/assigned-trainee"
+                            element={<AssignedTraineePage />}
+                          />
+                          {/* <Route
+                            path="/import-assign-instructor"
+                            element={<AssignInstructorPage />}
+                          /> */}
+                          <Route path="/subject" element={<SubjectPage />} />
+                          <Route
+                            path="/subject-create"
+                            element={<CreateSubjectPage />}
+                          />
+                          <Route
+                            path="/subject/:subjectId"
+                            element={<SubjectDetailPage />}
+                          />
+                          <Route
+                            path="/subject-edit/:subjectId"
+                            element={<UpdateSubjectPage />}
+                          />
+                          <Route path="/plan" element={<PlanPage />} />
+                          <Route
+                            path="/plan/create"
+                            element={<CreateTrainingPlanPage />}
+                          />
+                          <Route
+                            path="/plan/edit/:planId"
+                            element={<EditPlanPage />}
+                          />
+                          <Route
+                            path="/course/create"
+                            element={<CreateCoursePage />}
+                          />
+                          <Route path="/course" element={<CoursePage />} />
+                          <Route
+                            path="/course/edit/:id"
+                            element={<EditCoursePage />}
+                          />
+                          <Route
+                            path="/assigned-trainee/:id"
+                            element={<AssignedTraineeDetailPage />}
+                          />
+                        </Routes>
+                        <Footer />
+                      </Layout>
                     </Layout>
-                  </>
-                </ProtectedRoute>
+                  }
+                />
               }
             />
           </Routes>
-        </Layout>
-      </Router>
-    </AvatarProvider>
+        </AvatarProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 

@@ -1,20 +1,14 @@
-// src/component/ProtectedRoute.jsx
 import { Navigate } from "react-router-dom";
 import PropTypes from "prop-types";
+import { useAuth } from "../context/useAuth";
 
-const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem("token");
-
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
+const ProtectedRoute = ({ element }) => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? element : <Navigate to="/login" replace />;
 };
 
-// ✅ Add PropTypes validation
 ProtectedRoute.propTypes = {
-  children: PropTypes.node.isRequired,
+  element: PropTypes.node.isRequired,
 };
 
 export default ProtectedRoute;

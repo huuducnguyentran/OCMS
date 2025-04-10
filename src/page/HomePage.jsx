@@ -1,53 +1,89 @@
+import { useEffect, useState } from "react";
 import { SearchOutlined } from "@ant-design/icons";
 import { Input, Layout } from "antd";
 
-const HomePage = () => (
-  <Layout className="min-h-screen flex w-full overflow-hidden">
-    <Layout className="flex flex-col w-full h-screen overflow-hidden">
-      <Layout.Content className="p-6 bg-gray-100 flex-grow overflow-auto">
-        {/* Search Bar */}
-        <div className="bg-white p-3 rounded-lg shadow-md flex items-center mb-6">
-          <Input
-            type="text"
-            placeholder="Search for anything here.."
-            className="w-full p-2 outline-none"
-            prefix={<SearchOutlined className="text-gray-400" />}
-          />
-        </div>
+const HomePage = () => {
+  const [role, setRole] = useState("user"); // default fallback
 
-        {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card
-            title="Total Accounts"
-            count={213}
-            color="blue"
-            percentage={4}
-          />
-          <Card
-            title="Total Actives"
-            count={162}
-            color="green"
-            percentage={4}
-          />
-          <Card
-            title="Total Deactivates"
-            count={41}
-            color="red"
-            percentage={4}
-          />
-        </div>
+  useEffect(() => {
+    const storedRole = localStorage.getItem("role");
+    if (storedRole) setRole(storedRole);
+  }, []);
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <PieChart title="Active account" percentage={81} color="red" />
-          <PieChart title="Employee Growth" percentage={22} color="green" />
-        </div>
-      </Layout.Content>
+  return (
+    <Layout className="min-h-screen flex w-full overflow-hidden">
+      <Layout className="flex flex-col w-full h-screen overflow-hidden">
+        <Layout.Content className="p-6 bg-gray-100 flex-grow overflow-auto">
+          {role === "Admin" ? <AdminHome /> : <NormalHome />}
+        </Layout.Content>
+      </Layout>
     </Layout>
-  </Layout>
+  );
+};
+
+export default HomePage;
+
+// ✅ Original Home for Admin Role
+const AdminHome = () => (
+  <>
+    {/* Search Bar */}
+    <div className="bg-white p-3 rounded-lg shadow-md flex items-center mb-6">
+      <Input
+        type="text"
+        placeholder="Search for anything here.."
+        className="w-full p-2 outline-none"
+        prefix={<SearchOutlined className="text-gray-400" />}
+      />
+    </div>
+
+    {/* Overview Cards */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <Card title="Total Accounts" count={213} color="blue" percentage={4} />
+      <Card title="Total Actives" count={162} color="green" percentage={4} />
+      <Card title="Total Deactivates" count={41} color="red" percentage={4} />
+    </div>
+
+    {/* Charts */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <PieChart title="Active account" percentage={81} color="red" />
+      <PieChart title="Employee Growth" percentage={22} color="green" />
+    </div>
+  </>
 );
 
-// eslint-disable-next-line react/prop-types
+// ✅ GitHub-style Home for other roles
+const NormalHome = () => (
+  <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+    <h1 className="text-2xl font-semibold mb-4 text-gray-800">
+      Welcome Back 👋
+    </h1>
+    <p className="text-gray-600 mb-6">
+      Here's what’s going on with your account today.
+    </p>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="bg-gray-50 p-4 rounded-lg border">
+        <h2 className="font-medium text-gray-700 mb-2">Recent Activity</h2>
+        <ul className="text-sm text-gray-600 space-y-2">
+          <li>✅ You completed your profile</li>
+          <li>📥 You joined a training course</li>
+          <li>📅 You have 2 upcoming sessions</li>
+        </ul>
+      </div>
+
+      <div className="bg-gray-50 p-4 rounded-lg border">
+        <h2 className="font-medium text-gray-700 mb-2">Quick Actions</h2>
+        <ul className="text-sm text-gray-600 space-y-2">
+          <li>🔍 Browse available trainings</li>
+          <li>💬 Contact your trainer</li>
+          <li>📊 View your performance</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+);
+
+// 📊 Card component
 const Card = ({ title, count, color, percentage }) => (
   <div
     className={`bg-white p-6 rounded-lg shadow-md flex flex-col items-center w-full`}
@@ -63,7 +99,7 @@ const Card = ({ title, count, color, percentage }) => (
   </div>
 );
 
-// eslint-disable-next-line react/prop-types
+// 🥧 Pie chart component
 const PieChart = ({ title, percentage, color }) => (
   <div className="bg-white p-4 rounded-lg shadow-md flex flex-col items-center w-full">
     <div className="relative w-32 h-32">
@@ -95,5 +131,3 @@ const PieChart = ({ title, percentage, color }) => (
     <p className="mt-2 text-gray-500">{title}</p>
   </div>
 );
-
-export default HomePage;

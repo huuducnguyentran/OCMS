@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Layout, Button, Divider, Space, Image } from "antd";
+import { Layout, Button, Image } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import dayjs from "dayjs";
@@ -44,20 +44,27 @@ const CourseDetailPage = () => {
               <div className="sticky top-8">
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                   <Image
-                    src={course.image || "https://via.placeholder.com/600x400?text=Course+Image"}
+                    src={
+                      course.image ||
+                      "https://via.placeholder.com/600x400?text=Course+Image"
+                    }
                     alt={course.title}
                     preview={true}
                     className="w-full object-cover transition-transform duration-300 hover:scale-105"
-                    style={{ height: '300px' }}
+                    style={{ height: "300px" }}
                   />
                   {/* Quick Info Cards */}
                   <div className="p-6 space-y-4">
                     <div className="bg-blue-50 rounded-xl p-4">
-                      <p className="text-sm text-blue-600 font-semibold">Course Code</p>
+                      <p className="text-sm text-blue-600 font-semibold">
+                        Course Code
+                      </p>
                       <p className="text-lg text-gray-800">{course.code}</p>
                     </div>
                     <div className="bg-purple-50 rounded-xl p-4">
-                      <p className="text-sm text-purple-600 font-semibold">Level</p>
+                      <p className="text-sm text-purple-600 font-semibold">
+                        Level
+                      </p>
                       <p className="text-lg text-gray-800">{course.level}</p>
                     </div>
                   </div>
@@ -72,10 +79,12 @@ const CourseDetailPage = () => {
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
                   {course.title}
                 </h1>
-                
+
                 {/* Description */}
                 <div className="prose max-w-none">
-                  <h3 className="text-xl font-semibold text-gray-700 mb-3">Description</h3>
+                  <h3 className="text-xl font-semibold text-gray-700 mb-3">
+                    Description
+                  </h3>
                   <p className="text-gray-600 text-lg leading-relaxed">
                     {course.description || "No description available."}
                   </p>
@@ -84,10 +93,14 @@ const CourseDetailPage = () => {
 
               {/* Course Timeline */}
               <div className="bg-white rounded-2xl shadow-xl p-8">
-                <h3 className="text-xl font-semibold text-gray-700 mb-6">Course Timeline</h3>
+                <h3 className="text-xl font-semibold text-gray-700 mb-6">
+                  Course Timeline
+                </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6">
-                    <p className="text-sm text-blue-600 font-semibold mb-2">Start Date</p>
+                    <p className="text-sm text-blue-600 font-semibold mb-2">
+                      Start Date
+                    </p>
                     <p className="text-lg text-gray-800">
                       {course.startDate ? (
                         <>
@@ -98,11 +111,15 @@ const CourseDetailPage = () => {
                             {dayjs(course.startDate).format("YYYY")}
                           </span>
                         </>
-                      ) : "N/A"}
+                      ) : (
+                        "N/A"
+                      )}
                     </p>
                   </div>
                   <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-6">
-                    <p className="text-sm text-purple-600 font-semibold mb-2">End Date</p>
+                    <p className="text-sm text-purple-600 font-semibold mb-2">
+                      End Date
+                    </p>
                     <p className="text-lg text-gray-800">
                       {course.endDate ? (
                         <>
@@ -113,7 +130,9 @@ const CourseDetailPage = () => {
                             {dayjs(course.endDate).format("YYYY")}
                           </span>
                         </>
-                      ) : "N/A"}
+                      ) : (
+                        "N/A"
+                      )}
                     </p>
                   </div>
                 </div>
