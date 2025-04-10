@@ -10,7 +10,7 @@ export const importCertificate = async (formData) => {
       formData,
       {
         headers: {
-          "Content-Type": "multipart/form-data", // optional if using FormData
+          "Content-Type": "multipart/form-data",
         },
       }
     );
@@ -52,6 +52,37 @@ export const fetchCertificateTemplatebyId = async (id) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching certificate templates:", error);
+    throw error;
+  }
+};
+
+export const updateCertificateTemplate = async (templateId, formData) => {
+  try {
+    const response = await axiosInstance.put(
+      `/${API.UPDATE_CERTIFICATE_TEMPLATE}/${templateId}/`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating certificate templates:", error);
+    throw error;
+  }
+};
+
+export const deleteCertificateTemplate = async (templateId) => {
+  try {
+    const response = await axiosInstance.delete(
+      `/${API.UPDATE_CERTIFICATE_TEMPLATE}/${templateId}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating certificate templates:", error);
     throw error;
   }
 };

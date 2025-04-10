@@ -77,5 +77,6 @@ export const API = {
   IMPORT_CERTIFICATE_TEMPLATE: "CertificateTemplate",
   GET_ALL_CERTIFICATE_TEMPLATE: "CertificateTemplate",
   GET_CERTIFICATE_TEMPLATE_BY_ID: "CertificateTemplate",
-  DELETE_CERTIFICATE_TEMPLATE: "Certificate",
+  DELETE_CERTIFICATE_TEMPLATE: "CertificateTemplate",
+  UPDATE_CERTIFICATE_TEMPLATE: "CertificateTemplate",
 };

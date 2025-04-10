@@ -1,10 +1,21 @@
 import { useEffect, useState } from "react";
-import { Table, Typography, message, Button, Modal, Spin } from "antd";
+import {
+  Table,
+  Typography,
+  message,
+  Button,
+  Modal,
+  Spin,
+  Menu,
+  Dropdown,
+  Popconfirm,
+} from "antd";
 import {
   fetchCertificateTemplates,
   fetchCertificateTemplatebyId,
+  deleteCertificateTemplate,
 } from "../../services/certificateService";
-import { PlusOutlined } from "@ant-design/icons";
+import { EllipsisOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 const { Title } = Typography;
@@ -100,13 +111,61 @@ const CertificateTemplateListPage = () => {
         </Button>
       ),
     },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => {
+        const menu = (
+          <Menu>
+            <Menu.Item
+              key="edit"
+              onClick={() =>
+                navigate(
+                  `/certificate-template/update/${record.certificateTemplateId}`
+                )
+              }
+            >
+              Edit
+            </Menu.Item>
+
+            <Menu.Item key="delete">
+              <Popconfirm
+                title="Are you sure you want to delete this template?"
+                onConfirm={async () => {
+                  try {
+                    await deleteCertificateTemplate(
+                      record.certificateTemplateId
+                    );
+                    message.success("Template deleted successfully.");
+                    // Reload templates
+                    const data = await fetchCertificateTemplates();
+                    setTemplates(data);
+                  } catch (err) {
+                    message.error("Failed to delete template.", err);
+                  }
+                }}
+                okText="Yes"
+                cancelText="No"
+              >
+                Delete
+              </Popconfirm>
+            </Menu.Item>
+          </Menu>
+        );
+        return (
+          <Dropdown overlay={menu} trigger={["click"]}>
+            <Button icon={<EllipsisOutlined />} />
+          </Dropdown>
+        );
+      },
+    },
   ];
 
   return (
     <div className="min-h-screen bg-white p-6">
       <div className="max-w-7xl mx-auto">
         <button
-          className="fixed bottom-6 right-6 bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-full shadow-lg animate__animated animate__bounceIn"
+          className="fixed bottom-6 right-6 z-50 bg-blue-500 hover:bg-blue-600 text-white border-none shadow-lg animate__animated animate__bounceIn"
           onClick={() => navigate("/certificate-import")}
         >
           <PlusOutlined className="text-xl" />
