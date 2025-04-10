@@ -139,7 +139,7 @@ const AccountList = () => {
       const updatedUsers = await getAllUsers();
       setUsers(updatedUsers);
     } catch (error) {
-      message.error("Failed to update account");
+      message.error("Failed to update account", error);
     }
   };
 
@@ -188,7 +188,7 @@ const AccountList = () => {
                       colSpan="9"
                       className="border p-4 text-center text-red-500 font-medium"
                     >
-                      No result for "{searchTerm}"
+                      No result for {searchTerm}
                     </td>
                   </tr>
                 ) : (
