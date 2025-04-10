@@ -44,6 +44,7 @@ import AssignedTraineeCoursePage from "./page/assigned_trainee/AssignedTraineeCo
 import SendRequestPage from "./page/request/SendRequestPage";
 import UpdateSubjectPage from "./page/subject/UpdateSubjectPage";
 import CreateSchedulePage from "./page/course/CreateSchedulePage";
+import NotificationPage from "./page/user/NotificationPage";
 
 function App() {
   return (
@@ -105,6 +106,10 @@ function App() {
                           <Route
                             path="/candidates-import"
                             element={<ImportCandidate />}
+                          />
+                          <Route
+                            path="/notifications"
+                            element={<NotificationPage />}
                           />
                           <Route
                             path="/request"
