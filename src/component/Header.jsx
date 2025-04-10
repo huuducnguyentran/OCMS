@@ -1,16 +1,19 @@
 // src/components/Header.jsx
-import { Layout, Avatar } from "antd";
+import { Layout, Avatar, Badge } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import { useAvatar } from "../context/AvatarContext";
 import { useEffect, useState } from "react";
 import { getUserById } from "../services/userService";
+import { BellOutlined } from "@ant-design/icons";
+import { notificationService } from "../services/notificationService";
 
 const Header = () => {
   const navigate = useNavigate();
   const { avatar } = useAvatar();
   const [userID, setUserID] = useState("");
   const [userData, setUserData] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const storedUserID = localStorage.getItem("userID");
@@ -20,8 +23,56 @@ const Header = () => {
       getUserById(storedUserID)
         .then((data) => setUserData(data))
         .catch(console.error);
+        
+      // Fetch unread notifications count
+      fetchUnreadCount(storedUserID);
     }
   }, []);
+  
+  // Thêm interval để cập nhật số lượng thông báo mỗi 30 giây
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      const storedUserID = localStorage.getItem("userID");
+      if (storedUserID) {
+        fetchUnreadCount(storedUserID);
+      }
+    }, 30000);
+    
+    // Dọn dẹp interval khi component unmount
+    return () => clearInterval(intervalId);
+  }, []);
+  
+  // Thêm event listener để lắng nghe sự kiện làm mới thông báo
+  useEffect(() => {
+    const handleRefreshNotifications = () => {
+      const storedUserID = localStorage.getItem("userID");
+      if (storedUserID) {
+        fetchUnreadCount(storedUserID);
+      }
+    };
+    
+    window.addEventListener('refreshNotifications', handleRefreshNotifications);
+    
+    return () => {
+      window.removeEventListener('refreshNotifications', handleRefreshNotifications);
+    };
+  }, []);
+  
+  const fetchUnreadCount = async (userId) => {
+    try {
+      const result = await notificationService.getUnreadCount(userId);
+      console.log("Unread count response:", result);
+      
+      if (result && result.unreadCount !== undefined) {
+        setUnreadCount(result.unreadCount);
+      } else {
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      console.error("Error fetching unread notifications:", error);
+      setUnreadCount(0);
+    }
+  };
 
   const isLoggedIn = !!localStorage.getItem("token");
 
@@ -34,6 +85,17 @@ const Header = () => {
           <span className="text-gray-700 font-medium text-sm">
             {userData.username}
           </span>
+        )}
+
+        {isLoggedIn && (
+          <Badge count={unreadCount} overflowCount={99}>
+            <div 
+              className="cursor-pointer text-xl text-gray-600"
+              onClick={() => navigate('/notifications')}
+            >
+              <BellOutlined />
+            </div>
+          </Badge>
         )}
 
         {isLoggedIn ? (
