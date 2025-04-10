@@ -11,7 +11,7 @@ export const trainingPlanService = {
   getTrainingPlanById: async (id) => {
     console.log("Getting training plan with ID:", id);
     try {
-      const response = await axiosInstance.get(`${API.GET_TRAINING_PLAN_BY_ID}/${id}`);
+      const response = await axiosInstance.get(`/${API.GET_TRAINING_PLAN_BY_ID}/${id}`);
       console.log("API response:", response.data);
       return response.data;
     } catch (error) {
@@ -46,23 +46,16 @@ export const trainingPlanService = {
     return response.data;
   },
 
-  createRequest: async (planId, description, notes) => {
+  createRequest: async (planId, description, notes, requestType) => {
     try {
-      const requestData = {
-        requestType: 0,
-        requestEntityId: planId,
-        description: description || "",
-        notes: notes || ""
-      };
-      console.log("Creating request with data:", requestData);
-      
-      const response = await axiosInstance.post(
-        API.GET_ALL_REQUEST,
-        requestData
-      );
+      const response = await axiosInstance.post(API.CREATE_REQUEST, {
+        planId: planId,
+        description: description,
+        notes: notes || "",
+        requestType: requestType
+      });
       return response.data;
     } catch (error) {
-      console.error("Error creating request:", error);
       throw error;
     }
   }

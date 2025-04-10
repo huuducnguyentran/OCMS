@@ -1,6 +1,6 @@
 // src/pages/AssignedTraineePage.jsx
 import { useEffect, useState } from "react";
-import { Table, Tooltip } from "antd";
+import { Table, Tag, Tooltip } from "antd";
 import { useNavigate } from "react-router-dom";
 import { getAllAssignedTrainee } from "../../services/traineeService";
 
@@ -74,7 +74,16 @@ const AssignedTraineePage = () => {
       dataIndex: "requestStatus",
       key: "requestStatus",
       width: 130,
+      render: (status) => {
+        let color = "default";
+        if (status === "Pending") color = "orange";
+        else if (status === "Approved") color = "green";
+        else if (status === "Rejected") color = "red";
+
+        return <Tag color={color}>{status}</Tag>;
+      },
     },
+
     {
       title: "Approved By",
       dataIndex: "approveByUserId",

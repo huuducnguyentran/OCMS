@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Spin, Descriptions, message, Button, Input } from "antd";
+import { Spin, Descriptions, message, Button, Input, Tag, Select } from "antd";
 import {
   ArrowLeftOutlined,
   EditOutlined,
@@ -11,6 +11,7 @@ import {
   getAssignedTraineeById,
   UpdateAssignedTrainee,
 } from "../../services/traineeService";
+import { courseService } from "../../services/courseService";
 
 const AssignedTraineeDetailPage = () => {
   const { id } = useParams();
@@ -19,6 +20,7 @@ const AssignedTraineeDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState("");
+  const [courses, setCourses] = useState([]);
 
   useEffect(() => {
     const fetchAssignment = async () => {
@@ -32,7 +34,17 @@ const AssignedTraineeDetailPage = () => {
         setLoading(false);
       }
     };
+    const fetchCourses = async () => {
+      try {
+        const response = await courseService.getAllCourses();
+        const coursesArray = response.courses || response.data || response;
+        setCourses(coursesArray);
+      } catch {
+        message.error("Failed to load courses");
+      }
+    };
 
+    fetchCourses();
     fetchAssignment();
   }, [id]);
 
@@ -103,11 +115,38 @@ const AssignedTraineeDetailPage = () => {
     >
       {editingField === field ? (
         <div className="flex items-center gap-2">
-          <Input
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            size="small"
-          />
+          {field === "courseId" ? (
+            <Select
+              showSearch
+              placeholder="Select a Course"
+              optionFilterProp="label"
+              onChange={(value) => setEditValue(value)}
+              value={editValue || undefined}
+              style={{ width: 240 }}
+              filterOption={(input, option) =>
+                (option?.label ?? "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+            >
+              {Array.isArray(courses) &&
+                courses.map((course) => (
+                  <Select.Option
+                    key={course.courseId}
+                    value={course.courseId}
+                    label={`${course.courseName} (${course.courseId})`}
+                  >
+                    {course.courseName} ({course.courseId})
+                  </Select.Option>
+                ))}
+            </Select>
+          ) : (
+            <Input
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              size="small"
+            />
+          )}
           <CheckOutlined
             className="text-green-600 cursor-pointer"
             onClick={handleSaveEdit}
@@ -156,7 +195,15 @@ const AssignedTraineeDetailPage = () => {
           {renderEditableItem("Notes", "notes")}
 
           <Descriptions.Item label="Request Status">
-            {assignment.requestStatus}
+            {assignment.requestStatus === "Pending" && (
+              <Tag color="orange">Pending</Tag>
+            )}
+            {assignment.requestStatus === "Approved" && (
+              <Tag color="green">Approved</Tag>
+            )}
+            {assignment.requestStatus === "Rejected" && (
+              <Tag color="red">Rejected</Tag>
+            )}
           </Descriptions.Item>
           <Descriptions.Item label="Assign By User ID">
             {assignment.assignByUserId}
