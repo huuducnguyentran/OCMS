@@ -8,7 +8,8 @@ import {
   SearchOutlined,
   FilterOutlined,
   SortAscendingOutlined,
-  CalendarOutlined
+  CalendarOutlined,
+  InfoCircleOutlined
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { trainingPlanService } from '../../services/trainingPlanService';
@@ -80,18 +81,25 @@ const PlanPage = () => {
   const fetchTrainingPlans = async () => {
     try {
       setLoading(true);
+      console.log("Fetching all training plans...");
+      
       const response = await trainingPlanService.getAllTrainingPlans();
+      console.log("All training plans response:", response);
+      
       if (response && response.plans) {
+        console.log("Training plans data:", response.plans);
         setTrainingPlans(response.plans);
         applyFilters(response.plans);
       } else {
-        message.error("Failed to load training plans data");
+        console.error("Invalid response format:", response);
+        message.error("Failed to load training plans data: Invalid format");
         setTrainingPlans([]);
         setFilteredPlans([]);
       }
     } catch (error) {
       console.error("Failed to fetch training plans:", error);
-      message.error("Failed to load training plans");
+      console.error("Error details:", error.message, error.stack);
+      message.error("Failed to load training plans: " + (error.message || "Unknown error"));
       setTrainingPlans([]);
       setFilteredPlans([]);
     } finally {
@@ -172,6 +180,14 @@ const PlanPage = () => {
   const getPlanLevelText = (level) => {
     // Chỉ trả về level như giá trị thực tế
     return level || "Unknown";
+  };
+
+  const handleViewDetails = (planId) => {
+    if (planId) {
+      navigate(`/plan/${planId}`);
+    } else {
+      message.error("Invalid plan ID");
+    }
   };
 
   const handleEdit = (planId) => {
@@ -459,6 +475,13 @@ const PlanPage = () => {
                 key={plan.planId}
                 className="hover:shadow-xl transition-shadow duration-300 rounded-xl border-none bg-white overflow-hidden"
                 actions={[
+                  <Tooltip title="View Details">
+                    <InfoCircleOutlined
+                      key="details"
+                      className="text-blue-500 text-lg hover:text-blue-700"
+                      onClick={() => handleViewDetails(plan.planId)}
+                    />
+                  </Tooltip>,
                   <Tooltip title="Edit Plan">
                     <EditOutlined
                       key="edit"
@@ -482,7 +505,10 @@ const PlanPage = () => {
                   </Tooltip>,
                 ]}
               >
-                <div className="p-4">
+                <div 
+                  className="p-4 cursor-pointer"
+                  onClick={() => handleViewDetails(plan.planId)}
+                >
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <Title level={4} className="text-xl font-bold text-gray-800 mb-2">
