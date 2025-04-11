@@ -34,6 +34,7 @@ import AssignedTraineePage from "./page/assigned_trainee/AssignedTraineePage";
 import PlanPage from "./page/training_plan/PlanPage";
 import CreateTrainingPlanPage from "./page/training_plan/CreateTrainingPlanPage";
 import EditPlanPage from "./page/training_plan/EditPlanPage";
+import TrainingPlanDetailPage from "./page/training_plan/TrainingPlanDetailPage";
 import CreateCoursePage from "./page/course/CreateCoursePage";
 import CoursePage from "./page/course/CoursePage";
 import EditCoursePage from "./page/course/EditCoursePage";
@@ -168,6 +169,10 @@ function App() {
                           <Route
                             path="/plan/edit/:planId"
                             element={<EditPlanPage />}
+                          />
+                          <Route
+                            path="/plan/:planId"
+                            element={<TrainingPlanDetailPage />}
                           />
                           <Route
                             path="/course/create"
