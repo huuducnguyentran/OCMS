@@ -8,11 +8,13 @@ import {
   SearchOutlined,
   FilterOutlined,
   SortAscendingOutlined,
-  CalendarOutlined
+  CalendarOutlined,
+  EyeOutlined
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { trainingPlanService } from '../../services/trainingPlanService';
 import "animate.css";
+import { useAuth } from '../../context/useAuth';
 
 const { Search } = AntInput;
 const { Title, Paragraph } = Typography;
@@ -76,19 +78,22 @@ const PlanPage = () => {
   const [selectedLevelValues, setSelectedLevelValues] = useState([]);
   const [dateSort, setDateSort] = useState('desc'); // 'asc' hoặc 'desc'
   const [filterVisible, setFilterVisible] = useState(false);
+  const [userRole, setUserRole] = useState(localStorage.getItem("role"));
+  const isTrainee = userRole === "Trainee";
 
   const fetchTrainingPlans = async () => {
     try {
       setLoading(true);
       const response = await trainingPlanService.getAllTrainingPlans();
-      if (response && response.plans) {
-        setTrainingPlans(response.plans);
-        applyFilters(response.plans);
-      } else {
-        message.error("Failed to load training plans data");
-        setTrainingPlans([]);
-        setFilteredPlans([]);
+      
+      // Kiểm tra và xử lý dữ liệu response
+      let plans = [];
+      if (response) {
+        plans = Array.isArray(response) ? response : (response.plans || []);
       }
+      
+      setTrainingPlans(plans);
+      applyFilters(plans);
     } catch (error) {
       console.error("Failed to fetch training plans:", error);
       message.error("Failed to load training plans");
@@ -110,15 +115,13 @@ const PlanPage = () => {
     }
   }, [location.state, navigate]);
 
-  // Apply all filters & sort
   const applyFilters = (plans) => {
-    const planList = plans || trainingPlans;
-    if (!planList || planList.length === 0) {
+    if (!plans || !Array.isArray(plans)) {
       setFilteredPlans([]);
       return;
     }
 
-    let result = [...planList];
+    let result = [...plans];
 
     // Filter by search text
     if (searchText && searchText.trim() !== '') {
@@ -141,8 +144,8 @@ const PlanPage = () => {
 
     // Sort by date
     result.sort((a, b) => {
-      const dateA = new Date(a.startDate);
-      const dateB = new Date(b.startDate);
+      const dateA = new Date(a.startDate || 0);
+      const dateB = new Date(b.startDate || 0);
       return dateSort === 'asc' 
         ? dateA.getTime() - dateB.getTime()
         : dateB.getTime() - dateA.getTime();
@@ -151,9 +154,20 @@ const PlanPage = () => {
     setFilteredPlans(result);
   };
 
-  // Apply filters when filter conditions change
+  // Add handleView function that was missing
+  const handleView = (planId) => {
+    if (planId) {
+      navigate(`/plan/view/${planId}`);
+    } else {
+      message.error("Invalid plan ID");
+    }
+  };
+
+  // Update useEffect to handle dependencies properly
   useEffect(() => {
-    applyFilters();
+    if (trainingPlans.length > 0) {
+      applyFilters(trainingPlans);
+    }
   }, [searchText, selectedStatusValues, selectedLevelValues, dateSort]);
 
   const getStatusColor = (status) => {
@@ -231,6 +245,50 @@ const PlanPage = () => {
 
   const handleDateSortChange = () => {
     setDateSort(prev => prev === 'asc' ? 'desc' : 'asc');
+  };
+
+  const getCardActions = (plan) => {
+    if (isTrainee) {
+      return [
+        <Tooltip title="View Details">
+          <EyeOutlined
+            key="view"
+            className="text-blue-500 text-lg hover:text-blue-700"
+            onClick={() => handleView(plan.planId)}
+          />
+        </Tooltip>
+      ];
+    }
+
+    return [
+      <Tooltip title="Edit Plan">
+        <EditOutlined
+          key="edit"
+          className="text-green-500 text-lg hover:text-green-700"
+          onClick={() => handleEdit(plan.planId)}
+        />
+      </Tooltip>,
+      <Tooltip title="Send Request">
+        <SendOutlined
+          key="request"
+          className="text-blue-500 text-lg hover:text-blue-700"
+          onClick={() => handleRequest(plan.planId, plan.planName)}
+        />
+      </Tooltip>,
+      <Tooltip title="Delete Plan">
+        <Popconfirm
+          title="Are you sure you want to delete this plan?"
+          onConfirm={() => handleDelete(plan.planId)}
+          okText="Yes"
+          cancelText="No"
+        >
+          <DeleteOutlined
+            key="delete"
+            className="text-red-500 text-lg hover:text-red-700"
+          />
+        </Popconfirm>
+      </Tooltip>
+    ];
   };
 
   const renderFilterSection = () => {
@@ -340,9 +398,13 @@ const PlanPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center animate__animated animate__fadeIn">
             <CalendarOutlined className="text-5xl mb-4" />
-            <h1 className="text-4xl font-bold mb-4">Training Plans</h1>
+            <h1 className="text-4xl font-bold mb-4">
+              {isTrainee ? "My Training Plans" : "Training Plans Management"}
+            </h1>
             <p className="text-xl text-blue-100 max-w-2xl mx-auto">
-              Manage and organize your training schedules effectively
+              {isTrainee 
+                ? "View and track your assigned training plans"
+                : "Manage and organize training schedules effectively"}
             </p>
           </div>
         </div>
@@ -441,14 +503,20 @@ const PlanPage = () => {
             description={
               <div className="text-center space-y-4">
                 <p className="text-gray-500 text-lg">
-                  {searchText ? `No plans matching "${searchText}"` : "No plans available"}
+                  {searchText 
+                    ? `No plans matching "${searchText}"` 
+                    : isTrainee 
+                      ? "You don't have any training plans yet"
+                      : "No plans available"}
                 </p>
-                <button
-                  onClick={() => navigate("/plan/create")}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Create your first plan
-                </button>
+                {!isTrainee && (
+                  <button
+                    onClick={() => navigate("/plan/create")}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Create your first plan
+                  </button>
+                )}
               </div>
             }
           />
@@ -458,29 +526,7 @@ const PlanPage = () => {
               <Card
                 key={plan.planId}
                 className="hover:shadow-xl transition-shadow duration-300 rounded-xl border-none bg-white overflow-hidden"
-                actions={[
-                  <Tooltip title="Edit Plan">
-                    <EditOutlined
-                      key="edit"
-                      className="text-green-500 text-lg hover:text-green-700"
-                      onClick={() => handleEdit(plan.planId)}
-                    />
-                  </Tooltip>,
-                  <Tooltip title="Send Request">
-                    <SendOutlined
-                      key="request"
-                      className="text-blue-500 text-lg hover:text-blue-700"
-                      onClick={() => handleRequest(plan.planId, plan.planName)}
-                    />
-                  </Tooltip>,
-                  <Tooltip title="Delete Plan">
-                    <DeleteOutlined
-                      key="delete"
-                      className="text-red-500 text-lg hover:text-red-700"
-                      onClick={() => handleDelete(plan.planId)}
-                    />
-                  </Tooltip>,
-                ]}
+                actions={getCardActions(plan)}
               >
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-4">
@@ -523,19 +569,21 @@ const PlanPage = () => {
           </div>
         )}
 
-        {/* Floating Action Button */}
-        <Tooltip title="Create New Plan" placement="left">
-          <button
-            onClick={() => navigate("/plan/create")}
-            className="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 animate__animated animate__bounceIn"
-          >
-            <PlusOutlined className="text-xl" />
-          </button>
-        </Tooltip>
+        {/* Floating Action Button - Only show for non-trainees */}
+        {!isTrainee && (
+          <Tooltip title="Create New Plan" placement="left">
+            <button
+              onClick={() => navigate("/plan/create")}
+              className="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 animate__animated animate__bounceIn"
+            >
+              <PlusOutlined className="text-xl" />
+            </button>
+          </Tooltip>
+        )}
       </div>
 
-      {/* Request Modal */}
-      {renderRequestModal()}
+      {/* Request Modal - Only for non-trainees */}
+      {!isTrainee && renderRequestModal()}
     </div>
   );
 };

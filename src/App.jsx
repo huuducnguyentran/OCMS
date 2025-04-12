@@ -50,6 +50,7 @@ import UpdateCertificateTemplatePage from "./page/certificate/UpdateCertificateT
 import GradeImportPage from "./page/grade/GradeImportPage";
 import ViewGradePage from "./page/grade/ViewGradePage";
 
+
 function App() {
   return (
     <Router>
@@ -161,6 +162,10 @@ function App() {
                             element={<UpdateSubjectPage />}
                           />
                           <Route path="/plan" element={<PlanPage />} />
+                          {/* <Route 
+                            path="/plan/view/:planId"
+                            element={<TrainingPlanDetails />}
+                          /> */}
                           <Route
                             path="/plan/create"
                             element={<CreateTrainingPlanPage />}

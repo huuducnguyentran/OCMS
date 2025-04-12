@@ -3,19 +3,22 @@ import { API } from "../../api/apiUrl";
 
 export const trainingPlanService = {
   getAllTrainingPlans: async () => {
-    const response = await axiosInstance.get(API.GET_ALL_TRAINING_PLANS);
+    const role = localStorage.getItem("role");
+    let endpoint = role === "Trainee" ? "TrainingPlan/joined" : "TrainingPlan";
+    const response = await axiosInstance.get(endpoint);
     return response.data;
   },
 
   
-  getTrainingPlanById: async (id) => {
-    console.log("Getting training plan with ID:", id);
+getTrainingPlanById: async (id) => {
     try {
-      const response = await axiosInstance.get(`/${API.GET_TRAINING_PLAN_BY_ID}/${id}`);
-      console.log("API response:", response.data);
-      return response.data;
+      const response = await axiosInstance.get(`${API.GET_TRAINING_PLAN_BY_ID}/${id}`);
+      // Kiểm tra và xử lý response
+      if (response.status === 200 && response.data) {
+        return response.data;
+      }
     } catch (error) {
-      console.error("API error:", error);
+      console.error('Error in getTrainingPlanById:', error);
       throw error;
     }
   },
@@ -38,10 +41,9 @@ export const trainingPlanService = {
     return response.data;
   },
 
-
-  deleteTrainingPlan: async (id) => {
+  deleteTrainingPlan: async (planId) => {
     const response = await axiosInstance.delete(
-      `${API.DELETE_TRAINING_PLAN}/${id}`
+      `${API.DELETE_TRAINING_PLAN}/${planId}`
     );
     return response.data;
   },
