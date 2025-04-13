@@ -33,7 +33,12 @@ const ViewGradePage = () => {
   const [filteredGrades, setFilteredGrades] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState("all");
   const [subjectList, setSubjectList] = useState([]);
+  const [sortedInfo, setSortedInfo] = useState({});
   const navigate = useNavigate();
+
+  const handleChange = (pagination, filters, sorter) => {
+    setSortedInfo(sorter);
+  };
 
   const columns = [
     {

@@ -49,17 +49,18 @@ const SubjectPage = () => {
 
         if (role === "Trainee") {
           const response = await trainingScheduleService.getTraineeSubjects();
-
           if (Array.isArray(response)) {
-            // Lấy danh sách môn học của trainee
             const traineeSubjects = response.map((subject) => ({
               subjectId: subject.subjectId,
               subjectName: subject.subjectName,
               courseId: subject.courseId,
+              description: subject.description,
+              credits: subject.credits,
+              passingScore: subject.passingScore
             }));
             setSubjects(traineeSubjects);
+            setFilteredSubjects(traineeSubjects);
 
-            // Lấy tất cả lịch học của trainee
             const traineeSchedules = response.flatMap((subject) =>
               subject.trainingSchedules.map((schedule) => ({
                 ...schedule,
@@ -70,10 +71,19 @@ const SubjectPage = () => {
             );
             setScheduleData(traineeSchedules);
           }
+        } else {
+          const response = await getAllSubject();
+          if (response && response.subjects) {
+            setSubjects(response.subjects);
+            setFilteredSubjects(response.subjects);
+          } else if (Array.isArray(response)) {
+            setSubjects(response);
+            setFilteredSubjects(response);
+          }
         }
       } catch (error) {
         console.error("Error fetching initial data:", error);
-        message.error("Không thể tải dữ liệu");
+        message.error("Không thể tải dữ liệu môn học");
       } finally {
         setLoading(false);
       }
@@ -292,23 +302,27 @@ const SubjectPage = () => {
                       onClick={() => navigate(`/subject/${subject.subjectId}`)}
                     />
                   </Tooltip>,
-                  <Tooltip title="Edit Subject">
-                    <EditOutlined
-                      key="edit"
-                      className="text-green-500 text-lg hover:text-green-700"
-                      onClick={() =>
-                        navigate(`/subject-edit/${subject.subjectId}`)
-                      }
-                    />
-                  </Tooltip>,
-                  <Tooltip title="Delete Subject">
-                    <DeleteOutlined
-                      key="delete"
-                      className="text-red-500 text-lg hover:text-red-700"
-                      onClick={() => handleDelete(subject.subjectId)}
-                    />
-                  </Tooltip>,
-                ]}
+                  sessionStorage.getItem("role") !== "Trainee" && (
+                    <Tooltip title="Edit Subject">
+                      <EditOutlined
+                        key="edit"
+                        className="text-green-500 text-lg hover:text-green-700"
+                        onClick={() =>
+                          navigate(`/subject-edit/${subject.subjectId}`)
+                        }
+                      />
+                    </Tooltip>
+                  ),
+                  sessionStorage.getItem("role") !== "Trainee" && (
+                    <Tooltip title="Delete Subject">
+                      <DeleteOutlined
+                        key="delete"
+                        className="text-red-500 text-lg hover:text-red-700"
+                        onClick={() => handleDelete(subject.subjectId)}
+                      />
+                    </Tooltip>
+                  ),
+                ].filter(Boolean)}
               >
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-4">
@@ -369,15 +383,17 @@ const SubjectPage = () => {
           </div>
         )}
 
-        {/* Floating Action Button */}
-        <Tooltip title="Create New Subject" placement="left">
-          <button
-            onClick={() => navigate("/subject-create")}
-            className="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 animate__animated animate__bounceIn"
-          >
-            <PlusOutlined className="text-xl" />
-          </button>
-        </Tooltip>
+        {/* Floating Action Button - Chỉ hiển thị cho Admin/Training Staff */}
+        {sessionStorage.getItem("role") !== "Trainee" && (
+          <Tooltip title="Create New Subject" placement="left">
+            <button
+              onClick={() => navigate("/subject-create")}
+              className="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 animate__animated animate__bounceIn"
+            >
+              <PlusOutlined className="text-xl" />
+            </button>
+          </Tooltip>
+        )}
       </div>
     </div>
   );
