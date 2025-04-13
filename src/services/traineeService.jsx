@@ -6,7 +6,7 @@ export const assignTrainee = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     const response = await axiosInstance.post(
       `/${API.ASSIGN_TRAINEE}`,

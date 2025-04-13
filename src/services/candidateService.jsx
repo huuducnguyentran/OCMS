@@ -8,7 +8,7 @@ export const importCandidate = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     const response = await axiosInstance.post(
       `/${API.IMPORT_CANDIDATE}`,
@@ -31,7 +31,7 @@ export const importCandidate = async (file) => {
 // ✅ Function to get list of candidates
 export const getCandidates = async () => {
   try {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     const response = await axiosInstance.get(`/${API.CANDIDATE}`, {
       headers: {
@@ -48,7 +48,7 @@ export const getCandidates = async () => {
 
 export const getCandidateById = async (id) => {
   try {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     const response = await axiosInstance.get(`/${API.CANDIDATE_BY_ID}/${id}`, {
       headers: {
@@ -65,7 +65,7 @@ export const getCandidateById = async (id) => {
 
 export const createCandidateAccount = async (id) => {
   try {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     const response = await axiosInstance.post(
       `/${API.CREATE_CANDIDATE_ACCOUNT}/${id}`,
       {},

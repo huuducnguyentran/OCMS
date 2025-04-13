@@ -6,7 +6,7 @@ const HomePage = () => {
   const [role, setRole] = useState("user"); // default fallback
 
   useEffect(() => {
-    const storedRole = localStorage.getItem("role");
+    const storedRole = sessionStorage.getItem("role");
     if (storedRole) setRole(storedRole);
   }, []);
 

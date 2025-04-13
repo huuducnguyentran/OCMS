@@ -63,7 +63,7 @@ export const updateCertificateTemplate = async (templateId, formData) => {
       formData,
       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
           "Content-Type": "multipart/form-data",
         },
       }

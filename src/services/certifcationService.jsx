@@ -4,7 +4,7 @@ import { API } from "../../api/apiUrl";
 
 export const getExternalCertificatesByCandidateId = async (id) => {
   try {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     const response = await axiosInstance.get(
       `/${API.GET_EXTERNAL_CERTIFICATE_BY_ID}/${id}`,

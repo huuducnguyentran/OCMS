@@ -15,7 +15,7 @@ const AssignedTraineeCoursePage = () => {
   }, []);
 
   const fetchCourses = async () => {
-    const storedUserID = localStorage.getItem("userID");
+    const storedUserID = sessionStorage.getItem("userID");
     try {
       const data = await courseService.getAssignedTraineeCourse(storedUserID);
       setCourses(data);

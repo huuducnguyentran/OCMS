@@ -35,49 +35,52 @@ const iconMap = {
 };
 
 const Navbar = () => {
-  const storedRole = localStorage.getItem("role");
+  const storedRole = sessionStorage.getItem("role");
   const [unreadCount, setUnreadCount] = useState(0);
-  
+
   useEffect(() => {
-    const storedUserID = localStorage.getItem("userID");
+    const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       fetchUnreadCount(storedUserID);
     }
   }, []);
-  
+
   // Thêm interval để cập nhật số lượng thông báo chưa đọc mỗi 30 giây
   useEffect(() => {
     const intervalId = setInterval(() => {
-      const storedUserID = localStorage.getItem("userID");
+      const storedUserID = sessionStorage.getItem("userID");
       if (storedUserID) {
         fetchUnreadCount(storedUserID);
       }
     }, 30000);
-    
+
     return () => clearInterval(intervalId);
   }, []);
-  
+
   // Thêm event listener để lắng nghe sự kiện làm mới thông báo
   useEffect(() => {
     const handleRefreshNotifications = () => {
-      const storedUserID = localStorage.getItem("userID");
+      const storedUserID = sessionStorage.getItem("userID");
       if (storedUserID) {
         fetchUnreadCount(storedUserID);
       }
     };
-    
-    window.addEventListener('refreshNotifications', handleRefreshNotifications);
-    
+
+    window.addEventListener("refreshNotifications", handleRefreshNotifications);
+
     return () => {
-      window.removeEventListener('refreshNotifications', handleRefreshNotifications);
+      window.removeEventListener(
+        "refreshNotifications",
+        handleRefreshNotifications
+      );
     };
   }, []);
-  
+
   const fetchUnreadCount = async (userId) => {
     try {
       const result = await notificationService.getUnreadCount(userId);
       console.log("NavBar unread count response:", result);
-      
+
       if (result && result.unreadCount !== undefined) {
         setUnreadCount(result.unreadCount);
       } else {

@@ -27,6 +27,7 @@ export const API = {
   GET_ALL_USER: "User",
   GET_USER_BY_ID: "User",
   UPDATE_USER: "User",
+  UPDATE_USER_AVATAR: "/User/avatar",
   UPDATE_PASSWORD: "User",
   FORGOT_PASSWORD: "User/forgot-password",
   RESET_PASSWORD: "User/reset-password",

@@ -15,7 +15,9 @@ export const trainingScheduleService = {
 
   getTrainingScheduleById: async (id) => {
     try {
-      const response = await axiosInstance.get(`${API.GET_TRAINING_SCHEDULE_BY_ID}/${id}`);
+      const response = await axiosInstance.get(
+        `${API.GET_TRAINING_SCHEDULE_BY_ID}/${id}`
+      );
       return response.data;
     } catch (error) {
       console.error(`Error fetching training schedule ${id}:`, error);
@@ -80,12 +82,12 @@ export const trainingScheduleService = {
       throw error;
     }
   },
-  
+
   validateToken: async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       if (!token) return false;
-      const response = await axiosInstance.get('User/validate-token');
+      const response = await axiosInstance.get("User/validate-token");
       return response.status === 200;
     } catch (error) {
       console.error("Token validation failed:", error);
@@ -95,11 +97,14 @@ export const trainingScheduleService = {
 
   getCreatedSchedules: async (userId) => {
     try {
-      const response = await axiosInstance.get(`${API.GET_ALL_TRAINING_SCHEDULE}`, {
-        params: {
-          createdBy: userId
+      const response = await axiosInstance.get(
+        `${API.GET_ALL_TRAINING_SCHEDULE}`,
+        {
+          params: {
+            createdBy: userId,
+          },
         }
-      });
+      );
       return response.data;
     } catch (error) {
       console.error("Error fetching created schedules:", error);
@@ -110,33 +115,33 @@ export const trainingScheduleService = {
   getScheduleBySubjectId: async (subjectId) => {
     try {
       console.log("Fetching schedules for subject:", subjectId);
-      
+
       // Chỉ gọi API subject, vì response đã chứa cả training schedules
       const subjectUrl = `${API.GET_SUBJECT_BY_ID}/${subjectId}`;
-      
+
       console.log("Fetching from:", subjectUrl);
-      
+
       try {
         // Chỉ gọi API subject, không cần gọi thêm API schedule
         const subjectResponse = await axiosInstance.get(subjectUrl);
         console.log("Subject API Response:", subjectResponse.data);
-        
+
         if (!subjectResponse.data || !subjectResponse.data.subject) {
           console.error("Invalid subject response format");
           throw new Error("Subject data not found");
         }
-        
+
         // Lấy thông tin subject từ response
         const subjectDetails = subjectResponse.data.subject;
-        
+
         // Lấy schedules từ subject response
         const schedules = subjectDetails.trainingSchedules || [];
-        
+
         console.log(`Found ${schedules.length} schedules in subject response`);
-        
+
         return {
           schedules: schedules,
-          subjectDetails: subjectDetails
+          subjectDetails: subjectDetails,
         };
       } catch (error) {
         console.error("API Error:", error);
@@ -150,10 +155,15 @@ export const trainingScheduleService = {
 
   getSchedulesBySubjectId: async (subjectId) => {
     try {
-      const response = await axiosInstance.get(`${API.GET_SCHEDULE_BY_SUBJECT}/${subjectId}`);
+      const response = await axiosInstance.get(
+        `${API.GET_SCHEDULE_BY_SUBJECT}/${subjectId}`
+      );
       return response.data;
     } catch (error) {
-      console.error(`Error fetching schedules for subject ${subjectId}:`, error);
+      console.error(
+        `Error fetching schedules for subject ${subjectId}:`,
+        error
+      );
       throw error;
     }
   },
@@ -161,27 +171,28 @@ export const trainingScheduleService = {
   getAllSubjects: async () => {
     try {
       console.log("Fetching all subjects from API");
-      
+
       const response = await axiosInstance.get(API.GET_ALL_SUBJECTS);
       console.log("All subjects API response:", response.data);
-      
+
       // Xử lý dữ liệu response
       if (response.data && response.data.subjects) {
         console.log(`Got ${response.data.subjects.length} subjects from API`);
         return response.data.subjects;
       }
-      
+
       if (Array.isArray(response.data)) {
-        console.log(`Got ${response.data.length} subjects from API (array format)`);
+        console.log(
+          `Got ${response.data.length} subjects from API (array format)`
+        );
         return response.data;
       }
-      
+
       console.warn("Unexpected API response format");
       return [];
     } catch (error) {
       console.error("Error fetching subjects from API:", error);
       throw error; // Ném lỗi ra để component xử lý
     }
-  }
+  },
 };
-  

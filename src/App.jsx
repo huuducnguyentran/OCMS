@@ -50,6 +50,7 @@ import CertificateTemplateListPage from "./page/certificate/CertificateTemplateP
 import UpdateCertificateTemplatePage from "./page/certificate/UpdateCertificateTemplatePage";
 import GradeImportPage from "./page/grade/GradeImportPage";
 import ViewGradePage from "./page/grade/ViewGradePage";
+import CertificateTemplateDetailPage from "./page/certificate/CertificateTemplateDetailPage";
 
 function App() {
   return (
@@ -198,6 +199,10 @@ function App() {
                           <Route
                             path="/certificate-template/update/:templateId"
                             element={<UpdateCertificateTemplatePage />}
+                          />
+                          <Route
+                            path="/certificate-template/:templateId"
+                            element={<CertificateTemplateDetailPage />}
                           />
                         </Routes>
                         <Footer />

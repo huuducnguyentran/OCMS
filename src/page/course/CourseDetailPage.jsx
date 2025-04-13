@@ -10,7 +10,7 @@ const CourseDetailPage = () => {
   const [course, setCourse] = useState(null);
 
   useEffect(() => {
-    const storedCourses = JSON.parse(localStorage.getItem("courses")) || [];
+    const storedCourses = JSON.parse(sessionStorage.getItem("courses")) || [];
     const foundCourse = storedCourses.find((c) => c.id.toString() === id);
     setCourse(foundCourse);
   }, [id]);

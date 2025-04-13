@@ -26,8 +26,8 @@ const UpdateCertificateTemplatePage = () => {
           templateStatus: data.templateStatus?.toString(),
         });
 
-        if (data.templateFile) {
-          setTemplateUrl(data.templateFile);
+        if (data.templateFileWithSas) {
+          setTemplateUrl(data.templateFileWithSas);
         }
       } catch (err) {
         message.error("Failed to load certificate template.", err);

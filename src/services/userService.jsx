@@ -33,6 +33,25 @@ export const updateUser = async (id, userData) => {
     throw error;
   }
 };
+export const updateAvatar = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const response = await axiosInstance.put(
+      `${API.UPDATE_USER_AVATAR}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
 
 export const updatePassword = async (id, password) => {
   try {

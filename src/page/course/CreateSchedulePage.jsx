@@ -1,19 +1,35 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Form, Input, Button, DatePicker, Select, 
-  Card, message, Spin, TimePicker, Checkbox,
-  Row, Col, Typography, Space
+import {
+  Form,
+  Input,
+  Button,
+  DatePicker,
+  Select,
+  Card,
+  message,
+  Spin,
+  TimePicker,
+  Checkbox,
+  Row,
+  Col,
+  Typography,
+  Space,
 } from "antd";
 import { useNavigate } from "react-router-dom";
-import { 
-  CalendarOutlined, SaveOutlined, 
-  RollbackOutlined, ClockCircleOutlined 
+import {
+  CalendarOutlined,
+  SaveOutlined,
+  RollbackOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
 import { trainingScheduleService } from "../../services/trainingScheduleService";
 import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
 import dayjs from "dayjs";
-import { getTrainingPlanSchema, applyTrainingPlanValidation } from "../../../utils/validationSchemas";
+import {
+  getTrainingPlanSchema,
+  applyTrainingPlanValidation,
+} from "../../../utils/validationSchemas";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -38,9 +54,9 @@ const CreateSchedulePage = () => {
     try {
       setLoading(true);
       // Call API to get list of subjects
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const response = await axiosInstance.get(API.GET_ALL_SUBJECTS, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       console.log("Subject API response:", response.data);
@@ -48,26 +64,31 @@ const CreateSchedulePage = () => {
       if (response.data && response.data.subjects) {
         // Process data according to API structure
         const subjectData = response.data.subjects;
-        
+
         // Filter out subjects with subjectId as "string" (invalid data)
-        const filteredSubjects = subjectData.filter(subject => 
-          subject.subjectId !== "string" && subject.subjectName !== "string"
+        const filteredSubjects = subjectData.filter(
+          (subject) =>
+            subject.subjectId !== "string" && subject.subjectName !== "string"
         );
-        
-        setSubjects(filteredSubjects.map(subject => ({
-          id: subject.subjectId,
-          name: subject.subjectName,
-          description: subject.description,
-          courseId: subject.courseId
-        })));
-        
+
+        setSubjects(
+          filteredSubjects.map((subject) => ({
+            id: subject.subjectId,
+            name: subject.subjectName,
+            description: subject.description,
+            courseId: subject.courseId,
+          }))
+        );
+
         console.log("Processed subjects:", subjects);
       } else if (response.data && Array.isArray(response.data)) {
         // In case API returns array directly
-        setSubjects(response.data.map(subject => ({
-          id: subject.subjectId || subject.id,
-          name: subject.subjectName || subject.name
-        })));
+        setSubjects(
+          response.data.map((subject) => ({
+            id: subject.subjectId || subject.id,
+            name: subject.subjectName || subject.name,
+          }))
+        );
       } else {
         console.warn("Unexpected subject data format:", response.data);
         setSubjects([]);
@@ -75,7 +96,7 @@ const CreateSchedulePage = () => {
     } catch (error) {
       console.error("Error fetching subjects:", error);
       message.error("Unable to load subject list");
-      
+
       // Sample data based on actual API
       setSubjects([
         { id: "S-0002", name: "Air plane daily journey" },
@@ -93,25 +114,29 @@ const CreateSchedulePage = () => {
     try {
       setLoading(true);
       // Call API to get list of instructors with role "Instructor"
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const response = await axiosInstance.get(API.GET_ALL_USER, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { role: "Instructor" }
+        params: { role: "Instructor" },
       });
 
       console.log("Instructor API response:", response.data);
 
       if (response.data && response.data.users) {
         const instructorData = response.data.users;
-        setInstructors(instructorData.map(instructor => ({
-          id: instructor.userId || instructor.id,
-          name: instructor.fullName || instructor.name || instructor.userName
-        })));
+        setInstructors(
+          instructorData.map((instructor) => ({
+            id: instructor.userId || instructor.id,
+            name: instructor.fullName || instructor.name || instructor.userName,
+          }))
+        );
       } else if (response.data && Array.isArray(response.data)) {
-        setInstructors(response.data.map(instructor => ({
-          id: instructor.userId || instructor.id,
-          name: instructor.fullName || instructor.name || instructor.userName
-        })));
+        setInstructors(
+          response.data.map((instructor) => ({
+            id: instructor.userId || instructor.id,
+            name: instructor.fullName || instructor.name || instructor.userName,
+          }))
+        );
       } else {
         console.warn("Unexpected instructor data format:", response.data);
         setInstructors([]);
@@ -119,11 +144,9 @@ const CreateSchedulePage = () => {
     } catch (error) {
       console.error("Error fetching instructors:", error);
       message.error("Unable to load instructor list");
-      
+
       // Sample data based on actual API
-      setInstructors([
-        { id: "INST-1", name: "Instructor User" },
-      ]);
+      setInstructors([{ id: "INST-1", name: "Instructor User" }]);
     } finally {
       setLoading(false);
     }
@@ -133,21 +156,23 @@ const CreateSchedulePage = () => {
   const handleSubmit = async (values) => {
     try {
       setSubmitting(true);
-      
+
       // Format dates to ISO string
       const startDate = values.startDate.format("YYYY-MM-DD");
       const endDate = values.endDate.format("YYYY-MM-DD");
-      
+
       // Format time to string
       const classTime = values.classTime.format("HH:mm:ss");
-      const subjectPeriod = values.subjectPeriod ? values.subjectPeriod.format("HH:mm:ss") : "01:30:00";
-      
+      const subjectPeriod = values.subjectPeriod
+        ? values.subjectPeriod.format("HH:mm:ss")
+        : "01:30:00";
+
       // Convert daysOfWeek to array of integers
-      const daysOfWeek = values.daysOfWeek.map(day => parseInt(day));
-      
+      const daysOfWeek = values.daysOfWeek.map((day) => parseInt(day));
+
       // Find selected subject information
-      const selectedSubject = subjects.find(s => s.id === values.subjectID);
-      
+      const selectedSubject = subjects.find((s) => s.id === values.subjectID);
+
       // Create data according to API format
       const scheduleData = {
         subjectID: values.subjectID,
@@ -160,14 +185,17 @@ const CreateSchedulePage = () => {
         daysOfWeek: daysOfWeek,
         classTime: classTime,
         subjectPeriod: subjectPeriod,
-        createdBy: localStorage.getItem("userId") // Add creator information
+        createdBy: sessionStorage.getItem("userId"), // Add creator information
       };
-      
+
       console.log("Submitting schedule data:", scheduleData);
-      
+
       // Call API to create schedule
-      const response = await axiosInstance.post(API.CREATE_TRAINING_SCHEDULE, scheduleData);
-      
+      const response = await axiosInstance.post(
+        API.CREATE_TRAINING_SCHEDULE,
+        scheduleData
+      );
+
       if (response.data) {
         message.success("Schedule created successfully!");
         // Navigate to "created" view in SchedulePage
@@ -175,7 +203,7 @@ const CreateSchedulePage = () => {
       }
     } catch (error) {
       console.error("Error creating schedule:", error);
-      
+
       if (error.response?.data?.message) {
         message.error(`Error: ${error.response.data.message}`);
       } else {
@@ -219,94 +247,109 @@ const CreateSchedulePage = () => {
         {/* Form Section */}
         <Card className="shadow-xl rounded-2xl">
           <Spin spinning={loading || submitting}>
-            <Form 
+            <Form
               form={form}
-              layout="vertical" 
+              layout="vertical"
               onFinish={handleSubmit}
               initialValues={{
                 startDate: dayjs(),
-                endDate: dayjs().add(30, 'day'),
-                classTime: dayjs('08:00:00', 'HH:mm:ss'),
-                subjectPeriod: dayjs('01:30:00', 'HH:mm:ss'),
+                endDate: dayjs().add(30, "day"),
+                classTime: dayjs("08:00:00", "HH:mm:ss"),
+                subjectPeriod: dayjs("01:30:00", "HH:mm:ss"),
                 daysOfWeek: ["0", "2", "4"],
               }}
             >
               <Row gutter={24}>
                 {/* Column 1 */}
                 <Col xs={24} md={12}>
-                  <Title level={4} className="mb-4">General Information</Title>
-                  
-                  <Form.Item 
-                    name="subjectID" 
+                  <Title level={4} className="mb-4">
+                    General Information
+                  </Title>
+
+                  <Form.Item
+                    name="subjectID"
                     label="Subject"
-                    rules={[{ required: true, message: "Please select a subject" }]}
+                    rules={[
+                      { required: true, message: "Please select a subject" },
+                    ]}
                   >
-                    <Select 
+                    <Select
                       placeholder="Select subject"
                       loading={loading}
                       showSearch
                       optionFilterProp="children"
                     >
-                      {subjects.map(subject => (
+                      {subjects.map((subject) => (
                         <Option key={subject.id} value={subject.id}>
                           {subject.name}
                         </Option>
                       ))}
                     </Select>
                   </Form.Item>
-                  
-                  <Form.Item 
-                    name="instructorID" 
+
+                  <Form.Item
+                    name="instructorID"
                     label="Instructor"
-                    rules={[{ required: true, message: "Please select an instructor" }]}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select an instructor",
+                      },
+                    ]}
                   >
-                    <Select 
+                    <Select
                       placeholder="Select instructor"
                       loading={loading}
                       showSearch
                       optionFilterProp="children"
                     >
-                      {instructors.map(instructor => (
+                      {instructors.map((instructor) => (
                         <Option key={instructor.id} value={instructor.id}>
                           {instructor.name}
                         </Option>
                       ))}
                     </Select>
                   </Form.Item>
-                  
+
                   <Row gutter={16}>
                     <Col span={12}>
-                      <Form.Item 
-                        name="location" 
+                      <Form.Item
+                        name="location"
                         label="Location"
-                        rules={[{ required: true, message: "Please enter a location" }]}
+                        rules={[
+                          {
+                            required: true,
+                            message: "Please enter a location",
+                          },
+                        ]}
                       >
                         <Input placeholder="Example: ABC Campus" />
                       </Form.Item>
                     </Col>
                     <Col span={12}>
-                      <Form.Item 
-                        name="room" 
+                      <Form.Item
+                        name="room"
                         label="Room"
-                        rules={[{ required: true, message: "Please enter a room" }]}
+                        rules={[
+                          { required: true, message: "Please enter a room" },
+                        ]}
                       >
                         <Input placeholder="Example: 101" />
                       </Form.Item>
                     </Col>
                   </Row>
-                  
-                  <Form.Item 
-                    name="notes" 
-                    label="Notes"
-                  >
+
+                  <Form.Item name="notes" label="Notes">
                     <TextArea rows={3} placeholder="Notes about the schedule" />
                   </Form.Item>
                 </Col>
-                
+
                 {/* Column 2 */}
                 <Col xs={24} md={12}>
-                  <Title level={4} className="mb-4">Class Schedule</Title>
-                  
+                  <Title level={4} className="mb-4">
+                    Class Schedule
+                  </Title>
+
                   <Row gutter={16}>
                     <Col span={12}>
                       <Form.Item
@@ -319,18 +362,24 @@ const CreateSchedulePage = () => {
                               if (!value) return Promise.resolve();
                               const now = new Date();
                               if (value.isBefore(dayjs(now))) {
-                                return Promise.reject(new Error('Start date and time must be in the future'));
+                                return Promise.reject(
+                                  new Error(
+                                    "Start date and time must be in the future"
+                                  )
+                                );
                               }
                               return Promise.resolve();
-                            }
-                          })
+                            },
+                          }),
                         ]}
                       >
                         <DatePicker
                           className="w-full rounded-lg py-2 px-3 text-base"
                           showTime
                           format="YYYY-MM-DD HH:mm:ss"
-                          disabledDate={(current) => current && current < dayjs().startOf('day')}
+                          disabledDate={(current) =>
+                            current && current < dayjs().startOf("day")
+                          }
                         />
                       </Form.Item>
                     </Col>
@@ -343,21 +392,27 @@ const CreateSchedulePage = () => {
                           ({ getFieldValue }) => ({
                             validator(_, value) {
                               if (!value) return Promise.resolve();
-                              
+
                               // Check if end date is after start date
-                              const startDate = getFieldValue('startDate');
+                              const startDate = getFieldValue("startDate");
                               if (startDate && value.isBefore(startDate)) {
-                                return Promise.reject(new Error('End date must be after start date'));
+                                return Promise.reject(
+                                  new Error("End date must be after start date")
+                                );
                               }
-                              
+
                               // Check duration is reasonable
                               if (startDate) {
-                                const diffDays = value.diff(startDate, 'days');
+                                const diffDays = value.diff(startDate, "days");
                                 if (diffDays < 1 || diffDays > 365) {
-                                  return Promise.reject(new Error('Training plan duration should be between 1 day and 365 days'));
+                                  return Promise.reject(
+                                    new Error(
+                                      "Training plan duration should be between 1 day and 365 days"
+                                    )
+                                  );
                                 }
                               }
-                              
+
                               return Promise.resolve();
                             },
                           }),
@@ -368,56 +423,86 @@ const CreateSchedulePage = () => {
                           showTime
                           format="YYYY-MM-DD HH:mm:ss"
                           disabledDate={(current) => {
-                            const startDate = form.getFieldValue('startDate');
-                            return current && (current < dayjs().startOf('day') || (startDate && current < startDate));
+                            const startDate = form.getFieldValue("startDate");
+                            return (
+                              current &&
+                              (current < dayjs().startOf("day") ||
+                                (startDate && current < startDate))
+                            );
                           }}
                         />
                       </Form.Item>
                     </Col>
                   </Row>
-                  
+
                   <Row gutter={16}>
                     <Col span={12}>
-                      <Form.Item 
-                        name="classTime" 
+                      <Form.Item
+                        name="classTime"
                         label="Class Time"
-                        rules={[{ required: true, message: "Please select a class time" }]}
+                        rules={[
+                          {
+                            required: true,
+                            message: "Please select a class time",
+                          },
+                        ]}
                       >
-                        <TimePicker className="w-full" format="HH:mm" placeholder="Select class time" />
+                        <TimePicker
+                          className="w-full"
+                          format="HH:mm"
+                          placeholder="Select class time"
+                        />
                       </Form.Item>
                     </Col>
                     <Col span={12}>
-                      <Form.Item 
-                        name="subjectPeriod" 
+                      <Form.Item
+                        name="subjectPeriod"
                         label="Duration"
-                        rules={[{ required: true, message: "Please select a duration" }]}
+                        rules={[
+                          {
+                            required: true,
+                            message: "Please select a duration",
+                          },
+                        ]}
                       >
-                        <TimePicker className="w-full" format="HH:mm" placeholder="Select duration" />
+                        <TimePicker
+                          className="w-full"
+                          format="HH:mm"
+                          placeholder="Select duration"
+                        />
                       </Form.Item>
                     </Col>
                   </Row>
-                  
-                  <Form.Item 
-                    name="daysOfWeek" 
+
+                  <Form.Item
+                    name="daysOfWeek"
                     label="Days of Week"
-                    rules={[{ required: true, message: "Please select at least one day" }]}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select at least one day",
+                      },
+                    ]}
                   >
-                    <Checkbox.Group options={daysOfWeekOptions} className="grid grid-cols-2 sm:grid-cols-4" />
+                    <Checkbox.Group
+                      options={daysOfWeekOptions}
+                      className="grid grid-cols-2 sm:grid-cols-4"
+                    />
                   </Form.Item>
                 </Col>
               </Row>
-              
+
               <div className="flex justify-end mt-6 gap-4">
-                <Button 
-                  icon={<RollbackOutlined />} 
+                <Button
+                  icon={<RollbackOutlined />}
                   onClick={() => navigate("/schedule")}
                   size="large"
                 >
                   Back
                 </Button>
-                <Button 
-                  type="primary" 
-                  icon={<SaveOutlined />} 
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
                   htmlType="submit"
                   loading={submitting}
                   size="large"

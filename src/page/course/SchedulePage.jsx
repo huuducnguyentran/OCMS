@@ -2,9 +2,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Table, Spin, Empty, message, Select, Tag, Button } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
-import { CalendarOutlined, ClockCircleOutlined, UserSwitchOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  CalendarOutlined,
+  ClockCircleOutlined,
+  UserSwitchOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import { trainingScheduleService } from "../../services/trainingScheduleService";
-
 
 const { Option } = Select;
 
@@ -18,31 +22,30 @@ const SchedulePage = () => {
   const [subjects, setSubjects] = useState([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
   const [selectedSubjectDetails, setSelectedSubjectDetails] = useState(null);
-  
+
   // Thêm các state mới cho search
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [subjectOptions, setSubjectOptions] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const searchTimeoutRef = useRef(null);
-  
+
   // Kiểm tra token và xác định quyền người dùng
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const role = localStorage.getItem("role");
-    
+    const token = sessionStorage.getItem("token");
+    const role = sessionStorage.getItem("role");
+
     if (!token) {
       message.error("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại");
       navigate("/login");
       return;
     }
-    
-    // Xác định quyền người dùng từ token hoặc localStorage
+
+    // Xác định quyền người dùng từ token hoặc sessionStorage
     if (role) {
       setUserRole(role);
     } else {
-      
       // Hoặc kiểm tra userId
-      const userId = localStorage.getItem("userId");
+      const userId = sessionStorage.getItem("userId");
       if (userId && userId.startsWith("TS-")) {
         setUserRole("TrainingStaff");
       } else {
@@ -51,24 +54,24 @@ const SchedulePage = () => {
       }
     }
   }, [navigate]);
-  
+
   // Fetch schedule data based on user role
   useEffect(() => {
     if (userRole) {
       fetchScheduleData();
     }
   }, [userRole, viewMode]);
-  
+
   // Thêm useEffect để fetch danh sách subjects
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
         setLoading(true);
         console.log("Fetching subjects from API...");
-        
+
         const subjects = await trainingScheduleService.getAllSubjects();
         console.log("Subjects fetched successfully:", subjects);
-        
+
         if (Array.isArray(subjects) && subjects.length > 0) {
           setSubjects(subjects);
           setSubjectOptions(subjects);
@@ -79,16 +82,22 @@ const SchedulePage = () => {
         }
       } catch (error) {
         console.error("Failed to fetch subjects:", error);
-        
+
         // Hiển thị lỗi cụ thể hơn
         if (error.response) {
-          message.error(`Lỗi API (${error.response.status}): ${error.response.data?.message || 'Không thể tải danh sách môn học'}`);
+          message.error(
+            `Lỗi API (${error.response.status}): ${
+              error.response.data?.message || "Không thể tải danh sách môn học"
+            }`
+          );
         } else if (error.request) {
-          message.error("Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.");
+          message.error(
+            "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng."
+          );
         } else {
           message.error("Không thể tải danh sách môn học");
         }
-        
+
         setSubjects([]);
       } finally {
         setLoading(false);
@@ -97,36 +106,40 @@ const SchedulePage = () => {
 
     fetchSubjects();
   }, []);
-  
+
   const fetchScheduleData = async () => {
     try {
       setLoading(true);
-      
-      const token = localStorage.getItem("token");
+
+      const token = sessionStorage.getItem("token");
       if (!token) {
         message.error("Phiên đăng nhập hết hạn");
         navigate("/login");
         return;
       }
-      
+
       // Nếu có subject được chọn
       if (selectedSubjectId) {
         try {
           // Log để debug
           console.log("Fetching data for subject:", selectedSubjectId);
-          
-          const data = await trainingScheduleService.getScheduleBySubjectId(selectedSubjectId);
+
+          const data = await trainingScheduleService.getScheduleBySubjectId(
+            selectedSubjectId
+          );
           console.log("Received data:", data);
-          
+
           if (data && data.subjectDetails) {
             setSelectedSubjectDetails(data.subjectDetails);
-            
+
             // Đảm bảo schedules là một mảng
-            const schedules = Array.isArray(data.schedules) ? data.schedules : [];
+            const schedules = Array.isArray(data.schedules)
+              ? data.schedules
+              : [];
             console.log("Processed schedules:", schedules);
-            
+
             setScheduleData(schedules);
-            
+
             if (schedules.length === 0) {
               message.info("Không có lịch học cho môn này");
             }
@@ -142,7 +155,7 @@ const SchedulePage = () => {
         }
         return; // Kết thúc sớm nếu đã xử lý subject
       }
-      
+
       // Xử lý trường hợp không có subject được chọn
       let response;
       try {
@@ -155,11 +168,14 @@ const SchedulePage = () => {
               response = await trainingScheduleService.getTraineeSubjects();
               break;
             case "created":
-              const userId = localStorage.getItem("userId");
-              response = await trainingScheduleService.getCreatedSchedules(userId);
+              const userId = sessionStorage.getItem("userId");
+              response = await trainingScheduleService.getCreatedSchedules(
+                userId
+              );
               break;
             default:
-              response = await trainingScheduleService.getAllTrainingSchedules();
+              response =
+                await trainingScheduleService.getAllTrainingSchedules();
           }
         } else if (userRole === "Instructor") {
           response = await trainingScheduleService.getInstructorSubjects();
@@ -215,10 +231,10 @@ const SchedulePage = () => {
   // Thêm useEffect để fetch lại data khi selectedSubjectId thay đổi
   useEffect(() => {
     if (userRole) {
-      console.log('Fetching data with:', {
+      console.log("Fetching data with:", {
         selectedSubjectId,
         userRole,
-        viewMode
+        viewMode,
       });
       fetchScheduleData();
     }
@@ -227,23 +243,23 @@ const SchedulePage = () => {
   // Xử lý chuỗi daysOfWeek thành mảng các ngày
   const parseDaysOfWeek = (daysOfWeekString) => {
     if (!daysOfWeekString) return [];
-    
+
     console.log("Parsing days:", daysOfWeekString);
-    
+
     // Xử lý các trường hợp ngày như "Saturday" hoặc "Monday, Tuesday, Wednesday"
     const days = daysOfWeekString
-      .split(',')
-      .map(day => day.trim())
+      .split(",")
+      .map((day) => day.trim())
       .filter(Boolean);
-    
+
     console.log("Parsed days:", days);
     return days;
   };
-  
+
   // Chuyển đổi thời gian từ string thành định dạng hiển thị
   const formatTime = (timeString) => {
     if (!timeString) return "";
-    
+
     // Xử lý nếu timeString có dạng "HH:mm:ss"
     if (timeString.includes(":")) {
       const parts = timeString.split(":");
@@ -251,7 +267,7 @@ const SchedulePage = () => {
         return `${parts[0]}:${parts[1]}`;
       }
     }
-    
+
     return timeString;
   };
 
@@ -260,7 +276,7 @@ const SchedulePage = () => {
     console.log("Processing schedule data:", {
       scheduleData,
       selectedSubjectId,
-      selectedSubjectDetails
+      selectedSubjectDetails,
     });
 
     if (!Array.isArray(scheduleData) || scheduleData.length === 0) {
@@ -269,22 +285,32 @@ const SchedulePage = () => {
     }
 
     // Lấy tất cả time slots duy nhất
-    const uniqueTimeSlots = [...new Set(scheduleData.map(item => item.classTime))]
+    const uniqueTimeSlots = [
+      ...new Set(scheduleData.map((item) => item.classTime)),
+    ]
       .filter(Boolean)
       .sort();
-    
+
     console.log("Unique time slots:", uniqueTimeSlots);
 
-    return uniqueTimeSlots.map(timeSlot => {
+    return uniqueTimeSlots.map((timeSlot) => {
       const row = {
         key: timeSlot,
-        timeFrame: formatTime(timeSlot)
+        timeFrame: formatTime(timeSlot),
       };
 
-      const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      const daysOfWeek = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ];
 
-      daysOfWeek.forEach(day => {
-        const matchingSchedules = scheduleData.filter(schedule => {
+      daysOfWeek.forEach((day) => {
+        const matchingSchedules = scheduleData.filter((schedule) => {
           const scheduleDays = parseDaysOfWeek(schedule.daysOfWeek);
           return schedule.classTime === timeSlot && scheduleDays.includes(day);
         });
@@ -302,15 +328,17 @@ const SchedulePage = () => {
               <div className="text-sm text-gray-500">
                 <div>Room: {schedule.room || "N/A"}</div>
                 <div>Location: {schedule.location || "N/A"}</div>
-                {schedule.courseId && (
-                  <div>Course: {schedule.courseId}</div>
-                )}
+                {schedule.courseId && <div>Course: {schedule.courseId}</div>}
                 {userRole === "TrainingStaff" && (
                   <>
                     <div>Instructor: {schedule.instructorID}</div>
                     <div>
-                      Status: 
-                      <Tag color={schedule.status === "Pending" ? "orange" : "green"}>
+                      Status:
+                      <Tag
+                        color={
+                          schedule.status === "Pending" ? "orange" : "green"
+                        }
+                      >
                         {schedule.status}
                       </Tag>
                     </div>
@@ -389,9 +417,9 @@ const SchedulePage = () => {
           <div className="flex items-center gap-3">
             <UserSwitchOutlined className="text-lg text-indigo-600" />
             <span className="font-medium">View as:</span>
-            <Select 
-              value={viewMode} 
-              onChange={setViewMode} 
+            <Select
+              value={viewMode}
+              onChange={setViewMode}
               className="w-48"
               style={{ width: 200 }}
             >
@@ -447,7 +475,9 @@ const SchedulePage = () => {
 
       try {
         // Gọi API để lấy thông tin subject và schedules
-        const data = await trainingScheduleService.getScheduleBySubjectId(subjectId);
+        const data = await trainingScheduleService.getScheduleBySubjectId(
+          subjectId
+        );
         console.log("API response:", data);
 
         // Kiểm tra và cập nhật schedule data
@@ -461,7 +491,7 @@ const SchedulePage = () => {
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        
+
         // Hiển thị lỗi phù hợp
         if (error.response) {
           if (error.response.status === 404) {
@@ -474,7 +504,7 @@ const SchedulePage = () => {
         } else {
           message.error("Lỗi khi tải dữ liệu");
         }
-        
+
         setScheduleData([]);
       }
     } catch (error) {
@@ -491,24 +521,25 @@ const SchedulePage = () => {
     // Hàm tìm kiếm sử dụng setTimeout
     const handleSearch = (value) => {
       if (!value || value.length < 2) return;
-      
+
       // Clear timeout cũ nếu có
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
-      
+
       setSearchLoading(true);
       setSearchTerm(value);
-      
+
       // Set timeout mới
       searchTimeoutRef.current = setTimeout(() => {
         try {
           // Lọc từ danh sách subjects đã tải
           const filtered = subjects.filter(
-            subject => subject.subjectName.toLowerCase().includes(value.toLowerCase()) || 
-                      subject.subjectId.toLowerCase().includes(value.toLowerCase())
+            (subject) =>
+              subject.subjectName.toLowerCase().includes(value.toLowerCase()) ||
+              subject.subjectId.toLowerCase().includes(value.toLowerCase())
           );
-          
+
           setSubjectOptions(filtered);
         } catch (error) {
           console.error("Error searching subjects:", error);
@@ -520,7 +551,7 @@ const SchedulePage = () => {
 
     console.log("Rendering subject selector with:", {
       subjects: subjects.length,
-      options: (searchTerm ? subjectOptions : subjects).length
+      options: (searchTerm ? subjectOptions : subjects).length,
     });
 
     return (
@@ -547,9 +578,10 @@ const SchedulePage = () => {
             onSearch={handleSearch}
             loading={searchLoading}
             value={
-              selectedSubjectId ? 
-                subjects.find(s => s.subjectId === selectedSubjectId)?.subjectName : 
-                undefined
+              selectedSubjectId
+                ? subjects.find((s) => s.subjectId === selectedSubjectId)
+                    ?.subjectName
+                : undefined
             }
             allowClear
             onClear={() => {
@@ -558,31 +590,35 @@ const SchedulePage = () => {
               fetchScheduleData();
             }}
             filterOption={false}
-            notFoundContent={searchLoading ? <Spin size="small" /> : "No subjects found"}
+            notFoundContent={
+              searchLoading ? <Spin size="small" /> : "No subjects found"
+            }
           >
             {/* Thêm option "Get All" ở đầu danh sách */}
             <Option key="get_all" value="get_all">
               <div className="flex flex-col">
-                <div className="font-medium text-blue-600">Get All Schedules</div>
-                <div className="text-xs text-gray-500">View all training schedules</div>
+                <div className="font-medium text-blue-600">
+                  Get All Schedules
+                </div>
+                <div className="text-xs text-gray-500">
+                  View all training schedules
+                </div>
               </div>
             </Option>
-            
+
             {/* Phân cách giữa "Get All" và danh sách subjects */}
             <Option key="divider" disabled className="border-t my-1 py-1">
               <div className="text-xs text-gray-400 text-center">Subjects</div>
             </Option>
 
             {/* Danh sách subjects */}
-            {(searchTerm ? subjectOptions : subjects).map(subject => (
-              <Option 
-                key={subject.subjectId}
-                value={subject.subjectId}
-              >
+            {(searchTerm ? subjectOptions : subjects).map((subject) => (
+              <Option key={subject.subjectId} value={subject.subjectId}>
                 <div className="flex flex-col">
                   <div className="font-medium">{subject.subjectName}</div>
                   <div className="text-xs text-gray-500">
-                    ID: {subject.subjectId} | Course: {subject.courseId || 'N/A'}
+                    ID: {subject.subjectId} | Course:{" "}
+                    {subject.courseId || "N/A"}
                   </div>
                 </div>
               </Option>
@@ -608,13 +644,13 @@ const SchedulePage = () => {
                   Weekly Schedule
                 </h2>
                 <p className="text-gray-600">
-                  {userRole === "TrainingStaff" 
-                    ? "Manage and view all training schedules" 
+                  {userRole === "TrainingStaff"
+                    ? "Manage and view all training schedules"
                     : "View your weekly training schedule"}
                 </p>
               </div>
             </div>
-            
+
             {/* Nút tạo lịch trình mới */}
             {renderCreateButton()}
           </div>
@@ -626,9 +662,7 @@ const SchedulePage = () => {
             {renderViewSelector()}
             {renderSubjectSelector()}
           </div>
-          <div className="mb-4 sm:mb-0 sm:hidden">
-            {renderCreateButton()}
-          </div>
+          <div className="mb-4 sm:mb-0 sm:hidden">{renderCreateButton()}</div>
         </div>
 
         {/* Table Section */}
