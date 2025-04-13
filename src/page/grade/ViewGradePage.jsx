@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Table, message, Typography, Button, Space, Tag, Input } from 'antd';
-import { ReloadOutlined, FileExcelOutlined, SearchOutlined } from '@ant-design/icons';
+import { Table, message, Typography, Button, Space, Tag, Input, Popconfirm, Dropdown, Select } from 'antd';
+import { ReloadOutlined, FileExcelOutlined, SearchOutlined, EditOutlined, DeleteOutlined, MoreOutlined, FilterOutlined } from '@ant-design/icons';
 import { gradeServices } from '../../services/gradeServices';
+import { useNavigate } from 'react-router-dom';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -11,6 +12,9 @@ const ViewGradePage = () => {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [filteredGrades, setFilteredGrades] = useState([]);
+  const [selectedSubject, setSelectedSubject] = useState('all');
+  const [subjectList, setSubjectList] = useState([]);
+  const navigate = useNavigate();
 
   const columns = [
     {
@@ -140,19 +144,66 @@ const ViewGradePage = () => {
           hour12: true
         });
       },
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      fixed: 'right',
+      width: 80,
+      render: (_, record) => {
+        const items = [
+          {
+            key: 'edit',
+            label: 'Edit Grade',
+            icon: <EditOutlined />,
+            onClick: () => handleEdit(record)
+          },
+          {
+            key: 'delete',
+            label: (
+              <Popconfirm
+                title="Delete Grade"
+                description="Are you sure to delete this grade?"
+                onConfirm={() => handleDelete(record)}
+                okText="Yes"
+                cancelText="No"
+                okButtonProps={{ className: 'bg-red-500 hover:bg-red-600' }}
+              >
+                <div className="flex items-center text-red-500">
+                  {/* <DeleteOutlined className="mr-2" /> */}
+                  Delete Grade
+                </div>
+              </Popconfirm>
+            ),
+            icon: <DeleteOutlined />,
+            danger: true
+          }
+        ];
+
+        return (
+          <Dropdown
+            menu={{ items }}
+            trigger={['click']}
+            placement="bottomRight"
+            overlayClassName="custom-dropdown"
+          >
+            <Button
+              icon={<MoreOutlined />}
+              className="border-none shadow-none hover:bg-gray-100"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </Dropdown>
+        );
+      },
     }
   ];
 
-  const handleSearch = (value) => {
-    setSearchText(value);
-    if (!value) {
-      setFilteredGrades(grades);
-    } else {
-      const filtered = grades.filter(grade => 
-        grade.subjectId.toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredGrades(filtered);
-    }
+  const getUniqueSubjects = (gradeData) => {
+    const subjects = [...new Set(gradeData.map(grade => grade.subjectId))];
+    return subjects.map(subject => ({
+      value: subject,
+      label: subject
+    }));
   };
 
   const fetchGrades = async () => {
@@ -167,13 +218,74 @@ const ViewGradePage = () => {
         }));
         setGrades(formattedGrades);
         setFilteredGrades(formattedGrades);
-        setSearchText(''); // Reset search when refreshing data
+        setSearchText('');
+        setSubjectList(getUniqueSubjects(formattedGrades));
       } else {
         message.error('Invalid data format received');
       }
     } catch (error) {
       console.error('Error fetching grades:', error);
       message.error('Unable to load grades');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubjectChange = (value) => {
+    setSelectedSubject(value);
+    filterGrades(searchText, value);
+  };
+
+  const handleSearch = (value) => {
+    setSearchText(value);
+    filterGrades(value, selectedSubject);
+  };
+
+  const filterGrades = (search, subject) => {
+    let filtered = [...grades];
+    
+    if (search) {
+      filtered = filtered.filter(grade => 
+        grade.subjectId.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    
+    if (subject && subject !== 'all') {
+      filtered = filtered.filter(grade => grade.subjectId === subject);
+    }
+    
+    setFilteredGrades(filtered);
+  };
+
+  const handleEdit = (record) => {
+    navigate(`/grade-update/${record.gradeId}`, {
+      state: {
+        gradeData: {
+          gradeId: record.gradeId,
+          traineeAssignID: record.traineeAssignID,
+          subjectId: record.subjectId,
+          participantScore: record.participantScore,
+          assignmentScore: record.assignmentScore,
+          finalExamScore: record.finalExamScore,
+          finalResultScore: record.finalResitScore || 0,
+          remarks: record.remarks || ''
+        }
+      }
+    });
+  };
+
+  const handleDelete = async (record) => {
+    try {
+      setLoading(true);
+      if (!record || !record.gradeId) {
+        throw new Error('Grade ID is required');
+      }
+      await gradeServices.deleteGrade(record.gradeId);
+      message.success('Grade deleted successfully');
+      await fetchGrades();
+    } catch (error) {
+      console.error('Error deleting grade:', error);
+      message.error(error.response?.data?.message || 'Failed to delete grade');
     } finally {
       setLoading(false);
     }
@@ -193,6 +305,18 @@ const ViewGradePage = () => {
               Grade List
             </Title>
             <Space size="large">
+              <Select
+                placeholder="Filter by Subject"
+                onChange={handleSubjectChange}
+                value={selectedSubject}
+                style={{ width: 200 }}
+                options={[
+                  { value: 'all', label: 'All Subjects' },
+                  ...subjectList
+                ]}
+                suffixIcon={<FilterOutlined />}
+                className="rounded-lg"
+              />
               <Search
                 placeholder="Search by Subject ID"
                 allowClear
@@ -215,14 +339,23 @@ const ViewGradePage = () => {
             </Space>
           </div>
 
-          {/* Search Results Summary */}
-          {searchText && (
-            <div className="mb-4">
+          <div className="mb-4 flex items-center gap-2">
+            {searchText && (
               <Tag color="blue" className="text-sm px-3 py-1">
-                Found {filteredGrades.length} results for "{searchText}"
+                Search: "{searchText}"
               </Tag>
-            </div>
-          )}
+            )}
+            {selectedSubject !== 'all' && (
+              <Tag color="green" className="text-sm px-3 py-1">
+                Subject: {selectedSubject}
+              </Tag>
+            )}
+            {(searchText || selectedSubject !== 'all') && (
+              <Tag color="blue" className="text-sm px-3 py-1">
+                Found {filteredGrades.length} results
+              </Tag>
+            )}
+          </div>
 
           <Table
             loading={loading}
@@ -244,5 +377,29 @@ const ViewGradePage = () => {
     </div>
   );
 };
+
+const styles = `
+.custom-dropdown .ant-dropdown-menu {
+  padding: 4px;
+  min-width: 160px;
+}
+
+.custom-dropdown .ant-dropdown-menu-item {
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.custom-dropdown .ant-dropdown-menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+.custom-dropdown .ant-dropdown-menu-item-danger:hover {
+  background-color: #fff1f0;
+}
+`;
+
+const styleSheet = document.createElement("style");
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
 
 export default ViewGradePage;

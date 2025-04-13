@@ -9,6 +9,7 @@ import {
   Typography,
   Tooltip,
   Badge,
+  Select,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
@@ -21,12 +22,15 @@ import {
   QuestionCircleOutlined,
   ClockCircleOutlined,
   EyeOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import "animate.css";
 import { getAllSubject, deleteSubject } from "../../services/subjectService";
+import { trainingScheduleService } from "../../services/trainingScheduleService";
 
 const { Title, Paragraph } = Typography;
+const { Option } = Select;
 
 const SubjectPage = () => {
   const navigate = useNavigate();
@@ -34,21 +38,48 @@ const SubjectPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [filteredSubjects, setFilteredSubjects] = useState([]);
+  const [selectedSubjectId, setSelectedSubjectId] = useState(null);
+  const [scheduleData, setScheduleData] = useState([]);
 
   useEffect(() => {
-    const fetchSubjects = async () => {
+    const fetchInitialData = async () => {
       try {
-        const data = await getAllSubject();
-        const subjectsList = data.subjects || [];
-        setSubjects(subjectsList);
-        setFilteredSubjects(subjectsList);
+        setLoading(true);
+        const role = localStorage.getItem("role");
+        
+        if (role === "Trainee") {
+          const response = await trainingScheduleService.getTraineeSubjects();
+          
+          if (Array.isArray(response)) {
+            // Lấy danh sách môn học của trainee
+            const traineeSubjects = response.map(subject => ({
+              subjectId: subject.subjectId,
+              subjectName: subject.subjectName,
+              courseId: subject.courseId
+            }));
+            setSubjects(traineeSubjects);
+            
+            // Lấy tất cả lịch học của trainee
+            const traineeSchedules = response.flatMap(subject => 
+              subject.trainingSchedules.map(schedule => ({
+                ...schedule,
+                subjectName: subject.subjectName,
+                subjectId: subject.subjectId,
+                courseId: subject.courseId
+              }))
+            );
+            setScheduleData(traineeSchedules);
+          }
+        }
       } catch (error) {
-        console.error("Failed to fetch subjects:", error);
+        console.error("Error fetching initial data:", error);
+        message.error("Không thể tải dữ liệu");
       } finally {
         setLoading(false);
       }
     };
-    fetchSubjects();
+
+    fetchInitialData();
   }, []);
 
   useEffect(() => {
@@ -85,6 +116,113 @@ const SubjectPage = () => {
         }
       },
     });
+  };
+
+  const handleSubjectChange = async (subjectId) => {
+    try {
+      setLoading(true);
+      const role = localStorage.getItem("role");
+      
+      if (role === "Trainee") {
+        // Nếu là Trainee, luôn gọi API getTraineeSubjects
+        const response = await trainingScheduleService.getTraineeSubjects();
+        
+        if (subjectId) {
+          // Nếu chọn một môn cụ thể, lọc chỉ hiển thị môn đó
+          const filteredSchedules = response.flatMap(subject => 
+            subject.subjectId === subjectId ? 
+              subject.trainingSchedules.map(schedule => ({
+                ...schedule,
+                subjectName: subject.subjectName,
+                subjectId: subject.subjectId,
+                courseId: subject.courseId
+              })) : []
+          );
+          setScheduleData(filteredSchedules);
+        } else {
+          // Nếu không chọn môn nào, hiển thị tất cả môn của trainee
+          const allTraineeSchedules = response.flatMap(subject => 
+            subject.trainingSchedules.map(schedule => ({
+              ...schedule,
+              subjectName: subject.subjectName,
+              subjectId: subject.subjectId,
+              courseId: subject.courseId
+            }))
+          );
+          setScheduleData(allTraineeSchedules);
+        }
+      }
+      // ... rest of the code for other roles
+    } catch (error) {
+      console.error("Error in handleSubjectChange:", error);
+      message.error("Có lỗi xảy ra khi tải dữ liệu");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderSubjectSelector = () => {
+    const role = localStorage.getItem("role");
+    
+    if (role === "Trainee") {
+      return (
+        <div className="mb-6 bg-white p-4 rounded-xl shadow-sm">
+          <div className="flex items-center gap-3">
+            <CalendarOutlined className="text-lg text-indigo-600" />
+            <span className="font-medium">My Subjects:</span>
+            <Select
+              style={{ width: 350 }}
+              placeholder="Chọn môn học của bạn"
+              onChange={(value) => handleSubjectChange(value)}
+              value={selectedSubjectId}
+              allowClear
+            >
+              {subjects.map(subject => (
+                <Option 
+                  key={subject.subjectId} 
+                  value={subject.subjectId}
+                >
+                  <div className="flex flex-col">
+                    <div className="font-medium">{subject.subjectName}</div>
+                    <div className="text-xs text-gray-500">
+                      Course: {subject.courseId || 'N/A'}
+                    </div>
+                  </div>
+                </Option>
+              ))}
+            </Select>
+          </div>
+        </div>
+      );
+    }
+
+    // Return existing subject selector for other roles
+    return (
+      <div className="mb-6 bg-white p-4 rounded-xl shadow-sm">
+        <div className="flex items-center gap-3">
+          <CalendarOutlined className="text-lg text-indigo-600" />
+          <span className="font-medium">Select Subject:</span>
+          <Select
+            style={{ width: 350 }}
+            placeholder="Select a subject"
+            onChange={(value) => handleSubjectChange(value)}
+            value={selectedSubjectId}
+            allowClear
+          >
+            {subjects.map(subject => (
+              <Option key={subject.subjectId} value={subject.subjectId}>
+                <div className="flex flex-col">
+                  <div className="font-medium">{subject.subjectName}</div>
+                  <div className="text-xs text-gray-500">
+                    ID: {subject.subjectId}
+                  </div>
+                </div>
+              </Option>
+            ))}
+          </Select>
+        </div>
+      </div>
+    );
   };
 
   return (

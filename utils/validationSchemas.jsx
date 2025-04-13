@@ -11,10 +11,6 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Login Schema
 export const LoginSchema = Yup.object({
   username: Yup.string()
-    .matches(
-      usernameRegex,
-      "Username must be 4-16 characters and contain only letters, numbers, and underscores."
-    )
     .required("Username is required"),
   password: Yup.string().required("Password is required"),
 });

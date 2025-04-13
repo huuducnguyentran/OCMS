@@ -49,6 +49,8 @@ import CertificateTemplateListPage from "./page/certificate/CertificateTemplateP
 import UpdateCertificateTemplatePage from "./page/certificate/UpdateCertificateTemplatePage";
 import GradeImportPage from "./page/grade/GradeImportPage";
 import ViewGradePage from "./page/grade/ViewGradePage";
+import PlanDetailPage from "./page/training_plan/PlanDetailPage";
+import UpdateGradePage from "./page/grade/UpdateGradePage";
 
 
 function App() {
@@ -112,6 +114,7 @@ function App() {
                             path="/grade-view"
                             element={<ViewGradePage />}
                           />
+                          <Route path="/grade-update/:id" element={<UpdateGradePage />} />
                           <Route
                             path="/candidates-import"
                             element={<ImportCandidate />}
@@ -162,10 +165,10 @@ function App() {
                             element={<UpdateSubjectPage />}
                           />
                           <Route path="/plan" element={<PlanPage />} />
-                          {/* <Route 
-                            path="/plan/view/:planId"
-                            element={<TrainingPlanDetails />}
-                          /> */}
+                          <Route
+                            path="/plan/details/:planId"
+                            element={<PlanDetailPage />}
+                          />
                           <Route
                             path="/plan/create"
                             element={<CreateTrainingPlanPage />}

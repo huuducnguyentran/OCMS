@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Layout, Button, Card, Tag, Typography, Breadcrumb, Row, Col, Spin, Table } from "antd";
+import { Layout, Button, Card, Tag, Typography, Breadcrumb, Row, Col, Spin, Table, Statistic } from "antd";
 import {
   ArrowLeftOutlined,
   BookOutlined,
@@ -8,7 +8,8 @@ import {
   ClockCircleOutlined,
   TeamOutlined,
   CalendarOutlined,
-  EnvironmentOutlined
+  EnvironmentOutlined,
+  CheckCircleOutlined
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { getSubjectById } from "../../services/subjectService";
@@ -38,257 +39,293 @@ const SubjectDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
         <div className="text-center">
           <Spin size="large" />
-          <div className="mt-4 text-gray-600">Loading subject details...</div>
+          <Text className="block mt-4 text-gray-600">Loading subject details...</Text>
         </div>
       </div>
     );
   }
 
-  if (!subject) {
-    return <p className="text-center text-red-500">Subject not found!</p>;
-  }
-
   return (
-    <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {/* Header Section */}
-        <div className="bg-white rounded-xl shadow-md p-8 mb-8">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <Breadcrumb
-                className="mb-4"
-                items={[
-                  {
-                    title: (
-                      <a onClick={() => navigate('/subject')} className="text-blue-600">
-                        <BookOutlined className="mr-1" />
-                        Subjects
-                      </a>
-                    ),
-                  },
-                  {
-                    title: subject?.subjectName,
-                  },
-                ]}
-              />
-              <Title level={2} className="mb-2">{subject?.subjectName}</Title>
-              <Tag color="blue" className="mb-4">{subject?.subjectId}</Tag>
-            </div>
-             <Button
-              type="link"
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center space-x-4 mb-4">
+            <Button
               icon={<ArrowLeftOutlined />}
-              onClick={() => navigate("/subject")}
-              className="text-white hover:text-blue-200 px-0 text-lg"
+              onClick={() => navigate('/subject')}
+              className="flex items-center bg-white/10 border-white/20 text-white hover:bg-white/20"
+              ghost
             >
               Back to Subjects
-            </Button> 
+            </Button>
+            <Breadcrumb className="text-white/60">
+              <Breadcrumb.Item>
+                <a href="/subject" className="text-white/60 hover:text-white">Subjects</a>
+              </Breadcrumb.Item>
+              <Breadcrumb.Item className="text-white">Details</Breadcrumb.Item>
+            </Breadcrumb>
           </div>
-
-          <Paragraph className="text-lg text-gray-600">
-            {subject?.description || "No description available."}
-          </Paragraph>
+          
+          <Title level={2} className="text-white mb-2">
+            {subject?.subjectName || 'Subject Details'}
+          </Title>
+          <Text className="text-white/80">
+            Subject ID: {subject?.subjectId}
+          </Text>
         </div>
+      </div>
 
-        {/* Stats Cards */}
-        <Row gutter={16} className="mb-8">
-          <Col xs={24} sm={12}>
-            <Card className="rounded-xl shadow-md hover:shadow-lg transition-shadow">
-              <div className="flex items-center">
-                <BookOutlined className="text-3xl text-blue-500 mr-4" />
-                <div>
-                  <Text className="text-gray-600 block">Credits</Text>
-                  <Title level={3} className="mb-0">{subject?.credits}</Title>
-                </div>
-              </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Statistics Cards */}
+        <Row gutter={[16, 16]} className="mb-8">
+          <Col xs={24} sm={12} md={6}>
+            <Card bordered={false} className="h-full shadow-sm hover:shadow-md transition-shadow">
+              <Statistic
+                title="Credits"
+                value={subject?.credits || 0}
+                prefix={<BookOutlined className="text-blue-500" />}
+              />
             </Card>
           </Col>
-          <Col xs={24} sm={12}>
-            <Card className="rounded-xl shadow-md hover:shadow-lg transition-shadow">
-              <div className="flex items-center">
-                <TrophyOutlined className="text-3xl text-yellow-500 mr-4" />
-                <div>
-                  <Text className="text-gray-600 block">Passing Score</Text>
-                  <Title level={3} className="mb-0">{subject?.passingScore}</Title>
-                </div>
-              </div>
+          <Col xs={24} sm={12} md={6}>
+            <Card bordered={false} className="h-full shadow-sm hover:shadow-md transition-shadow">
+              <Statistic
+                title="Passing Score"
+                value={subject?.passingScore || 0}
+                prefix={<TrophyOutlined className="text-yellow-500" />}
+                suffix="%"
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card bordered={false} className="h-full shadow-sm hover:shadow-md transition-shadow">
+              <Statistic
+                title="Total Schedules"
+                value={subject?.trainingSchedules?.length || 0}
+                prefix={<CalendarOutlined className="text-purple-500" />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card bordered={false} className="h-full shadow-sm hover:shadow-md transition-shadow">
+              <Statistic
+                title="Instructors"
+                value={subject?.instructors?.length || 0}
+                prefix={<TeamOutlined className="text-indigo-500" />}
+              />
             </Card>
           </Col>
         </Row>
 
-        {/* Additional Information */}
-        <div className="space-y-8">
-          {/* Training Schedules Section */}
-          <Card className="rounded-xl shadow-md">
-            <div className="flex items-center justify-between mb-6">
-              <Title level={4} className="flex items-center m-0">
-                <CalendarOutlined className="mr-2 text-blue-500" />
-                Training Schedules
-              </Title>
+        {/* Basic Information */}
+        <Card 
+          title={
+            <div className="flex items-center space-x-2">
+              <BookOutlined className="text-blue-500" />
+              <span>Basic Information</span>
             </div>
-            <div className="overflow-x-auto">
-              <Table
-                dataSource={subject?.trainingSchedules}
-                rowKey="scheduleID"
-                className="w-full"
-                pagination={false}
-              >
-                <Table.Column
-                  title="Schedule ID"
-                  dataIndex="scheduleID"
-                  key="scheduleID"
-                  render={(text) => <Tag color="blue">{text}</Tag>}
-                />
-                <Table.Column
-                  title="Period"
-                  key="period"
-                  render={(_, record) => (
-                    <div>
-                      <div className="font-medium">
-                        {moment(record.startDateTime).format('DD/MM/YYYY')} - {moment(record.endDateTime).format('DD/MM/YYYY')}
-                      </div>
-                      <div className="text-gray-500">
-                        {record.daysOfWeek} at {record.classTime} ({record.subjectPeriod} hours)
-                      </div>
-                    </div>
-                  )}
-                />
-                <Table.Column
-                  title="Location"
-                  key="location"
-                  render={(_, record) => (
-                    <div>
-                      <EnvironmentOutlined className="mr-1 text-red-500" />
-                      {record.location} - Room {record.room}
-                    </div>
-                  )}
-                />
-                <Table.Column
-                  title="Status"
-                  dataIndex="status"
-                  key="status"
-                  render={(status) => (
-                    <Tag color={
-                      status === 'Incoming' ? 'blue' :
-                      status === 'Ongoing' ? 'green' :
-                      status === 'Completed' ? 'gray' : 'default'
-                    }>
-                      {status}
-                    </Tag>
-                  )}
-                />
-                <Table.Column
-                  title="Notes"
-                  dataIndex="notes"
-                  key="notes"
-                  render={(notes) => (
-                    <div className="max-w-xs truncate" title={notes}>
-                      {notes || '-'}
-                    </div>
-                  )}
-                />
-              </Table>
-            </div>
-          </Card>
+          }
+          className="mb-8 shadow-sm hover:shadow-md transition-shadow"
+        >
+          <Row gutter={[24, 24]}>
+            <Col xs={24} md={12}>
+              <div className="space-y-4">
+                <div>
+                  <Text className="text-gray-500 block">Credits</Text>
+                  <Tag color="blue" className="mt-1 text-base px-3 py-1">
+                    {subject?.credits || "N/A"}
+                  </Tag>
+                </div>
+                <div>
+                  <Text className="text-gray-500 block">Passing Score</Text>
+                  <Tag color="orange" className="mt-1 text-base px-3 py-1">
+                    {subject?.passingScore || "N/A"}%
+                  </Tag>
+                </div>
+              </div>
+            </Col>
+            <Col xs={24} md={12}>
+              <div className="space-y-4">
+                <div>
+                  <Text className="text-gray-500 block">Status</Text>
+                  <Tag color="green" className="mt-1 text-base px-3 py-1">
+                    Active
+                  </Tag>
+                </div>
+                <div>
+                  <Text className="text-gray-500 block">Department</Text>
+                  <Text strong className="text-base">
+                    {subject?.department || "N/A"}
+                  </Text>
+                </div>
+              </div>
+            </Col>
+            <Col span={24}>
+              <Text className="text-gray-500 block mb-2">Description</Text>
+              <Text className="text-base">
+                {subject?.description || "No description available"}
+              </Text>
+            </Col>
+          </Row>
+        </Card>
 
-          {/* Instructors Section */}
-          <Card className="rounded-xl shadow-md">
-            <div className="flex items-center justify-between mb-6">
-              <Title level={4} className="flex items-center m-0">
-                <TeamOutlined className="mr-2 text-blue-500" />
-                Assigned Instructors
-              </Title>
+        {/* Training Schedules Section */}
+        <Card 
+          title={
+            <div className="flex items-center space-x-2">
+              <CalendarOutlined className="text-purple-500" />
+              <span>Training Schedules</span>
             </div>
-            <div className="overflow-x-auto">
-              <Table
-                dataSource={subject?.instructors}
-                rowKey="assignmentId"
-                className="w-full"
-                pagination={false}
-              >
-                <Table.Column
-                  title="Assignment ID"
-                  dataIndex="assignmentId"
-                  key="assignmentId"
-                  render={(text) => <Tag color="purple">{text}</Tag>}
-                />
-                <Table.Column
-                  title="Instructor ID"
-                  dataIndex="instructorId"
-                  key="instructorId"
-                  render={(text) => <Tag color="blue">{text}</Tag>}
-                />
-                <Table.Column
-                  title="Assigned Date"
-                  dataIndex="assignDate"
-                  key="assignDate"
-                  render={(date) => moment(date).format('DD/MM/YYYY HH:mm')}
-                />
-                <Table.Column
-                  title="Status"
-                  dataIndex="requestStatus"
-                  key="requestStatus"
-                  render={(status) => (
-                    <Tag color={
-                      status === 'Approved' ? 'green' :
-                      status === 'Pending' ? 'gold' :
-                      status === 'Rejected' ? 'red' : 'default'
-                    }>
-                      {status}
-                    </Tag>
-                  )}
-                />
-                <Table.Column
-                  title="Notes"
-                  dataIndex="notes"
-                  key="notes"
-                  render={(notes) => (
-                    <div className="max-w-xs truncate" title={notes}>
-                      {notes || '-'}
-                    </div>
-                  )}
-                />
-              </Table>
-            </div>
-          </Card>
+          }
+          className="mb-8 shadow-sm hover:shadow-md transition-shadow"
+        >
+          <Table
+            dataSource={subject?.trainingSchedules}
+            rowKey="scheduleID"
+            pagination={false}
+            className="shadow-sm"
+            columns={[
+              {
+                title: 'Schedule ID',
+                dataIndex: 'scheduleID',
+                key: 'scheduleID',
+                width: '15%',
+                render: (text) => <Text strong>{text}</Text>
+              },
+              {
+                title: 'Period',
+                key: 'period',
+                width: '30%',
+                render: (_, record) => (
+                  <div className="space-y-1">
+                    <Text strong>
+                      {moment(record.startDateTime).format('DD/MM/YYYY')} - {moment(record.endDateTime).format('DD/MM/YYYY')}
+                    </Text>
+                    <Tag color="blue" className="block w-fit">{record.daysOfWeek}</Tag>
+                    <Text className="block text-xs text-gray-500">
+                      Time: {record.classTime} ({record.subjectPeriod} hours)
+                    </Text>
+                  </div>
+                )
+              },
+              {
+                title: 'Location',
+                key: 'location',
+                width: '25%',
+                render: (_, record) => (
+                  <div>
+                    <Text strong>Room: {record.room}</Text>
+                    <Text className="block text-xs text-gray-500">{record.location}</Text>
+                  </div>
+                )
+              },
+              {
+                title: 'Status',
+                dataIndex: 'status',
+                key: 'status',
+                width: '15%',
+                render: (status) => (
+                  <Tag color={
+                    status === 'Incoming' ? 'blue' :
+                    status === 'Ongoing' ? 'green' :
+                    'default'
+                  }>
+                    {status}
+                  </Tag>
+                )
+              },
+              {
+                title: 'Notes',
+                dataIndex: 'notes',
+                key: 'notes',
+                width: '15%',
+                render: (notes) => (
+                  <div className="max-w-xs truncate" title={notes}>
+                    {notes || '-'}
+                  </div>
+                )
+              }
+            ]}
+          />
+        </Card>
 
-          {/* Study Requirements Card */}
-          <Card className="rounded-xl shadow-md">
-            <Title level={4} className="mb-4">Additional Information</Title>
-            <Row gutter={[16, 16]}>
-              <Col xs={24} md={12}>
-                <Card className="bg-gray-50 border-none">
-                  <Title level={5} className="flex items-center mb-3">
-                    <ClockCircleOutlined className="mr-2" />
-                    Study Requirements
-                  </Title>
-                  <Paragraph>
-                    Students must achieve a minimum score of{' '}
-                    <Tag color="orange">{subject?.passingScore}</Tag>
-                    {' '}to pass this subject.
-                  </Paragraph>
-                </Card>
-              </Col>
-              <Col xs={24} md={12}>
-                <Card className="bg-gray-50 border-none">
-                  <Title level={5} className="flex items-center mb-3">
-                    <BookOutlined className="mr-2" />
-                    Credit Information
-                  </Title>
-                  <Paragraph>
-                    This subject is worth{' '}
-                    <Tag color="blue">{subject?.credits} credits</Tag>
-                    {' '}towards your course completion.
-                  </Paragraph>
-                </Card>
-              </Col>
-            </Row>
-          </Card>
-        </div>
+        {/* Instructors Section */}
+        <Card 
+          title={
+            <div className="flex items-center space-x-2">
+              <TeamOutlined className="text-indigo-500" />
+              <span>Assigned Instructors</span>
+            </div>
+          }
+          className="shadow-sm hover:shadow-md transition-shadow"
+        >
+          <Table
+            dataSource={subject?.instructors}
+            rowKey="assignmentId"
+            pagination={false}
+            className="shadow-sm"
+            columns={[
+              {
+                title: 'Assignment ID',
+                dataIndex: 'assignmentId',
+                key: 'assignmentId',
+                width: '20%',
+                render: (text) => <Text strong>{text}</Text>
+              },
+              {
+                title: 'Instructor ID',
+                dataIndex: 'instructorId',
+                key: 'instructorId',
+                width: '20%',
+                render: (text) => <Tag color="blue">{text}</Tag>
+              },
+              {
+                title: 'Assigned Date',
+                dataIndex: 'assignDate',
+                key: 'assignDate',
+                width: '25%',
+                render: (date) => (
+                  <div>
+                    <CalendarOutlined className="mr-2 text-gray-400" />
+                    {moment(date).format('DD/MM/YYYY HH:mm')}
+                  </div>
+                )
+              },
+              {
+                title: 'Status',
+                dataIndex: 'requestStatus',
+                key: 'requestStatus',
+                width: '15%',
+                render: (status) => (
+                  <Tag color={
+                    status === 'Approved' ? 'green' :
+                    status === 'Pending' ? 'gold' :
+                    status === 'Rejected' ? 'red' : 'default'
+                  }>
+                    {status}
+                  </Tag>
+                )
+              },
+              {
+                title: 'Notes',
+                dataIndex: 'notes',
+                key: 'notes',
+                width: '20%',
+                render: (notes) => (
+                  <div className="max-w-xs truncate" title={notes}>
+                    {notes || '-'}
+                  </div>
+                )
+              }
+            ]}
+          />
+        </Card>
       </div>
-    </Layout>
+    </div>
   );
 };
 

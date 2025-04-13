@@ -1,4 +1,4 @@
-import { Layout, Card, Button, Empty, Tag, Popconfirm, message, Tooltip, Modal, Form, Input, Select, Checkbox, Space, DatePicker, Row, Col, Input as AntInput, Typography, Badge, Spin } from "antd";
+import { Layout, Card, Button, Empty, Tag, Popconfirm, message, Tooltip, Modal, Form, Input, Select, Checkbox, Space, DatePicker, Row, Col, Input as AntInput, Typography, Badge, Spin, Table } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   PlusOutlined,
@@ -6,7 +6,6 @@ import {
   DeleteOutlined,
   SendOutlined,
   SearchOutlined,
-  FilterOutlined,
   SortAscendingOutlined,
   CalendarOutlined,
   EyeOutlined
@@ -14,7 +13,6 @@ import {
 import { useState, useEffect } from "react";
 import { trainingPlanService } from '../../services/trainingPlanService';
 import "animate.css";
-import { useAuth } from '../../context/useAuth';
 
 const { Search } = AntInput;
 const { Title, Paragraph } = Typography;
@@ -247,48 +245,56 @@ const PlanPage = () => {
     setDateSort(prev => prev === 'asc' ? 'desc' : 'asc');
   };
 
-  const getCardActions = (plan) => {
-    if (isTrainee) {
-      return [
-        <Tooltip title="View Details">
-          <EyeOutlined
-            key="view"
-            className="text-blue-500 text-lg hover:text-blue-700"
-            onClick={() => handleView(plan.planId)}
-          />
-        </Tooltip>
-      ];
-    }
+  // Thêm hàm xử lý khi click vào nút details
+  const handleViewDetails = (planId) => {
+    navigate(`/plan/details/${planId}`);
+  };
 
-    return [
-      <Tooltip title="Edit Plan">
-        <EditOutlined
-          key="edit"
-          className="text-green-500 text-lg hover:text-green-700"
-          onClick={() => handleEdit(plan.planId)}
-        />
-      </Tooltip>,
-      <Tooltip title="Send Request">
-        <SendOutlined
-          key="request"
+  // Cập nhật getCardActions để thêm nút Details
+  const getCardActions = (plan) => {
+    const actions = [
+      <Tooltip title="View Details">
+        <EyeOutlined
+          key="details"
           className="text-blue-500 text-lg hover:text-blue-700"
-          onClick={() => handleRequest(plan.planId, plan.planName)}
+          onClick={() => handleViewDetails(plan.planId)}
         />
-      </Tooltip>,
-      <Tooltip title="Delete Plan">
-        <Popconfirm
-          title="Are you sure you want to delete this plan?"
-          onConfirm={() => handleDelete(plan.planId)}
-          okText="Yes"
-          cancelText="No"
-        >
-          <DeleteOutlined
-            key="delete"
-            className="text-red-500 text-lg hover:text-red-700"
-          />
-        </Popconfirm>
       </Tooltip>
     ];
+
+    if (!isTrainee) {
+      actions.push(
+        <Tooltip title="Edit Plan">
+          <EditOutlined
+            key="edit"
+            className="text-green-500 text-lg hover:text-green-700"
+            onClick={() => handleEdit(plan.planId)}
+          />
+        </Tooltip>,
+        <Tooltip title="Send Request">
+          <SendOutlined
+            key="request"
+            className="text-blue-500 text-lg hover:text-blue-700"
+            onClick={() => handleRequest(plan.planId, plan.planName)}
+          />
+        </Tooltip>,
+        <Tooltip title="Delete Plan">
+          <Popconfirm
+            title="Are you sure you want to delete this plan?"
+            onConfirm={() => handleDelete(plan.planId)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <DeleteOutlined
+              key="delete"
+              className="text-red-500 text-lg hover:text-red-700"
+            />
+          </Popconfirm>
+        </Tooltip>
+      );
+    }
+
+    return actions;
   };
 
   const renderFilterSection = () => {
