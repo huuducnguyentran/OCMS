@@ -5,7 +5,7 @@ import { authServices } from "../../services/authServices";
 import { useAuth } from "../../context/useAuth";
 import { Formik } from "formik";
 import { LoginSchema } from "../../../utils/validationSchemas";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import {
   UserOutlined,
   LockOutlined,

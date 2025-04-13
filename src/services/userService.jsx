@@ -43,10 +43,7 @@ export const updateUser = async (id, userData) => {
     throw error;
   }
 };
-export const updateAvatar = async (file) => {
-  const formData = new FormData();
-  formData.append("file", file);
-
+export const updateAvatar = async (formData) => {
   try {
     const response = await axiosInstance.put(
       `${API.UPDATE_USER_AVATAR}`,

@@ -81,20 +81,27 @@ const PersonalProfilePage = () => {
 
   // Handle file upload
   const handleUpload = async (info) => {
-    const file = info.file; // info.file is a File object
+    const file = info.file.originFileObj || info.file;
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
+    const formDataUpload = new FormData();
+    formDataUpload.append("file", file);
 
     try {
-      const response = await updateAvatar(formData); // your service call
-      console.log("Avatar uploaded:", response);
-      // Update avatar in UI
-      setAvatar(URL.createObjectURL(file));
-      // Optionally, refresh user profile
+      await updateAvatar(formDataUpload);
+      message.success("Avatar uploaded successfully!");
+
+      // Re-fetch updated user data
+      const userData = await getUserProfile();
+
+      // Update avatar in form and UI
+      setFormData((prev) => ({
+        ...prev,
+        avatar: userData.avatarUrlWithSas || "", // <-- updated from server
+      }));
     } catch (error) {
       console.error("Upload failed:", error);
+      message.error("Avatar upload failed.");
     }
   };
 

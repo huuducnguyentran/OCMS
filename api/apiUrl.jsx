@@ -26,6 +26,7 @@ export const API = {
 
   GET_ALL_USER: "User",
   GET_USER_BY_ID: "User",
+  GET_USER_PROiLE: "User/profile",
   UPDATE_USER: "User",
   UPDATE_USER_AVATAR: "/User/avatar",
   UPDATE_PASSWORD: "User",
@@ -46,7 +47,6 @@ export const API = {
   CREATE_TRAINING_PLAN: "TrainingPlan",
   UPDATE_TRAINING_PLAN: "TrainingPlan",
   DELETE_TRAINING_PLAN: "TrainingPlan",
-  
 
   // Subject
   GET_ALL_SUBJECTS: "Subject",
