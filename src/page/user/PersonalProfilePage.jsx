@@ -22,7 +22,8 @@ import {
 } from "@ant-design/icons";
 import { useAvatar } from "../../context/AvatarContext";
 import {
-  getUserById,
+  // getUserById,
+  getUserProfile,
   updateAvatar,
   updatePassword,
   updateUser,
@@ -52,7 +53,8 @@ const PersonalProfilePage = () => {
           return;
         }
 
-        const userData = await getUserById(userId);
+        const userData = await getUserProfile();
+
         const profileData = {
           avatar: userData.avatarUrlWithSas || "",
           userId: userData.userId || "",

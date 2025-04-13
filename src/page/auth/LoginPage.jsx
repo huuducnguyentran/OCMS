@@ -164,10 +164,10 @@ const LoginPage = () => {
       const response = await authServices.loginUser(values);
       const { token, userID, roles } = response.data;
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("userID", userID);
-      localStorage.setItem("role", roles?.[0] || "user");
-      localStorage.setItem("tokenExpiry", Date.now() + 60 * 60 * 1000);
+      sessionStorage.setItem("token", token);
+      sessionStorage.setItem("userID", userID);
+      sessionStorage.setItem("role", roles?.[0] || "user");
+      sessionStorage.setItem("tokenExpiry", Date.now() + 60 * 60 * 1000);
 
       setIsAuthenticated(true);
       message.success("Login successful!");

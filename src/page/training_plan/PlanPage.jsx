@@ -99,7 +99,7 @@ const PlanPage = () => {
   const [selectedLevelValues, setSelectedLevelValues] = useState([]);
   const [dateSort, setDateSort] = useState("desc"); // 'asc' hoặc 'desc'
   const [filterVisible, setFilterVisible] = useState(false);
-  const [userRole, setUserRole] = useState(localStorage.getItem("role"));
+  const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
   const isTrainee = userRole === "Trainee";
 
   const fetchTrainingPlans = async () => {
@@ -225,13 +225,13 @@ const PlanPage = () => {
     return level || "Unknown";
   };
 
-  const handleViewDetails = (planId) => {
-    if (planId) {
-      navigate(`/plan/${planId}`);
-    } else {
-      message.error("Invalid plan ID");
-    }
-  };
+  // const handleViewDetails = (planId) => {
+  //   if (planId) {
+  //     navigate(`/plan/${planId}`);
+  //   } else {
+  //     message.error("Invalid plan ID");
+  //   }
+  // };
 
   const handleEdit = (planId) => {
     if (planId) {

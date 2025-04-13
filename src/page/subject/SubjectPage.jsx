@@ -45,27 +45,27 @@ const SubjectPage = () => {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
-        const role = localStorage.getItem("role");
-        
+        const role = sessionStorage.getItem("role");
+
         if (role === "Trainee") {
           const response = await trainingScheduleService.getTraineeSubjects();
-          
+
           if (Array.isArray(response)) {
             // Lấy danh sách môn học của trainee
-            const traineeSubjects = response.map(subject => ({
+            const traineeSubjects = response.map((subject) => ({
               subjectId: subject.subjectId,
               subjectName: subject.subjectName,
-              courseId: subject.courseId
+              courseId: subject.courseId,
             }));
             setSubjects(traineeSubjects);
-            
+
             // Lấy tất cả lịch học của trainee
-            const traineeSchedules = response.flatMap(subject => 
-              subject.trainingSchedules.map(schedule => ({
+            const traineeSchedules = response.flatMap((subject) =>
+              subject.trainingSchedules.map((schedule) => ({
                 ...schedule,
                 subjectName: subject.subjectName,
                 subjectId: subject.subjectId,
-                courseId: subject.courseId
+                courseId: subject.courseId,
               }))
             );
             setScheduleData(traineeSchedules);
@@ -121,32 +121,33 @@ const SubjectPage = () => {
   const handleSubjectChange = async (subjectId) => {
     try {
       setLoading(true);
-      const role = localStorage.getItem("role");
-      
+      const role = sessionStorage.getItem("role");
+
       if (role === "Trainee") {
         // Nếu là Trainee, luôn gọi API getTraineeSubjects
         const response = await trainingScheduleService.getTraineeSubjects();
-        
+
         if (subjectId) {
           // Nếu chọn một môn cụ thể, lọc chỉ hiển thị môn đó
-          const filteredSchedules = response.flatMap(subject => 
-            subject.subjectId === subjectId ? 
-              subject.trainingSchedules.map(schedule => ({
-                ...schedule,
-                subjectName: subject.subjectName,
-                subjectId: subject.subjectId,
-                courseId: subject.courseId
-              })) : []
+          const filteredSchedules = response.flatMap((subject) =>
+            subject.subjectId === subjectId
+              ? subject.trainingSchedules.map((schedule) => ({
+                  ...schedule,
+                  subjectName: subject.subjectName,
+                  subjectId: subject.subjectId,
+                  courseId: subject.courseId,
+                }))
+              : []
           );
           setScheduleData(filteredSchedules);
         } else {
           // Nếu không chọn môn nào, hiển thị tất cả môn của trainee
-          const allTraineeSchedules = response.flatMap(subject => 
-            subject.trainingSchedules.map(schedule => ({
+          const allTraineeSchedules = response.flatMap((subject) =>
+            subject.trainingSchedules.map((schedule) => ({
               ...schedule,
               subjectName: subject.subjectName,
               subjectId: subject.subjectId,
-              courseId: subject.courseId
+              courseId: subject.courseId,
             }))
           );
           setScheduleData(allTraineeSchedules);
@@ -162,8 +163,8 @@ const SubjectPage = () => {
   };
 
   const renderSubjectSelector = () => {
-    const role = localStorage.getItem("role");
-    
+    const role = sessionStorage.getItem("role");
+
     if (role === "Trainee") {
       return (
         <div className="mb-6 bg-white p-4 rounded-xl shadow-sm">
@@ -177,15 +178,12 @@ const SubjectPage = () => {
               value={selectedSubjectId}
               allowClear
             >
-              {subjects.map(subject => (
-                <Option 
-                  key={subject.subjectId} 
-                  value={subject.subjectId}
-                >
+              {subjects.map((subject) => (
+                <Option key={subject.subjectId} value={subject.subjectId}>
                   <div className="flex flex-col">
                     <div className="font-medium">{subject.subjectName}</div>
                     <div className="text-xs text-gray-500">
-                      Course: {subject.courseId || 'N/A'}
+                      Course: {subject.courseId || "N/A"}
                     </div>
                   </div>
                 </Option>
@@ -209,7 +207,7 @@ const SubjectPage = () => {
             value={selectedSubjectId}
             allowClear
           >
-            {subjects.map(subject => (
+            {subjects.map((subject) => (
               <Option key={subject.subjectId} value={subject.subjectId}>
                 <div className="flex flex-col">
                   <div className="font-medium">{subject.subjectName}</div>

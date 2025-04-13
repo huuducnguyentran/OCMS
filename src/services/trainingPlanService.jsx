@@ -7,7 +7,7 @@ const API_BASE_URL = "https://ocms-vjvm.azurewebsites.net/api";
 
 export const trainingPlanService = {
   getAllTrainingPlans: async () => {
-    const role = localStorage.getItem("role");
+    const role = sessionStorage.getItem("role");
     let endpoint = role === "Trainee" ? "TrainingPlan/joined" : "TrainingPlan";
     const response = await axiosInstance.get(endpoint);
     return response.data;

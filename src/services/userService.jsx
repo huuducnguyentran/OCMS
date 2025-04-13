@@ -21,6 +21,16 @@ export const getUserById = async (id) => {
   }
 };
 
+export const getUserProfile = async () => {
+  try {
+    const response = await axiosInstance.get(`/${API.GET_USER_PROiLE}`);
+    return response.data.user;
+  } catch (error) {
+    console.error("Error fetching requests:", error?.response || error.message);
+    throw error;
+  }
+};
+
 export const updateUser = async (id, userData) => {
   try {
     const response = await axiosInstance.put(
