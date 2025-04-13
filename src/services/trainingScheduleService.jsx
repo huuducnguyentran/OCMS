@@ -1,6 +1,6 @@
 import axiosInstance from "../../utils/axiosInstance";
 import { API } from "../../api/apiUrl";
-import { BASE_URL } from "../../utils/environment";
+
 
 export const trainingScheduleService = {
   getAllTrainingSchedules: async () => {

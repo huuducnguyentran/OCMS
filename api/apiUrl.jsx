@@ -46,6 +46,7 @@ export const API = {
   CREATE_TRAINING_PLAN: "TrainingPlan",
   UPDATE_TRAINING_PLAN: "TrainingPlan",
   DELETE_TRAINING_PLAN: "TrainingPlan",
+  
 
   // Subject
   GET_ALL_SUBJECTS: "Subject",
