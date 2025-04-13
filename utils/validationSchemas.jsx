@@ -14,7 +14,6 @@ export const LoginSchema = Yup.object({
   password: Yup.string().required("Password is required"),
 });
 
-// Reset Password Schema
 export const ResetPasswordSchema = Yup.object({
   token: Yup.string()
     .matches(tokenRegex, "Invalid token format.")

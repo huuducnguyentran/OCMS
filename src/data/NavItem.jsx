@@ -34,7 +34,7 @@ const navItems = [
         key: "3-1",
         label: "All Schedule",
         path: "/schedule",
-        roles: ["Training staff", "Trainee", "Instructor"],
+        roles: ["Training staff", "Instructor","Trainee"],
       },
     ],
   },
@@ -94,7 +94,7 @@ const navItems = [
     key: "8",
     label: "Grade",
     icon: "FileExcelOutlined",
-    path: "/grade",
+    path: "/grade-view",
     roles: ["Instructor","Admin","Training staff","Reviewer"],
     children: [
       {
@@ -105,23 +105,10 @@ const navItems = [
       },
       {
         key: "8-2",
-        label: "Update Grade",
-        path: "/grade-update",
-        roles: ["Admin","Instructor"],
-      },
-       {
-        key: "8-3",
-        label: "Delete Grade",
-        path: "/grade-delete",
-        roles: ["Admin","Instructor","Training staff"],
-      },
-      {
-        key: "8-4",
         label: "View Grade",
         path: "/grade-view",
-        roles: ["Admin","Instructor","Training staff","Reviewer"],
-    },
-
+        roles: ["Admin","Instructor","Training staff","Reviewer","Trainee"],
+      },
     ],
   },
   {
@@ -194,6 +181,7 @@ const navItems = [
     path: "/certificate",
     roles: ["Admin", "HR", "AOC Manager"],
   },
+  
 ];
 
 export default navItems;

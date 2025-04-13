@@ -1,17 +1,45 @@
 import { useEffect, useState } from "react";
 import {
-  Spin, Tag, Typography, Button, Space, Input, message, Table, DatePicker, Select, Row, Col,
-  Modal, Card, Divider
+  Spin,
+  Tag,
+  Typography,
+  Button,
+  Space,
+  Input,
+  message,
+  Table,
+  DatePicker,
+  Select,
+  Row,
+  Col,
+  Modal,
+  Card,
+  Divider,
 } from "antd";
 import {
-  CalendarOutlined, FileTextOutlined, ProfileOutlined,
-  CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined,
-  DeleteOutlined, SearchOutlined, ReloadOutlined, FilterOutlined, UpOutlined, DownOutlined,
-  EyeOutlined, UserOutlined
+  CalendarOutlined,
+  FileTextOutlined,
+  ProfileOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ClockCircleOutlined,
+  DeleteOutlined,
+  SearchOutlined,
+  ReloadOutlined,
+  FilterOutlined,
+  UpOutlined,
+  DownOutlined,
+  EyeOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import {
-  getAllRequests, getAllEduOfficerRequests, deleteRequest, getRequestById, approveRequest, rejectRequest
+  getAllRequests,
+  getAllEduOfficerRequests,
+  deleteRequest,
+  getRequestById,
+  approveRequest,
+  rejectRequest,
 } from "../../services/requestService";
 import { getUserById } from "../../services/userService";
 
@@ -21,22 +49,36 @@ const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 const RequestTypeEnum = {
-  0: "New Plan", 1: "Recurrent Plan", 2: "Relearn Plan", 3: "Complaint",
-  4: "Plan Change", 5: "Plan Delete", 6: "Create New", 7: "Create Recurrent",
-  8: "Create Relearn", 9: "Candidate Import", 10: "Update", 11: "Delete",
-  12: "Assign Trainee", 13: "Add Trainee Assign"
+  0: "New Plan",
+  1: "Recurrent Plan",
+  2: "Relearn Plan",
+  3: "Complaint",
+  4: "Plan Change",
+  5: "Plan Delete",
+  6: "Create New",
+  7: "Create Recurrent",
+  8: "Create Relearn",
+  9: "Candidate Import",
+  10: "Update",
+  11: "Delete",
+  12: "Assign Trainee",
+  13: "Add Trainee Assign",
 };
 
 // Hàm helper để kiểm tra xem request type có phải loại training plan không
 const isTrainingPlanType = (requestType) => {
   // Xử lý trường hợp requestType là chuỗi tên loại
-  if (typeof requestType === 'string') {
-    if (requestType === 'NewPlan' || requestType === 'New Plan') return true;
-    if (requestType === 'RecurrentPlan' || requestType === 'Recurrent Plan') return true;
-    if (requestType === 'RelearnPlan' || requestType === 'Relearn Plan') return true;
-    if (requestType === 'PlanChange' || requestType === 'Plan Change') return true;
-    if (requestType === 'PlanDelete' || requestType === 'Plan Delete') return true;
-    
+  if (typeof requestType === "string") {
+    if (requestType === "NewPlan" || requestType === "New Plan") return true;
+    if (requestType === "RecurrentPlan" || requestType === "Recurrent Plan")
+      return true;
+    if (requestType === "RelearnPlan" || requestType === "Relearn Plan")
+      return true;
+    if (requestType === "PlanChange" || requestType === "Plan Change")
+      return true;
+    if (requestType === "PlanDelete" || requestType === "Plan Delete")
+      return true;
+
     // Thử chuyển về số nếu không khớp với tên
     const type = parseInt(requestType, 10);
     if (!isNaN(type)) {
@@ -44,25 +86,29 @@ const isTrainingPlanType = (requestType) => {
     }
     return false;
   }
-  
+
   // Trường hợp requestType là số
   return [0, 1, 2, 4, 5].includes(Number(requestType));
 };
 
 const RequestList = () => {
-  const storedRole = localStorage.getItem("role");
+  const storedRole = sessionStorage.getItem("role");
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
   const [filteredRequests, setFilteredRequests] = useState([]);
-  const [sortedInfo, setSortedInfo] = useState({ order: 'ascend', columnKey: 'status', field: 'status' });
+  const [sortedInfo, setSortedInfo] = useState({
+    order: "ascend",
+    columnKey: "status",
+    field: "status",
+  });
   const [pageSize, setPageSize] = useState(10);
 
   const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState(null);
   const [requestTypeFilter, setRequestTypeFilter] = useState(null);
   const [dateRange, setDateRange] = useState(null);
-  
+
   // State cho popup chi tiết
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [currentRequest, setCurrentRequest] = useState(null);
@@ -84,12 +130,12 @@ const RequestList = () => {
 
   const getDefaultSortedData = (data) => {
     return [...data].sort((a, b) => {
-      if (a.status === 'Pending' && b.status !== 'Pending') return -1;
-      if (a.status !== 'Pending' && b.status === 'Pending') return 1;
+      if (a.status === "Pending" && b.status !== "Pending") return -1;
+      if (a.status !== "Pending" && b.status === "Pending") return 1;
       if (a.status === b.status) {
         return new Date(b.requestDate) - new Date(a.requestDate);
       }
-      const statusOrder = { "Pending": 0, "Approved": 1, "Rejected": 2 };
+      const statusOrder = { Pending: 0, Approved: 1, Rejected: 2 };
       return statusOrder[a.status] - statusOrder[b.status];
     });
   };
@@ -98,18 +144,22 @@ const RequestList = () => {
     let filtered = [...data];
 
     if (searchText) {
-      filtered = filtered.filter(request =>
-        request.requestId.toLowerCase().includes(searchText.toLowerCase()) ||
-        (request.description && request.description.toLowerCase().includes(searchText.toLowerCase()))
+      filtered = filtered.filter(
+        (request) =>
+          request.requestId.toLowerCase().includes(searchText.toLowerCase()) ||
+          (request.description &&
+            request.description
+              .toLowerCase()
+              .includes(searchText.toLowerCase()))
       );
     }
 
     if (statusFilter) {
-      filtered = filtered.filter(request => request.status === statusFilter);
+      filtered = filtered.filter((request) => request.status === statusFilter);
     }
 
     if (requestTypeFilter !== null) {
-      filtered = filtered.filter(request => {
+      filtered = filtered.filter((request) => {
         const requestTypeNum = Number(request.requestType);
         return !isNaN(requestTypeNum) && requestTypeNum === requestTypeFilter;
       });
@@ -117,9 +167,12 @@ const RequestList = () => {
 
     if (dateRange && dateRange.length === 2) {
       const [start, end] = dateRange;
-      filtered = filtered.filter(request => {
+      filtered = filtered.filter((request) => {
         const date = new Date(request.requestDate);
-        return date >= start.startOf('day').toDate() && date <= end.endOf('day').toDate();
+        return (
+          date >= start.startOf("day").toDate() &&
+          date <= end.endOf("day").toDate()
+        );
       });
     }
 
@@ -147,11 +200,11 @@ const RequestList = () => {
         setRequests(reqs);
         setFilteredRequests(getDefaultSortedData(reqs));
       }
-      setSearchText('');
+      setSearchText("");
       setStatusFilter(null);
       setRequestTypeFilter(null);
       setDateRange(null);
-      setSortedInfo({ order: 'ascend', columnKey: 'status', field: 'status' });
+      setSortedInfo({ order: "ascend", columnKey: "status", field: "status" });
     } catch (err) {
       console.error("Failed to load requests:", err);
       message.error("Failed to load requests");
@@ -167,7 +220,7 @@ const RequestList = () => {
   }, [storedRole]);
 
   useEffect(() => {
-    setSortedInfo({ order: 'ascend', columnKey: 'status', field: 'status' });
+    setSortedInfo({ order: "ascend", columnKey: "status", field: "status" });
   }, []);
 
   useEffect(() => {
@@ -178,7 +231,9 @@ const RequestList = () => {
     try {
       await deleteRequest(requestId);
       setRequests((prev) => prev.filter((r) => r.requestId !== requestId));
-      setFilteredRequests((prev) => prev.filter((r) => r.requestId !== requestId));
+      setFilteredRequests((prev) =>
+        prev.filter((r) => r.requestId !== requestId)
+      );
       message.success("Request deleted successfully");
     } catch (error) {
       console.error("Failed to delete request", error);
@@ -191,14 +246,22 @@ const RequestList = () => {
     setDetailsLoading(true);
     setDetailsVisible(true);
     setRequestByUser(null);
-    
+
     try {
       const requestData = await getRequestById(record.requestId);
       console.log("Request Data:", requestData);
-      console.log("Request Type:", requestData.requestType, "Type of:", typeof requestData.requestType);
-      console.log("Is training plan type:", [0, 1, 2, 4, 5].includes(Number(requestData.requestType)));
+      console.log(
+        "Request Type:",
+        requestData.requestType,
+        "Type of:",
+        typeof requestData.requestType
+      );
+      console.log(
+        "Is training plan type:",
+        [0, 1, 2, 4, 5].includes(Number(requestData.requestType))
+      );
       setCurrentRequest(requestData);
-      
+
       // Lấy thông tin người gửi yêu cầu nếu có requestById
       if (requestData.requestById) {
         try {
@@ -226,24 +289,24 @@ const RequestList = () => {
   // Hàm approve request
   const handleApprove = async () => {
     if (!currentRequest) return;
-    
+
     try {
       const response = await approveRequest(currentRequest.requestId);
       message.success("Request approved successfully");
-      
+
       // Cập nhật state
       const updatedRequest = {
         ...currentRequest,
         status: "Approved",
-        approvedById: localStorage.getItem("userId") || "Unknown",
-        approvedDate: new Date().toISOString()
+        approvedById: sessionStorage.getItem("userId") || "Unknown",
+        approvedDate: new Date().toISOString(),
       };
       setCurrentRequest(updatedRequest);
-      
+
       // Cập nhật danh sách
-      const updatedRequests = requests.map(req => 
-        req.requestId === currentRequest.requestId 
-          ? { ...req, status: "Approved" } 
+      const updatedRequests = requests.map((req) =>
+        req.requestId === currentRequest.requestId
+          ? { ...req, status: "Approved" }
           : req
       );
       setRequests(updatedRequests);
@@ -264,30 +327,32 @@ const RequestList = () => {
   // Hàm xác nhận từ chối với lý do
   const confirmReject = async () => {
     if (!currentRequest) return;
-    
+
     try {
       // Gọi API với lý do từ chối
-      const response = await rejectRequest(currentRequest.requestId, { rejectReason });
+      const response = await rejectRequest(currentRequest.requestId, {
+        rejectReason,
+      });
       message.success("Request rejected successfully");
-      
+
       // Cập nhật state
       const updatedRequest = {
         ...currentRequest,
         status: "Rejected",
-        approvedById: localStorage.getItem("userId") || "Unknown",
-        approvedDate: new Date().toISOString()
+        approvedById: sessionStorage.getItem("userId") || "Unknown",
+        approvedDate: new Date().toISOString(),
       };
       setCurrentRequest(updatedRequest);
-      
+
       // Cập nhật danh sách
-      const updatedRequests = requests.map(req => 
-        req.requestId === currentRequest.requestId 
-          ? { ...req, status: "Rejected" } 
+      const updatedRequests = requests.map((req) =>
+        req.requestId === currentRequest.requestId
+          ? { ...req, status: "Rejected" }
           : req
       );
       setRequests(updatedRequests);
       setFilteredRequests(getDefaultSortedData(applyFilters(updatedRequests)));
-      
+
       // Đóng modal từ chối
       setRejectModalVisible(false);
     } catch (error) {
@@ -303,7 +368,10 @@ const RequestList = () => {
       key: "requestId",
       sorter: (a, b) => a.requestId.localeCompare(b.requestId),
       render: (text, record) => (
-        <Link to={`/requests/${record.requestId}`} className="text-blue-600 hover:text-blue-800">
+        <Link
+          to={`/requests/${record.requestId}`}
+          className="text-blue-600 hover:text-blue-800"
+        >
           {text}
         </Link>
       ),
@@ -329,14 +397,14 @@ const RequestList = () => {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      defaultSortOrder: 'ascend',
+      defaultSortOrder: "ascend",
       sorter: (a, b) => {
-        if (a.status === 'Pending' && b.status !== 'Pending') return -1;
-        if (a.status !== 'Pending' && b.status === 'Pending') return 1;
+        if (a.status === "Pending" && b.status !== "Pending") return -1;
+        if (a.status !== "Pending" && b.status === "Pending") return 1;
         if (a.status === b.status) {
           return new Date(b.requestDate) - new Date(a.requestDate);
         }
-        const statusOrder = { "Pending": 0, "Approved": 1, "Rejected": 2 };
+        const statusOrder = { Pending: 0, Approved: 1, Rejected: 2 };
         return statusOrder[a.status] - statusOrder[b.status];
       },
       sortOrder: sortedInfo.columnKey === "status" ? sortedInfo.order : null,
@@ -369,13 +437,13 @@ const RequestList = () => {
       render: (date) => (
         <span>
           <CalendarOutlined className="mr-2" />
-          {new Date(date).toLocaleString('vi-VN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
+          {new Date(date).toLocaleString("vi-VN", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
           })}
         </span>
       ),
@@ -387,9 +455,7 @@ const RequestList = () => {
       key: "description",
       ellipsis: true,
       render: (text) => (
-        <div className="max-w-md truncate">
-          {text || "No description"}
-        </div>
+        <div className="max-w-md truncate">{text || "No description"}</div>
       ),
     },
     {
@@ -470,13 +536,15 @@ const RequestList = () => {
             <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
               <Row gutter={[16, 16]}>
                 <Col xs={24} md={8}>
-                  <label className="block text-gray-700 font-medium mb-1">Status</label>
+                  <label className="block text-gray-700 font-medium mb-1">
+                    Status
+                  </label>
                   <Select
                     allowClear
                     placeholder="Select Status"
                     onChange={setStatusFilter}
                     value={statusFilter}
-                    style={{ width: '100%' }}
+                    style={{ width: "100%" }}
                   >
                     <Option value="Pending">Pending</Option>
                     <Option value="Approved">Approved</Option>
@@ -484,23 +552,29 @@ const RequestList = () => {
                   </Select>
                 </Col>
                 <Col xs={24} md={8}>
-                  <label className="block text-gray-700 font-medium mb-1">Request Type</label>
+                  <label className="block text-gray-700 font-medium mb-1">
+                    Request Type
+                  </label>
                   <Select
                     allowClear
                     placeholder="Select Request Type"
                     onChange={(value) => setRequestTypeFilter(value)}
                     value={requestTypeFilter}
-                    style={{ width: '100%' }}
+                    style={{ width: "100%" }}
                   >
                     {Object.entries(RequestTypeEnum).map(([key, label]) => (
-                      <Option key={key} value={parseInt(key, 10)}>{label}</Option>
+                      <Option key={key} value={parseInt(key, 10)}>
+                        {label}
+                      </Option>
                     ))}
                   </Select>
                 </Col>
                 <Col xs={24} md={8}>
-                  <label className="block text-gray-700 font-medium mb-1">Date Range</label>
+                  <label className="block text-gray-700 font-medium mb-1">
+                    Date Range
+                  </label>
                   <RangePicker
-                    style={{ width: '100%' }}
+                    style={{ width: "100%" }}
                     onChange={(dates) => setDateRange(dates)}
                     value={dateRange}
                   />
@@ -518,7 +592,7 @@ const RequestList = () => {
               total: filteredRequests.length,
               pageSize: pageSize,
               showSizeChanger: true,
-              pageSizeOptions: ['7', '10', '20', '50', '100'],
+              pageSizeOptions: ["7", "10", "20", "50", "100"],
               showQuickJumper: true,
               showTotal: (total) => `Total ${total} requests`,
             }}
@@ -526,10 +600,12 @@ const RequestList = () => {
             scroll={{ x: "max-content", y: 500 }}
             className="shadow-md"
             rowClassName={(record) =>
-              record.status === "Pending" ? "bg-orange-50/50 hover:bg-orange-100/70" : ""
+              record.status === "Pending"
+                ? "bg-orange-50/50 hover:bg-orange-100/70"
+                : ""
             }
           />
-          
+
           {/* Hiển thị modal chi tiết */}
           <Modal
             title="Request Details"
@@ -553,18 +629,19 @@ const RequestList = () => {
                     <div className="flex items-center gap-2 text-gray-600">
                       <ProfileOutlined className="text-indigo-500" />
                       <span className="text-sm font-medium">
-                        Type: {RequestTypeEnum[currentRequest.requestType] || currentRequest.requestType}
+                        Type:{" "}
+                        {RequestTypeEnum[currentRequest.requestType] ||
+                          currentRequest.requestType}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2 text-gray-600">
                       <UserOutlined className="text-indigo-500" />
                       <span className="text-sm font-medium">
-                        Requested By: {
-                          requestByUser 
-                            ? `${requestByUser.fullName} (${currentRequest.requestById})`
-                            : currentRequest.requestById || 'Unknown'
-                        }
+                        Requested By:{" "}
+                        {requestByUser
+                          ? `${requestByUser.fullName} (${currentRequest.requestById})`
+                          : currentRequest.requestById || "Unknown"}
                       </span>
                     </div>
 
@@ -572,18 +649,22 @@ const RequestList = () => {
                       <div className="flex items-center gap-2 text-gray-600">
                         <ProfileOutlined className="text-indigo-500" />
                         <span className="text-sm font-medium">
-                          {isTrainingPlanType(currentRequest.requestType) ? 'Training Plan ID: ' : 'Entity ID: '}
+                          {isTrainingPlanType(currentRequest.requestType)
+                            ? "Training Plan ID: "
+                            : "Entity ID: "}
                           {
                             // Nếu là các loại request về training plan thì hiển thị link
                             isTrainingPlanType(currentRequest.requestType) ? (
-                              <Link 
+                              <Link
                                 to={`/plan/${currentRequest.requestEntityId}`}
                                 className="text-blue-600 hover:text-blue-800 hover:underline"
                                 title="Click to view Training Plan details"
                               >
                                 {currentRequest.requestEntityId}
                               </Link>
-                            ) : currentRequest.requestEntityId
+                            ) : (
+                              currentRequest.requestEntityId
+                            )
                           }
                         </span>
                       </div>
@@ -592,7 +673,8 @@ const RequestList = () => {
                     <div className="flex items-center gap-2 text-gray-600">
                       <FileTextOutlined className="text-indigo-500" />
                       <span className="text-sm font-medium">
-                        Description: {currentRequest.description || 'No description'}
+                        Description:{" "}
+                        {currentRequest.description || "No description"}
                       </span>
                     </div>
 
@@ -609,7 +691,11 @@ const RequestList = () => {
                       <CalendarOutlined className="text-indigo-500" />
                       <span className="text-sm font-medium">
                         Request Date:{" "}
-                        {currentRequest.requestDate ? new Date(currentRequest.requestDate).toLocaleString() : 'N/A'}
+                        {currentRequest.requestDate
+                          ? new Date(
+                              currentRequest.requestDate
+                            ).toLocaleString()
+                          : "N/A"}
                       </span>
                     </div>
 
@@ -617,8 +703,14 @@ const RequestList = () => {
                       <div className="flex items-center gap-2 text-gray-600">
                         <UserOutlined className="text-indigo-500" />
                         <span className="text-sm font-medium">
-                          {currentRequest.status === "Approved" ? "Approved" : "Rejected"} By: {currentRequest.approvedById}
-                          {currentRequest.approvedDate && ` (${new Date(currentRequest.approvedDate).toLocaleString()})`}
+                          {currentRequest.status === "Approved"
+                            ? "Approved"
+                            : "Rejected"}{" "}
+                          By: {currentRequest.approvedById}
+                          {currentRequest.approvedDate &&
+                            ` (${new Date(
+                              currentRequest.approvedDate
+                            ).toLocaleString()})`}
                         </span>
                       </div>
                     )}
@@ -644,7 +736,7 @@ const RequestList = () => {
                         }
                         className="text-sm font-medium px-3 py-1 rounded-full"
                       >
-                        {currentRequest.status || 'Unknown'}
+                        {currentRequest.status || "Unknown"}
                       </Tag>
                     </div>
                   </div>
@@ -660,34 +752,35 @@ const RequestList = () => {
                       >
                         Approve
                       </Button>
-                      <Button
-                        danger
-                        onClick={handleReject}
-                      >
+                      <Button danger onClick={handleReject}>
                         Reject
                       </Button>
                     </>
                   )}
-                  
+
                   {/* Thêm nút view training plan nếu là request liên quan đến training plan */}
-                  {currentRequest.requestEntityId && isTrainingPlanType(currentRequest.requestType) && (
-                    <Link to={`/training-plan/${currentRequest.requestEntityId}`}>
-                      <Button type="primary" className="bg-blue-500 hover:bg-blue-600">
-                        View Training Plan
-                      </Button>
-                    </Link>
-                  )}
-                  
-                  <Button onClick={handleCloseDetails}>
-                    Close
-                  </Button>
+                  {currentRequest.requestEntityId &&
+                    isTrainingPlanType(currentRequest.requestType) && (
+                      <Link
+                        to={`/training-plan/${currentRequest.requestEntityId}`}
+                      >
+                        <Button
+                          type="primary"
+                          className="bg-blue-500 hover:bg-blue-600"
+                        >
+                          View Training Plan
+                        </Button>
+                      </Link>
+                    )}
+
+                  <Button onClick={handleCloseDetails}>Close</Button>
                 </div>
               </div>
             ) : (
               <p className="text-red-500">Request not found.</p>
             )}
           </Modal>
-          
+
           {/* Modal để nhập lý do từ chối */}
           <Modal
             title="Reject Request"
@@ -699,7 +792,9 @@ const RequestList = () => {
             cancelText="Cancel"
           >
             <div className="mb-4">
-              <p className="mb-2 text-gray-700">Please provide a reason for rejection:</p>
+              <p className="mb-2 text-gray-700">
+                Please provide a reason for rejection:
+              </p>
               <Input.TextArea
                 rows={4}
                 value={rejectReason}
