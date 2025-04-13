@@ -54,11 +54,11 @@ export const approveRequest = async (id) => {
 };
 
 // Reject request
-export const rejectRequest = async (id, reason = "") => {
+export const rejectRequest = async (id, data) => {
   try {
     const response = await axiosInstance.put(
       `${API.REJECT_REQUEST}/${id}/reject`,
-      reason,
+      data,
       {
         headers: {
           "Content-Type": "application/json",

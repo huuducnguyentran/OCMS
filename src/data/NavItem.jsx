@@ -192,7 +192,7 @@ const navItems = [
     label: "Certificate",
     icon: "ImportOutlined",
     path: "/certificate",
-    roles: ["Admin", "Training staff", "HR", "AOC Manager"],
+    roles: ["Admin", "HR", "AOC Manager"],
   },
 ];
 
