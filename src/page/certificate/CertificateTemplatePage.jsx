@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Table,
   Typography,
@@ -9,13 +9,15 @@ import {
   Menu,
   Dropdown,
   Popconfirm,
+  Alert,
+  Space
 } from "antd";
 import {
   fetchCertificateTemplates,
   fetchCertificateTemplatebyId,
   deleteCertificateTemplate,
 } from "../../services/certificateService";
-import { EllipsisOutlined, PlusOutlined } from "@ant-design/icons";
+import { EllipsisOutlined, PlusOutlined, WarningOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 const { Title } = Typography;
@@ -26,6 +28,8 @@ const CertificateTemplateListPage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [previewError, setPreviewError] = useState(null);
+  const loadingTimeoutRef = useRef(null);
 
   useEffect(() => {
     const loadTemplates = async () => {
@@ -33,41 +37,82 @@ const CertificateTemplateListPage = () => {
         const data = await fetchCertificateTemplates();
         setTemplates(data);
       } catch (err) {
-        message.error("Failed to fetch certificate templates.", err);
+        message.error("Failed to fetch certificate templates.");
+        console.error("Error fetching templates:", err);
       }
     };
 
     loadTemplates();
+    
+    // Cleanup function to clear any pending timeouts
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
   }, []);
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl("");
+    }
+    setPreviewError(null);
+    
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
+  };
 
   const handlePreview = async (templateId) => {
     setLoading(true);
+    setPreviewError(null);
+    setIsModalVisible(true);
+    
+    // Set a timeout to stop loading after 15 seconds
+    loadingTimeoutRef.current = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+        setPreviewError("Preview loading timeout. The server took too long to respond.");
+      }
+    }, 15000);
+    
     try {
       const data = await fetchCertificateTemplatebyId(templateId);
 
       if (data?.templateFile) {
-        const response = await fetch(data.templateFile, {
-          headers: {
-            Accept: "text/html",
-          },
-        });
+        try {
+          const response = await fetch(data.templateFile, {
+            headers: {
+              Accept: "text/html",
+            },
+          });
 
-        if (!response.ok) {
-          throw new Error("Failed to load certificate template file.");
+          if (!response.ok) {
+            throw new Error(`Failed to load certificate template file. Status: ${response.status}`);
+          }
+
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+
+          setPreviewUrl(blobUrl);
+        } catch (fetchError) {
+          console.error("Fetch error:", fetchError);
+          setPreviewError(`Error loading template preview: ${fetchError.message}`);
         }
-
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-
-        setPreviewUrl(blobUrl);
-        setIsModalVisible(true);
       } else {
-        message.warning("No template file found.");
+        setPreviewError("No template file found for this certificate.");
       }
     } catch (err) {
-      console.error(err);
-      message.error("Failed to fetch template details.");
+      console.error("Template fetch error:", err);
+      setPreviewError(`Error loading template: ${err.message || "Unknown error"}`);
     } finally {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
       setLoading(false);
     }
   };
@@ -141,7 +186,8 @@ const CertificateTemplateListPage = () => {
                     const data = await fetchCertificateTemplates();
                     setTemplates(data);
                   } catch (err) {
-                    message.error("Failed to delete template.", err);
+                    message.error("Failed to delete template.");
+                    console.error("Delete error:", err);
                   }
                 }}
                 okText="Yes"
@@ -183,24 +229,47 @@ const CertificateTemplateListPage = () => {
       <Modal
         title="Certificate Template Preview"
         open={isModalVisible}
-        onCancel={() => {
-          setIsModalVisible(false);
-          if (previewUrl) URL.revokeObjectURL(previewUrl); // Cleanup
-          setPreviewUrl("");
-        }}
-        footer={null}
+        onCancel={closeModal}
+        footer={[
+          <Button key="close" onClick={closeModal}>
+            Close
+          </Button>
+        ]}
         width={800}
+        maskClosable={true}
+        closable={true}
+        destroyOnClose={true}
       >
         {loading ? (
           <div className="flex justify-center items-center h-60">
-            <Spin />
+            <Spin tip="Loading template..." />
           </div>
-        ) : (
-          <iframe
-            src={previewUrl}
-            title="Template Preview"
-            style={{ width: "100%", height: "600px", border: "none" }}
+        ) : previewError ? (
+          <Alert
+            message="Error Loading Preview"
+            description={
+              <Space direction="vertical">
+                <div>{previewError}</div>
+                <Button type="primary" danger onClick={closeModal}>
+                  <CloseCircleOutlined /> Close Preview
+                </Button>
+              </Space>
+            }
+            type="error"
+            showIcon
+            icon={<WarningOutlined />}
           />
+        ) : (
+          previewUrl && (
+            <iframe
+              src={previewUrl}
+              title="Template Preview"
+              style={{ width: "100%", height: "600px", border: "none" }}
+              onError={() => {
+                setPreviewError("Failed to load template content. The file might be corrupted or in an unsupported format.");
+              }}
+            />
+          )
         )}
       </Modal>
     </div>

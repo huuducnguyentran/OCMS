@@ -163,7 +163,7 @@ const SubjectDetailPage = () => {
                       <EnvironmentOutlined className="mr-1 text-red-500" />
                       {record.location} - Room {record.room}
                     </div>
-                  )}
+                  )}  
                 />
                 <Table.Column
                   title="Status"
