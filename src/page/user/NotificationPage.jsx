@@ -97,7 +97,16 @@ const NotificationPage = () => {
       }
     } catch (error) {
       console.error("Error when loading notifications:", error);
-      setError("Unable to load notifications. Please try again later.");
+      
+      // Kiểm tra nếu thông báo là "No notifications found for this user."
+      if (error.response?.data?.message === "No notifications found for this user.") {
+        // Đây không phải là lỗi, chỉ là không có dữ liệu
+        setError(null);
+      } else {
+        // Các lỗi khác vẫn hiển thị thông báo lỗi
+        setError("Unable to load notifications. Please try again later.");
+      }
+      
       setAllNotifications([]);
       setFilteredNotifications([]);
       setNotifications([]);

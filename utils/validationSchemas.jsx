@@ -10,12 +10,10 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Login Schema
 export const LoginSchema = Yup.object({
-  username: Yup.string()
-    .required("Username is required"),
+  username: Yup.string().required("Username is required"),
   password: Yup.string().required("Password is required"),
 });
 
-// Reset Password Schema
 export const ResetPasswordSchema = Yup.object({
   token: Yup.string()
     .matches(tokenRegex, "Invalid token format.")
