@@ -203,7 +203,7 @@ function App() {
                             element={<ImportCertificatePage />}
                           />
                           <Route
-                            path="/certificate"
+                            path="/certificate-tempalte"
                             element={<CertificateTemplateListPage />}
                           />
                           <Route

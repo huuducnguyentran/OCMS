@@ -177,6 +177,13 @@ const navItems = [
     label: "Certificate",
     icon: "FileProtectOutlined",
     path: "/certificate",
+    roles: ["Admin", "HR", "AOC Manager, Training Staff"],
+  },
+  {
+    key: "14",
+    label: "Certificate Template",
+    icon: "FileProtectOutlined",
+    path: "/certificate-tempalte",
     roles: ["Admin", "HR", "AOC Manager"],
   },
 ];
