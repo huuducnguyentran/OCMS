@@ -113,6 +113,11 @@ const PlanPage = () => {
       let plans = [];
       if (response) {
         plans = Array.isArray(response) ? response : response.plans || [];
+        
+        // Nếu là trainee, chỉ hiển thị các kế hoạch có trạng thái "Approved" (1)
+        if (isTrainee) {
+          plans = plans.filter(plan => plan.trainingPlanStatus === 1);
+        }
       }
 
       setTrainingPlans(plans);
@@ -351,22 +356,24 @@ const PlanPage = () => {
         style={{ display: filterVisible ? "block" : "none" }}
       >
         <Row gutter={[16, 16]}>
-          <Col xs={24} md={8}>
-            <div className="mb-2 font-semibold">
-              Status Filter{" "}
-              <span className="text-gray-500 text-xs">
-                (none selected = show all)
-              </span>
-            </div>
-            <Checkbox.Group
-              options={statusOptions}
-              value={selectedStatusValues}
-              onChange={handleStatusChange}
-              className="flex flex-wrap gap-2"
-            />
-          </Col>
+          {!isTrainee && (
+            <Col xs={24} md={8}>
+              <div className="mb-2 font-semibold">
+                Status Filter{" "}
+                <span className="text-gray-500 text-xs">
+                  (none selected = show all)
+                </span>
+              </div>
+              <Checkbox.Group
+                options={statusOptions}
+                value={selectedStatusValues}
+                onChange={handleStatusChange}
+                className="flex flex-wrap gap-2"
+              />
+            </Col>
+          )}
 
-          <Col xs={24} md={8}>
+          <Col xs={24} md={isTrainee ? 12 : 8}>
             <div className="mb-2 font-semibold">
               Plan Level Filter{" "}
               <span className="text-gray-500 text-xs">
@@ -387,7 +394,7 @@ const PlanPage = () => {
             </Checkbox.Group>
           </Col>
 
-          <Col xs={24} md={8}>
+          <Col xs={24} md={isTrainee ? 12 : 8}>
             <div className="mb-2 font-semibold">Date Sort</div>
             <Button
               type="default"
@@ -494,34 +501,36 @@ const PlanPage = () => {
           {filterVisible && (
             <div className="mt-6 animate__animated animate__fadeIn">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Status Filter */}
-                <div>
-                  <Title level={5}>Status</Title>
-                  <div className="space-y-2">
-                    {statusOptions.map((option) => (
-                      <Tag
-                        key={option.value}
-                        className={`cursor-pointer px-3 py-1 mr-2 ${
-                          selectedStatusValues.includes(option.value)
-                            ? "bg-blue-100 border-blue-500"
-                            : ""
-                        }`}
-                        onClick={() => {
-                          const newSelected = selectedStatusValues.includes(
-                            option.value
-                          )
-                            ? selectedStatusValues.filter(
-                                (v) => v !== option.value
-                              )
-                            : [...selectedStatusValues, option.value];
-                          setSelectedStatusValues(newSelected);
-                        }}
-                      >
-                        {option.label}
-                      </Tag>
-                    ))}
+                {/* Status Filter - Chỉ hiển thị nếu không phải trainee */}
+                {!isTrainee && (
+                  <div>
+                    <Title level={5}>Status</Title>
+                    <div className="space-y-2">
+                      {statusOptions.map((option) => (
+                        <Tag
+                          key={option.value}
+                          className={`cursor-pointer px-3 py-1 mr-2 ${
+                            selectedStatusValues.includes(option.value)
+                              ? "bg-blue-100 border-blue-500"
+                              : ""
+                          }`}
+                          onClick={() => {
+                            const newSelected = selectedStatusValues.includes(
+                              option.value
+                            )
+                              ? selectedStatusValues.filter(
+                                  (v) => v !== option.value
+                                )
+                              : [...selectedStatusValues, option.value];
+                            setSelectedStatusValues(newSelected);
+                          }}
+                        >
+                          {option.label}
+                        </Tag>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Plan Level Filter */}
                 <div>
