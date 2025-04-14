@@ -128,7 +128,7 @@ const navItems = [
     label: "Assign Trainee",
     icon: "DeploymentUnitOutlined",
     path: "/assign-trainee",
-    roles: ["Admin", "Training staff", "HeadMaster", "Trainee"],
+    roles: ["Admin", "Training staff", "HeadMaster"],
     children: [
       {
         key: "11-1",
@@ -186,6 +186,15 @@ const navItems = [
     path: "/certificate-tempalte",
     roles: ["Admin", "HR", "AOC Manager"],
   },
+  
+  { 
+    key: "16",
+    label: "Specialty",
+    icon: "ImportOutlined",
+    path: "/specialty",
+    roles: ["Admin","Training staff"],
+  }
+
 ];
 
 export default navItems;

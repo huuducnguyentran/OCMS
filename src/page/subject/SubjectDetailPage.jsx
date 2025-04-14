@@ -119,7 +119,6 @@ const SubjectDetailPage = () => {
                 title="Passing Score"
                 value={subject?.passingScore || 0}
                 prefix={<TrophyOutlined className="text-yellow-500" />}
-                suffix="%"
               />
             </Card>
           </Col>
@@ -171,7 +170,7 @@ const SubjectDetailPage = () => {
                 <div>
                   <Text className="text-gray-500 block">Passing Score</Text>
                   <Tag color="orange" className="mt-1 text-base px-3 py-1">
-                    {subject?.passingScore || "N/A"}%
+                    {subject?.passingScore || "N/A"}
                   </Tag>
                 </div>
               </div>

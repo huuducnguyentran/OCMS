@@ -53,6 +53,10 @@ import ViewGradePage from "./page/grade/ViewGradePage";
 import CertificateTemplateDetailPage from "./page/certificate/CertificateTemplateDetailPage";
 import PlanDetailPage from "./page/training_plan/PlanDetailPage";
 import UpdateGradePage from "./page/grade/UpdateGradePage";
+import SpecialtyPage from "./page/specialty/SpecialtyPage";
+import EditSpecialtyPage from "./page/specialty/EditSpecialtyPage";
+import CreateSpecialtyPage from "./page/specialty/CreateSpecialtyPage";
+import SpecialtyTreePage from "./page/specialty/SpecialtyTreePage";
 
 function App() {
   return (
@@ -213,6 +217,19 @@ function App() {
                           <Route
                             path="/certificate-template/:templateId"
                             element={<CertificateTemplateDetailPage />}
+                          />
+                          <Route path="/specialty" element={<SpecialtyPage />} />
+                          <Route
+                            path="/specialty/edit/:id"
+                            element={<EditSpecialtyPage />}
+                          />
+                          <Route
+                            path="/specialty/create"
+                            element={<CreateSpecialtyPage />}
+                          />
+                          <Route
+                            path="/specialty/tree"
+                            element={<SpecialtyTreePage />}
                           />
                         </Routes>
                         <Footer />
