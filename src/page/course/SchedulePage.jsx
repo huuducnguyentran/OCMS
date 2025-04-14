@@ -1,4 +1,3 @@
-// src/pages/SchedulePage.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { Table, Spin, Empty, message, Select, Tag, Button } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -18,18 +17,76 @@ const SchedulePage = () => {
   const [scheduleData, setScheduleData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
-  const [viewMode, setViewMode] = useState(location.state?.viewMode || "all"); // For Training Staff: "all", "instructor", "trainee"
+  const [viewMode, setViewMode] = useState(location.state?.viewMode || "all");
   const [subjects, setSubjects] = useState([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
   const [selectedSubjectDetails, setSelectedSubjectDetails] = useState(null);
-
-  // Thêm các state mới cho search
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [currentWeek, setCurrentWeek] = useState(null);
+  const [weekOptions, setWeekOptions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [subjectOptions, setSubjectOptions] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const searchTimeoutRef = useRef(null);
+  const [columns, setColumns] = useState([]);
 
-  // Kiểm tra token và xác định quyền người dùng
+  // Initialize current week and generate week options when component mounts
+  useEffect(() => {
+    // Get current week number and set it
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const weekNumber = Math.ceil(((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+    
+    // Generate week options for the entire year
+    generateWeekOptions(now.getFullYear());
+    
+    // Set the current week in format "DD/MM To DD/MM"
+    const currentWeekDates = getWeekDates(weekNumber, now.getFullYear());
+    setCurrentWeek(`${formatDateShort(currentWeekDates.start)} To ${formatDateShort(currentWeekDates.end)}`);
+  }, []);
+
+  // Generate week options for dropdown
+  const generateWeekOptions = (year) => {
+    const options = [];
+    for (let week = 1; week <= 52; week++) {
+      const weekDates = getWeekDates(week, year);
+      options.push({
+        value: `${formatDateShort(weekDates.start)} To ${formatDateShort(weekDates.end)}`,
+        label: `${formatDateShort(weekDates.start)} To ${formatDateShort(weekDates.end)}`,
+        weekNumber: week
+      });
+    }
+    setWeekOptions(options);
+  };
+
+  // Get start and end dates for a specific week in a year
+  const getWeekDates = (weekNumber, year) => {
+    const startOfYear = new Date(year, 0, 1);
+    const daysOffset = (startOfYear.getDay() > 0 ? 7 - startOfYear.getDay() : 0) + (weekNumber - 1) * 7;
+    const startDate = new Date(year, 0, 1 + daysOffset);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6);
+    
+    return { start: startDate, end: endDate };
+  };
+
+  // Format date as DD/MM
+  const formatDateShort = (date) => {
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+  };
+
+  // Format date with day of month and month
+  const formatDateFull = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString;
+    }
+  };
+
+  // Check token and determine user role
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     const role = sessionStorage.getItem("role");
@@ -40,16 +97,13 @@ const SchedulePage = () => {
       return;
     }
 
-    // Xác định quyền người dùng từ token hoặc sessionStorage
     if (role) {
       setUserRole(role);
     } else {
-      // Hoặc kiểm tra userId
       const userId = sessionStorage.getItem("userId");
       if (userId && userId.startsWith("TS-")) {
         setUserRole("TrainingStaff");
       } else {
-        // Default role nếu không xác định được
         setUserRole("Trainee");
       }
     }
@@ -62,7 +116,7 @@ const SchedulePage = () => {
     }
   }, [userRole, viewMode]);
 
-  // Thêm useEffect để fetch danh sách subjects
+  // Fetch subjects list
   useEffect(() => {
     const fetchSubjects = async () => {
       try {
@@ -83,7 +137,6 @@ const SchedulePage = () => {
       } catch (error) {
         console.error("Failed to fetch subjects:", error);
 
-        // Hiển thị lỗi cụ thể hơn
         if (error.response) {
           message.error(
             `Lỗi API (${error.response.status}): ${
@@ -118,10 +171,9 @@ const SchedulePage = () => {
         return;
       }
 
-      // Nếu có subject được chọn
+      // If a subject is selected
       if (selectedSubjectId) {
         try {
-          // Log để debug
           console.log("Fetching data for subject:", selectedSubjectId);
 
           const data = await trainingScheduleService.getScheduleBySubjectId(
@@ -131,11 +183,7 @@ const SchedulePage = () => {
 
           if (data && data.subjectDetails) {
             setSelectedSubjectDetails(data.subjectDetails);
-
-            // Đảm bảo schedules là một mảng
-            const schedules = Array.isArray(data.schedules)
-              ? data.schedules
-              : [];
+            const schedules = Array.isArray(data.schedules) ? data.schedules : [];
             console.log("Processed schedules:", schedules);
 
             setScheduleData(schedules);
@@ -153,10 +201,10 @@ const SchedulePage = () => {
           console.error("Error in subject fetch:", error);
           handleError(error);
         }
-        return; // Kết thúc sớm nếu đã xử lý subject
+        return;
       }
 
-      // Xử lý trường hợp không có subject được chọn
+      // Handle the case when no subject is selected
       let response;
       try {
         if (userRole === "Training staff" || userRole === "TrainingStaff") {
@@ -179,13 +227,37 @@ const SchedulePage = () => {
           }
         } else if (userRole === "Instructor") {
           response = await trainingScheduleService.getInstructorSubjects();
+        } else if (userRole === "Trainee") {
+          response = await trainingScheduleService.getTraineeSubjects();
+          
+          // Process the response specific for trainee format
+          if (response && response.data && Array.isArray(response.data)) {
+            // Extract schedules from all subjects
+            const allSchedules = [];
+            
+            response.data.forEach(subject => {
+              if (subject.schedules && Array.isArray(subject.schedules)) {
+                // Add subject information to each schedule
+                const schedulesWithSubjectInfo = subject.schedules.map(schedule => ({
+                  ...schedule,
+                  subjectID: subject.subjectId,
+                  subjectName: subject.subjectName
+                }));
+                
+                allSchedules.push(...schedulesWithSubjectInfo);
+              }
+            });
+            
+            setScheduleData(allSchedules);
+            return;
+          }
         } else {
           response = await trainingScheduleService.getTraineeSubjects();
         }
 
         console.log("Response from service:", response);
 
-        // Xử lý response
+        // Process the response
         if (response && response.schedules) {
           setScheduleData(response.schedules);
         } else if (Array.isArray(response)) {
@@ -205,7 +277,6 @@ const SchedulePage = () => {
     }
   };
 
-  // Thêm hàm handleError
   const handleError = (error) => {
     if (error.response) {
       switch (error.response.status) {
@@ -228,7 +299,7 @@ const SchedulePage = () => {
     setScheduleData([]);
   };
 
-  // Thêm useEffect để fetch lại data khi selectedSubjectId thay đổi
+  // Fetch data when selectedSubjectId changes
   useEffect(() => {
     if (userRole) {
       console.log("Fetching data with:", {
@@ -240,35 +311,82 @@ const SchedulePage = () => {
     }
   }, [userRole, viewMode, selectedSubjectId]);
 
-  // Xử lý chuỗi daysOfWeek thành mảng các ngày
+  // Parse days of week string into an array of days
   const parseDaysOfWeek = (daysOfWeekString) => {
     if (!daysOfWeekString) return [];
-
     console.log("Parsing days:", daysOfWeekString);
-
-    // Xử lý các trường hợp ngày như "Saturday" hoặc "Monday, Tuesday, Wednesday"
     const days = daysOfWeekString
       .split(",")
       .map((day) => day.trim())
       .filter(Boolean);
-
     console.log("Parsed days:", days);
     return days;
   };
 
-  // Chuyển đổi thời gian từ string thành định dạng hiển thị
+  // Format time from string to display format
   const formatTime = (timeString) => {
     if (!timeString) return "";
-
-    // Xử lý nếu timeString có dạng "HH:mm:ss"
     if (timeString.includes(":")) {
       const parts = timeString.split(":");
       if (parts.length >= 2) {
         return `${parts[0]}:${parts[1]}`;
       }
     }
-
     return timeString;
+  };
+
+  // Generate dates for current week based on selected week
+  const generateWeekDates = (weekString) => {
+    // If week string is not set, use current date
+    if (!weekString) {
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const startDate = new Date(today);
+      startDate.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)); // Monday
+      
+      const dates = [];
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
+        dates.push(date);
+      }
+      return dates;
+    }
+    
+    // Parse selected week string (format: "DD/MM To DD/MM")
+    const [startDateStr, endDateStr] = weekString.split(" To ");
+    const [startDay, startMonth] = startDateStr.split("/").map(Number);
+    
+    // Create date for Monday of selected week
+    const startDate = new Date(currentYear, startMonth - 1, startDay);
+    
+    // Generate dates for the entire week
+    const dates = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+      dates.push(date);
+    }
+    
+    return dates;
+  };
+
+  // Get formatted date string (DD/MM)
+  const getFormattedDate = (date) => {
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+  };
+
+  // Check if a course is active on a specific date
+  const isCourseActiveOnDate = (schedule, date) => {
+    const startDate = new Date(schedule.startDateTime);
+    const endDate = new Date(schedule.endDateTime);
+    
+    // Reset time components for accurate date comparison
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+    date.setHours(12, 0, 0, 0);
+    
+    return date >= startDate && date <= endDate;
   };
 
   // Process schedule data into time slots
@@ -284,7 +402,7 @@ const SchedulePage = () => {
       return [];
     }
 
-    // Lấy tất cả time slots duy nhất
+    // Get all unique time slots
     const uniqueTimeSlots = [
       ...new Set(scheduleData.map((item) => item.classTime)),
     ]
@@ -292,6 +410,9 @@ const SchedulePage = () => {
       .sort();
 
     console.log("Unique time slots:", uniqueTimeSlots);
+    
+    // Generate dates for the current/selected week
+    const weekDates = generateWeekDates(currentWeek);
 
     return uniqueTimeSlots.map((timeSlot) => {
       const row = {
@@ -309,10 +430,20 @@ const SchedulePage = () => {
         "Sunday",
       ];
 
-      daysOfWeek.forEach((day) => {
+      // For each day of the week
+      daysOfWeek.forEach((day, index) => {
+        const currentDate = weekDates[index];
+        
+        // Find schedules for this time slot and day
         const matchingSchedules = scheduleData.filter((schedule) => {
           const scheduleDays = parseDaysOfWeek(schedule.daysOfWeek);
-          return schedule.classTime === timeSlot && scheduleDays.includes(day);
+          
+          // Check if schedule is on this day and active on the current date
+          return (
+            schedule.classTime === timeSlot && 
+            scheduleDays.includes(day) && 
+            isCourseActiveOnDate(schedule, currentDate)
+          );
         });
 
         if (matchingSchedules.length > 0) {
@@ -325,10 +456,20 @@ const SchedulePage = () => {
               <div className="font-semibold text-blue-600 hover:text-blue-700">
                 {schedule.subjectName}
               </div>
+              
+              {/* Clear date range information */}
+              <div className="text-xs font-medium text-indigo-600 bg-indigo-50 p-1 rounded my-1">
+                <div>Từ: {formatDateFull(schedule.startDateTime)}</div>
+                <div>Đến: {formatDateFull(schedule.endDateTime)}</div>
+              </div>
+              
               <div className="text-sm text-gray-500">
                 <div>Room: {schedule.room || "N/A"}</div>
                 <div>Location: {schedule.location || "N/A"}</div>
                 {schedule.courseId && <div>Course: {schedule.courseId}</div>}
+                {schedule.subjectPeriod && (
+                  <div>Duration: {schedule.subjectPeriod.substring(0, 5)} hours</div>
+                )}
                 {userRole === "TrainingStaff" && (
                   <>
                     <div>Instructor: {schedule.instructorID}</div>
@@ -356,25 +497,32 @@ const SchedulePage = () => {
     });
   };
 
-  const columns = [
-    {
-      title: (
-        <div className="flex items-center gap-2 text-indigo-700">
-          <ClockCircleOutlined />
-          <span>Time Slot</span>
-        </div>
-      ),
-      dataIndex: "timeFrame",
-      key: "timeFrame",
-      fixed: "left",
-      width: 150,
-      render: (text) => (
-        <div className="font-medium text-gray-700 bg-gray-50 p-2 rounded-lg">
-          {text}
-        </div>
-      ),
-    },
-    ...[
+  // Generate column headers with dates
+  const generateColumns = () => {
+    const weekDates = generateWeekDates(currentWeek);
+    
+    const columns = [
+      {
+        title: (
+          <div className="flex items-center gap-2 text-indigo-700">
+            <ClockCircleOutlined />
+            <span>Time Slot</span>
+          </div>
+        ),
+        dataIndex: "timeFrame",
+        key: "timeFrame",
+        fixed: "left",
+        width: 150,
+        render: (text) => (
+          <div className="font-medium text-gray-700 bg-gray-50 p-2 rounded-lg">
+            {text}
+          </div>
+        ),
+      }
+    ];
+    
+    // Days of week with corresponding dates
+    const daysOfWeek = [
       "Monday",
       "Tuesday",
       "Wednesday",
@@ -382,32 +530,47 @@ const SchedulePage = () => {
       "Friday",
       "Saturday",
       "Sunday",
-    ].map((day) => ({
-      title: (
-        <div className="text-center font-semibold text-indigo-700">
-          <div className="text-lg">{day}</div>
-        </div>
-      ),
-      dataIndex: day,
-      key: day,
-      width: 200,
-      render: (content) => (
-        <div className="p-2">
-          {content !== "-" ? (
-            <div
-              className="bg-white hover:bg-blue-50 p-4 rounded-xl shadow-sm 
+    ];
+    
+    // Add column for each day with its date
+    daysOfWeek.forEach((day, index) => {
+      const date = weekDates[index];
+      
+      columns.push({
+        title: (
+          <div className="text-center font-semibold text-indigo-700">
+            <div className="text-lg">{day}</div>
+            <div className="text-sm">{getFormattedDate(date)}</div>
+          </div>
+        ),
+        dataIndex: day,
+        key: day,
+        width: 200,
+        render: (content) => (
+          <div className="p-2">
+            {content !== "No Class" ? (
+              <div
+                className="bg-white hover:bg-blue-50 p-4 rounded-xl shadow-sm 
                          border border-blue-100 transition-all duration-300
                          hover:shadow-md cursor-pointer"
-            >
-              {content}
-            </div>
-          ) : (
-            <div className="text-center text-gray-400 p-4">No Class</div>
-          )}
-        </div>
-      ),
-    })),
-  ];
+              >
+                {content}
+              </div>
+            ) : (
+              <div className="text-center text-gray-400 p-4">No Class</div>
+            )}
+          </div>
+        ),
+      });
+    });
+    
+    return columns;
+  };
+
+  // Update columns when currentWeek changes
+  useEffect(() => {
+    setColumns(generateColumns());
+  }, [currentWeek]);
 
   // View selector for Training Staff
   const renderViewSelector = () => {
@@ -420,7 +583,6 @@ const SchedulePage = () => {
             <Select
               value={viewMode}
               onChange={setViewMode}
-              className="w-48"
               style={{ width: 200 }}
             >
               <Option value="all">All Schedules</Option>
@@ -435,12 +597,12 @@ const SchedulePage = () => {
     return null;
   };
 
-  // Xử lý điều hướng đến trang tạo lịch trình
+  // Handle navigation to create schedule page
   const handleCreateSchedule = () => {
     navigate("/schedule/create");
   };
 
-  // Render nút tạo lịch trình (chỉ hiển thị cho Training Staff)
+  // Render create button (only for Training Staff)
   const renderCreateButton = () => {
     if (userRole === "TrainingStaff" || userRole === "Training staff") {
       return (
@@ -458,7 +620,7 @@ const SchedulePage = () => {
     return null;
   };
 
-  // Thêm hàm xử lý khi chọn subject
+  // Handle subject change
   const handleSubjectChange = async (subjectId) => {
     try {
       console.log("Selected subject ID:", subjectId);
@@ -474,13 +636,13 @@ const SchedulePage = () => {
       setSelectedSubjectId(subjectId);
 
       try {
-        // Gọi API để lấy thông tin subject và schedules
+        // Call API to get subject info and schedules
         const data = await trainingScheduleService.getScheduleBySubjectId(
           subjectId
         );
         console.log("API response:", data);
 
-        // Kiểm tra và cập nhật schedule data
+        // Check and update schedule data
         if (data.schedules && data.schedules.length > 0) {
           setScheduleData(data.schedules);
           console.log("Schedule data set:", data.schedules);
@@ -492,7 +654,6 @@ const SchedulePage = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
 
-        // Hiển thị lỗi phù hợp
         if (error.response) {
           if (error.response.status === 404) {
             message.error("Không tìm thấy môn học");
@@ -516,13 +677,13 @@ const SchedulePage = () => {
     }
   };
 
-  // Thêm component Subject Selector vào giao diện
+  // Render subject selector
   const renderSubjectSelector = () => {
-    // Hàm tìm kiếm sử dụng setTimeout
+    // Search function with setTimeout
     const handleSearch = (value) => {
       if (!value || value.length < 2) return;
 
-      // Clear timeout cũ nếu có
+      // Clear previous timeout if exists
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
@@ -530,10 +691,10 @@ const SchedulePage = () => {
       setSearchLoading(true);
       setSearchTerm(value);
 
-      // Set timeout mới
+      // Set new timeout
       searchTimeoutRef.current = setTimeout(() => {
         try {
-          // Lọc từ danh sách subjects đã tải
+          // Filter from loaded subjects list
           const filtered = subjects.filter(
             (subject) =>
               subject.subjectName.toLowerCase().includes(value.toLowerCase()) ||
@@ -567,7 +728,7 @@ const SchedulePage = () => {
             onChange={(value, option) => {
               console.log("Selected subject:", option);
               if (value === "get_all") {
-                // Khi chọn "Get All", reset selection và fetch tất cả schedules
+                // When "Get All" is selected, reset selection and fetch all schedules
                 setSelectedSubjectId(null);
                 setSelectedSubjectDetails(null);
                 fetchScheduleData();
@@ -594,7 +755,7 @@ const SchedulePage = () => {
               searchLoading ? <Spin size="small" /> : "No subjects found"
             }
           >
-            {/* Thêm option "Get All" ở đầu danh sách */}
+            {/* Add "Get All" option at the top */}
             <Option key="get_all" value="get_all">
               <div className="flex flex-col">
                 <div className="font-medium text-blue-600">
@@ -606,12 +767,12 @@ const SchedulePage = () => {
               </div>
             </Option>
 
-            {/* Phân cách giữa "Get All" và danh sách subjects */}
+            {/* Divider between "Get All" and subjects list */}
             <Option key="divider" disabled className="border-t my-1 py-1">
               <div className="text-xs text-gray-400 text-center">Subjects</div>
             </Option>
 
-            {/* Danh sách subjects */}
+            {/* Subjects list */}
             {(searchTerm ? subjectOptions : subjects).map((subject) => (
               <Option key={subject.subjectId} value={subject.subjectId}>
                 <div className="flex flex-col">
@@ -624,6 +785,47 @@ const SchedulePage = () => {
               </Option>
             ))}
           </Select>
+        </div>
+      </div>
+    );
+  };
+
+  // Render year and week selector
+  const renderDateSelector = () => {
+    return (
+      <div className="mb-6 bg-white p-4 rounded-xl shadow-sm">
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Year selector */}
+          <div className="flex items-center gap-3">
+            <CalendarOutlined className="text-lg text-indigo-600" />
+            <span className="font-medium">Year:</span>
+            <Select
+              value={currentYear}
+              onChange={(value) => {
+                setCurrentYear(value);
+                generateWeekOptions(value);
+              }}
+              style={{ width: 120 }}
+            >
+              {[2023, 2024, 2025, 2026].map((year) => (
+                <Option key={year} value={year}>
+                  {year}
+                </Option>
+              ))}
+            </Select>
+          </div>
+          
+          {/* Week selector */}
+          <div className="flex items-center gap-3">
+            <CalendarOutlined className="text-lg text-indigo-600" />
+            <span className="font-medium">Week:</span>
+            <Select
+              value={currentWeek}
+              onChange={setCurrentWeek}
+              style={{ width: 200 }}
+              options={weekOptions}
+            />
+          </div>
         </div>
       </div>
     );
@@ -651,16 +853,17 @@ const SchedulePage = () => {
               </div>
             </div>
 
-            {/* Nút tạo lịch trình mới */}
+            {/* Create new schedule button */}
             {renderCreateButton()}
           </div>
         </div>
 
-        {/* View Selector and Subject Selector */}
+        {/* View Selector, Subject Selector and Date Selector */}
         <div className="flex flex-wrap items-center justify-between mb-6">
           <div className="flex flex-wrap gap-4">
             {renderViewSelector()}
             {renderSubjectSelector()}
+            {renderDateSelector()}
           </div>
           <div className="mb-4 sm:mb-0 sm:hidden">{renderCreateButton()}</div>
         </div>

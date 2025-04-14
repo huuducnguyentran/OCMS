@@ -179,6 +179,15 @@ const navItems = [
     path: "/certificate",
     roles: ["Admin", "HR", "AOC Manager"],
   },
+  
+  { 
+    key: "16",
+    label: "Specialty",
+    icon: "ImportOutlined",
+    path: "/specialty",
+    roles: ["Admin","Training staff"],
+  }
+
 ];
 
 export default navItems;
