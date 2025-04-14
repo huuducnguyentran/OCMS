@@ -91,4 +91,13 @@ export const API = {
   GET_CERTIFICATE_TEMPLATE_BY_ID: "CertificateTemplate",
   DELETE_CERTIFICATE_TEMPLATE: "CertificateTemplate",
   UPDATE_CERTIFICATE_TEMPLATE: "CertificateTemplate",
+
+
+  // Specialty APIs
+  GET_ALL_SPECIALTY: "Specialty",
+  GET_SPECIALTY_BY_ID: "Specialty",
+  CREATE_SPECIALTY: "Specialty", 
+  UPDATE_SPECIALTY: "Specialty",
+  DELETE_SPECIALTY: "Specialty",
+  GET_SPECIALTY_TREE: "Specialty/tree",
 };
