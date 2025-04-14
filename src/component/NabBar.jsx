@@ -1,4 +1,5 @@
 // src/components/Navbar.jsx
+// src/components/Navbar.jsx
 import { Layout, Menu, Badge } from "antd";
 import { Link } from "react-router-dom";
 import navItems from "../data/NavItem";
@@ -14,6 +15,14 @@ import {
   AccountBookOutlined,
   FileExcelOutlined,
   SelectOutlined,
+  FileAddOutlined,
+  TeamOutlined,
+  SolutionOutlined,
+  FileDoneOutlined,
+  IdcardOutlined,
+  DeploymentUnitOutlined,
+  ReadOutlined,
+  FileProtectOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { notificationService } from "../services/notificationService";
@@ -32,52 +41,58 @@ const iconMap = {
   AccountBookOutlined: <AccountBookOutlined />,
   FileExcelOutlined: <FileExcelOutlined />,
   SelectOutlined: <SelectOutlined />,
+  FileAddOutlined: <FileAddOutlined />,
+  TeamOutlined: <TeamOutlined />,
+  SolutionOutlined: <SolutionOutlined />,
+  FileDoneOutlined: <FileDoneOutlined />,
+  IdcardOutlined: <IdcardOutlined />,
+  DeploymentUnitOutlined: <DeploymentUnitOutlined />,
+  ReadOutlined: <ReadOutlined />,
+  FileProtectOutlined: <FileProtectOutlined />,
 };
 
 const Navbar = () => {
-  const storedRole = localStorage.getItem("role");
+  const storedRole = sessionStorage.getItem("role");
   const [unreadCount, setUnreadCount] = useState(0);
-  
+
   useEffect(() => {
-    const storedUserID = localStorage.getItem("userID");
+    const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       fetchUnreadCount(storedUserID);
     }
   }, []);
-  
-  // Thêm interval để cập nhật số lượng thông báo chưa đọc mỗi 30 giây
+
   useEffect(() => {
     const intervalId = setInterval(() => {
-      const storedUserID = localStorage.getItem("userID");
+      const storedUserID = sessionStorage.getItem("userID");
       if (storedUserID) {
         fetchUnreadCount(storedUserID);
       }
     }, 30000);
-    
+
     return () => clearInterval(intervalId);
   }, []);
-  
-  // Thêm event listener để lắng nghe sự kiện làm mới thông báo
+
   useEffect(() => {
     const handleRefreshNotifications = () => {
-      const storedUserID = localStorage.getItem("userID");
+      const storedUserID = sessionStorage.getItem("userID");
       if (storedUserID) {
         fetchUnreadCount(storedUserID);
       }
     };
-    
-    window.addEventListener('refreshNotifications', handleRefreshNotifications);
-    
+
+    window.addEventListener("refreshNotifications", handleRefreshNotifications);
     return () => {
-      window.removeEventListener('refreshNotifications', handleRefreshNotifications);
+      window.removeEventListener(
+        "refreshNotifications",
+        handleRefreshNotifications
+      );
     };
   }, []);
-  
+
   const fetchUnreadCount = async (userId) => {
     try {
       const result = await notificationService.getUnreadCount(userId);
-      console.log("NavBar unread count response:", result);
-      
       if (result && result.unreadCount !== undefined) {
         setUnreadCount(result.unreadCount);
       } else {
@@ -89,36 +104,38 @@ const Navbar = () => {
     }
   };
 
-  const filteredNavItems = navItems.filter((item) =>
-    item.roles.includes(storedRole)
-  );
+  const filteredNavItems = navItems
+    .filter((item) => item.roles.includes(storedRole))
+    .map((item) => {
+      if (item.children) {
+        const filteredChildren = item.children.filter((child) =>
+          child.roles.includes(storedRole)
+        );
+        if (filteredChildren.length === 0) return null;
 
-  const menuItems = filteredNavItems.map((item) => {
-    if (item.children) {
-      return {
-        key: item.key,
-        icon: iconMap[item.icon],
-        label: item.label,
-        children: item.children
-          .filter((child) => child.roles.includes(storedRole))
-          .map((child) => ({
+        return {
+          key: item.key,
+          icon: iconMap[item.icon],
+          label: item.label,
+          children: filteredChildren.map((child) => ({
             key: child.key,
             label: <Link to={child.path}>{child.label}</Link>,
           })),
-      };
-    }
+        };
+      }
 
-    return {
-      key: item.key,
-      icon: iconMap[item.icon],
-      label: (
-        <Link to={item.path}>
-          {item.label}
-          {item.key === "4" && <Badge count={unreadCount} offset={[20, 0]} />}
-        </Link>
-      ),
-    };
-  });
+      return {
+        key: item.key,
+        icon: iconMap[item.icon],
+        label: (
+          <Link to={item.path}>
+            {item.label}
+            {item.key === "4" && <Badge count={unreadCount} offset={[10, 0]} />}
+          </Link>
+        ),
+      };
+    })
+    .filter(Boolean); // Remove null items
 
   return (
     <Sider theme="dark" style={{ overflow: "auto", height: "auto" }}>
@@ -133,11 +150,12 @@ const Navbar = () => {
           {storedRole}
         </div>
       </div>
+
       <Menu
         theme="dark"
-        mode="vertical"
+        mode="inline"
         defaultSelectedKeys={["1"]}
-        items={menuItems}
+        items={filteredNavItems}
       />
     </Sider>
   );

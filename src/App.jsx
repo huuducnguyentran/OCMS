@@ -34,7 +34,7 @@ import AssignedTraineePage from "./page/assigned_trainee/AssignedTraineePage";
 import PlanPage from "./page/training_plan/PlanPage";
 import CreateTrainingPlanPage from "./page/training_plan/CreateTrainingPlanPage";
 import EditPlanPage from "./page/training_plan/EditPlanPage";
-import TrainingPlanDetailPage from "./page/training_plan/TrainingPlanDetailPage";
+// import TrainingPlanDetailPage from "./page/training_plan/TrainingPlanDetailPage";
 import CreateCoursePage from "./page/course/CreateCoursePage";
 import CoursePage from "./page/course/CoursePage";
 import EditCoursePage from "./page/course/EditCoursePage";
@@ -50,6 +50,13 @@ import CertificateTemplateListPage from "./page/certificate/CertificateTemplateP
 import UpdateCertificateTemplatePage from "./page/certificate/UpdateCertificateTemplatePage";
 import GradeImportPage from "./page/grade/GradeImportPage";
 import ViewGradePage from "./page/grade/ViewGradePage";
+import CertificateTemplateDetailPage from "./page/certificate/CertificateTemplateDetailPage";
+import PlanDetailPage from "./page/training_plan/PlanDetailPage";
+import UpdateGradePage from "./page/grade/UpdateGradePage";
+import SpecialtyPage from "./page/specialty/SpecialtyPage";
+import EditSpecialtyPage from "./page/specialty/EditSpecialtyPage";
+import CreateSpecialtyPage from "./page/specialty/CreateSpecialtyPage";
+import SpecialtyTreePage from "./page/specialty/SpecialtyTreePage";
 
 function App() {
   return (
@@ -113,6 +120,10 @@ function App() {
                             element={<ViewGradePage />}
                           />
                           <Route
+                            path="/grade-update/:id"
+                            element={<UpdateGradePage />}
+                          />
+                          <Route
                             path="/candidates-import"
                             element={<ImportCandidate />}
                           />
@@ -163,6 +174,10 @@ function App() {
                           />
                           <Route path="/plan" element={<PlanPage />} />
                           <Route
+                            path="/plan/details/:planId"
+                            element={<PlanDetailPage />}
+                          />
+                          <Route
                             path="/plan/create"
                             element={<CreateTrainingPlanPage />}
                           />
@@ -170,10 +185,10 @@ function App() {
                             path="/plan/edit/:planId"
                             element={<EditPlanPage />}
                           />
-                          <Route
+                          {/* <Route
                             path="/plan/:planId"
                             element={<TrainingPlanDetailPage />}
-                          />
+                          /> */}
                           <Route
                             path="/course/create"
                             element={<CreateCoursePage />}
@@ -198,6 +213,23 @@ function App() {
                           <Route
                             path="/certificate-template/update/:templateId"
                             element={<UpdateCertificateTemplatePage />}
+                          />
+                          <Route
+                            path="/certificate-template/:templateId"
+                            element={<CertificateTemplateDetailPage />}
+                          />
+                          <Route path="/specialty" element={<SpecialtyPage />} />
+                          <Route
+                            path="/specialty/edit/:id"
+                            element={<EditSpecialtyPage />}
+                          />
+                          <Route
+                            path="/specialty/create"
+                            element={<CreateSpecialtyPage />}
+                          />
+                          <Route
+                            path="/specialty/tree"
+                            element={<SpecialtyTreePage />}
                           />
                         </Routes>
                         <Footer />

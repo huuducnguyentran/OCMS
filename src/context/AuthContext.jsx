@@ -8,26 +8,30 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Skip authentication for certain routes
   const publicRoutes = ["/forgot-password", "/reset-password", "/login"];
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    const token = localStorage.getItem("token");
-    const tokenExpiry = localStorage.getItem("tokenExpiry");
+    const token = sessionStorage.getItem("token");
+    const tokenExpiry = sessionStorage.getItem("tokenExpiry");
     return token && tokenExpiry && Date.now() < Number(tokenExpiry);
   });
 
-  // Function to check authentication
+  const [user, setUser] = useState(() => {
+    const userData = sessionStorage.getItem("user");
+    return userData ? JSON.parse(userData) : null;
+  });
+
   const checkAuth = () => {
-    const token = localStorage.getItem("token");
-    const tokenExpiry = localStorage.getItem("tokenExpiry");
+    const token = sessionStorage.getItem("token");
+    const tokenExpiry = sessionStorage.getItem("tokenExpiry");
+    const userData = sessionStorage.getItem("user");
 
     if (token && tokenExpiry) {
       const expiryTime = Number(tokenExpiry);
       if (Date.now() < expiryTime) {
         setIsAuthenticated(true);
-        setAutoLogout(expiryTime - Date.now()); // Set automatic logout timer
+        setUser(userData ? JSON.parse(userData) : null);
+        setAutoLogout(expiryTime - Date.now());
       } else {
         logout();
       }
@@ -36,7 +40,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Automatically logout when the token expires
   const setAutoLogout = (timeLeft) => {
     setTimeout(() => {
       logout();
@@ -44,9 +47,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (!publicRoutes.includes(location.pathname)) {
-      checkAuth(); // Initial authentication check for protected routes
-    }
+    // Always check on mount
+    checkAuth();
 
     const handleVisibilityChange = () => {
       if (!document.hidden && !publicRoutes.includes(location.pathname)) {
@@ -55,20 +57,21 @@ export const AuthProvider = ({ children }) => {
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
+    return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [location.pathname]); // Run on location change
+    };
+  }, []);
 
-  // Logout function
   const logout = () => {
-    localStorage.clear();
+    sessionStorage.clear();
     setIsAuthenticated(false);
-    navigate("/login"); // Redirect to login after logout
+    setUser(null);
+    navigate("/login");
   };
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, setIsAuthenticated, logout }}
+      value={{ isAuthenticated, setIsAuthenticated, user, setUser, logout }}
     >
       {children}
     </AuthContext.Provider>

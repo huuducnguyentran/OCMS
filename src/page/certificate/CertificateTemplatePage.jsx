@@ -10,14 +10,19 @@ import {
   Dropdown,
   Popconfirm,
   Alert,
-  Space
+  Space,
 } from "antd";
 import {
   fetchCertificateTemplates,
   fetchCertificateTemplatebyId,
   deleteCertificateTemplate,
 } from "../../services/certificateService";
-import { EllipsisOutlined, PlusOutlined, WarningOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import {
+  EllipsisOutlined,
+  PlusOutlined,
+  WarningOutlined,
+  CloseCircleOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 
 const { Title } = Typography;
@@ -43,7 +48,7 @@ const CertificateTemplateListPage = () => {
     };
 
     loadTemplates();
-    
+
     // Cleanup function to clear any pending timeouts
     return () => {
       if (loadingTimeoutRef.current) {
@@ -59,7 +64,7 @@ const CertificateTemplateListPage = () => {
       setPreviewUrl("");
     }
     setPreviewError(null);
-    
+
     if (loadingTimeoutRef.current) {
       clearTimeout(loadingTimeoutRef.current);
       loadingTimeoutRef.current = null;
@@ -70,44 +75,28 @@ const CertificateTemplateListPage = () => {
     setLoading(true);
     setPreviewError(null);
     setIsModalVisible(true);
-    
+
     // Set a timeout to stop loading after 15 seconds
     loadingTimeoutRef.current = setTimeout(() => {
       if (loading) {
         setLoading(false);
-        setPreviewError("Preview loading timeout. The server took too long to respond.");
+        setPreviewError(
+          "Preview loading timeout. The server took too long to respond."
+        );
       }
     }, 15000);
-    
+
     try {
       const data = await fetchCertificateTemplatebyId(templateId);
 
-      if (data?.templateFile) {
-        try {
-          const response = await fetch(data.templateFile, {
-            headers: {
-              Accept: "text/html",
-            },
-          });
-
-          if (!response.ok) {
-            throw new Error(`Failed to load certificate template file. Status: ${response.status}`);
-          }
-
-          const blob = await response.blob();
-          const blobUrl = URL.createObjectURL(blob);
-
-          setPreviewUrl(blobUrl);
-        } catch (fetchError) {
-          console.error("Fetch error:", fetchError);
-          setPreviewError(`Error loading template preview: ${fetchError.message}`);
-        }
-      } else {
-        setPreviewError("No template file found for this certificate.");
+      if (data?.templateFileWithSas) {
+        setPreviewUrl(data.templateFileWithSas);
       }
     } catch (err) {
       console.error("Template fetch error:", err);
-      setPreviewError(`Error loading template: ${err.message || "Unknown error"}`);
+      setPreviewError(
+        `Error loading template: ${err.message || "Unknown error"}`
+      );
     } finally {
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
@@ -233,7 +222,7 @@ const CertificateTemplateListPage = () => {
         footer={[
           <Button key="close" onClick={closeModal}>
             Close
-          </Button>
+          </Button>,
         ]}
         width={800}
         maskClosable={true}
@@ -266,7 +255,9 @@ const CertificateTemplateListPage = () => {
               title="Template Preview"
               style={{ width: "100%", height: "600px", border: "none" }}
               onError={() => {
-                setPreviewError("Failed to load template content. The file might be corrupted or in an unsupported format.");
+                setPreviewError(
+                  "Failed to load template content. The file might be corrupted or in an unsupported format."
+                );
               }}
             />
           )

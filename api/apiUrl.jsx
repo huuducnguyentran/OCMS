@@ -26,7 +26,9 @@ export const API = {
 
   GET_ALL_USER: "User",
   GET_USER_BY_ID: "User",
+  GET_USER_PROiLE: "User/profile",
   UPDATE_USER: "User",
+  UPDATE_USER_AVATAR: "/User/avatar",
   UPDATE_PASSWORD: "User",
   FORGOT_PASSWORD: "User/forgot-password",
   RESET_PASSWORD: "User/reset-password",
@@ -89,4 +91,18 @@ export const API = {
   GET_CERTIFICATE_TEMPLATE_BY_ID: "CertificateTemplate",
   DELETE_CERTIFICATE_TEMPLATE: "CertificateTemplate",
   UPDATE_CERTIFICATE_TEMPLATE: "CertificateTemplate",
+
+
+
+  // Specialty APIs
+  GET_ALL_SPECIALTY: "Specialty",
+  GET_SPECIALTY_BY_ID: "Specialty",
+  CREATE_SPECIALTY: "Specialty", 
+  UPDATE_SPECIALTY: "Specialty",
+  DELETE_SPECIALTY: "Specialty",
+  GET_SPECIALTY_TREE: "Specialty/tree",
+
+  // digital signature
+  SIGN_DIGITAL_SIGNATURE: "DigitalSignature/sign",
+
 };

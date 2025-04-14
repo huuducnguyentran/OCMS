@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import {
   Layout,
-  Avatar,
+  // Avatar,
   Input,
   Button,
   Upload,
@@ -14,7 +14,7 @@ import {
   Modal,
 } from "antd";
 import {
-  UserOutlined,
+  // UserOutlined,
   EditOutlined,
   DeleteOutlined,
   ArrowLeftOutlined,
@@ -22,7 +22,9 @@ import {
 } from "@ant-design/icons";
 import { useAvatar } from "../../context/AvatarContext";
 import {
-  getUserById,
+  // getUserById,
+  getUserProfile,
+  updateAvatar,
   updatePassword,
   updateUser,
 } from "../../services/userService";
@@ -51,8 +53,10 @@ const PersonalProfilePage = () => {
           return;
         }
 
-        const userData = await getUserById(userId);
+        const userData = await getUserProfile();
+
         const profileData = {
+          avatar: userData.avatarUrlWithSas || "",
           userId: userData.userId || "",
           fullName: userData.fullName || "",
           gender: userData.gender || "",
@@ -76,13 +80,29 @@ const PersonalProfilePage = () => {
   }, [userId, profileForm]);
 
   // Handle file upload
-  const handleUpload = (info) => {
-    const file = info.file;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setAvatar(e.target.result); // Save to global context
-    };
-    reader.readAsDataURL(file);
+  const handleUpload = async (info) => {
+    const file = info.file.originFileObj || info.file;
+    if (!file) return;
+
+    const formDataUpload = new FormData();
+    formDataUpload.append("file", file);
+
+    try {
+      await updateAvatar(formDataUpload);
+      message.success("Avatar uploaded successfully!");
+
+      // Re-fetch updated user data
+      const userData = await getUserProfile();
+
+      // Update avatar in form and UI
+      setFormData((prev) => ({
+        ...prev,
+        avatar: userData.avatarUrlWithSas || "", // <-- updated from server
+      }));
+    } catch (error) {
+      console.error("Upload failed:", error);
+      message.error("Avatar upload failed.");
+    }
   };
 
   // Validate date of birth (18 years from today)
@@ -148,8 +168,8 @@ const PersonalProfilePage = () => {
       cancelText: "No",
       onOk() {
         // Clear any stored user data
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("user");
         // Redirect to login page
         navigate("/login");
       },
@@ -176,12 +196,16 @@ const PersonalProfilePage = () => {
 
         {/* Profile Image */}
         <div className="relative w-32 h-32 mx-auto my-4">
-          <Avatar size={128} src={avatar} icon={!avatar && <UserOutlined />} />
+          <img
+            src={formData.avatar || "/default-avatar.png"}
+            alt="Profile"
+            className="w-full h-full object-cover rounded-full"
+          />
 
           {/* Upload/Edit Button */}
           <Upload
             showUploadList={false}
-            beforeUpload={() => false}
+            beforeUpload={() => false} // prevent auto upload
             onChange={handleUpload}
           >
             <EditOutlined className="absolute bottom-2 right-2 bg-white p-1 rounded-full cursor-pointer shadow-md" />
