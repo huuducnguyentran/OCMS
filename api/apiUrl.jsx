@@ -93,6 +93,7 @@ export const API = {
   UPDATE_CERTIFICATE_TEMPLATE: "CertificateTemplate",
 
 
+
   // Specialty APIs
   GET_ALL_SPECIALTY: "Specialty",
   GET_SPECIALTY_BY_ID: "Specialty",
@@ -100,4 +101,8 @@ export const API = {
   UPDATE_SPECIALTY: "Specialty",
   DELETE_SPECIALTY: "Specialty",
   GET_SPECIALTY_TREE: "Specialty/tree",
+
+  // digital signature
+  SIGN_DIGITAL_SIGNATURE: "DigitalSignature/sign",
+
 };

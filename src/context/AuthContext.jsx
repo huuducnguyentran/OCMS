@@ -47,9 +47,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (!publicRoutes.includes(location.pathname)) {
-      checkAuth();
-    }
+    // Always check on mount
+    checkAuth();
 
     const handleVisibilityChange = () => {
       if (!document.hidden && !publicRoutes.includes(location.pathname)) {
@@ -58,9 +57,10 @@ export const AuthProvider = ({ children }) => {
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
+    return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [location.pathname]);
+    };
+  }, []);
 
   const logout = () => {
     sessionStorage.clear();
