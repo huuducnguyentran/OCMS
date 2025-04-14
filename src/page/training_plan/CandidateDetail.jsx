@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Spin, Descriptions, message, Button, Input, Tag } from "antd";
 import {
   createCandidateAccount,
@@ -20,6 +20,7 @@ import { CandidateDetailSchema } from "../../../utils/validationSchemas";
 const CandidateDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [candidate, setCandidate] = useState(null);
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +28,13 @@ const CandidateDetailPage = () => {
   const [creatingAccount, setCreatingAccount] = useState(false);
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState("");
+  
+  // Lấy role của người dùng từ session storage
+  const userRole = sessionStorage.getItem("role");
+  // Kiểm tra có phải HeadMaster không
+  const isHeadMaster = userRole === "HeadMaster";
+  // Kiểm tra xem người dùng đến từ trang request hay không
+  const isFromRequest = location.state?.fromRequest || isHeadMaster;
 
   useEffect(() => {
     const fetchCandidate = async () => {
@@ -70,6 +78,14 @@ const CandidateDetailPage = () => {
       console.error(error);
     } finally {
       setCreatingAccount(false);
+    }
+  };
+
+  const handleGoBack = () => {
+    if (isFromRequest) {
+      navigate('/request');
+    } else {
+      navigate(-1);
     }
   };
 
@@ -149,7 +165,7 @@ const CandidateDetailPage = () => {
       label={
         <div className="flex items-center justify-between">
           <span>{label}</span>
-          {editingField !== field && (
+          {!isHeadMaster && editingField !== field && (
             <EditOutlined
               className="text-blue-500 ml-2 cursor-pointer"
               onClick={() => handleEditClick(field)}
@@ -216,10 +232,10 @@ const CandidateDetailPage = () => {
           <Button
             type="link"
             icon={<ArrowLeftOutlined />}
-            onClick={() => navigate(-1)}
+            onClick={handleGoBack}
             className="text-blue-600 hover:text-blue-800 px-0"
           >
-            Candidate List
+            {isFromRequest ? "Request List" : "Candidate List"}
           </Button>
           <span className="text-gray-400">/</span>
           <span className="font-semibold text-gray-800">
@@ -335,14 +351,16 @@ const CandidateDetailPage = () => {
             {candidate.importRequestId}
           </Descriptions.Item>
         </Descriptions>
-        <Button
-          type="primary"
-          onClick={handleCreateAccount}
-          loading={creatingAccount}
-          className="mt-4"
-        >
-          Create Account
-        </Button>
+        {!isHeadMaster && (
+          <Button
+            type="primary"
+            onClick={handleCreateAccount}
+            loading={creatingAccount}
+            className="mt-4"
+          >
+            Create Account
+          </Button>
+        )}
       </div>
     </div>
   );
