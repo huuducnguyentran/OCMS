@@ -57,6 +57,8 @@ import SpecialtyPage from "./page/specialty/SpecialtyPage";
 import EditSpecialtyPage from "./page/specialty/EditSpecialtyPage";
 import CreateSpecialtyPage from "./page/specialty/CreateSpecialtyPage";
 import SpecialtyTreePage from "./page/specialty/SpecialtyTreePage";
+import CertificatePendingPage from "./page/certificate/CertificatePendingPage";
+import CertificateDetailPage from "./page/certificate/CertificateDetailPage";
 
 function App() {
   return (
@@ -203,11 +205,20 @@ function App() {
                             element={<AssignedTraineeDetailPage />}
                           />
                           <Route
+                            path="/certificate"
+                            element={<CertificatePendingPage />}
+                          />
+                          <Route
+                            path="/certificate/:certificateId"
+                            element={<CertificateDetailPage />}
+                          />
+
+                          <Route
                             path="/certificate-import"
                             element={<ImportCertificatePage />}
                           />
                           <Route
-                            path="/certificate-tempalte"
+                            path="/certificate-template"
                             element={<CertificateTemplateListPage />}
                           />
                           <Route
@@ -218,7 +229,10 @@ function App() {
                             path="/certificate-template/:templateId"
                             element={<CertificateTemplateDetailPage />}
                           />
-                          <Route path="/specialty" element={<SpecialtyPage />} />
+                          <Route
+                            path="/specialty"
+                            element={<SpecialtyPage />}
+                          />
                           <Route
                             path="/specialty/edit/:id"
                             element={<EditSpecialtyPage />}
