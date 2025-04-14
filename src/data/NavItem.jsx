@@ -12,14 +12,13 @@ const navItems = [
       "Instructor",
       "Reviewer",
       "Trainee",
-      "Instructor",
       "AOC Manager",
     ],
   },
   {
     key: "2",
     label: "Plan",
-    icon: "BookOutlined",
+    icon: "AccountBookOutlined", // Planning/documentation
     path: "/plan",
     roles: ["Training staff", "Trainee", "Reviewer", "HR"],
   },
@@ -34,7 +33,7 @@ const navItems = [
         key: "3-1",
         label: "All Schedule",
         path: "/schedule",
-        roles: ["Training staff", "Instructor","Trainee"],
+        roles: ["Training staff", "Instructor", "Trainee"],
       },
     ],
   },
@@ -51,28 +50,27 @@ const navItems = [
       "Instructor",
       "Reviewer",
       "Trainee",
-      "Instructor",
       "AOC Manager",
     ],
   },
   {
     key: "5",
     label: "Accomplishments",
-    icon: "LineChartOutlined",
+    icon: "FileDoneOutlined", // Achievement
     path: "/accomplishments",
     roles: ["Trainee"],
   },
   {
     key: "6",
     label: "Accounts",
-    icon: "UserOutlined",
+    icon: "TeamOutlined", // Better for multiple user accounts
     path: "/accounts",
     roles: ["Admin", "Reviewer"],
   },
   {
     key: "7",
     label: "Candidates",
-    icon: "ImportOutlined",
+    icon: "SolutionOutlined", // Person review/interview
     path: "/candidates",
     roles: ["Admin", "HR"],
     children: [
@@ -95,19 +93,19 @@ const navItems = [
     label: "Grade",
     icon: "FileExcelOutlined",
     path: "/grade-view",
-    roles: ["Instructor","Admin","Training staff","Reviewer"],
+    roles: ["Instructor", "Admin", "Training staff", "Reviewer"],
     children: [
       {
         key: "8-1",
         label: "Import Grade",
         path: "/grade",
-        roles: ["Admin","Instructor"],
+        roles: ["Admin", "Instructor"],
       },
       {
         key: "8-2",
         label: "View Grade",
         path: "/grade-view",
-        roles: ["Admin","Instructor","Training staff","Reviewer","Trainee"],
+        roles: ["Admin", "Instructor", "Training staff", "Reviewer", "Trainee"],
       },
     ],
   },
@@ -121,14 +119,14 @@ const navItems = [
   {
     key: "10",
     label: "Send Request",
-    icon: "SelectOutlined",
+    icon: "FileAddOutlined",
     path: "/send-request",
     roles: ["Trainee", "Training staff", "HR", "AOC Manager"],
   },
   {
     key: "11",
     label: "Assign Trainee",
-    icon: "SelectOutlined",
+    icon: "DeploymentUnitOutlined",
     path: "/assign-trainee",
     roles: ["Admin", "Training staff", "HeadMaster", "Trainee"],
     children: [
@@ -149,25 +147,25 @@ const navItems = [
   {
     key: "12",
     label: "Subject",
-    icon: "ImportOutlined",
+    icon: "ReadOutlined",
     path: "/subject",
     roles: ["Admin", "Training staff", "user"],
   },
   {
     key: "13",
     label: "Course",
-    icon: "ImportOutlined",
+    icon: "BookOutlined",
     path: "/course",
     roles: ["Training staff", "Trainee"],
     children: [
       {
-        key: "14-1",
+        key: "13-1",
         label: "All Courses",
-        path: "/all courses",
+        path: "/all-courses",
         roles: ["Training staff"],
       },
       {
-        key: "14-2",
+        key: "13-2",
         label: "Trainee Courses",
         path: "/assigned-trainee-courses/:id",
         roles: ["Trainee"],
@@ -175,13 +173,12 @@ const navItems = [
     ],
   },
   {
-    key: "15",
+    key: "14",
     label: "Certificate",
-    icon: "ImportOutlined",
+    icon: "FileProtectOutlined",
     path: "/certificate",
     roles: ["Admin", "HR", "AOC Manager"],
   },
-  
 ];
 
 export default navItems;

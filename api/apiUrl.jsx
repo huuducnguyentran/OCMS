@@ -91,4 +91,7 @@ export const API = {
   GET_CERTIFICATE_TEMPLATE_BY_ID: "CertificateTemplate",
   DELETE_CERTIFICATE_TEMPLATE: "CertificateTemplate",
   UPDATE_CERTIFICATE_TEMPLATE: "CertificateTemplate",
+
+  // digital signature
+  SIGN_DIGITAL_SIGNATURE: "DigitalSignature/sign",
 };
