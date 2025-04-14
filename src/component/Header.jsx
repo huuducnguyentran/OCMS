@@ -10,7 +10,7 @@ import { notificationService } from "../services/notificationService";
 
 const Header = () => {
   const navigate = useNavigate();
-  const { avatar } = useAvatar();
+  const { avatar, setAvatar } = useAvatar();
   const [userID, setUserID] = useState("");
   const [userData, setUserData] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -21,13 +21,19 @@ const Header = () => {
     if (storedUserID) {
       setUserID(storedUserID);
       getUserById(storedUserID)
-        .then((data) => setUserData(data))
+        .then((data) => {
+          setUserData(data);
+          // Nếu avatar trong context là null nhưng dữ liệu người dùng có avatar thì cập nhật context
+          if (!avatar && data && data.avatarUrlWithSas) {
+            setAvatar(data.avatarUrlWithSas);
+          }
+        })
         .catch(console.error);
 
       // Fetch unread notifications count
       fetchUnreadCount(storedUserID);
     }
-  }, []);
+  }, [avatar, setAvatar]);
 
   // Thêm interval để cập nhật số lượng thông báo mỗi 30 giây
   useEffect(() => {
@@ -97,9 +103,9 @@ const Header = () => {
               className="flex items-center gap-2 cursor-pointer"
             >
               <Avatar
-                src={avatar || "https://via.placeholder.com/40"}
+                src={avatar || (userData && userData.avatarUrlWithSas) || "https://via.placeholder.com/40"}
                 size="large"
-                icon={!avatar && <UserOutlined />}
+                icon={!avatar && !userData?.avatarUrlWithSas && <UserOutlined />}
               />
             </div>
           </>

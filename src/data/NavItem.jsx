@@ -128,7 +128,7 @@ const navItems = [
     label: "Assign Trainee",
     icon: "DeploymentUnitOutlined",
     path: "/assign-trainee",
-    roles: ["Admin", "Training staff", "HeadMaster", "Trainee"],
+    roles: ["Admin", "Training staff", "HeadMaster"],
     children: [
       {
         key: "11-1",

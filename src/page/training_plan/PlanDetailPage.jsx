@@ -21,6 +21,8 @@ const PlanDetailPage = () => {
   const navigate = useNavigate();
   const [planDetails, setPlanDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
+  const isHeadMaster = userRole === "HeadMaster";
 
   useEffect(() => {
     fetchPlanDetails();
@@ -91,15 +93,17 @@ const PlanDetailPage = () => {
           <div className="flex items-center space-x-4 mb-4">
             <Button
               icon={<ArrowLeftOutlined />}
-              onClick={() => navigate('/plan')}
+              onClick={() => navigate(isHeadMaster ? '/request' : '/plan')}
               className="flex items-center bg-white/10 border-white/20 text-white hover:bg-white/20"
               ghost
             >
-              Back to Plans
+              {isHeadMaster ? 'Back to Requests' : 'Back to Plans'}
             </Button>
             <Breadcrumb className="text-white/60">
               <Breadcrumb.Item>
-                <a href="/plan" className="text-white/60 hover:text-white">Plans</a>
+                <a href={isHeadMaster ? '/requests' : '/plan'} className="text-white/60 hover:text-white">
+                  {isHeadMaster ? 'Requests' : 'Plans'}
+                </a>
               </Breadcrumb.Item>
               <Breadcrumb.Item className="text-white">Details</Breadcrumb.Item>
             </Breadcrumb>

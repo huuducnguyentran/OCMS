@@ -15,6 +15,8 @@ import {
   Modal,
   Card,
   Divider,
+  List,
+  Popconfirm,
 } from "antd";
 import {
   CalendarOutlined,
@@ -31,8 +33,9 @@ import {
   DownOutlined,
   EyeOutlined,
   UserOutlined,
+  IdcardOutlined,
 } from "@ant-design/icons";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   getAllRequests,
   getAllEduOfficerRequests,
@@ -42,6 +45,7 @@ import {
   rejectRequest,
 } from "../../services/requestService";
 import { getUserById } from "../../services/userService";
+import { getCandidateByRequestId } from "../../services/candidateService";
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -93,6 +97,7 @@ const isTrainingPlanType = (requestType) => {
 
 const RequestList = () => {
   const storedRole = sessionStorage.getItem("role");
+  const isAdmin = storedRole === "Admin";
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
@@ -114,8 +119,13 @@ const RequestList = () => {
   const [currentRequest, setCurrentRequest] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [requestByUser, setRequestByUser] = useState(null);
+  const [approvedByUser, setApprovedByUser] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
+
+  const [candidateData, setCandidateData] = useState([]);
+  const [candidateLoading, setCandidateLoading] = useState(false);
+  const navigate = useNavigate();
 
   const toggleFilters = () => {
     setShowFilters(!showFilters);
@@ -126,6 +136,17 @@ const RequestList = () => {
     if (pagination.pageSize !== pageSize) {
       setPageSize(pagination.pageSize);
     }
+  };
+
+  // Lệnh logging để debug giá trị requestType
+  const handleDebugRequestType = () => {
+    console.log("Current requests with requestType:", requests.map(req => ({ 
+      id: req.requestId, 
+      type: req.requestType, 
+      typeNum: Number(req.requestType),
+      typeName: RequestTypeEnum[Number(req.requestType)]
+    })));
+    console.log("Current requestTypeFilter:", requestTypeFilter);
   };
 
   const getDefaultSortedData = (data) => {
@@ -158,10 +179,14 @@ const RequestList = () => {
       filtered = filtered.filter((request) => request.status === statusFilter);
     }
 
-    if (requestTypeFilter !== null) {
+    if (requestTypeFilter !== null && requestTypeFilter !== undefined) {
       filtered = filtered.filter((request) => {
-        const requestTypeNum = Number(request.requestType);
-        return !isNaN(requestTypeNum) && requestTypeNum === requestTypeFilter;
+        // Chuyển đổi requestType thành số
+        const requestTypeValue = Number(request.requestType);
+        // Debug để kiểm tra giá trị requestType
+        console.log(`Filtering: ${request.requestId}, type=${request.requestType}, typeNum=${requestTypeValue}, filter=${requestTypeFilter}, match=${requestTypeValue === requestTypeFilter}`);
+        // So sánh chính xác với giá trị filter
+        return requestTypeValue === requestTypeFilter;
       });
     }
 
@@ -227,13 +252,11 @@ const RequestList = () => {
     setFilteredRequests(getDefaultSortedData(applyFilters(requests)));
   }, [searchText, statusFilter, requestTypeFilter, dateRange, requests]);
 
-  const handleDelete = async (requestId) => {
+  const handleDeleteConfirm = async (requestId) => {
     try {
       await deleteRequest(requestId);
       setRequests((prev) => prev.filter((r) => r.requestId !== requestId));
-      setFilteredRequests((prev) =>
-        prev.filter((r) => r.requestId !== requestId)
-      );
+      setFilteredRequests((prev) => prev.filter((r) => r.requestId !== requestId));
       message.success("Request deleted successfully");
     } catch (error) {
       console.error("Failed to delete request", error);
@@ -246,6 +269,8 @@ const RequestList = () => {
     setDetailsLoading(true);
     setDetailsVisible(true);
     setRequestByUser(null);
+    setApprovedByUser(null);
+    setCandidateData([]);
 
     try {
       const requestData = await getRequestById(record.requestId);
@@ -256,19 +281,43 @@ const RequestList = () => {
         "Type of:",
         typeof requestData.requestType
       );
-      console.log(
-        "Is training plan type:",
-        [0, 1, 2, 4, 5].includes(Number(requestData.requestType))
-      );
       setCurrentRequest(requestData);
 
-      // Lấy thông tin người gửi yêu cầu nếu có requestById
+      // Lấy thông tin người gửi yêu cầu và người phê duyệt (nếu có)
       if (requestData.requestById) {
         try {
           const userData = await getUserById(requestData.requestById);
           setRequestByUser(userData);
+          
+          // Kiểm tra và lấy thông tin người phê duyệt nếu có
+          if (requestData.actionByUserId) {
+            try {
+              const actionByUserData = await getUserById(requestData.actionByUserId);
+              setApprovedByUser(actionByUserData);
+            } catch (actionByUserError) {
+              console.error("Failed to fetch action user details", actionByUserError);
+            }
+          }
         } catch (userError) {
           console.error("Failed to fetch requester details", userError);
+        }
+      }
+
+      // Nếu là yêu cầu nhập ứng viên (requestType = 9 hoặc "CandidateImport")
+      if (Number(requestData.requestType) === 9 || 
+          requestData.requestType === "CandidateImport" || 
+          requestData.requestType === "Candidate Import") {
+        console.log("Detected candidate import request, fetching candidate data...");
+        setCandidateLoading(true);
+        try {
+          const candidateResult = await getCandidateByRequestId(record.requestId);
+          console.log("Candidate Data:", candidateResult);
+          setCandidateData(candidateResult || []);
+        } catch (candidateError) {
+          console.error("Failed to fetch candidate details", candidateError);
+          setCandidateData([]);
+        } finally {
+          setCandidateLoading(false);
         }
       }
     } catch (error) {
@@ -284,7 +333,10 @@ const RequestList = () => {
     setDetailsVisible(false);
     setCurrentRequest(null);
     setRequestByUser(null);
+    setApprovedByUser(null);
+    setCandidateData([]);
   };
+
 
   // Hàm approve request
   const handleApprove = async () => {
@@ -294,14 +346,36 @@ const RequestList = () => {
       const response = await approveRequest(currentRequest.requestId);
       message.success("Request approved successfully");
 
+      // Lấy thông tin người dùng hiện tại
+      const userId = sessionStorage.getItem("userId");
+      let approverName = userId || "Unknown";
+
+      try {
+        const userData = await getUserById(userId);
+        if (userData && userData.fullName) {
+          approverName = `${userData.fullName} (${userId})`;
+        }
+      } catch (userError) {
+        console.error("Failed to fetch approver details", userError);
+      }
+
       // Cập nhật state
       const updatedRequest = {
         ...currentRequest,
         status: "Approved",
-        approvedById: sessionStorage.getItem("userId") || "Unknown",
+        actionByUserId: userId,
+        approvedByName: approverName,
         approvedDate: new Date().toISOString(),
       };
       setCurrentRequest(updatedRequest);
+
+      // Cập nhật thông tin người phê duyệt
+      try {
+        const approvedByUserData = await getUserById(userId);
+        setApprovedByUser(approvedByUserData);
+      } catch (error) {
+        console.error("Failed to fetch approver details", error);
+      }
 
       // Cập nhật danh sách
       const updatedRequests = requests.map((req) =>
@@ -335,14 +409,36 @@ const RequestList = () => {
       });
       message.success("Request rejected successfully");
 
+      // Lấy thông tin người dùng hiện tại
+      const userId = sessionStorage.getItem("userId");
+      let rejecterName = userId || "Unknown";
+
+      try {
+        const userData = await getUserById(userId);
+        if (userData && userData.fullName) {
+          rejecterName = `${userData.fullName} (${userId})`;
+        }
+      } catch (userError) {
+        console.error("Failed to fetch rejecter details", userError);
+      }
+
       // Cập nhật state
       const updatedRequest = {
         ...currentRequest,
         status: "Rejected",
-        approvedById: sessionStorage.getItem("userId") || "Unknown",
+        actionByUserId: userId,
+        approvedByName: rejecterName,
         approvedDate: new Date().toISOString(),
       };
       setCurrentRequest(updatedRequest);
+
+      // Cập nhật thông tin người từ chối
+      try {
+        const approvedByUserData = await getUserById(userId);
+        setApprovedByUser(approvedByUserData);
+      } catch (error) {
+        console.error("Failed to fetch rejecter details", error);
+      }
 
       // Cập nhật danh sách
       const updatedRequests = requests.map((req) =>
@@ -359,6 +455,18 @@ const RequestList = () => {
       console.error("Failed to reject request", error);
       message.error("Failed to reject request");
     }
+  };
+
+  // Sửa lại hàm handleRequestTypeFilterChange
+  const handleRequestTypeFilterChange = (value) => {
+    console.log("Selected request type filter:", value);
+    setRequestTypeFilter(value);
+  };
+
+  // Hàm chuyển hướng đến trang chi tiết ứng viên
+  const navigateToCandidateDetail = (candidateId) => {
+    navigate(`/candidates/${candidateId}`);
+    handleCloseDetails();
   };
 
   const columns = [
@@ -448,6 +556,7 @@ const RequestList = () => {
         </span>
       ),
       sorter: (a, b) => new Date(a.requestDate) - new Date(b.requestDate),
+      sortOrder: sortedInfo.columnKey === "requestDate" ? sortedInfo.order : null,
     },
     {
       title: "Description",
@@ -469,14 +578,23 @@ const RequestList = () => {
             onClick={() => handleViewDetails(record)}
             title="View Details"
           />
-          <Button
-            type="text"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.requestId)}
-            disabled={record.status == "Pending"}
-            title="Delete"
-          />
+          {isAdmin && (
+            <Popconfirm
+              title="Delete Request"
+              description="Are you sure you want to delete this request?"
+              onConfirm={() => handleDeleteConfirm(record.requestId)}
+              okText="Yes"
+              cancelText="No"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                title="Delete"
+              />
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -558,12 +676,15 @@ const RequestList = () => {
                   <Select
                     allowClear
                     placeholder="Select Request Type"
-                    onChange={(value) => setRequestTypeFilter(value)}
+                    onChange={handleRequestTypeFilterChange}
                     value={requestTypeFilter}
                     style={{ width: "100%" }}
+                    onDropdownVisibleChange={(open) => {
+                      if (open) handleDebugRequestType();
+                    }}
                   >
                     {Object.entries(RequestTypeEnum).map(([key, label]) => (
-                      <Option key={key} value={parseInt(key, 10)}>
+                      <Option key={key} value={Number(key)}>
                         {label}
                       </Option>
                     ))}
@@ -645,7 +766,68 @@ const RequestList = () => {
                       </span>
                     </div>
 
-                    {currentRequest.requestEntityId && (
+                    {/* Hiển thị thông tin ứng viên khi loại yêu cầu là nhập ứng viên */}
+                    {(Number(currentRequest.requestType) === 9 || 
+                      currentRequest.requestType === "CandidateImport" || 
+                      currentRequest.requestType === "Candidate Import") && (
+                      <div className="border-t border-gray-200 pt-3 mt-3">
+                        <div className="flex items-center gap-2 text-gray-600 mb-2">
+                          <IdcardOutlined className="text-indigo-500" />
+                          <span className="text-sm font-semibold">
+                            Candidate Information:
+                          </span>
+                        </div>
+                        
+                        {candidateLoading ? (
+                          <div className="flex justify-center py-2">
+                            <Spin size="small" />
+                          </div>
+                        ) : candidateData.length > 0 ? (
+                          <div className="bg-gray-50 p-3 rounded-md">
+                            <List
+                              size="small"
+                              bordered
+                              dataSource={candidateData}
+                              renderItem={(candidate) => (
+                                <List.Item>
+                                  <div className="w-full flex items-center justify-between">
+                                    <div>
+                                      <span 
+                                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer" 
+                                        onClick={() => navigateToCandidateDetail(candidate.candidateId)}
+                                      >
+                                        {candidate.candidateId}
+                                      </span>
+                                      <span className="mx-2">-</span>
+                                      <span className="font-medium">{candidate.fullName}</span>
+                                    </div>
+                                    <div>
+                                      {candidate.candidateStatus === 0 && <Tag color="orange">Pending</Tag>}
+                                      {candidate.candidateStatus === 1 && <Tag color="green">Approved</Tag>}
+                                      {candidate.candidateStatus === 2 && <Tag color="red">Rejected</Tag>}
+                                    </div>
+                                  </div>
+                                </List.Item>
+                              )}
+                            />
+                            {candidateData.length > 3 && (
+                              <div className="mt-2 text-right">
+                                <span className="text-gray-500 text-sm">
+                                  Total: {candidateData.length} candidates
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">No candidate information available.</p>
+                        )}
+                      </div>
+                    )}
+
+                    {currentRequest.requestEntityId && 
+                      !(Number(currentRequest.requestType) === 9 || 
+                        currentRequest.requestType === "CandidateImport" || 
+                        currentRequest.requestType === "Candidate Import") && (
                       <div className="flex items-center gap-2 text-gray-600">
                         <ProfileOutlined className="text-indigo-500" />
                         <span className="text-sm font-medium">
@@ -656,7 +838,7 @@ const RequestList = () => {
                             // Nếu là các loại request về training plan thì hiển thị link
                             isTrainingPlanType(currentRequest.requestType) ? (
                               <Link
-                                to={`/plan/${currentRequest.requestEntityId}`}
+                                to={`/plan/details/${currentRequest.requestEntityId}`}
                                 className="text-blue-600 hover:text-blue-800 hover:underline"
                                 title="Click to view Training Plan details"
                               >
@@ -699,14 +881,16 @@ const RequestList = () => {
                       </span>
                     </div>
 
-                    {currentRequest.approvedById && (
+                    {currentRequest.actionByUserId && (
                       <div className="flex items-center gap-2 text-gray-600">
                         <UserOutlined className="text-indigo-500" />
                         <span className="text-sm font-medium">
                           {currentRequest.status === "Approved"
                             ? "Approved"
                             : "Rejected"}{" "}
-                          By: {currentRequest.approvedById}
+                          By: {approvedByUser 
+                                ? `${approvedByUser.fullName} (${currentRequest.actionByUserId})`
+                                : currentRequest.approvedByName || currentRequest.actionByUserId || "Unknown"}
                           {currentRequest.approvedDate &&
                             ` (${new Date(
                               currentRequest.approvedDate
@@ -758,11 +942,34 @@ const RequestList = () => {
                     </>
                   )}
 
+                  {/* Thêm nút xem chi tiết ứng viên nếu là request nhập ứng viên */}
+                  {(Number(currentRequest.requestType) === 9 || 
+                    currentRequest.requestType === "CandidateImport" || 
+                    currentRequest.requestType === "Candidate Import") && candidateData.length > 0 && (
+                    candidateData.length === 1 ? (
+                      <Button
+                        type="primary"
+                        className="bg-blue-500 hover:bg-blue-600"
+                        onClick={() => navigateToCandidateDetail(candidateData[0].candidateId)}
+                      >
+                        View Candidate Details
+                      </Button>
+                    ) : (
+                      <Button
+                        type="primary"
+                        className="bg-blue-500 hover:bg-blue-600"
+                        onClick={() => message.info("Click on a candidate ID to view details")}
+                      >
+                        {`View ${candidateData.length} Candidates`}
+                      </Button>
+                    )
+                  )}
+
                   {/* Thêm nút view training plan nếu là request liên quan đến training plan */}
                   {currentRequest.requestEntityId &&
                     isTrainingPlanType(currentRequest.requestType) && (
                       <Link
-                        to={`/training-plan/${currentRequest.requestEntityId}`}
+                        to={`/plan/details/${currentRequest.requestEntityId}`}
                       >
                         <Button
                           type="primary"
