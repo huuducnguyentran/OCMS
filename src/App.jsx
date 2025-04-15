@@ -59,6 +59,7 @@ import CreateSpecialtyPage from "./page/specialty/CreateSpecialtyPage";
 import SpecialtyTreePage from "./page/specialty/SpecialtyTreePage";
 import CertificatePendingPage from "./page/certificate/CertificatePendingPage";
 import CertificateDetailPage from "./page/certificate/CertificateDetailPage";
+import CertificateActivePage from "./page/certificate/CertificateActivePage";
 
 function App() {
   return (
@@ -85,7 +86,7 @@ function App() {
                         <Header />
                         <Routes>
                           <Route path="/home" element={<HomePage />} />
-                          <Route path="/all courses" element={<CoursePage />} />
+                          <Route path="/all-courses" element={<CoursePage />} />
                           <Route
                             path="/assigned-trainee-courses/:id"
                             element={<AssignedTraineeCoursePage />}
@@ -205,8 +206,12 @@ function App() {
                             element={<AssignedTraineeDetailPage />}
                           />
                           <Route
-                            path="/certificate"
+                            path="/certificate-pending"
                             element={<CertificatePendingPage />}
+                          />
+                          <Route
+                            path="/certificate-active"
+                            element={<CertificateActivePage />}
                           />
                           <Route
                             path="/certificate/:certificateId"

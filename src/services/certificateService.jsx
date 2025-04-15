@@ -92,6 +92,11 @@ export const getPendingCertificate = async () => {
   return response.data;
 };
 
+export const getActiveCertificate = async () => {
+  const response = await axiosInstance.get(`${API.GET_ACTIVE_CERTIFICATE}`);
+  return response.data;
+};
+
 export const getCertificateById = async (certificateId) => {
   const response = await axiosInstance.get(
     `${API.GET_CERTIFICATE_BY_ID}/${certificateId}`

@@ -94,6 +94,7 @@ export const API = {
 
   //certificate
   GET_PENDING_CERTIFICATE: "Certificate/pending",
+  GET_ACTIVE_CERTIFICATE: "Certificate/active",
   GET_ALL_CERTIFICATE: "Certificate",
   GET_CERTIFICATE_BY_ID: "Certificate",
   CREATE_CERTIFICATE: "Certificate",
