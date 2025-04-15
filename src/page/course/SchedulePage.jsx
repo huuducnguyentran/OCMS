@@ -1,14 +1,23 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Table, Spin, Empty, message, Select, Tag, Button } from "antd";
+import { Table, Spin, Empty, message, Select, Tag, Button, Alert } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   CalendarOutlined,
   ClockCircleOutlined,
   UserSwitchOutlined,
   PlusOutlined,
+  SearchOutlined,
+  UnorderedListOutlined,
+  BookOutlined,
+  InfoCircleOutlined,
+  TagsOutlined,
+  CheckCircleOutlined,
+  HomeOutlined,
+  EnvironmentOutlined,
+  TagOutlined,
 } from "@ant-design/icons";
 import { trainingScheduleService } from "../../services/trainingScheduleService";
-
+import { SchedulePageValidationSchema } from '../../../utils/validationSchemas';
 const { Option } = Select;
 
 const SchedulePage = () => {
@@ -71,20 +80,10 @@ const SchedulePage = () => {
   };
 
   // Format date as DD/MM
-  const formatDateShort = (date) => {
-    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-  };
+  const formatDateShort = SchedulePageValidationSchema.formatDateShort;
 
   // Format date with day of month and month
-  const formatDateFull = (dateString) => {
-    try {
-      const date = new Date(dateString);
-      return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return dateString;
-    }
-  };
+  const formatDateFull = SchedulePageValidationSchema.formatDateFull;
 
   // Check token and determine user role
   useEffect(() => {
@@ -123,42 +122,52 @@ const SchedulePage = () => {
         setLoading(true);
         console.log("Fetching subjects from API...");
 
-        const subjects = await trainingScheduleService.getAllSubjects();
-        console.log("Subjects fetched successfully:", subjects);
-
-        if (Array.isArray(subjects) && subjects.length > 0) {
+        let response;
+        if (userRole === "Instructor") {
+          response = await trainingScheduleService.getInstructorSubjects();
+          console.log("Instructor subjects response:", response);
+          
+          if (response && response.data) {
+            const subjects = response.data.map(subject => ({
+              subjectId: subject.subjectId,
+              subjectName: subject.subjectName,
+              courseId: subject.courseId,
+              schedules: subject.schedules || []
+            }));
+            
           setSubjects(subjects);
           setSubjectOptions(subjects);
-        } else {
+            
+            // Process schedules
+            if (response.schedules && Array.isArray(response.schedules)) {
+              setScheduleData(response.schedules);
+            }
+          }
+        } else if (userRole === "Trainee") {
+          response = await trainingScheduleService.getTraineeSubjects();
+          // Process trainee data...
+        }
+
+        if (!response || (!response.data && !response.schedules)) {
           console.warn("No subjects returned or invalid format");
           message.warning("Không tìm thấy môn học nào");
           setSubjects([]);
+          setScheduleData([]);
         }
       } catch (error) {
         console.error("Failed to fetch subjects:", error);
-
-        if (error.response) {
-          message.error(
-            `Lỗi API (${error.response.status}): ${
-              error.response.data?.message || "Không thể tải danh sách môn học"
-            }`
-          );
-        } else if (error.request) {
-          message.error(
-            "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng."
-          );
-        } else {
           message.error("Không thể tải danh sách môn học");
-        }
-
         setSubjects([]);
+        setScheduleData([]);
       } finally {
         setLoading(false);
       }
     };
 
+    if (userRole) {
     fetchSubjects();
-  }, []);
+    }
+  }, [userRole]);
 
   const fetchScheduleData = async () => {
     try {
@@ -227,6 +236,26 @@ const SchedulePage = () => {
           }
         } else if (userRole === "Instructor") {
           response = await trainingScheduleService.getInstructorSubjects();
+          console.log("Instructor schedule response:", response);
+          
+          // Xử lý dữ liệu cho instructor
+          if (response && response.data && Array.isArray(response.data)) {
+            const allSchedules = [];
+            response.data.forEach(subject => {
+              if (subject.schedules && Array.isArray(subject.schedules)) {
+                const schedulesWithSubjectInfo = subject.schedules.map(schedule => ({
+                  ...schedule,
+                  subjectId: subject.subjectId,
+                  subjectName: subject.subjectName,
+                  courseId: subject.courseId
+                }));
+                allSchedules.push(...schedulesWithSubjectInfo);
+              }
+            });
+            console.log("Processed instructor schedules:", allSchedules);
+            setScheduleData(allSchedules);
+            return;
+          }
         } else if (userRole === "Trainee") {
           response = await trainingScheduleService.getTraineeSubjects();
           
@@ -324,25 +353,16 @@ const SchedulePage = () => {
   };
 
   // Format time from string to display format
-  const formatTime = (timeString) => {
-    if (!timeString) return "";
-    if (timeString.includes(":")) {
-      const parts = timeString.split(":");
-      if (parts.length >= 2) {
-        return `${parts[0]}:${parts[1]}`;
-      }
-    }
-    return timeString;
-  };
+  const formatTime = SchedulePageValidationSchema.formatTime;
 
   // Generate dates for current week based on selected week
   const generateWeekDates = (weekString) => {
     // If week string is not set, use current date
     if (!weekString) {
       const today = new Date();
-      const dayOfWeek = today.getDay();
+      const dayOfWeek = today.getDay(); // Sẽ trả về 0 cho Sunday, 1 cho Monday,...
       const startDate = new Date(today);
-      startDate.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1)); // Monday
+      startDate.setDate(today.getDate() - dayOfWeek); // Lùi về Sunday
       
       const dates = [];
       for (let i = 0; i < 7; i++) {
@@ -357,8 +377,10 @@ const SchedulePage = () => {
     const [startDateStr, endDateStr] = weekString.split(" To ");
     const [startDay, startMonth] = startDateStr.split("/").map(Number);
     
-    // Create date for Monday of selected week
+    // Create date for Sunday of selected week
     const startDate = new Date(currentYear, startMonth - 1, startDay);
+    const dayOfWeek = startDate.getDay();
+    startDate.setDate(startDate.getDate() - dayOfWeek); // Điều chỉnh về Sunday
     
     // Generate dates for the entire week
     const dates = [];
@@ -389,35 +411,51 @@ const SchedulePage = () => {
     return date >= startDate && date <= endDate;
   };
 
+  const checkScheduleConflict = (schedule1, schedule2) => {
+    // Kiểm tra trùng thời gian
+    if (schedule1.classTime !== schedule2.classTime) return false;
+    
+    // Kiểm tra trùng ngày
+    const days1 = parseDaysOfWeek(schedule1.daysOfWeek);
+    const days2 = parseDaysOfWeek(schedule2.daysOfWeek);
+    
+    return days1.some(day => days2.includes(day));
+  };
+
   // Process schedule data into time slots
   const processScheduleData = () => {
-    console.log("Processing schedule data:", {
-      scheduleData,
-      selectedSubjectId,
-      selectedSubjectDetails,
-    });
-
     if (!Array.isArray(scheduleData) || scheduleData.length === 0) {
-      console.log("No schedule data to process");
       return [];
     }
 
-    // Get all unique time slots
-    const uniqueTimeSlots = [
-      ...new Set(scheduleData.map((item) => item.classTime)),
-    ]
-      .filter(Boolean)
-      .sort();
-
-    console.log("Unique time slots:", uniqueTimeSlots);
+    // Get all unique time slots and format them
+    const uniqueTimeSlots = [...new Set(scheduleData.map((item) => item.classTime))]
+      .sort()
+      .map(timeSlot => {
+        const schedule = scheduleData.find(s => s.classTime === timeSlot);
+        const duration = schedule.subjectPeriod ? 
+          parseFloat(schedule.subjectPeriod.substring(0, 5)) : 0;
+        
+        const [startHour, startMinute] = timeSlot.split(':').map(Number);
+        const endHour = startHour + Math.floor(duration);
+        const endMinute = startMinute + Math.round((duration % 1) * 60);
+        
+        const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+        
+        return {
+          start: timeSlot,
+          end: endTime,
+          display: `${timeSlot} - ${endTime}`
+        };
+      });
     
     // Generate dates for the current/selected week
     const weekDates = generateWeekDates(currentWeek);
 
-    return uniqueTimeSlots.map((timeSlot) => {
+    return uniqueTimeSlots.map((timeSlot, timeIndex) => {
       const row = {
-        key: timeSlot,
-        timeFrame: formatTime(timeSlot),
+        key: `timeslot-${timeIndex}-${timeSlot.start}`,
+        timeFrame: timeSlot.display,
       };
 
       const daysOfWeek = [
@@ -427,59 +465,80 @@ const SchedulePage = () => {
         "Thursday",
         "Friday",
         "Saturday",
-        "Sunday",
+        "Sunday"
       ];
 
       // For each day of the week
-      daysOfWeek.forEach((day, index) => {
-        const currentDate = weekDates[index];
+      daysOfWeek.forEach((day, dayIndex) => {
+        const currentDate = weekDates[dayIndex];
         
         // Find schedules for this time slot and day
         const matchingSchedules = scheduleData.filter((schedule) => {
           const scheduleDays = parseDaysOfWeek(schedule.daysOfWeek);
-          
-          // Check if schedule is on this day and active on the current date
           return (
-            schedule.classTime === timeSlot && 
+            schedule.classTime === timeSlot.start && 
             scheduleDays.includes(day) && 
             isCourseActiveOnDate(schedule, currentDate)
           );
         });
 
-        if (matchingSchedules.length > 0) {
+        if (matchingSchedules.length > 1) {
+          console.warn(`Warning: Multiple schedules found for ${day} at ${timeSlot.display}`);
+          message.warning(`Phát hiện lịch học trùng vào ${day} lúc ${timeSlot.display}`);
+          
+          row[day] = (
+            <div className="conflict-warning">
+              <Alert
+                type="warning"
+                message="Lịch học trùng"
+                description={
+                  <div>
+                    {matchingSchedules.map(schedule => (
+                      <div key={schedule.scheduleID}>
+                        {schedule.subjectName} - Room: {schedule.room}
+                      </div>
+                    ))}
+                  </div>
+                }
+              />
+            </div>
+          );
+        } else if (matchingSchedules.length === 1) {
           const schedule = matchingSchedules[0];
           row[day] = (
             <div
+              key={`schedule-${schedule.scheduleID}`}
               onClick={() => navigate(`/course/${schedule.scheduleID}`)}
               className="space-y-2"
+              schedule={schedule}
             >
               <div className="font-semibold text-blue-600 hover:text-blue-700">
                 {schedule.subjectName}
               </div>
               
-              {/* Clear date range information */}
-              <div className="text-xs font-medium text-indigo-600 bg-indigo-50 p-1 rounded my-1">
-                <div>Từ: {formatDateFull(schedule.startDateTime)}</div>
-                <div>Đến: {formatDateFull(schedule.endDateTime)}</div>
+              <div className="text-xs font-medium text-indigo-600 bg-indigo-50 p-2 rounded">
+                <div className="flex items-center gap-2">
+                  <ClockCircleOutlined className="text-indigo-500" />
+                  <span>Time: {timeSlot.display}</span>
+                </div>
+                {schedule.subjectPeriod && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <ClockCircleOutlined className="text-indigo-500" />
+                    <span>Duration: {schedule.subjectPeriod.substring(0, 5)} hours</span>
+                  </div>
+                )}
               </div>
               
               <div className="text-sm text-gray-500">
-                <div>Room: {schedule.room || "N/A"}</div>
-                <div>Location: {schedule.location || "N/A"}</div>
+                <div>{schedule.room || "N/A"}</div>
+                <div>{schedule.location || "N/A"}</div>
                 {schedule.courseId && <div>Course: {schedule.courseId}</div>}
-                {schedule.subjectPeriod && (
-                  <div>Duration: {schedule.subjectPeriod.substring(0, 5)} hours</div>
-                )}
                 {userRole === "TrainingStaff" && (
                   <>
                     <div>Instructor: {schedule.instructorID}</div>
                     <div>
                       Status:
-                      <Tag
-                        color={
-                          schedule.status === "Pending" ? "orange" : "green"
-                        }
-                      >
+                      <Tag color={schedule.status === "Pending" ? "orange" : "green"}>
                         {schedule.status}
                       </Tag>
                     </div>
@@ -512,10 +571,13 @@ const SchedulePage = () => {
         dataIndex: "timeFrame",
         key: "timeFrame",
         fixed: "left",
-        width: 150,
+        width: 180, // Tăng độ rộng để hiển thị đủ thời gian
         render: (text) => (
           <div className="font-medium text-gray-700 bg-gray-50 p-2 rounded-lg">
-            {text}
+            <div className="flex items-center gap-2">
+              <ClockCircleOutlined className="text-indigo-500" />
+              <span>{text}</span>
+            </div>
           </div>
         ),
       }
@@ -529,7 +591,7 @@ const SchedulePage = () => {
       "Thursday",
       "Friday",
       "Saturday",
-      "Sunday",
+      "Sunday", 
     ];
     
     // Add column for each day with its date
@@ -550,14 +612,76 @@ const SchedulePage = () => {
           <div className="p-2">
             {content !== "No Class" ? (
               <div
-                className="bg-white hover:bg-blue-50 p-4 rounded-xl shadow-sm 
+                className="relative bg-white hover:bg-blue-50 p-4 rounded-xl shadow-sm 
                          border border-blue-100 transition-all duration-300
-                         hover:shadow-md cursor-pointer"
+                           hover:shadow-md cursor-pointer group"
               >
-                {content}
+                {/* Active Indicator */}
+                {content.props && content.props.schedule && 
+                 isCourseActiveOnDate(content.props.schedule, new Date()) && (
+                  <div className="absolute -top-1 -right-1">
+                    <div className="relative">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <div className="absolute top-0 right-0">
+                        <div className="w-3 h-3 bg-green-400 rounded-full animate-ping"></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Content */}
+                <div className="space-y-3">
+                  {/* Subject Name with Icon */}
+                  <div className="font-semibold text-blue-600 group-hover:text-blue-700 flex items-center gap-2">
+                    <BookOutlined className="text-lg" />
+                    <span>{content.props?.children[0]?.props?.children || "N/A"}</span>
+                  </div>
+
+                  {/* Date Range with Icons */}
+                  <div className="text-xs font-medium text-indigo-600 bg-indigo-50 p-2 rounded">
+                    <div className="flex items-center gap-2 mb-1">
+                      <CalendarOutlined className="text-indigo-500" />
+                      <span>Room: {content.props?.children[2]?.props?.children[0]?.props?.children}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CalendarOutlined className="text-indigo-500" />
+                      <span>Location: {content.props?.children[2]?.props?.children[1]?.props?.children}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Additional Details */}
+                  <div className="text-sm text-gray-500 space-y-1">
+                    {content.props?.children[4]?.props?.children[2] && (
+                      <div className="flex items-center gap-2">
+                        <TagOutlined className="text-gray-400" />
+                        <span>Course: {content.props?.children[4]?.props?.children[2]?.props?.children[1]}</span>
+                      </div>
+                    )}
+                    {content.props?.children[4]?.props?.children[3] && (
+                      <div className="flex items-center gap-2">
+                        <ClockCircleOutlined className="text-gray-400" />
+                        <span>{content.props.children[4].props.children[3].props.children}</span>
+                      </div>
+                    )}
+                    {userRole === "TrainingStaff" && content.props?.children[4]?.props?.children[4] && (
+                      <div className="flex items-center gap-2">
+                        <UserSwitchOutlined className="text-gray-400" />
+                        <span>{content.props.children[4].props.children[4].props.children}</span>
+                      </div>
+                    )}
+                    {userRole === "TrainingStaff" && content.props?.children[4]?.props?.children[5] && (
+                      <div className="flex items-center gap-2">
+                        {content.props.children[4].props.children[5].props.children}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="text-center text-gray-400 p-4">No Class</div>
+              <div className="text-center text-gray-400 p-4 bg-gray-50/50 rounded-xl border border-gray-100">
+                <ClockCircleOutlined className="text-2xl mb-2" />
+                <div>No Class</div>
+              </div>
             )}
           </div>
         ),
@@ -594,6 +718,7 @@ const SchedulePage = () => {
         </div>
       );
     }
+  
     return null;
   };
 
@@ -681,7 +806,11 @@ const SchedulePage = () => {
   const renderSubjectSelector = () => {
     // Search function with setTimeout
     const handleSearch = (value) => {
-      if (!value || value.length < 2) return;
+      if (!value || value.length < 2) {
+        // Nếu không có search term, hiển thị tất cả subjects của trainee
+        setSubjectOptions(subjects);
+        return;
+      }
 
       // Clear previous timeout if exists
       if (searchTimeoutRef.current) {
@@ -695,11 +824,14 @@ const SchedulePage = () => {
       searchTimeoutRef.current = setTimeout(() => {
         try {
           // Filter from loaded subjects list
-          const filtered = subjects.filter(
-            (subject) =>
-              subject.subjectName.toLowerCase().includes(value.toLowerCase()) ||
-              subject.subjectId.toLowerCase().includes(value.toLowerCase())
-          );
+          const filtered = subjects.filter((subject) => {
+            const searchValue = value.toLowerCase();
+            return (
+              subject.subjectName.toLowerCase().includes(searchValue) ||
+              subject.courseId?.toLowerCase().includes(searchValue) ||
+              subject.subjectId?.toLowerCase().includes(searchValue)
+            );
+          });
 
           setSubjectOptions(filtered);
         } catch (error) {
@@ -716,19 +848,29 @@ const SchedulePage = () => {
     });
 
     return (
-      <div className="mb-6 bg-white p-4 rounded-xl shadow-sm">
-        <div className="flex items-center gap-3">
-          <CalendarOutlined className="text-lg text-indigo-600" />
-          <span className="font-medium">Select Subject:</span>
+      <div className="mb-6 bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <CalendarOutlined className="text-xl text-indigo-600" />
+            </div>
+            <span className="text-lg font-semibold text-gray-700">Select Subject</span>
+          </div>
+          
           <Select
             showSearch
-            style={{ width: 350 }}
-            placeholder="Select a subject"
+            className="w-full"
+            size="large"
+            placeholder={
+              <div className="flex items-center gap-2 text-gray-400">
+                <SearchOutlined />
+                <span>Search your enrolled subjects...</span>
+              </div>
+            }
             optionFilterProp="children"
             onChange={(value, option) => {
               console.log("Selected subject:", option);
               if (value === "get_all") {
-                // When "Get All" is selected, reset selection and fetch all schedules
                 setSelectedSubjectId(null);
                 setSelectedSubjectDetails(null);
                 fetchScheduleData();
@@ -740,8 +882,7 @@ const SchedulePage = () => {
             loading={searchLoading}
             value={
               selectedSubjectId
-                ? subjects.find((s) => s.subjectId === selectedSubjectId)
-                    ?.subjectName
+                ? subjects.find((s) => s.subjectId === selectedSubjectId)?.subjectName
                 : undefined
             }
             allowClear
@@ -752,34 +893,63 @@ const SchedulePage = () => {
             }}
             filterOption={false}
             notFoundContent={
-              searchLoading ? <Spin size="small" /> : "No subjects found"
-            }
-          >
-            {/* Add "Get All" option at the top */}
-            <Option key="get_all" value="get_all">
-              <div className="flex flex-col">
-                <div className="font-medium text-blue-600">
-                  Get All Schedules
+              searchLoading ? (
+                <div className="flex items-center justify-center p-4">
+                  <Spin size="small" />
+                  <span className="ml-2">Searching...</span>
                 </div>
-                <div className="text-xs text-gray-500">
-                  View all training schedules
+              ) : (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="No subjects found"
+                />
+              )
+            }
+            dropdownRender={menu => (
+              <div>
+                {/* View All Option */}
+                <div className="px-4 py-3 hover:bg-indigo-50 cursor-pointer transition-colors"
+                     onClick={() => {
+                       setSelectedSubjectId(null);
+                       setSelectedSubjectDetails(null);
+                       fetchScheduleData();
+                     }}>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <UnorderedListOutlined className="text-blue-600" />
+                </div>
+                    <div>
+                      <div className="font-medium text-blue-600">View All My Subjects</div>
+                      <div className="text-xs text-gray-500">Show schedule for all your enrolled subjects</div>
                 </div>
               </div>
-            </Option>
+                </div>
 
-            {/* Divider between "Get All" and subjects list */}
-            <Option key="divider" disabled className="border-t my-1 py-1">
-              <div className="text-xs text-gray-400 text-center">Subjects</div>
-            </Option>
+                {/* Divider */}
+                <div className="my-2 px-4">
+                  <div className="border-t border-gray-200"></div>
+                  <div className="text-xs text-center text-gray-400 -mt-2.5 bg-white w-fit mx-auto px-4">
+                    Your Enrolled Subjects
+                  </div>
+                </div>
 
-            {/* Subjects list */}
+                {/* Menu Items */}
+                {menu}
+              </div>
+            )}
+          >
+            {/* Subject Options */}
             {(searchTerm ? subjectOptions : subjects).map((subject) => (
               <Option key={subject.subjectId} value={subject.subjectId}>
-                <div className="flex flex-col">
-                  <div className="font-medium">{subject.subjectName}</div>
+                <div className="flex items-center gap-3 py-1">
+                  <div className="p-2 bg-indigo-50 rounded-lg">
+                    <BookOutlined className="text-indigo-600" />
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-700">{subject.subjectName}</div>
                   <div className="text-xs text-gray-500">
-                    ID: {subject.subjectId} | Course:{" "}
-                    {subject.courseId || "N/A"}
+                      Course: {subject.courseId || "N/A"}
+                    </div>
                   </div>
                 </div>
               </Option>
@@ -793,42 +963,83 @@ const SchedulePage = () => {
   // Render year and week selector
   const renderDateSelector = () => {
     return (
-      <div className="mb-6 bg-white p-4 rounded-xl shadow-sm">
-        <div className="flex flex-wrap items-center gap-4">
+      <div className="mb-6 bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <CalendarOutlined className="text-xl text-indigo-600" />
+            </div>
+            <span className="text-lg font-semibold text-gray-700">Select Period</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Year selector */}
-          <div className="flex items-center gap-3">
-            <CalendarOutlined className="text-lg text-indigo-600" />
-            <span className="font-medium">Year:</span>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-600">Academic Year</label>
             <Select
               value={currentYear}
               onChange={(value) => {
                 setCurrentYear(value);
                 generateWeekOptions(value);
               }}
-              style={{ width: 120 }}
+                size="large"
+                className="w-full"
+                dropdownClassName="custom-dropdown"
             >
               {[2023, 2024, 2025, 2026].map((year) => (
                 <Option key={year} value={year}>
-                  {year}
+                    <div className="flex items-center gap-2">
+                      <CalendarOutlined className="text-indigo-600" />
+                      <span>{year}</span>
+                    </div>
                 </Option>
               ))}
             </Select>
           </div>
           
           {/* Week selector */}
-          <div className="flex items-center gap-3">
-            <CalendarOutlined className="text-lg text-indigo-600" />
-            <span className="font-medium">Week:</span>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-600">Week Period</label>
             <Select
               value={currentWeek}
               onChange={setCurrentWeek}
-              style={{ width: 200 }}
-              options={weekOptions}
-            />
+                size="large"
+                className="w-full"
+                dropdownClassName="custom-dropdown"
+              >
+                {weekOptions.map((option) => (
+                  <Option key={option.value} value={option.value}>
+                    <div className="flex items-center gap-2">
+                      <CalendarOutlined className="text-indigo-600" />
+                      <span>{option.label}</span>
+                    </div>
+                  </Option>
+                ))}
+              </Select>
+            </div>
           </div>
         </div>
       </div>
     );
+  };
+
+  const validateNewSchedule = async (values) => {
+    try {
+      const response = await trainingScheduleService.checkScheduleConflict({
+        classTime: values.classTime,
+        daysOfWeek: values.daysOfWeek,
+        startDate: values.startDate,
+        endDate: values.endDate
+      });
+      
+      if (response.hasConflict) {
+        throw new Error('Thời gian này đã có lịch học khác!');
+      }
+    } catch (error) {
+      message.error(error.message);
+      return false;
+    }
+    return true;
   };
 
   return (
@@ -869,25 +1080,147 @@ const SchedulePage = () => {
         </div>
 
         {/* Table Section */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-xl p-6 overflow-hidden">
           {loading ? (
-            <div className="flex justify-center items-center h-64">
+            <div className="flex flex-col items-center justify-center h-64 space-y-4">
+              <div className="relative">
               <Spin size="large" />
+                <div className="absolute -top-2 -right-2">
+                  <div className="animate-ping w-3 h-3 bg-indigo-400 rounded-full"></div>
+                </div>
+              </div>
+              <span className="text-gray-500 animate-pulse font-medium">Loading your schedule...</span>
             </div>
           ) : scheduleData.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Empty description="No schedule data available" />
+            <div className="flex flex-col items-center justify-center py-12 space-y-6">
+              <div className="p-6 bg-indigo-50 rounded-full animate-pulse">
+                <CalendarOutlined className="text-5xl text-indigo-400" />
+              </div>
+              <Empty 
+                description={
+                  <div className="space-y-3">
+                    <p className="text-gray-700 font-semibold text-lg">No Schedule Found</p>
+                    <p className="text-gray-500 text-sm max-w-md text-center">
+                      Select a subject or time period to view your training schedule
+                    </p>
+                  </div>
+                }
+              />
               {renderCreateButton()}
             </div>
           ) : (
+            <div className="space-y-6">
             <Table
               dataSource={processScheduleData()}
               columns={columns}
-              bordered={true}
+                bordered={false}
               scroll={{ x: "max-content" }}
               pagination={false}
               className="custom-schedule-table"
-            />
+                rowClassName="hover:bg-blue-50/50 transition-colors duration-200"
+                components={{
+                  header: {
+                    cell: ({ children, ...restProps }) => (
+                      <th
+                        {...restProps}
+                        className="bg-gradient-to-br from-indigo-50 to-blue-50 
+                                   text-indigo-700 font-semibold py-4 px-6 
+                                   first:rounded-tl-xl last:rounded-tr-xl
+                                   border-b border-indigo-100 whitespace-nowrap"
+                      >
+                        {children}
+                      </th>
+                    ),
+                  },
+                  body: {
+                    cell: ({ children, ...restProps }) => (
+                      <td
+                        {...restProps}
+                        className="p-4 border-b border-gray-100 
+                                   group-hover:bg-blue-50/30 transition-colors duration-200"
+                      >
+                        {children}
+                      </td>
+                    ),
+                    row: ({ children, ...restProps }) => (
+                      <tr {...restProps} className="group">
+                        {children}
+                      </tr>
+                    ),
+                  },
+                }}
+              />
+              
+              {/* Status and Legend Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                {/* Legend */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-700 flex items-center gap-2">
+                    <TagsOutlined className="text-indigo-600" />
+                    Schedule Status
+                  </h4>
+                  <div className="flex flex-wrap gap-4">
+                    <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
+                      <div className="relative">
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        <div className="absolute -top-1 -right-1">
+                          <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+                        </div>
+                      </div>
+                      <span className="text-sm text-gray-600">Active Class</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
+                      <div className="w-3 h-3 rounded-full bg-gray-300"></div>
+                      <span className="text-sm text-gray-600">No Class</span>
+                    </div>
+                    {userRole === "TrainingStaff" && (
+                      <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
+                        <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                        <span className="text-sm text-gray-600">Pending Schedule</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Info */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <InfoCircleOutlined className="text-blue-600 text-lg" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="font-medium text-blue-700">Schedule Information</h4>
+                      <p className="text-sm text-blue-600/90">
+                        Click on any class card to view detailed information. Active classes are highlighted 
+                        with a green indicator.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Classes Summary */}
+              <div className="bg-green-50 rounded-xl p-4 border border-green-100">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <CheckCircleOutlined className="text-green-600 text-lg" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium text-green-700">Active Classes</h4>
+                      <div className="px-2 py-0.5 bg-green-100 rounded text-sm text-green-700">
+                        {scheduleData.filter(schedule => 
+                          isCourseActiveOnDate(schedule, new Date())
+                        ).length} Classes
+                      </div>
+                    </div>
+                    <p className="text-sm text-green-600 mt-1">
+                      You have active classes scheduled for this week. Click on any class for more details.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -896,3 +1229,4 @@ const SchedulePage = () => {
 };
 
 export default SchedulePage;
+

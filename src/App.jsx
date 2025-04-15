@@ -83,7 +83,7 @@ function App() {
                         <Header />
                         <Routes>
                           <Route path="/home" element={<HomePage />} />
-                          <Route path="/all courses" element={<CoursePage />} />
+                          <Route path="/all-courses" element={<CoursePage />} />
                           <Route
                             path="/assigned-trainee-courses/:id"
                             element={<AssignedTraineeCoursePage />}

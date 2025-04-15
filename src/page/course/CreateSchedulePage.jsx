@@ -113,28 +113,30 @@ const CreateSchedulePage = () => {
   const fetchInstructors = async () => {
     try {
       setLoading(true);
-      // Call API to get list of instructors with role "Instructor"
       const token = sessionStorage.getItem("token");
       const response = await axiosInstance.get(API.GET_ALL_USER, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { role: "Instructor" },
+        params: { roleName: "Instructor" }
       });
 
       console.log("Instructor API response:", response.data);
 
       if (response.data && response.data.users) {
-        const instructorData = response.data.users;
+        const instructorData = response.data.users.filter(user => user.roleName === "Instructor");
         setInstructors(
           instructorData.map((instructor) => ({
             id: instructor.userId || instructor.id,
             name: instructor.fullName || instructor.name || instructor.userName,
+            roleName: instructor.roleName
           }))
         );
       } else if (response.data && Array.isArray(response.data)) {
+        const filteredInstructors = response.data.filter(user => user.roleName === "Instructor");
         setInstructors(
-          response.data.map((instructor) => ({
+          filteredInstructors.map((instructor) => ({
             id: instructor.userId || instructor.id,
             name: instructor.fullName || instructor.name || instructor.userName,
+            roleName: instructor.roleName
           }))
         );
       } else {
@@ -144,9 +146,7 @@ const CreateSchedulePage = () => {
     } catch (error) {
       console.error("Error fetching instructors:", error);
       message.error("Unable to load instructor list");
-
-      // Sample data based on actual API
-      setInstructors([{ id: "INST-1", name: "Instructor User" }]);
+      setInstructors([]);
     } finally {
       setLoading(false);
     }
