@@ -177,17 +177,36 @@ const navItems = [
     label: "Certificate",
     icon: "FileProtectOutlined",
     path: "/certificate",
+    roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+    children: [
+      {
+        key: "14-1",
+        label: "Certificate Pending",
+        path: "/certificate-pending",
+        roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+      },
+      {
+        key: "14-2",
+        label: "Certificate Active",
+        path: "/certificate-active",
+        roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+      },
+    ],
+  },
+  {
+    key: "15",
+    label: "Certificate Template",
+    icon: "FileProtectOutlined",
+    path: "/certificate-template",
     roles: ["Admin", "HR", "AOC Manager"],
   },
-  
-  { 
+  {
     key: "16",
     label: "Specialty",
     icon: "ImportOutlined",
     path: "/specialty",
-    roles: ["Admin","Training staff"],
-  }
-
+    roles: ["Admin", "Training staff"],
+  },
 ];
 
 export default navItems;

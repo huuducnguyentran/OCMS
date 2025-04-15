@@ -92,17 +92,22 @@ export const API = {
   DELETE_CERTIFICATE_TEMPLATE: "CertificateTemplate",
   UPDATE_CERTIFICATE_TEMPLATE: "CertificateTemplate",
 
-
+  //certificate
+  GET_PENDING_CERTIFICATE: "Certificate/pending",
+  GET_ACTIVE_CERTIFICATE: "Certificate/active",
+  GET_ALL_CERTIFICATE: "Certificate",
+  GET_CERTIFICATE_BY_ID: "Certificate",
+  CREATE_CERTIFICATE: "Certificate",
+  UPDATE_CERTIFICATE: "Certificate",
 
   // Specialty APIs
   GET_ALL_SPECIALTY: "Specialty",
   GET_SPECIALTY_BY_ID: "Specialty",
-  CREATE_SPECIALTY: "Specialty", 
+  CREATE_SPECIALTY: "Specialty",
   UPDATE_SPECIALTY: "Specialty",
   DELETE_SPECIALTY: "Specialty",
   GET_SPECIALTY_TREE: "Specialty/tree",
 
   // digital signature
   SIGN_DIGITAL_SIGNATURE: "DigitalSignature/sign",
-
 };

@@ -86,3 +86,20 @@ export const deleteCertificateTemplate = async (templateId) => {
     throw error;
   }
 };
+
+export const getPendingCertificate = async () => {
+  const response = await axiosInstance.get(`${API.GET_PENDING_CERTIFICATE}`);
+  return response.data;
+};
+
+export const getActiveCertificate = async () => {
+  const response = await axiosInstance.get(`${API.GET_ACTIVE_CERTIFICATE}`);
+  return response.data;
+};
+
+export const getCertificateById = async (certificateId) => {
+  const response = await axiosInstance.get(
+    `${API.GET_CERTIFICATE_BY_ID}/${certificateId}`
+  );
+  return response.data;
+};
