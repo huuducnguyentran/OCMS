@@ -12,8 +12,6 @@ import {
   InfoCircleOutlined,
   TagsOutlined,
   CheckCircleOutlined,
-  HomeOutlined,
-  EnvironmentOutlined,
   TagOutlined,
 } from "@ant-design/icons";
 import { trainingScheduleService } from "../../services/trainingScheduleService";
@@ -29,7 +27,7 @@ const SchedulePage = () => {
   const [viewMode, setViewMode] = useState(location.state?.viewMode || "all");
   const [subjects, setSubjects] = useState([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
-  const [selectedSubjectDetails, setSelectedSubjectDetails] = useState(null);
+  const [ setSelectedSubjectDetails] = useState(null);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentWeek, setCurrentWeek] = useState(null);
   const [weekOptions, setWeekOptions] = useState([]);
@@ -1229,4 +1227,3 @@ const SchedulePage = () => {
 };
 
 export default SchedulePage;
-

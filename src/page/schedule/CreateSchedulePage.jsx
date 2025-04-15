@@ -20,16 +20,11 @@ import {
   CalendarOutlined,
   SaveOutlined,
   RollbackOutlined,
-  ClockCircleOutlined,
 } from "@ant-design/icons";
-import { trainingScheduleService } from "../../services/trainingScheduleService";
 import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
 import dayjs from "dayjs";
-import {
-  getTrainingPlanSchema,
-  applyTrainingPlanValidation,
-} from "../../../utils/validationSchemas";
+
 
 const { Title, Text } = Typography;
 const { Option } = Select;
