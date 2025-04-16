@@ -118,9 +118,9 @@ const navItems = [
   },
   {
     key: "10",
-    label: "Send Request",
+    label: "Send Complaint",
     icon: "FileAddOutlined",
-    path: "/send-request",
+    path: "/send-complaint",
     roles: ["Trainee", "Training staff", "HR", "AOC Manager"],
   },
   {

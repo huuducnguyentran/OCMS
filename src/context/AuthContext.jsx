@@ -9,6 +9,9 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const publicRoutes = ["/forgot-password", "/reset-password", "/login"];
+  const isPublicRoute = (pathname) => {
+    return publicRoutes.includes(pathname);
+  };
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     const token = sessionStorage.getItem("token");
@@ -40,6 +43,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const logout = () => {
+    sessionStorage.clear();
+    setIsAuthenticated(false);
+    setUser(null);
+    //  Do not navigate to /login if already on a public route
+    if (!isPublicRoute(location.pathname)) {
+      navigate("/login");
+    }
+  };
+
   const setAutoLogout = (timeLeft) => {
     setTimeout(() => {
       logout();
@@ -61,13 +74,6 @@ export const AuthProvider = ({ children }) => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
-
-  const logout = () => {
-    sessionStorage.clear();
-    setIsAuthenticated(false);
-    setUser(null);
-    navigate("/login");
-  };
 
   return (
     <AuthContext.Provider

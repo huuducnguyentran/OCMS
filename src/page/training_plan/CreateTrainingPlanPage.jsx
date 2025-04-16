@@ -9,7 +9,6 @@ import dayjs from "dayjs";
 import { trainingPlanService } from '../../services/trainingPlanService';
 import { getTrainingPlanSchema, applyTrainingPlanValidation } from "../../../utils/validationSchemas";
 import axiosInstance from "../../../utils/axiosInstance";
-import { specialtyService } from '../../services/specialtyService';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -31,13 +30,13 @@ const CreateTrainingPlanPage = () => {
   const fetchSpecialties = async () => {
     try {
       setLoadingSpecialties(true);
-      const response = await specialtyService.getAllSpecialty();
-      if (response.status === 200) {
-        const activeSpecialties = response.data.filter(specialty => specialty.status === 0);
+      const response = await axiosInstance.get("Specialty");
+      if (response.data.success && response.data.data) {
+        const activeSpecialties = response.data.data.filter(specialty => specialty.status === 0);
         setSpecialties(activeSpecialties);
       }
     } catch (error) {
-      console.error("Error fetching specialties:", error);
+      console.error("Failed to fetch specialties:", error);
       message.error("Failed to load specialties");
     } finally {
       setLoadingSpecialties(false);
@@ -85,7 +84,7 @@ const CreateTrainingPlanPage = () => {
   // Helper function for rendering specialty options
   const renderSpecialtyOptions = (specialties) => {
     return specialties.map(specialty => {
-      if (specialty.children && specialty.children.length > 0) {
+      if (specialty.children && specialty.children.length > 0 ) {
         return (
           <Select.OptGroup key={specialty.specialtyId} label={specialty.specialtyName}>
             <Option key={specialty.specialtyId} value={specialty.specialtyId}>

@@ -93,6 +93,23 @@ const isTrainingPlanType = (requestType) => {
   return [0, 1, 2, 4, 5].includes(Number(requestType));
 };
 
+// Hàm helper kiểm tra loại Complaint
+const isComplaintType = (requestType) => {
+  if (typeof requestType === "string") {
+    if (requestType === "Complaint") return true;
+    
+    // Thử chuyển về số nếu không khớp với tên
+    const type = parseInt(requestType, 10);
+    if (!isNaN(type)) {
+      return type === 3;
+    }
+    return false;
+  }
+  
+  // Trường hợp requestType là số
+  return Number(requestType) === 3;
+};
+
 const RequestList = () => {
   const storedRole = sessionStorage.getItem("role");
   const isAdmin = storedRole === "Admin";
@@ -164,6 +181,17 @@ const RequestList = () => {
 
   const applyFilters = (data) => {
     let filtered = [...data];
+
+    // Lọc bỏ request Candidate Import nếu người dùng là HeadMaster
+    if (storedRole === "HeadMaster") {
+      filtered = filtered.filter(request => {
+        const requestType = Number(request.requestType);
+        const requestTypeStr = String(request.requestType).toLowerCase();
+        return requestType !== 9 && 
+               !requestTypeStr.includes('candidateimport') && 
+               !requestTypeStr.includes('candidate import');
+      });
+    }
 
     if (searchText) {
       filtered = filtered.filter(
@@ -871,14 +899,24 @@ const RequestList = () => {
                         <span className="text-sm font-medium">
                           {isTrainingPlanType(currentRequest.requestType)
                             ? "Training Plan ID: "
+                            : isComplaintType(currentRequest.requestType)
+                            ? "Subject ID: "
                             : "Entity ID: "}
                           {
                             // Nếu là các loại request về training plan thì hiển thị link
                             isTrainingPlanType(currentRequest.requestType) ? (
                               <Link
-                                  to={`/plan/details/${currentRequest.requestEntityId}`}
+                                to={`/plan/details/${currentRequest.requestEntityId}`}
                                 className="text-blue-600 hover:text-blue-800 hover:underline"
                                 title="Click to view Training Plan details"
+                              >
+                                {currentRequest.requestEntityId}
+                              </Link>
+                            ) : isComplaintType(currentRequest.requestType) ? (
+                              <Link
+                                to={`/subject/${currentRequest.requestEntityId}`}
+                                className="text-blue-600 hover:text-blue-800 hover:underline"
+                                title="Click to view Subject details"
                               >
                                 {currentRequest.requestEntityId}
                               </Link>
@@ -1025,6 +1063,21 @@ const RequestList = () => {
                           className="bg-blue-500 hover:bg-blue-600"
                         >
                           View Training Plan
+                        </Button>
+                      </Link>
+                    )}
+
+                  {/* Thêm nút view subject nếu là request liên quan đến complaint */}
+                  {currentRequest.requestEntityId &&
+                    isComplaintType(currentRequest.requestType) && (
+                      <Link
+                        to={`/subject/${currentRequest.requestEntityId}`}
+                      >
+                        <Button
+                          type="primary"
+                          className="bg-blue-500 hover:bg-blue-600"
+                        >
+                          View Subject
                         </Button>
                       </Link>
                     )}

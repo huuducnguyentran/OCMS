@@ -199,7 +199,7 @@ function App() {
                             element={<RequestDetail />}
                           />
                           <Route
-                            path="/send-request"
+                            path="/send-complaint"
                             element={<SendRequestPage />}
                           />
 
