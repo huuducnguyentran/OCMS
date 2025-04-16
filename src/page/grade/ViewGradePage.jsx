@@ -65,10 +65,10 @@ const ViewGradePage = () => {
       width: 120,
       sorter: (a, b) => a.subjectId.localeCompare(b.subjectId),
       sortOrder: sortedInfo.columnKey === "subjectId" ? sortedInfo.order : null,
-      filteredValue: [searchText],
-      onFilter: (value, record) => {
-        return record.subjectId.toLowerCase().includes(value.toLowerCase());
-      },
+      // filteredValue: [searchText],
+      // onFilter: (value, record) => {
+      //   return record.subjectId.toLowerCase().includes(value.toLowerCase());
+      // },
     },
     {
       title: "Progress Scores",
@@ -333,6 +333,8 @@ const ViewGradePage = () => {
 
     if (search) {
       filtered = filtered.filter((grade) =>
+        grade.gradeId.toLowerCase().includes(search.toLowerCase()) ||
+        grade.traineeAssignID.toLowerCase().includes(search.toLowerCase()) ||
         grade.subjectId.toLowerCase().includes(search.toLowerCase())
       );
     }
@@ -405,7 +407,7 @@ const ViewGradePage = () => {
                 className="rounded-lg"
               />
               <Search
-                placeholder="Search by Subject ID, Trainee ID, or Instructor ID"
+                placeholder="Search by Grade ID, Trainee ID, or Subject ID"
                 allowClear
                 enterButton={<SearchOutlined />}
                 size="large"

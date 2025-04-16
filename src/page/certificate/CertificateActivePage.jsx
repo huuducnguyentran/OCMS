@@ -10,7 +10,7 @@ import {
   Col,
   Typography,
 } from "antd";
-import { getPendingCertificate } from "../../services/certificateService";
+import { getActiveCertificate } from "../../services/certificateService";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { SearchOutlined } from "@ant-design/icons";
@@ -18,7 +18,7 @@ import { SearchOutlined } from "@ant-design/icons";
 const { Option } = Select;
 const { Title } = Typography;
 
-const CertificatePendingPage = () => {
+const CertificateActivePage = () => {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchCode, setSearchCode] = useState("");
@@ -29,7 +29,7 @@ const CertificatePendingPage = () => {
   useEffect(() => {
     const fetchCertificates = async () => {
       try {
-        const data = await getPendingCertificate();
+        const data = await getActiveCertificate();
         setCertificates(data);
       } catch (error) {
         console.error("Failed to fetch certificates:", error);
@@ -67,7 +67,7 @@ const CertificatePendingPage = () => {
 
   return (
     <div className="p-4">
-      <Title level={3}>Certificate Management List</Title>
+      <Title level={3}>Active Certificates List</Title>
       {/* Filters */}
       <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
         <Row gutter={[16, 16]} className="mb-4">
@@ -89,9 +89,9 @@ const CertificatePendingPage = () => {
               allowClear
               style={{ width: "100%" }}
             >
-              <Option value="Pending">Pending</Option>
-              <Option value="Approved">Approved</Option>
-              <Option value="Rejected">Rejected</Option>
+              <Option value="Active">Active</Option>
+              <Option value="Expired">Expired</Option>
+              <Option value="Revoked">Revoked</Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} md={8}>
@@ -153,4 +153,4 @@ const CertificatePendingPage = () => {
   );
 };
 
-export default CertificatePendingPage;
+export default CertificateActivePage;

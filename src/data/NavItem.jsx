@@ -178,6 +178,20 @@ const navItems = [
     icon: "FileProtectOutlined",
     path: "/certificate",
     roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+    children: [
+      {
+        key: "14-1",
+        label: "Certificate Pending",
+        path: "/certificate-pending",
+        roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+      },
+      {
+        key: "14-2",
+        label: "Certificate Active",
+        path: "/certificate-active",
+        roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+      },
+    ],
   },
   {
     key: "15",
@@ -186,13 +200,28 @@ const navItems = [
     path: "/certificate-template",
     roles: ["Admin", "HR", "AOC Manager"],
   },
-
   {
     key: "16",
     label: "Specialty",
     icon: "ImportOutlined",
     path: "/specialty",
     roles: ["Admin", "Training staff"],
+  },
+  {
+    key: "17",
+    label: "Regulations",
+    icon: "FileProtectOutlined",
+    path: "/regulations",
+    roles: [
+      "Admin",
+      "Training staff",
+      "Trainee",
+      "Instructor",
+      "Reviewer",
+      "HeadMaster",
+      "HR",
+      "AOC Manager",
+    ],
   },
 ];
 

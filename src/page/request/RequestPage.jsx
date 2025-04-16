@@ -14,7 +14,6 @@ import {
   Col,
   Modal,
   Card,
-  Divider,
   List,
   Popconfirm,
 } from "antd";
@@ -30,7 +29,6 @@ import {
   ReloadOutlined,
   FilterOutlined,
   UpOutlined,
-  DownOutlined,
   EyeOutlined,
   UserOutlined,
   IdcardOutlined,
@@ -140,12 +138,15 @@ const RequestList = () => {
 
   // Lệnh logging để debug giá trị requestType
   const handleDebugRequestType = () => {
-    console.log("Current requests with requestType:", requests.map(req => ({ 
-      id: req.requestId, 
-      type: req.requestType, 
-      typeNum: Number(req.requestType),
-      typeName: RequestTypeEnum[Number(req.requestType)]
-    })));
+    console.log(
+      "Current requests with requestType:",
+      requests.map((req) => ({
+        id: req.requestId,
+        type: req.requestType,
+        typeNum: Number(req.requestType),
+        typeName: RequestTypeEnum[Number(req.requestType)],
+      }))
+    );
     console.log("Current requestTypeFilter:", requestTypeFilter);
   };
 
@@ -184,7 +185,13 @@ const RequestList = () => {
         // Chuyển đổi requestType thành số
         const requestTypeValue = Number(request.requestType);
         // Debug để kiểm tra giá trị requestType
-        console.log(`Filtering: ${request.requestId}, type=${request.requestType}, typeNum=${requestTypeValue}, filter=${requestTypeFilter}, match=${requestTypeValue === requestTypeFilter}`);
+        console.log(
+          `Filtering: ${request.requestId}, type=${
+            request.requestType
+          }, typeNum=${requestTypeValue}, filter=${requestTypeFilter}, match=${
+            requestTypeValue === requestTypeFilter
+          }`
+        );
         // So sánh chính xác với giá trị filter
         return requestTypeValue === requestTypeFilter;
       });
@@ -256,7 +263,9 @@ const RequestList = () => {
     try {
       await deleteRequest(requestId);
       setRequests((prev) => prev.filter((r) => r.requestId !== requestId));
-      setFilteredRequests((prev) => prev.filter((r) => r.requestId !== requestId));
+      setFilteredRequests((prev) =>
+        prev.filter((r) => r.requestId !== requestId)
+      );
       message.success("Request deleted successfully");
     } catch (error) {
       console.error("Failed to delete request", error);
@@ -288,14 +297,19 @@ const RequestList = () => {
         try {
           const userData = await getUserById(requestData.requestById);
           setRequestByUser(userData);
-          
+
           // Kiểm tra và lấy thông tin người phê duyệt nếu có
           if (requestData.actionByUserId) {
             try {
-              const actionByUserData = await getUserById(requestData.actionByUserId);
+              const actionByUserData = await getUserById(
+                requestData.actionByUserId
+              );
               setApprovedByUser(actionByUserData);
             } catch (actionByUserError) {
-              console.error("Failed to fetch action user details", actionByUserError);
+              console.error(
+                "Failed to fetch action user details",
+                actionByUserError
+              );
             }
           }
         } catch (userError) {
@@ -304,13 +318,19 @@ const RequestList = () => {
       }
 
       // Nếu là yêu cầu nhập ứng viên (requestType = 9 hoặc "CandidateImport")
-      if (Number(requestData.requestType) === 9 || 
-          requestData.requestType === "CandidateImport" || 
-          requestData.requestType === "Candidate Import") {
-        console.log("Detected candidate import request, fetching candidate data...");
+      if (
+        Number(requestData.requestType) === 9 ||
+        requestData.requestType === "CandidateImport" ||
+        requestData.requestType === "Candidate Import"
+      ) {
+        console.log(
+          "Detected candidate import request, fetching candidate data..."
+        );
         setCandidateLoading(true);
         try {
-          const candidateResult = await getCandidateByRequestId(record.requestId);
+          const candidateResult = await getCandidateByRequestId(
+            record.requestId
+          );
           console.log("Candidate Data:", candidateResult);
           setCandidateData(candidateResult || []);
         } catch (candidateError) {
@@ -337,13 +357,13 @@ const RequestList = () => {
     setCandidateData([]);
   };
 
-
   // Hàm approve request
   const handleApprove = async () => {
     if (!currentRequest) return;
 
     try {
-      const response = await approveRequest(currentRequest.requestId);
+      // const response =
+      await approveRequest(currentRequest.requestId);
       message.success("Request approved successfully");
 
       // Lấy thông tin người dùng hiện tại
@@ -404,7 +424,8 @@ const RequestList = () => {
 
     try {
       // Gọi API với lý do từ chối
-      const response = await rejectRequest(currentRequest.requestId, {
+      // const response =
+      await rejectRequest(currentRequest.requestId, {
         rejectReason,
       });
       message.success("Request rejected successfully");
@@ -556,7 +577,8 @@ const RequestList = () => {
         </span>
       ),
       sorter: (a, b) => new Date(a.requestDate) - new Date(b.requestDate),
-      sortOrder: sortedInfo.columnKey === "requestDate" ? sortedInfo.order : null,
+      sortOrder:
+        sortedInfo.columnKey === "requestDate" ? sortedInfo.order : null,
     },
     {
       title: "Description",
@@ -767,8 +789,8 @@ const RequestList = () => {
                     </div>
 
                     {/* Hiển thị thông tin ứng viên khi loại yêu cầu là nhập ứng viên */}
-                    {(Number(currentRequest.requestType) === 9 || 
-                      currentRequest.requestType === "CandidateImport" || 
+                    {(Number(currentRequest.requestType) === 9 ||
+                      currentRequest.requestType === "CandidateImport" ||
                       currentRequest.requestType === "Candidate Import") && (
                       <div className="border-t border-gray-200 pt-3 mt-3">
                         <div className="flex items-center gap-2 text-gray-600 mb-2">
@@ -777,7 +799,7 @@ const RequestList = () => {
                             Candidate Information:
                           </span>
                         </div>
-                        
+
                         {candidateLoading ? (
                           <div className="flex justify-center py-2">
                             <Spin size="small" />
@@ -792,19 +814,31 @@ const RequestList = () => {
                                 <List.Item>
                                   <div className="w-full flex items-center justify-between">
                                     <div>
-                                      <span 
-                                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer" 
-                                        onClick={() => navigateToCandidateDetail(candidate.candidateId)}
+                                      <span
+                                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                        onClick={() =>
+                                          navigateToCandidateDetail(
+                                            candidate.candidateId
+                                          )
+                                        }
                                       >
                                         {candidate.candidateId}
                                       </span>
                                       <span className="mx-2">-</span>
-                                      <span className="font-medium">{candidate.fullName}</span>
+                                      <span className="font-medium">
+                                        {candidate.fullName}
+                                      </span>
                                     </div>
                                     <div>
-                                      {candidate.candidateStatus === 0 && <Tag color="orange">Pending</Tag>}
-                                      {candidate.candidateStatus === 1 && <Tag color="green">Approved</Tag>}
-                                      {candidate.candidateStatus === 2 && <Tag color="red">Rejected</Tag>}
+                                      {candidate.candidateStatus === 0 && (
+                                        <Tag color="orange">Pending</Tag>
+                                      )}
+                                      {candidate.candidateStatus === 1 && (
+                                        <Tag color="green">Approved</Tag>
+                                      )}
+                                      {candidate.candidateStatus === 2 && (
+                                        <Tag color="red">Rejected</Tag>
+                                      )}
                                     </div>
                                   </div>
                                 </List.Item>
@@ -819,38 +853,42 @@ const RequestList = () => {
                             )}
                           </div>
                         ) : (
-                          <p className="text-sm text-gray-500">No candidate information available.</p>
+                          <p className="text-sm text-gray-500">
+                            No candidate information available.
+                          </p>
                         )}
                       </div>
                     )}
 
-                    {currentRequest.requestEntityId && 
-                      !(Number(currentRequest.requestType) === 9 || 
-                        currentRequest.requestType === "CandidateImport" || 
-                        currentRequest.requestType === "Candidate Import") && (
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <ProfileOutlined className="text-indigo-500" />
-                        <span className="text-sm font-medium">
-                          {isTrainingPlanType(currentRequest.requestType)
-                            ? "Training Plan ID: "
-                            : "Entity ID: "}
-                          {
-                            // Nếu là các loại request về training plan thì hiển thị link
-                            isTrainingPlanType(currentRequest.requestType) ? (
-                              <Link
-                                to={`/plan/details/${currentRequest.requestEntityId}`}
-                                className="text-blue-600 hover:text-blue-800 hover:underline"
-                                title="Click to view Training Plan details"
-                              >
-                                {currentRequest.requestEntityId}
-                              </Link>
-                            ) : (
-                              currentRequest.requestEntityId
-                            )
-                          }
-                        </span>
-                      </div>
-                    )}
+                    {currentRequest.requestEntityId &&
+                      !(
+                        Number(currentRequest.requestType) === 9 ||
+                        currentRequest.requestType === "CandidateImport" ||
+                        currentRequest.requestType === "Candidate Import"
+                      ) && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <ProfileOutlined className="text-indigo-500" />
+                          <span className="text-sm font-medium">
+                            {isTrainingPlanType(currentRequest.requestType)
+                              ? "Training Plan ID: "
+                              : "Entity ID: "}
+                            {
+                              // Nếu là các loại request về training plan thì hiển thị link
+                              isTrainingPlanType(currentRequest.requestType) ? (
+                                <Link
+                                  to={`/plan/details/${currentRequest.requestEntityId}`}
+                                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                                  title="Click to view Training Plan details"
+                                >
+                                  {currentRequest.requestEntityId}
+                                </Link>
+                              ) : (
+                                currentRequest.requestEntityId
+                              )
+                            }
+                          </span>
+                        </div>
+                      )}
 
                     <div className="flex items-center gap-2 text-gray-600">
                       <FileTextOutlined className="text-indigo-500" />
@@ -888,9 +926,12 @@ const RequestList = () => {
                           {currentRequest.status === "Approved"
                             ? "Approved"
                             : "Rejected"}{" "}
-                          By: {approvedByUser 
-                                ? `${approvedByUser.fullName} (${currentRequest.actionByUserId})`
-                                : currentRequest.approvedByName || currentRequest.actionByUserId || "Unknown"}
+                          By:{" "}
+                          {approvedByUser
+                            ? `${approvedByUser.fullName} (${currentRequest.actionByUserId})`
+                            : currentRequest.approvedByName ||
+                              currentRequest.actionByUserId ||
+                              "Unknown"}
                           {currentRequest.approvedDate &&
                             ` (${new Date(
                               currentRequest.approvedDate
@@ -943,14 +984,19 @@ const RequestList = () => {
                   )}
 
                   {/* Thêm nút xem chi tiết ứng viên nếu là request nhập ứng viên */}
-                  {(Number(currentRequest.requestType) === 9 || 
-                    currentRequest.requestType === "CandidateImport" || 
-                    currentRequest.requestType === "Candidate Import") && candidateData.length > 0 && (
-                    candidateData.length === 1 ? (
+                  {(Number(currentRequest.requestType) === 9 ||
+                    currentRequest.requestType === "CandidateImport" ||
+                    currentRequest.requestType === "Candidate Import") &&
+                    candidateData.length > 0 &&
+                    (candidateData.length === 1 ? (
                       <Button
                         type="primary"
                         className="bg-blue-500 hover:bg-blue-600"
-                        onClick={() => navigateToCandidateDetail(candidateData[0].candidateId)}
+                        onClick={() =>
+                          navigateToCandidateDetail(
+                            candidateData[0].candidateId
+                          )
+                        }
                       >
                         View Candidate Details
                       </Button>
@@ -958,12 +1004,15 @@ const RequestList = () => {
                       <Button
                         type="primary"
                         className="bg-blue-500 hover:bg-blue-600"
-                        onClick={() => message.info("Click on a candidate ID to view details")}
+                        onClick={() =>
+                          message.info(
+                            "Click on a candidate ID to view details"
+                          )
+                        }
                       >
                         {`View ${candidateData.length} Candidates`}
                       </Button>
-                    )
-                  )}
+                    ))}
 
                   {/* Thêm nút view training plan nếu là request liên quan đến training plan */}
                   {currentRequest.requestEntityId &&

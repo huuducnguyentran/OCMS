@@ -66,6 +66,32 @@ export const trainingScheduleService = {
   getInstructorSubjects: async () => {
     try {
       const response = await axiosInstance.get(API.GET_INSTRUCTOR_SUBJECTS);
+      console.log("Instructor subjects response:", response.data);
+      
+      if (response.data && response.data.subscheldule) {
+        const subjectsWithSchedules = response.data.subscheldule;
+        
+        // Extract all schedules from all subjects
+        const allSchedules = [];
+        subjectsWithSchedules.forEach(subject => {
+          if (subject.schedules && Array.isArray(subject.schedules)) {
+            const schedulesWithSubjectInfo = subject.schedules.map(schedule => ({
+              ...schedule,
+              subjectId: subject.subjectId,
+              subjectName: subject.subjectName,
+              courseId: subject.courseId,
+              status: schedule.status || "Active"
+            }));
+            allSchedules.push(...schedulesWithSubjectInfo);
+          }
+        });
+        
+        return {
+          data: subjectsWithSchedules,
+          schedules: allSchedules
+        };
+      }
+      
       return response.data;
     } catch (error) {
       console.error("Error fetching instructor subjects:", error);

@@ -8,21 +8,21 @@ import {
 import ProtectedRoute from "./component/ProtectedRoute";
 import AvatarProvider from "./context/AvatarProvider";
 import { AuthProvider } from "./context/AuthContext";
-import HomePage from "./page/HomePage";
+import HomePage from "./page/user/HomePage";
 import AccountPage from "./page/user/AccountPage";
 import Navbar from "./component/NabBar";
 import { Layout } from "antd";
-import SchedulePage from "./page/course/SchedulePage";
+import SchedulePage from "./page/schedule/SchedulePage";
 import LoginPage from "./page/auth/LoginPage";
 import Header from "./component/Header";
 import PersonalProfilePage from "./page/user/PersonalProfilePage";
 import AccomplishmentsPage from "./page/result/AccomplishmentPage";
 import AccomplishmentDetail from "./page/result/AccompishmentDetailPage";
-import ImportCandidate from "./page/training_plan/ImportCandidatePage";
+import ImportCandidate from "./page/candidate/ImportCandidatePage";
 import Footer from "./component/Footer";
-import CandidatePage from "./page/training_plan/CandidatePage";
+import CandidatePage from "./page/candidate/CandidatePage";
 import RequestListPage from "./page/request/RequestPage";
-import CandidateDetailPage from "./page/training_plan/CandidateDetail";
+import CandidateDetailPage from "./page/candidate/CandidateDetail";
 import RequestDetail from "./page/request/RequestDetailPage";
 import ForgotPassword from "./page/auth/ForgotPasswordPage";
 import ResetPassword from "./page/auth/ResetPassword";
@@ -34,16 +34,14 @@ import AssignedTraineePage from "./page/assigned_trainee/AssignedTraineePage";
 import PlanPage from "./page/training_plan/PlanPage";
 import CreateTrainingPlanPage from "./page/training_plan/CreateTrainingPlanPage";
 import EditPlanPage from "./page/training_plan/EditPlanPage";
-// import TrainingPlanDetailPage from "./page/training_plan/TrainingPlanDetailPage";
 import CreateCoursePage from "./page/course/CreateCoursePage";
 import CoursePage from "./page/course/CoursePage";
 import EditCoursePage from "./page/course/EditCoursePage";
 import AssignedTraineeDetailPage from "./page/assigned_trainee/AssignedTraineeDetailPage";
 import AssignedTraineeCoursePage from "./page/assigned_trainee/AssignedTraineeCoursePage";
-// import AssignInstructorPage from "./page/assigned_instructor/AssignInstructorPage";
 import SendRequestPage from "./page/request/SendRequestPage";
 import UpdateSubjectPage from "./page/subject/UpdateSubjectPage";
-import CreateSchedulePage from "./page/course/CreateSchedulePage";
+import CreateSchedulePage from "./page/schedule/CreateSchedulePage";
 import NotificationPage from "./page/user/NotificationPage";
 import ImportCertificatePage from "./page/certificate/ImportCertificatePage";
 import CertificateTemplateListPage from "./page/certificate/CertificateTemplatePage";
@@ -59,6 +57,8 @@ import CreateSpecialtyPage from "./page/specialty/CreateSpecialtyPage";
 import SpecialtyTreePage from "./page/specialty/SpecialtyTreePage";
 import CertificatePendingPage from "./page/certificate/CertificatePendingPage";
 import CertificateDetailPage from "./page/certificate/CertificateDetailPage";
+import CertificateActivePage from "./page/certificate/CertificateActivePage";
+import RegulationsPage from "./page/Regulations/RegulationsPage";
 
 function App() {
   return (
@@ -67,13 +67,13 @@ function App() {
       <AuthProvider>
         <AvatarProvider>
           <Routes>
-            {/* Public Routes */}
+            {/* 🚪 Public Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<Navigate to="/login" replace />} />
 
-            {/* Protected Routes */}
+            {/*  Protected Routes */}
             <Route
               path="/*"
               element={
@@ -84,30 +84,100 @@ function App() {
                       <Layout className="flex flex-col w-full">
                         <Header />
                         <Routes>
+                          {/*  Dashboard & User Profile */}
                           <Route path="/home" element={<HomePage />} />
-                          <Route path="/all courses" element={<CoursePage />} />
+                          <Route path="/accounts" element={<AccountPage />} />
                           <Route
-                            path="/assigned-trainee-courses/:id"
-                            element={<AssignedTraineeCoursePage />}
+                            path="/profile/:userId"
+                            element={<PersonalProfilePage />}
                           />
-                          {/* <Route
-                            path="/course/:id"
-                            element={<CourseDetailPage />}
-                          /> */}
+                          <Route
+                            path="/notifications"
+                            element={<NotificationPage />}
+                          />
+
+                          {/*  Course Management */}
+                          <Route path="/all-courses" element={<CoursePage />} />
+                          <Route path="/course" element={<CoursePage />} />
+                          <Route
+                            path="/course/create"
+                            element={<CreateCoursePage />}
+                          />
+                          <Route
+                            path="/course/edit/:id"
+                            element={<EditCoursePage />}
+                          />
+
+                          {/*  Schedule Management */}
                           <Route path="/schedule" element={<SchedulePage />} />
                           <Route
                             path="/schedule/create"
                             element={<CreateSchedulePage />}
                           />
-                          <Route path="/accounts" element={<AccountPage />} />
+
+                          {/*  Training Plans */}
+                          <Route path="/plan" element={<PlanPage />} />
+                          <Route
+                            path="/plan/create"
+                            element={<CreateTrainingPlanPage />}
+                          />
+                          <Route
+                            path="/plan/edit/:planId"
+                            element={<EditPlanPage />}
+                          />
+                          <Route
+                            path="/plan/details/:planId"
+                            element={<PlanDetailPage />}
+                          />
+
+                          {/*  Candidates */}
+                          <Route
+                            path="/candidates-import"
+                            element={<ImportCandidate />}
+                          />
                           <Route
                             path="/candidates-view"
                             element={<CandidatePage />}
                           />
                           <Route
-                            path="/profile/:userId"
-                            element={<PersonalProfilePage />}
+                            path="/candidates/:id"
+                            element={<CandidateDetailPage />}
                           />
+
+                          {/*  Subjects */}
+                          <Route path="/subject" element={<SubjectPage />} />
+                          <Route
+                            path="/subject-create"
+                            element={<CreateSubjectPage />}
+                          />
+                          <Route
+                            path="/subject/:subjectId"
+                            element={<SubjectDetailPage />}
+                          />
+                          <Route
+                            path="/subject-edit/:subjectId"
+                            element={<UpdateSubjectPage />}
+                          />
+
+                          {/*  Trainees */}
+                          <Route
+                            path="/import-assign-trainee"
+                            element={<AssignTraineePage />}
+                          />
+                          <Route
+                            path="/assigned-trainee"
+                            element={<AssignedTraineePage />}
+                          />
+                          <Route
+                            path="/assigned-trainee/:id"
+                            element={<AssignedTraineeDetailPage />}
+                          />
+                          <Route
+                            path="/assigned-trainee-courses/:id"
+                            element={<AssignedTraineeCoursePage />}
+                          />
+
+                          {/*  Accomplishments & Grades */}
                           <Route
                             path="/accomplishments"
                             element={<AccomplishmentsPage />}
@@ -125,14 +195,8 @@ function App() {
                             path="/grade-update/:id"
                             element={<UpdateGradePage />}
                           />
-                          <Route
-                            path="/candidates-import"
-                            element={<ImportCandidate />}
-                          />
-                          <Route
-                            path="/notifications"
-                            element={<NotificationPage />}
-                          />
+
+                          {/*  Requests */}
                           <Route
                             path="/request"
                             element={<RequestListPage />}
@@ -145,77 +209,27 @@ function App() {
                             path="/send-request"
                             element={<SendRequestPage />}
                           />
+
+                          {/*  Certificates */}
                           <Route
-                            path="/candidates/:id"
-                            element={<CandidateDetailPage />}
-                          />
-                          <Route
-                            path="/import-assign-trainee"
-                            element={<AssignTraineePage />}
-                          />
-                          <Route
-                            path="/assigned-trainee"
-                            element={<AssignedTraineePage />}
-                          />
-                          {/* <Route
-                            path="/import-assign-instructor"
-                            element={<AssignInstructorPage />}
-                          /> */}
-                          <Route path="/subject" element={<SubjectPage />} />
-                          <Route
-                            path="/subject-create"
-                            element={<CreateSubjectPage />}
-                          />
-                          <Route
-                            path="/subject/:subjectId"
-                            element={<SubjectDetailPage />}
-                          />
-                          <Route
-                            path="/subject-edit/:subjectId"
-                            element={<UpdateSubjectPage />}
-                          />
-                          <Route path="/plan" element={<PlanPage />} />
-                          <Route
-                            path="/plan/details/:planId"
-                            element={<PlanDetailPage />}
-                          />
-                          <Route
-                            path="/plan/create"
-                            element={<CreateTrainingPlanPage />}
-                          />
-                          <Route
-                            path="/plan/edit/:planId"
-                            element={<EditPlanPage />}
-                          />
-                          {/* <Route
-                            path="/plan/:planId"
-                            element={<TrainingPlanDetailPage />}
-                          /> */}
-                          <Route
-                            path="/course/create"
-                            element={<CreateCoursePage />}
-                          />
-                          <Route path="/course" element={<CoursePage />} />
-                          <Route
-                            path="/course/edit/:id"
-                            element={<EditCoursePage />}
-                          />
-                          <Route
-                            path="/assigned-trainee/:id"
-                            element={<AssignedTraineeDetailPage />}
+                            path="/certificate-import"
+                            element={<ImportCertificatePage />}
                           />
                           <Route
                             path="/certificate"
+                            element={<CertificateTemplateListPage />}
+                          />
+                          <Route
+                            path="/certificate-pending"
                             element={<CertificatePendingPage />}
+                          />
+                          <Route
+                            path="/certificate-active"
+                            element={<CertificateActivePage />}
                           />
                           <Route
                             path="/certificate/:certificateId"
                             element={<CertificateDetailPage />}
-                          />
-
-                          <Route
-                            path="/certificate-import"
-                            element={<ImportCertificatePage />}
                           />
                           <Route
                             path="/certificate-template"
@@ -229,6 +243,8 @@ function App() {
                             path="/certificate-template/:templateId"
                             element={<CertificateTemplateDetailPage />}
                           />
+
+                          {/*  Specialty */}
                           <Route
                             path="/specialty"
                             element={<SpecialtyPage />}
@@ -245,6 +261,24 @@ function App() {
                             path="/specialty/tree"
                             element={<SpecialtyTreePage />}
                           />
+
+                          {/*  Regulations */}
+                          <Route
+                            path="/regulations"
+                            element={<RegulationsPage />}
+                          />
+                          {/* <Route
+                            path="/import-assign-instructor"
+                            element={<AssignInstructorPage />}
+                          /> */}
+                          {/* <Route
+                            path="/plan/:planId"
+                            element={<TrainingPlanDetailPage />}
+                          /> */}
+                          {/* <Route
+                            path="/course/:id"
+                            element={<CourseDetailPage />}
+                          /> */}
                         </Routes>
                         <Footer />
                       </Layout>

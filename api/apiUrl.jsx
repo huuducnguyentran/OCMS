@@ -94,6 +94,8 @@ export const API = {
 
   //certificate
   GET_PENDING_CERTIFICATE: "Certificate/pending",
+  GET_ACTIVE_CERTIFICATE: "Certificate/active",
+  GET_TRAINEE_CERTIFICATE: "Certificate/trainee",
   GET_ALL_CERTIFICATE: "Certificate",
   GET_CERTIFICATE_BY_ID: "Certificate",
   CREATE_CERTIFICATE: "Certificate",
@@ -108,5 +110,5 @@ export const API = {
   GET_SPECIALTY_TREE: "Specialty/tree",
 
   // digital signature
-  SIGN_DIGITAL_SIGNATURE: "DigitalSignature/sign",
+  SIGN_DIGITAL_SIGNATURE: "PdfSign",
 };
