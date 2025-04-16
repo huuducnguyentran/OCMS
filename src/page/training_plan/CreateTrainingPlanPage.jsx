@@ -9,6 +9,7 @@ import dayjs from "dayjs";
 import { trainingPlanService } from '../../services/trainingPlanService';
 import { getTrainingPlanSchema, applyTrainingPlanValidation } from "../../../utils/validationSchemas";
 import axiosInstance from "../../../utils/axiosInstance";
+import { specialtyService } from '../../services/specialtyService';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -30,12 +31,13 @@ const CreateTrainingPlanPage = () => {
   const fetchSpecialties = async () => {
     try {
       setLoadingSpecialties(true);
-      const response = await axiosInstance.get("Specialty");
-      if (response.data.success && response.data.data) {
-        setSpecialties(response.data.data);
+      const response = await specialtyService.getAllSpecialty();
+      if (response.status === 200) {
+        const activeSpecialties = response.data.filter(specialty => specialty.status === 0);
+        setSpecialties(activeSpecialties);
       }
     } catch (error) {
-      console.error("Failed to fetch specialties:", error);
+      console.error("Error fetching specialties:", error);
       message.error("Failed to load specialties");
     } finally {
       setLoadingSpecialties(false);

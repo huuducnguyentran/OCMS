@@ -609,12 +609,12 @@ const RequestList = () => {
               cancelText="No"
               okButtonProps={{ danger: true }}
             >
-              <Button
-                type="text"
-                danger
-                icon={<DeleteOutlined />}
-                title="Delete"
-              />
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            title="Delete"
+          />
             </Popconfirm>
           )}
         </Space>
@@ -866,29 +866,29 @@ const RequestList = () => {
                         currentRequest.requestType === "CandidateImport" ||
                         currentRequest.requestType === "Candidate Import"
                       ) && (
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <ProfileOutlined className="text-indigo-500" />
-                          <span className="text-sm font-medium">
-                            {isTrainingPlanType(currentRequest.requestType)
-                              ? "Training Plan ID: "
-                              : "Entity ID: "}
-                            {
-                              // Nếu là các loại request về training plan thì hiển thị link
-                              isTrainingPlanType(currentRequest.requestType) ? (
-                                <Link
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <ProfileOutlined className="text-indigo-500" />
+                        <span className="text-sm font-medium">
+                          {isTrainingPlanType(currentRequest.requestType)
+                            ? "Training Plan ID: "
+                            : "Entity ID: "}
+                          {
+                            // Nếu là các loại request về training plan thì hiển thị link
+                            isTrainingPlanType(currentRequest.requestType) ? (
+                              <Link
                                   to={`/plan/details/${currentRequest.requestEntityId}`}
-                                  className="text-blue-600 hover:text-blue-800 hover:underline"
-                                  title="Click to view Training Plan details"
-                                >
-                                  {currentRequest.requestEntityId}
-                                </Link>
-                              ) : (
-                                currentRequest.requestEntityId
-                              )
-                            }
-                          </span>
-                        </div>
-                      )}
+                                className="text-blue-600 hover:text-blue-800 hover:underline"
+                                title="Click to view Training Plan details"
+                              >
+                                {currentRequest.requestEntityId}
+                              </Link>
+                            ) : (
+                              currentRequest.requestEntityId
+                            )
+                          }
+                        </span>
+                      </div>
+                    )}
 
                     <div className="flex items-center gap-2 text-gray-600">
                       <FileTextOutlined className="text-indigo-500" />
