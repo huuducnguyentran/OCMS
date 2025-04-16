@@ -349,3 +349,84 @@ export const CandidateDetailSchema = Yup.object({
   note: Yup.string(),
   specialtyId: Yup.string().required("Specialty ID is required"),
 });
+
+// Validation cho Schedule Page
+export const SchedulePageValidationSchema = {
+  // Validate thời gian lớp học (6:00 - 22:00)
+  validateClassTime: (time) => {
+    if (!time) return false;
+    const hours = time.getHours();
+    return hours >= 6 && hours < 22;
+  },
+
+  // Validate ngày bắt đầu không được trong quá khứ
+  validateStartDate: (date) => {
+    if (!date) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    return startDate >= today;
+  },
+
+  // Validate khoảng thời gian khóa học (1-180 ngày)
+  validateCourseDuration: (startDate, endDate) => {
+    if (!startDate || !endDate) return false;
+    const diffTime = Math.abs(endDate - startDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 1 && diffDays <= 180;
+  },
+
+  // Validate ngày kết thúc phải sau ngày bắt đầu
+  validateEndDate: (startDate, endDate) => {
+    if (!startDate || !endDate) return false;
+    return endDate > startDate;
+  },
+
+  // Validate định dạng ngày trong tuần
+  validateDaysOfWeek: (daysOfWeekString) => {
+    if (!daysOfWeekString) return [];
+    const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const days = daysOfWeekString
+      .split(",")
+      .map(day => day.trim())
+      .filter(day => validDays.includes(day));
+    return days;
+  },
+
+  // Validate thời lượng môn học (30 phút đến 5 giờ)
+  validateSubjectPeriod: (period) => {
+    if (!period) return false;
+    const minutes = period.getHours() * 60 + period.getMinutes();
+    return minutes >= 30 && minutes <= 300;
+  },
+
+  // Format date DD/MM/YYYY
+  formatDateFull: (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString;
+    }
+  },
+
+  // Format date DD/MM
+  formatDateShort: (date) => {
+    if (!date) return '';
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+  },
+
+  // Validate và format thời gian
+  formatTime: (timeString) => {
+    if (!timeString) return "";
+    if (timeString.includes(":")) {
+      const parts = timeString.split(":");
+      if (parts.length >= 2) {
+        return `${parts[0]}:${parts[1]}`;
+      }
+    }
+    return timeString;
+  }
+};

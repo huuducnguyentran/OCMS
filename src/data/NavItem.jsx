@@ -207,6 +207,22 @@ const navItems = [
     path: "/specialty",
     roles: ["Admin", "Training staff"],
   },
+  {
+    key: "17",
+    label: "Regulations",
+    icon: "FileProtectOutlined",
+    path: "/regulations",
+    roles: [
+      "Admin",
+      "Training staff",
+      "Trainee",
+      "Instructor",
+      "Reviewer",
+      "HeadMaster",
+      "HR",
+      "AOC Manager",
+    ],
+  },
 ];
 
 export default navItems;
