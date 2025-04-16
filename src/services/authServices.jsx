@@ -42,12 +42,11 @@ export const forgotPassword = async (email) => {
 
 export const resetPassword = async (token, newPassword) => {
   try {
-    const response = await axiosInstance.post(API.RESET_PASSWORD, {
-      token,
+    const response = await axiosInstance.post(`${API.RESET_PASSWORD}/${token}`, {
       newPassword,
     });
     return response.data;
   } catch (error) {
-    throw error.response?.data?.message || "Failed to send reset email.";
+    throw error.response?.data?.message || "Failed to reset password. Please try again.";
   }
 };
