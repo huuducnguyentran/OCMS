@@ -762,7 +762,7 @@ const RequestList = () => {
                   {currentRequest.requestEntityId &&
                     isTrainingPlanType(currentRequest.requestType) && (
                       <Link
-                        to={`/training-plan/${currentRequest.requestEntityId}`}
+                        to={`/plan/details/${currentRequest.requestEntityId}`}
                       >
                         <Button
                           type="primary"

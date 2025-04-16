@@ -88,7 +88,7 @@ function App() {
                           <Route path="/notifications" element={<NotificationPage />} />
 
                           {/* Course Management Routes */}
-                          <Route path="/course" element={<CoursePage />} />
+                          <Route path="/all-courses" element={<CoursePage />} />
                           <Route path="/course/create" element={<CreateCoursePage />} />
                           <Route path="/course/edit/:id" element={<EditCoursePage />} />
 
