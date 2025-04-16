@@ -103,3 +103,17 @@ export const getCertificateById = async (certificateId) => {
   );
   return response.data;
 };
+
+export const getTraineeCertificateById = async (userId) => {
+  const response = await axiosInstance.get(
+    `${API.GET_TRAINEE_CERTIFICATE}/${userId}`
+  );
+  return response.data;
+};
+
+export const signCertificate = async (certificateId) => {
+  const response = await axiosInstance.post(
+    `${API.SIGN_DIGITAL_SIGNATURE}/${certificateId}`
+  );
+  return response.data;
+};

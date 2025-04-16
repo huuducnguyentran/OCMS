@@ -1,9 +1,12 @@
 // pages/CertificateDetailPage.jsx
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Spin, Empty, Button } from "antd";
-import { getCertificateById } from "../../services/certificateService";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { Spin, Empty, Button, message } from "antd";
+import {
+  getCertificateById,
+  signCertificate,
+} from "../../services/certificateService";
+import { ArrowLeftOutlined, CheckCircleOutlined } from "@ant-design/icons";
 
 const CertificateDetailPage = () => {
   const { certificateId } = useParams();
@@ -26,6 +29,19 @@ const CertificateDetailPage = () => {
     fetchCertificate();
   }, [certificateId]);
 
+  const handleSignCertificate = async () => {
+    try {
+      await signCertificate(certificateId);
+      message.success("Certificate signed successfully!");
+      // Optional: refresh the certificate data
+      const updated = await getCertificateById(certificateId);
+      setCertificate(updated);
+    } catch (error) {
+      console.error("Signing failed:", error);
+      message.error("Failed to sign certificate.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[80vh]">
@@ -47,7 +63,7 @@ const CertificateDetailPage = () => {
       <div className="mb-8">
         <Button
           type="link"
-          onClick={() => navigate("/certificate")}
+          onClick={() => navigate(-1)}
           icon={<ArrowLeftOutlined />}
           className="flex items-center text-blue-600 hover:text-blue-800 text-lg font-medium 
                        transition-all duration-300 hover:-translate-x-1"
@@ -86,6 +102,18 @@ const CertificateDetailPage = () => {
           {new Date(certificate.issueDate).toLocaleString()}
         </p>
       </div>
+      {certificate.status === "Pending" && (
+        <div className="flex justify-end mt-8">
+          <Button
+            type="primary"
+            icon={<CheckCircleOutlined />}
+            onClick={handleSignCertificate}
+            className="text-white bg-green-600 hover:bg-green-700"
+          >
+            Sign Certificate
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
