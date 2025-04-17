@@ -1,6 +1,5 @@
-import { Form, Input, Button, DatePicker, Upload, message } from "antd";
+import { Form, Input, Button, Upload, message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
-// import dayjs from "dayjs";
 import { useParams } from "react-router-dom";
 import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
@@ -9,47 +8,29 @@ const CreateExCertificatePage = () => {
   const [form] = Form.useForm();
   const { id: candidateId } = useParams();
 
-  const normFile = (e) => {
-    if (Array.isArray(e)) return e;
-    return e?.fileList;
-  };
+  const normFile = (e) => (Array.isArray(e) ? e : e?.fileList);
 
   const handleSubmit = async (values) => {
     const formData = new FormData();
 
     formData.append("CertificateCode", values.certificateCode);
     formData.append("CertificateName", values.certificateName);
-    formData.append("CertificateProvider", values.certificateProvider || "");
-    formData.append("IssueDate", values.issueDate?.toISOString() || "");
-    formData.append(
-      "ExpirationDate",
-      values.expirationDate?.toISOString() || ""
-    );
-    formData.append("CertificateFileURL", "");
-    formData.append("CandidateId", candidateId); // from route or props
+    formData.append("IssuingOrganization", values.issuingOrganization);
+    formData.append("CandidateId", candidateId);
     formData.append(
       "CertificateImage",
       values.certificateImage?.[0]?.originFileObj
     );
-    formData.append("CertificateFileURLWithSas", "");
-    formData.append("Id", "");
 
     try {
-      await axiosInstance.post(
-        `/${API.CREATE_EXTERNAL_CERTIFICATE}/${candidateId}`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
+      await axiosInstance.post(API.CREATE_EXTERNAL_CERTIFICATE, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       message.success("Certificate uploaded successfully!");
       form.resetFields();
     } catch (error) {
-      if (error.response?.data?.errors) {
-        console.error("Backend validation errors:", error.response.data.errors);
-      } else {
-        console.error("Upload error:", error);
-      }
+      console.error("Upload error:", error);
+      message.error("Failed to upload certificate.");
     }
   };
 
@@ -74,19 +55,11 @@ const CreateExCertificatePage = () => {
         </Form.Item>
 
         <Form.Item
-          name="certificateProvider"
-          label="Certificate Provider"
+          name="issuingOrganization"
+          label="Issuing Organization"
           rules={[{ required: true }]}
         >
           <Input />
-        </Form.Item>
-
-        <Form.Item name="issueDate" label="Issue Date">
-          <DatePicker showTime format="YYYY-MM-DDTHH:mm:ss.SSS[Z]" />
-        </Form.Item>
-
-        <Form.Item name="expirationDate" label="Expiration Date">
-          <DatePicker showTime format="YYYY-MM-DDTHH:mm:ss.SSS[Z]" />
         </Form.Item>
 
         <Form.Item
