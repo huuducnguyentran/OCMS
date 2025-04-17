@@ -21,3 +21,18 @@ export const getExternalCertificatesByCandidateId = async (id) => {
     throw error;
   }
 };
+
+export const createExternalCertificate = (candidateId, formData) => {
+  const token = sessionStorage.getItem("token");
+
+  return axiosInstance.post(
+    `/${API.CREATE_EXTERNAL_CERTIFICATE}/${candidateId}`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+};

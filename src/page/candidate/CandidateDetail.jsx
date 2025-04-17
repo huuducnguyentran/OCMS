@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { Spin, Descriptions, message, Button, Input, Tag } from "antd";
+import {
+  Spin,
+  Descriptions,
+  message,
+  Button,
+  Input,
+  Tag,
+  Dropdown,
+  Menu,
+} from "antd";
 import {
   createCandidateAccount,
   getCandidateById,
@@ -11,8 +20,10 @@ import {
   CheckOutlined,
   CloseOutlined,
   EditOutlined,
+  MoreOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
-import { getExternalCertificatesByCandidateId } from "../../services/certifcationService";
+import { getExternalCertificatesByCandidateId } from "../../services/externalCertifcateService";
 import { DatePicker, Select } from "antd";
 import dayjs from "dayjs";
 import { CandidateDetailSchema } from "../../../utils/validationSchemas";
@@ -28,7 +39,7 @@ const CandidateDetailPage = () => {
   const [creatingAccount, setCreatingAccount] = useState(false);
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState("");
-  
+
   // Lấy role của người dùng từ session storage
   const userRole = sessionStorage.getItem("role");
   // Kiểm tra có phải HeadMaster không
@@ -83,7 +94,7 @@ const CandidateDetailPage = () => {
 
   const handleGoBack = () => {
     if (isFromRequest) {
-      navigate('/request');
+      navigate("/request");
     } else {
       navigate(-1);
     }
@@ -104,6 +115,20 @@ const CandidateDetailPage = () => {
       </div>
     );
   }
+
+  const handleCreateCertificate = () => {
+    navigate(`/external-certificate/create/${id}`);
+  };
+
+  const handleEdit = (cert) => {
+    console.log("Edit clicked", cert);
+    // Show modal, set form state, etc.
+  };
+
+  const handleUpdate = (cert) => {
+    console.log("Update clicked", cert);
+    // Trigger API call or open update form
+  };
 
   const handleSaveEdit = async () => {
     if (!editingField) return;
@@ -243,63 +268,95 @@ const CandidateDetailPage = () => {
           </span>
         </div>
         <div className="mt-10">
-          <h2 className="text-2xl text-gray-800 font-semibold mb-4">
+          <h2 className="text-2xl text-gray-800 font-semibold">
             External Certificates
           </h2>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleCreateCertificate}
+          >
+            Add Certificate
+          </Button>
           {certLoading ? (
             <Spin />
           ) : certificates.length === 0 ? (
             <p className="text-gray-500">No certificates found.</p>
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
-              {certificates.map((cert, index) => (
-                <div
-                  key={index}
-                  className="border rounded-xl p-4 shadow-sm bg-white hover:shadow-md transition mb-4"
-                >
-                  <p>
-                    <strong>Certificate Code:</strong> {cert.certificateCode}
-                  </p>
-                  <p>
-                    <strong>Certificate Name:</strong> {cert.certificateName}
-                  </p>
-                  <p>
-                    <strong>Provider:</strong> {cert.certificateProvider || "-"}
-                  </p>
-                  <p>
-                    <strong>Issue Date:</strong>{" "}
-                    {cert.issueDate
-                      ? new Date(cert.issueDate).toLocaleDateString()
-                      : "-"}
-                  </p>
-                  <p>
-                    <strong>Expiration Date:</strong>{" "}
-                    {cert.expirationDate
-                      ? new Date(cert.expirationDate).toLocaleDateString()
-                      : "-"}
-                  </p>
-                  {cert.certificateFileURL ? (
-                    <img
-                      src={cert.certificateFileURL}
-                      alt="Certificate"
-                      className="mt-2 w-full h-auto rounded-lg border"
-                      onError={(e) => {
-                        e.target.style.display = "none";
-                        const parent = e.target.parentNode;
-                        const errorText = document.createElement("p");
-                        errorText.className = "text-red-500 text-sm mt-2";
-                        errorText.innerText =
-                          "Certificate file not accessible or requires authentication.";
-                        parent.appendChild(errorText);
-                      }}
-                    />
-                  ) : (
-                    <p className="text-gray-500">
-                      No certificate file uploaded.
+              {certificates.map((cert, index) => {
+                const menu = (
+                  <Menu>
+                    <Menu.Item key="edit" onClick={() => handleEdit(cert)}>
+                      Edit
+                    </Menu.Item>
+                    <Menu.Item key="update" onClick={() => handleUpdate(cert)}>
+                      Update
+                    </Menu.Item>
+                  </Menu>
+                );
+
+                return (
+                  <div
+                    key={index}
+                    className="relative border rounded-xl p-4 shadow-sm bg-white hover:shadow-md transition mb-4"
+                  >
+                    {/* Dropdown icon */}
+                    <div className="absolute top-2 right-2 z-10">
+                      <Dropdown overlay={menu} trigger={["click"]}>
+                        <Button
+                          icon={<MoreOutlined />}
+                          type="text"
+                          className="text-gray-600 hover:text-black"
+                        />
+                      </Dropdown>
+                    </div>
+
+                    <p className="text-gray-600">
+                      <strong>Certificate Code:</strong> {cert.certificateCode}
                     </p>
-                  )}
-                </div>
-              ))}
+                    <p className="text-gray-600">
+                      <strong>Certificate Name:</strong> {cert.certificateName}
+                    </p>
+                    <p className="text-gray-600">
+                      <strong>Provider:</strong>{" "}
+                      {cert.certificateProvider || "-"}
+                    </p>
+                    <p className="text-gray-600">
+                      <strong>Issue Date:</strong>{" "}
+                      {cert.issueDate
+                        ? new Date(cert.issueDate).toLocaleDateString()
+                        : "-"}
+                    </p>
+                    <p className="text-gray-600">
+                      <strong>Expiration Date:</strong>{" "}
+                      {cert.expirationDate
+                        ? new Date(cert.expirationDate).toLocaleDateString()
+                        : "-"}
+                    </p>
+                    {cert.certificateFileURLWithSas ? (
+                      <img
+                        src={cert.certificateFileURLWithSas}
+                        alt="Certificate"
+                        className="mt-2 w-full h-auto rounded-lg border"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                          const parent = e.target.parentNode;
+                          const errorText = document.createElement("p");
+                          errorText.className = "text-red-500 text-sm mt-2";
+                          errorText.innerText =
+                            "Certificate file not accessible or requires authentication.";
+                          parent.appendChild(errorText);
+                        }}
+                      />
+                    ) : (
+                      <p className="text-gray-500">
+                        No certificate file uploaded.
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

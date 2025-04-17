@@ -13,7 +13,12 @@ export const API = {
   SEND_NOTI: "/notifications/send",
   CHECK_NOTI: "/api/notifications/mark-as-read/",
   VIEW_NOTI_BY_USER_ID: "/api/notifications/",
+
+  //external certificate
   GET_EXTERNAL_CERTIFICATE_BY_ID: "ExternalCertificate/candidate",
+  CREATE_EXTERNAL_CERTIFICATE: "ExternalCertificate",
+  UPDATE_EXTERNAL_CERTIFICATE: "ExternalCertificate",
+  DELETE_EXTERNAL_CERTIFICATE: "ExternalCertificate",
 
   // Request
   GET_ALL_REQUEST: "Requests",

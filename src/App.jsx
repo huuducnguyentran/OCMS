@@ -59,6 +59,7 @@ import CertificatePendingPage from "./page/certificate/CertificatePendingPage";
 import CertificateDetailPage from "./page/certificate/CertificateDetailPage";
 import CertificateActivePage from "./page/certificate/CertificateActivePage";
 import RegulationsPage from "./page/Regulations/RegulationsPage";
+import CreateExCertificatePage from "./page/candidate/CreateExCertificatePage";
 
 function App() {
   return (
@@ -142,6 +143,10 @@ function App() {
                           <Route
                             path="/candidates/:id"
                             element={<CandidateDetailPage />}
+                          />
+                          <Route
+                            path="/external-certificate/create/:id"
+                            element={<CreateExCertificatePage />}
                           />
 
                           {/*  Subjects */}
