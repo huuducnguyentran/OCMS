@@ -28,7 +28,7 @@ const CourseDetailPage = () => {
           <div className="mb-8">
             <Button
               type="link"
-              onClick={() => navigate("/course")}
+              onClick={() => navigate("/all-courses")}
               icon={<ArrowLeftOutlined />}
               className="flex items-center text-blue-600 hover:text-blue-800 text-lg font-medium 
                        transition-all duration-300 hover:-translate-x-1"

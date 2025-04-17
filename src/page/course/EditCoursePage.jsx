@@ -82,7 +82,7 @@ const EditCoursePage = () => {
       // Call the update API with the course ID
       await courseService.updateCourse(id, formattedData);
       message.success("Course updated successfully!");
-      navigate("/course", { state: { refresh: true } });
+      navigate("/all-courses", { state: { refresh: true } });
     } catch (error) {
       console.error("Failed to update course:", error);
       message.error(`Failed to update course: ${error.response?.data?.message || error.message}`);
@@ -101,7 +101,7 @@ const EditCoursePage = () => {
             <Button 
               size="large"
               icon={<ArrowLeftOutlined />} 
-              onClick={() => navigate("/course")}
+              onClick={() => navigate("/all-courses")}
               className="flex items-center text-gray-600 hover:text-gray-800 border-gray-300"
             >
               Back to Courses

@@ -54,7 +54,7 @@ const CreateCoursePage = () => {
       await courseService.createCourse(formattedData);
       message.success("Course created successfully!");
       form.resetFields();
-      navigate("/course", { state: { refresh: true } });
+      navigate("/all-courses", { state: { refresh: true } });
     } catch (error) {
       console.error("Failed to create course:", error);
       message.error(`Failed to create course: ${error.response?.data?.message || error.message}`);
@@ -73,7 +73,7 @@ const CreateCoursePage = () => {
             <Button 
               size="large"
               icon={<ArrowLeftOutlined />} 
-              onClick={() => navigate("/course")}
+              onClick={() => navigate("/all-courses")}
               className="flex items-center text-gray-600 hover:text-gray-800 border-gray-300"
             >
               Back to Courses
