@@ -1,9 +1,8 @@
-import axios from "axios";
+
 import { API } from "../../api/apiUrl";
 import axiosInstance from "../../utils/axiosInstance";
 
 // API Base URL
-const API_BASE_URL = "https://ocms-vjvm.azurewebsites.net/api";
 
 export const trainingPlanService = {
   getAllTrainingPlans: async () => {
@@ -121,7 +120,7 @@ export const trainingPlanService = {
     try {
       console.log("Creating request for plan ID:", planId);
       const requestData = {
-        planId: planId,
+        requestEntityId: planId,
         description: description,
         notes: notes || "",
         requestType: requestType,

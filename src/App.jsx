@@ -97,17 +97,10 @@ function App() {
                             element={<NotificationPage />}
                           />
 
-                          {/*  Course Management */}
+                          {/* Course Management Routes */}
                           <Route path="/all-courses" element={<CoursePage />} />
-                          <Route path="/course" element={<CoursePage />} />
-                          <Route
-                            path="/course/create"
-                            element={<CreateCoursePage />}
-                          />
-                          <Route
-                            path="/course/edit/:id"
-                            element={<EditCoursePage />}
-                          />
+                          <Route path="/course/create" element={<CreateCoursePage />} />
+                          <Route path="/course/edit/:id" element={<EditCoursePage />} />
 
                           {/*  Schedule Management */}
                           <Route path="/schedule" element={<SchedulePage />} />
@@ -211,7 +204,7 @@ function App() {
                             element={<RequestDetail />}
                           />
                           <Route
-                            path="/send-request"
+                            path="/send-complaint"
                             element={<SendRequestPage />}
                           />
 
