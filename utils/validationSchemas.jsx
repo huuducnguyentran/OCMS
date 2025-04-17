@@ -458,7 +458,7 @@ export const CreateAccountSchema = Yup.object({
 
   email: Yup.string()
     .required("Email is required")
-    .email("Invalid email format")
+    .email("Invalid email format")    
     .max(100, "Email must not exceed 100 characters")
     .trim(),
 

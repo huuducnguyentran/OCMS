@@ -11,18 +11,12 @@ import {
   Layout,
   Spin,
   Upload,
-  Steps,
-  Divider
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { 
   UploadOutlined, 
   SaveOutlined, 
   ArrowLeftOutlined,
-  UserOutlined,
-  SolutionOutlined,
-  TeamOutlined,
-  IdcardOutlined
 } from '@ant-design/icons';
 import { createUser, getAllSpecialties } from '../../services/userService';
 import dayjs from 'dayjs';
@@ -88,25 +82,61 @@ const CreateAccountPage = () => {
 
     const value = form.getFieldValue(fieldName);
 
-    if (fieldName === 'dateOfBirth' && value) {
-      const dateValue = value.toDate();
-      try {
-        await validateField('dateOfBirth', dateValue);
+    try {
+      // Xử lý đặc biệt cho dateOfBirth
+      if (fieldName === 'dateOfBirth' && value) {
+        const dateValue = value.toDate();
+        const age = calculateAge(dateValue);
+        
+        if (dateValue > new Date()) {
+          setFormErrors(prev => ({
+            ...prev,
+            dateOfBirth: "Date of birth cannot be in the future"
+          }));
+          return;
+        }
+        
+        if (age < 18) {
+          setFormErrors(prev => ({
+            ...prev,
+            dateOfBirth: "User must be at least 18 years old"
+          }));
+          return;
+        }
+        
         setFormErrors(prev => {
           const newErrors = { ...prev };
           delete newErrors.dateOfBirth;
           return newErrors;
         });
-      } catch (error) {
-        setFormErrors(prev => ({
-          ...prev,
-          dateOfBirth: error.message
-        }));
+        return;
       }
-      return;
-    }
 
-    try {
+      // Xử lý đặc biệt cho email
+      if (fieldName === 'email' && value) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          setFormErrors(prev => ({
+            ...prev,
+            email: "Invalid email format"
+          }));
+          return;
+        }
+        if (value.length > 100) {
+          setFormErrors(prev => ({
+            ...prev,
+            email: "Email must not exceed 100 characters"
+          }));
+          return;
+        }
+        setFormErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.email;
+          return newErrors;
+        });
+        return;
+      }
+
       await validateField(fieldName, value);
       setFormErrors(prev => {
         const newErrors = { ...prev };
@@ -185,6 +215,18 @@ const CreateAccountPage = () => {
     }
   };
 
+  const calculateAge = (birthDate) => {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   return (
     <Layout className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
       <Card className="max-w-7xl mx-auto shadow-lg rounded-xl border-0">
@@ -258,12 +300,40 @@ const CreateAccountPage = () => {
                   validateStatus={formErrors.dateOfBirth ? 'error' : ''}
                   help={formErrors.dateOfBirth}
                   className="mb-4"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Date of birth is required"
+                    },
+                    {
+                      validator: async (_, value) => {
+                        if (value) {
+                          const age = calculateAge(value.toDate());
+                          if (age < 18) {
+                            throw new Error("User must be at least 18 years old");
+                          }
+                          if (value.toDate() > new Date()) {
+                            throw new Error("Date of birth cannot be in the future");
+                          }
+                        }
+                      }
+                    }
+                  ]}
                 >
                   <DatePicker 
                     className="w-full rounded-lg"
                     placeholder="Select date of birth"
                     format="DD/MM/YYYY"
                     size="large"
+                    onChange={(date) => {
+                      form.setFieldsValue({ dateOfBirth: date });
+                      handleFieldChange([{ name: ['dateOfBirth'] }]);
+                    }}
+                    disabledDate={(current) => {
+                      const eighteenYearsAgo = new Date();
+                      eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+                      return current && (current > new Date() || current > eighteenYearsAgo);
+                    }}
                   />
                 </Form.Item>
               </div>
@@ -279,11 +349,29 @@ const CreateAccountPage = () => {
                   validateStatus={formErrors.email ? 'error' : ''}
                   help={formErrors.email}
                   className="mb-4"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Email is required"
+                    },
+                    {
+                      type: 'email',
+                      message: "Invalid email format"
+                    },
+                    {
+                      max: 100,
+                      message: "Email must not exceed 100 characters"
+                    }
+                  ]}
                 >
                   <Input 
                     placeholder="Enter email" 
                     className="rounded-lg"
                     size="large"
+                    onChange={(e) => {
+                      form.setFieldsValue({ email: e.target.value });
+                      handleFieldChange([{ name: ['email'] }]);
+                    }}
                   />
                 </Form.Item>
 

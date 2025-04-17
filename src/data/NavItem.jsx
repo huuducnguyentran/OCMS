@@ -66,6 +66,21 @@ const navItems = [
     icon: "TeamOutlined", // Better for multiple user accounts
     path: "/accounts",
     roles: ["Admin", "Reviewer"],
+    children: [
+      {
+        key: "6-1",
+        label: "View Accounts",
+        path: "/accounts",
+        roles: ["Admin", "Reviewer"],
+      },
+      {
+        key: "6-2",
+        label: "Create Account",
+        path: "/create-account",
+        roles: ["Admin"],
+      },
+        
+    ]
   },
   {
     key: "7",
