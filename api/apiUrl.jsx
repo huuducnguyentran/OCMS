@@ -10,6 +10,7 @@ export const API = {
   UPDATE_CANDIDATE: "Candidate",
   DELETE_CANDIDATE: "Candidate",
 
+  // Notification
   SEND_NOTI: "/notifications/send",
   CHECK_NOTI: "/api/notifications/mark-as-read/",
   VIEW_NOTI_BY_USER_ID: "/api/notifications/",
@@ -29,8 +30,10 @@ export const API = {
   GET_ALL_EDU_OFFICER_REQUEST: "Requests/edu-officer/requests",
   CREATE_REQUEST: "Requests",
 
+  // User
   GET_ALL_USER: "User",
   GET_USER_BY_ID: "User",
+  CREATE_USER: "User",
   GET_USER_PROiLE: "User/profile",
   UPDATE_USER: "User",
   UPDATE_USER_AVATAR: "/User/avatar",

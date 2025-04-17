@@ -72,3 +72,23 @@ export const updatePassword = async (id, password) => {
     throw error;
   }
 };
+
+export const createUser = async (userData) => {
+  try {
+    const response = await axiosInstance.post(`/${API.CREATE_USER}`, userData);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating user:", error?.response || error.message);
+    throw error;
+  }
+};
+
+export const getAllSpecialties = async () => {
+  try {
+    const response = await axiosInstance.get(`/${API.GET_ALL_SPECIALTY}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching specialties:", error?.response || error.message);
+    throw error;
+  }
+};

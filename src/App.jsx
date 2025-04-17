@@ -62,6 +62,7 @@ import RegulationsPage from "./page/Regulations/RegulationsPage";
 import CreateExCertificatePage from "./page/candidate/CreateExCertificatePage";
 import ImportDecisionPage from "./page/decision/ImportDecisionPage";
 import DecisionTemplateListPage from "./page/decision/DecisionTemplatePage";
+import CreateAccountPage from "./page/user/CreateAccountPage";
 
 function App() {
   return (
@@ -93,6 +94,10 @@ function App() {
                           <Route
                             path="/profile/:userId"
                             element={<PersonalProfilePage />}
+                          />
+                          <Route
+                            path="/create-account"
+                            element={<CreateAccountPage />}
                           />
                           <Route
                             path="/notifications"

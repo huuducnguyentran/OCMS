@@ -104,11 +104,14 @@ const AccountPage = () => {
     if (!value) {
       setFilteredAccounts(accounts);
     } else {
+      const searchValue = value.toLowerCase().trim();
       const filtered = accounts.filter(account => 
-        account.username.toLowerCase().includes(value.toLowerCase()) ||
-        account.fullName.toLowerCase().includes(value.toLowerCase()) ||
-        account.email.toLowerCase().includes(value.toLowerCase()) ||
-        account.phoneNumber.toLowerCase().includes(value.toLowerCase())
+        (account.userId?.toString() || '').toLowerCase().includes(searchValue) ||      // Tìm theo UserID
+        (account.username || '').toLowerCase().includes(searchValue) ||                // Tìm theo Username
+        (account.fullName || '').toLowerCase().includes(searchValue) ||               // Tìm theo Full Name
+        (account.email || '').toLowerCase().includes(searchValue) ||                  // Tìm theo Email
+        (account.phoneNumber || '').toLowerCase().includes(searchValue) ||            // Tìm theo Phone
+        (account.roleName || '').toLowerCase().includes(searchValue)                  // Tìm theo Role
       );
       setFilteredAccounts(filtered);
     }
@@ -147,13 +150,13 @@ const AccountPage = () => {
             </Title>
             <Space size="large">
               <Search
-                placeholder="Search by Username, Full Name, Email, or Phone"
+                placeholder="Search by User ID, Username, Full Name, Email, Phone, or Role"
                 allowClear
                 enterButton={<SearchOutlined />}
                 size="large"
                 onSearch={handleSearch}
                 onChange={(e) => handleSearch(e.target.value)}
-                style={{ width: 400 }}
+                style={{ width: 500 }}
                 className="rounded-lg"
               />
               <Button
@@ -173,7 +176,7 @@ const AccountPage = () => {
         {searchText && (
           <div className="mb-4">
             <Tag color="blue" className="text-sm px-3 py-1">
-              Found {filteredAccounts.length} results for "{searchText}"
+              Tìm thấy {filteredAccounts.length} kết quả cho từ khóa "{searchText}"
             </Tag>
           </div>
         )}

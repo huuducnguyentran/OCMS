@@ -374,7 +374,7 @@ const RegulationsPage = () => {
               description={
                 <Space direction="vertical">
                   <Text>• Các quy định được cập nhật theo tiêu chuẩn mới nhất của ICAO và CAAV</Text>
-                  <Text>• Áp dụng hệ thống chứng chỉ số từ ngày 01/01/2024</Text>
+                  <Text>• Áp dụng hệ thống chứng chỉ số từ ngày 01/01/2025</Text>
                   <Text>• Tăng cường các yêu cầu về an toàn bay và sức khỏe phi công</Text>
                 </Space>
               }

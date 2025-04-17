@@ -140,7 +140,7 @@ const navItems = [
         key: "11-2",
         label: "Assigned Trainee",
         path: "/assigned-trainee",
-        roles: ["Admin", "Training staff", "HeadMaster", "Trainee"],
+        roles: ["Admin", "Training staff", "Trainee"],
       },
     ],
   },
