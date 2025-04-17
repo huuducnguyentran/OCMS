@@ -16,11 +16,7 @@ import {
   Row,
   Col,
 } from "antd";
-import {
-  fetchCertificateTemplates,
-  fetchCertificateTemplatebyId,
-  deleteCertificateTemplate,
-} from "../../services/certificateService";
+
 import {
   EllipsisOutlined,
   PlusOutlined,
@@ -31,12 +27,16 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import dayjs from "dayjs";
+import {
+  deleteDecisionTemplate,
+  fetchDecisionTemplates,
+} from "../../services/decisionService";
 
 const { Title } = Typography;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
-const CertificateTemplateListPage = () => {
+const DecisionTemplateListPage = () => {
   const navigate = useNavigate();
   const [templates, setTemplates] = useState([]);
   const [filteredTemplates, setFilteredTemplates] = useState([]);
@@ -55,11 +55,11 @@ const CertificateTemplateListPage = () => {
   useEffect(() => {
     const loadTemplates = async () => {
       try {
-        const data = await fetchCertificateTemplates();
+        const data = await fetchDecisionTemplates();
         setTemplates(data);
         setFilteredTemplates(data);
       } catch (err) {
-        message.error("Failed to fetch certificate templates.");
+        message.error("Failed to fetch decision templates.");
         console.error("Error fetching templates:", err);
       }
     };
@@ -81,9 +81,8 @@ const CertificateTemplateListPage = () => {
           .includes(searchText.toLowerCase()) ||
         template.description.toLowerCase().includes(searchText.toLowerCase());
 
-      const matchesStatus = statusFilter
-        ? template.templateStatus === statusFilter
-        : true;
+      const matchesStatus =
+        statusFilter !== null ? template.templateStatus === statusFilter : true;
 
       const matchesDescType = descTypeFilter
         ? template.description
@@ -117,10 +116,10 @@ const CertificateTemplateListPage = () => {
     }
   };
 
-  const handlePreview = async (templateId) => {
+  const handlePreview = (templateUrl) => {
     setLoading(true);
-    setPreviewError(null);
     setIsModalVisible(true);
+    setPreviewError(null);
 
     loadingTimeoutRef.current = setTimeout(() => {
       if (loading) {
@@ -131,38 +130,24 @@ const CertificateTemplateListPage = () => {
       }
     }, 15000);
 
-    try {
-      const data = await fetchCertificateTemplatebyId(templateId);
-      if (data?.templateFileWithSas) {
-        setPreviewUrl(data.templateFileWithSas);
-      }
-    } catch (err) {
-      console.error("Template fetch error:", err);
-      setPreviewError(
-        `Error loading template: ${err.message || "Unknown error"}`
-      );
-    } finally {
-      if (loadingTimeoutRef.current) {
-        clearTimeout(loadingTimeoutRef.current);
-        loadingTimeoutRef.current = null;
-      }
-      setLoading(false);
+    if (templateUrl) {
+      setPreviewUrl(templateUrl);
+    } else {
+      setPreviewError("Invalid template preview URL.");
+    }
+
+    setLoading(false);
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
     }
   };
 
   const columns = [
     {
       title: "Template ID",
-      dataIndex: "certificateTemplateId",
-      key: "certificateTemplateId",
-      render: (id) => (
-        <Button
-          type="link"
-          onClick={() => navigate(`/certificate-template/${id}`)}
-        >
-          {id}
-        </Button>
-      ),
+      dataIndex: "decisionTemplateId",
+      key: "decisionTemplateId",
     },
     {
       title: "Template Name",
@@ -178,6 +163,7 @@ const CertificateTemplateListPage = () => {
       title: "Status",
       dataIndex: "templateStatus",
       key: "templateStatus",
+      render: (status) => (status === 1 ? "Active" : "Inactive"),
     },
     {
       title: "Created At",
@@ -191,7 +177,7 @@ const CertificateTemplateListPage = () => {
       render: (_, record) => (
         <Button
           type="link"
-          onClick={() => handlePreview(record.certificateTemplateId)}
+          onClick={() => handlePreview(record.templateContent)}
         >
           View
         </Button>
@@ -207,7 +193,7 @@ const CertificateTemplateListPage = () => {
               key="edit"
               onClick={() =>
                 navigate(
-                  `/certificate-template/update/${record.certificateTemplateId}`
+                  `/decision-template/update/${record.decisionTemplateId}`
                 )
               }
             >
@@ -218,11 +204,9 @@ const CertificateTemplateListPage = () => {
                 title="Are you sure you want to delete this template?"
                 onConfirm={async () => {
                   try {
-                    await deleteCertificateTemplate(
-                      record.certificateTemplateId
-                    );
+                    await deleteDecisionTemplate(record.decisionTemplateId); // Rename to deleteDecisionTemplate
                     message.success("Template deleted successfully.");
-                    const data = await fetchCertificateTemplates();
+                    const data = await fetchDecisionTemplates();
                     setTemplates(data);
                   } catch (err) {
                     message.error("Failed to delete template.");
@@ -252,12 +236,12 @@ const CertificateTemplateListPage = () => {
       <div className="max-w-7xl mx-auto">
         <button
           className="fixed bottom-6 right-6 z-50 bg-blue-500 hover:bg-blue-600 text-white border-none shadow-lg animate__animated animate__bounceIn"
-          onClick={() => navigate("/certificate-import")}
+          onClick={() => navigate("/decision-template/import")}
         >
           <PlusOutlined className="text-xl" />
         </button>
 
-        <Title level={3}>Certificate Templates</Title>
+        <Title level={3}>Decision Templates</Title>
 
         {/* Filters */}
         <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
@@ -280,8 +264,8 @@ const CertificateTemplateListPage = () => {
                 onChange={setStatusFilter}
                 style={{ width: "100%" }}
               >
-                <Option value="Active">Active</Option>
-                <Option value="Inactive">Inactive</Option>
+                <Option value={1}>Active</Option>
+                <Option value={0}>Inactive</Option>
               </Select>
             </Col>
             <Col xs={24} md={6}>
@@ -312,7 +296,7 @@ const CertificateTemplateListPage = () => {
         <Table
           columns={columns}
           dataSource={filteredTemplates}
-          rowKey="certificateTemplateId"
+          rowKey="decisionTemplateId"
           pagination={{ pageSize: 5 }}
           bordered
         />
@@ -320,7 +304,7 @@ const CertificateTemplateListPage = () => {
 
       {/* Preview Modal */}
       <Modal
-        title="Certificate Template Preview"
+        title="Decision Template Preview"
         open={isModalVisible}
         onCancel={closeModal}
         footer={[
@@ -369,4 +353,4 @@ const CertificateTemplateListPage = () => {
   );
 };
 
-export default CertificateTemplateListPage;
+export default DecisionTemplateListPage;

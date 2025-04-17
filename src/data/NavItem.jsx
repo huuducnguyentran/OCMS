@@ -223,6 +223,13 @@ const navItems = [
       "AOC Manager",
     ],
   },
+  {
+    key: "18",
+    label: "Decision Template",
+    icon: "FileProtectOutlined",
+    path: "/decision-template",
+    roles: ["Admin", "HR", "AOC Manager"],
+  },
 ];
 
 export default navItems;

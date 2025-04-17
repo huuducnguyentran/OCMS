@@ -42,7 +42,7 @@ export const fetchCertificateTemplates = async () => {
 export const fetchCertificateTemplatebyId = async (id) => {
   try {
     const response = await axiosInstance.get(
-      `/${API.GET_CERTIFICATE_TEMPLATE_BY_ID}/${id}/`,
+      `/${API.GET_CERTIFICATE_TEMPLATE_BY_ID}/${id}`,
       {
         headers: {
           Accept: "text/plain",

@@ -60,6 +60,8 @@ import CertificateDetailPage from "./page/certificate/CertificateDetailPage";
 import CertificateActivePage from "./page/certificate/CertificateActivePage";
 import RegulationsPage from "./page/Regulations/RegulationsPage";
 import CreateExCertificatePage from "./page/candidate/CreateExCertificatePage";
+import ImportDecisionPage from "./page/decision/ImportDecisionPage";
+import DecisionTemplateListPage from "./page/decision/DecisionTemplatePage";
 
 function App() {
   return (
@@ -99,8 +101,14 @@ function App() {
 
                           {/* Course Management Routes */}
                           <Route path="/all-courses" element={<CoursePage />} />
-                          <Route path="/course/create" element={<CreateCoursePage />} />
-                          <Route path="/course/edit/:id" element={<EditCoursePage />} />
+                          <Route
+                            path="/course/create"
+                            element={<CreateCoursePage />}
+                          />
+                          <Route
+                            path="/course/edit/:id"
+                            element={<EditCoursePage />}
+                          />
 
                           {/*  Schedule Management */}
                           <Route path="/schedule" element={<SchedulePage />} />
@@ -240,6 +248,16 @@ function App() {
                           <Route
                             path="/certificate-template/:templateId"
                             element={<CertificateTemplateDetailPage />}
+                          />
+
+                          {/*  Decision */}
+                          <Route
+                            path="/decision-template/import"
+                            element={<ImportDecisionPage />}
+                          />
+                          <Route
+                            path="/decision-template"
+                            element={<DecisionTemplateListPage />}
                           />
 
                           {/*  Specialty */}
