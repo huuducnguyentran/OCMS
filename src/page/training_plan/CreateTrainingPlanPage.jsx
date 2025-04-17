@@ -7,7 +7,7 @@ import { ArrowLeftOutlined, SaveOutlined, ReloadOutlined } from "@ant-design/ico
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { trainingPlanService } from '../../services/trainingPlanService';
-import { getTrainingPlanSchema, applyTrainingPlanValidation } from "../../../utils/validationSchemas";
+import { applyTrainingPlanValidation } from "../../../utils/validationSchemas";
 import axiosInstance from "../../../utils/axiosInstance";
 
 const { TextArea } = Input;
