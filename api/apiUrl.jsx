@@ -10,6 +10,7 @@ export const API = {
   UPDATE_CANDIDATE: "Candidate",
   DELETE_CANDIDATE: "Candidate",
 
+  // Notification
   SEND_NOTI: "/notifications/send",
   CHECK_NOTI: "/api/notifications/mark-as-read/",
   VIEW_NOTI_BY_USER_ID: "/api/notifications/",
@@ -24,8 +25,10 @@ export const API = {
   GET_ALL_EDU_OFFICER_REQUEST: "Requests/edu-officer/requests",
   CREATE_REQUEST: "Requests",
 
+  // User
   GET_ALL_USER: "User",
   GET_USER_BY_ID: "User",
+  CREATE_USER: "User",
   GET_USER_PROiLE: "User/profile",
   UPDATE_USER: "User",
   UPDATE_USER_AVATAR: "/User/avatar",
@@ -92,17 +95,23 @@ export const API = {
   DELETE_CERTIFICATE_TEMPLATE: "CertificateTemplate",
   UPDATE_CERTIFICATE_TEMPLATE: "CertificateTemplate",
 
-
+  //certificate
+  GET_PENDING_CERTIFICATE: "Certificate/pending",
+  GET_ACTIVE_CERTIFICATE: "Certificate/active",
+  GET_TRAINEE_CERTIFICATE: "Certificate/trainee",
+  GET_ALL_CERTIFICATE: "Certificate",
+  GET_CERTIFICATE_BY_ID: "Certificate",
+  CREATE_CERTIFICATE: "Certificate",
+  UPDATE_CERTIFICATE: "Certificate",
 
   // Specialty APIs
   GET_ALL_SPECIALTY: "Specialty",
   GET_SPECIALTY_BY_ID: "Specialty",
-  CREATE_SPECIALTY: "Specialty", 
+  CREATE_SPECIALTY: "Specialty",
   UPDATE_SPECIALTY: "Specialty",
   DELETE_SPECIALTY: "Specialty",
   GET_SPECIALTY_TREE: "Specialty/tree",
 
   // digital signature
-  SIGN_DIGITAL_SIGNATURE: "DigitalSignature/sign",
-
+  SIGN_DIGITAL_SIGNATURE: "PdfSign",
 };

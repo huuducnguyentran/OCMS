@@ -94,11 +94,16 @@ const PersonalProfilePage = () => {
       // Re-fetch updated user data
       const userData = await getUserProfile();
 
-      // Update avatar in form and UI
+      const updatedAvatar = userData.avatarUrlWithSas || "";
+
+      // Update local state
       setFormData((prev) => ({
         ...prev,
-        avatar: userData.avatarUrlWithSas || "", // <-- updated from server
+        avatar: updatedAvatar,
       }));
+
+      // ✅ Update global avatar
+      setAvatar(updatedAvatar);
     } catch (error) {
       console.error("Upload failed:", error);
       message.error("Avatar upload failed.");

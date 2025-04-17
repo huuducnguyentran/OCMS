@@ -162,14 +162,19 @@ const ViewGradePage = () => {
       sorter: (a, b) => a.totalScore - b.totalScore,
       sortOrder:
         sortedInfo.columnKey === "totalScore" ? sortedInfo.order : null,
-      render: (score) => (
-        <Tag
-          color={score >= 5 ? "success" : "error"}
-          className="w-16 text-center font-semibold"
-        >
-          {score}
-        </Tag>
-      ),
+      render: (score) => {
+        const roundedScore = Number(score).toFixed(2);
+        const formattedScore = parseFloat(roundedScore);
+        
+        return (
+          <Tag
+            color={score >= 5 ? "success" : "error"}
+            className="w-16 text-center font-semibold"
+          >
+            {formattedScore}
+          </Tag>
+        );
+      },
     },
     {
       title: "Status",

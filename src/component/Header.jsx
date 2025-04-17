@@ -4,73 +4,56 @@ import { Link, useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import { useAvatar } from "../context/AvatarContext";
 import { useEffect, useState } from "react";
-import { getUserById } from "../services/userService";
+import { getUserProfile } from "../services/userService";
 import { BellOutlined, UserOutlined } from "@ant-design/icons";
 import { notificationService } from "../services/notificationService";
 
 const Header = () => {
   const navigate = useNavigate();
-  const { avatar } = useAvatar();
-  const [userID, setUserID] = useState("");
+  const { avatar, setAvatar } = useAvatar();
   const [userData, setUserData] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    const storedUserID = sessionStorage.getItem("userID");
+    getUserProfile()
+      .then((data) => {
+        setUserData(data);
+        if (!avatar && data?.avatarUrlWithSas) {
+          setAvatar(data.avatarUrlWithSas);
+        }
+        fetchUnreadCount(data.userId); // Use userId directly from the profile
+      })
+      .catch(console.error);
+  }, [avatar, setAvatar]);
 
-    if (storedUserID) {
-      setUserID(storedUserID);
-      getUserById(storedUserID)
-        .then((data) => setUserData(data))
-        .catch(console.error);
-
-      // Fetch unread notifications count
-      fetchUnreadCount(storedUserID);
-    }
-  }, []);
-
-  // Thêm interval để cập nhật số lượng thông báo mỗi 30 giây
   useEffect(() => {
     const intervalId = setInterval(() => {
-      const storedUserID = sessionStorage.getItem("userID");
-      if (storedUserID) {
-        fetchUnreadCount(storedUserID);
+      if (userData?.userId) {
+        fetchUnreadCount(userData.userId);
       }
     }, 30000);
-
-    // Dọn dẹp interval khi component unmount
     return () => clearInterval(intervalId);
-  }, []);
+  }, [userData]);
 
-  // Thêm event listener để lắng nghe sự kiện làm mới thông báo
   useEffect(() => {
     const handleRefreshNotifications = () => {
-      const storedUserID = sessionStorage.getItem("userID");
-      if (storedUserID) {
-        fetchUnreadCount(storedUserID);
+      if (userData?.userId) {
+        fetchUnreadCount(userData.userId);
       }
     };
-
     window.addEventListener("refreshNotifications", handleRefreshNotifications);
-
     return () => {
       window.removeEventListener(
         "refreshNotifications",
         handleRefreshNotifications
       );
     };
-  }, []);
+  }, [userData]);
 
   const fetchUnreadCount = async (userId) => {
     try {
       const result = await notificationService.getUnreadCount(userId);
-      console.log("Unread count response:", result);
-
-      if (result && result.unreadCount !== undefined) {
-        setUnreadCount(result.unreadCount);
-      } else {
-        setUnreadCount(0);
-      }
+      setUnreadCount(result?.unreadCount ?? 0);
     } catch (error) {
       console.error("Error fetching unread notifications:", error);
       setUnreadCount(0);
@@ -82,7 +65,6 @@ const Header = () => {
   return (
     <Layout.Header className="bg-white shadow-md px-6 py-4 flex items-center justify-between w-full">
       <SearchBar />
-
       <div className="flex items-center gap-4 ml-4">
         {userData && (
           <span className="text-white font-medium text-sm">
@@ -91,15 +73,20 @@ const Header = () => {
         )}
         {isLoggedIn ? (
           <>
-            {/* Profile redirect */}
             <div
-              onClick={() => navigate(`/profile/${userID}`)}
+              onClick={() => navigate(`/profile/${userData?.userId}`)}
               className="flex items-center gap-2 cursor-pointer"
             >
               <Avatar
-                src={avatar || "https://via.placeholder.com/40"}
+                src={
+                  avatar ||
+                  userData?.avatarUrlWithSas ||
+                  "https://via.placeholder.com/40"
+                }
                 size="large"
-                icon={!avatar && <UserOutlined />}
+                icon={
+                  !avatar && !userData?.avatarUrlWithSas && <UserOutlined />
+                }
               />
             </div>
           </>

@@ -66,6 +66,21 @@ const navItems = [
     icon: "TeamOutlined", // Better for multiple user accounts
     path: "/accounts",
     roles: ["Admin", "Reviewer"],
+    children: [
+         {
+        key: "6-1",
+        label: "View Accounts",
+        path: "/accounts",
+        roles: ["Admin", "Reviewer"],
+      },
+      {
+        key: "6-2",
+        label: "Create Account",
+        path: "/create-account",
+        roles: ["Admin"],
+      },
+   
+    ],
   },
   {
     key: "7",
@@ -118,9 +133,9 @@ const navItems = [
   },
   {
     key: "10",
-    label: "Send Request",
+    label: "Send Complaint",
     icon: "FileAddOutlined",
-    path: "/send-request",
+    path: "/send-complaint",
     roles: ["Trainee", "Training staff", "HR", "AOC Manager"],
   },
   {
@@ -128,7 +143,7 @@ const navItems = [
     label: "Assign Trainee",
     icon: "DeploymentUnitOutlined",
     path: "/assign-trainee",
-    roles: ["Admin", "Training staff", "HeadMaster", "Trainee"],
+    roles: ["Admin", "Training staff", "HeadMaster"],
     children: [
       {
         key: "11-1",
@@ -140,7 +155,7 @@ const navItems = [
         key: "11-2",
         label: "Assigned Trainee",
         path: "/assigned-trainee",
-        roles: ["Admin", "Training staff", "HeadMaster", "Trainee"],
+        roles: ["Admin", "Training staff", "Trainee"],
       },
     ],
   },
@@ -177,23 +192,53 @@ const navItems = [
     label: "Certificate",
     icon: "FileProtectOutlined",
     path: "/certificate",
+    roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+    children: [
+      {
+        key: "14-1",
+        label: "Certificate Pending",
+        path: "/certificate-pending",
+        roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+      },
+      {
+        key: "14-2",
+        label: "Certificate Active",
+        path: "/certificate-active",
+        roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+      },
+    ],
+  },
+  {
+    key: "15",
+    label: "Certificate Template",
+    icon: "FileProtectOutlined",
+    path: "/certificate-template",
     roles: ["Admin", "HR", "AOC Manager"],
   },
-  
-  { 
+  {
     key: "16",
     label: "Specialty",
     icon: "ImportOutlined",
     path: "/specialty",
-    roles: ["Admin","Training staff"],
+    roles: ["Admin", "Training staff"],
   },
   {
     key: "17",
     label: "Regulations",
     icon: "FileProtectOutlined",
     path: "/regulations",
-    roles: ["Admin", "Training staff","Trainee","Instructor","Reviewer","HeadMaster","HR","AOC Manager"],
+    roles: [
+      "Admin",
+      "Training staff",
+      "Trainee",
+      "Instructor",
+      "Reviewer",
+      "HeadMaster",
+      "HR",
+      "AOC Manager",
+    ],
   },
+
 ];
 
 export default navItems;

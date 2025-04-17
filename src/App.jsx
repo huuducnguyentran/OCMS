@@ -55,7 +55,11 @@ import SpecialtyPage from "./page/specialty/SpecialtyPage";
 import EditSpecialtyPage from "./page/specialty/EditSpecialtyPage";
 import CreateSpecialtyPage from "./page/specialty/CreateSpecialtyPage";
 import SpecialtyTreePage from "./page/specialty/SpecialtyTreePage";
+import CertificatePendingPage from "./page/certificate/CertificatePendingPage";
+import CertificateDetailPage from "./page/certificate/CertificateDetailPage";
+import CertificateActivePage from "./page/certificate/CertificateActivePage";
 import RegulationsPage from "./page/Regulations/RegulationsPage";
+import CreateAccountPage from "./page/user/CreateAccountPage";
 
 function App() {
   return (
@@ -64,13 +68,13 @@ function App() {
       <AuthProvider>
         <AvatarProvider>
           <Routes>
-            {/* Public Routes */}
+            {/* 🚪 Public Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/" element={<Navigate to="/login" replace />} />
 
-            {/* Protected Routes */}
+            {/*  Protected Routes */}
             <Route
               path="/*"
               element={
@@ -81,68 +85,198 @@ function App() {
                       <Layout className="flex flex-col w-full">
                         <Header />
                         <Routes>
-                          {/* Dashboard & Profile Routes */}
+                          {/*  Dashboard & User Profile */}
                           <Route path="/home" element={<HomePage />} />
                           <Route path="/accounts" element={<AccountPage />} />
-                          <Route path="/profile/:userId" element={<PersonalProfilePage />} />
-                          <Route path="/notifications" element={<NotificationPage />} />
+                          <Route
+                            path="/profile/:userId"
+                            element={<PersonalProfilePage />}
+                          />
+                          <Route
+                            path="/create-account"
+                            element={<CreateAccountPage />}
+                          />
+                          <Route
+                            path="/notifications"
+                            element={<NotificationPage />}
+                          />
 
                           {/* Course Management Routes */}
                           <Route path="/all-courses" element={<CoursePage />} />
                           <Route path="/course/create" element={<CreateCoursePage />} />
                           <Route path="/course/edit/:id" element={<EditCoursePage />} />
 
-                          {/* Schedule Management Routes */}
+                          {/*  Schedule Management */}
                           <Route path="/schedule" element={<SchedulePage />} />
-                          <Route path="/schedule/create" element={<CreateSchedulePage />} />
+                          <Route
+                            path="/schedule/create"
+                            element={<CreateSchedulePage />}
+                          />
 
-                          {/* Training Management Routes */}
+                          {/*  Training Plans */}
                           <Route path="/plan" element={<PlanPage />} />
-                          <Route path="/plan/create" element={<CreateTrainingPlanPage />} />
-                          <Route path="/plan/edit/:planId" element={<EditPlanPage />} />
-                          <Route path="/plan/details/:planId" element={<PlanDetailPage />} />
-                          <Route path="/candidates-import" element={<ImportCandidate />} />
-                          <Route path="/candidates-view" element={<CandidatePage />} />
-                          <Route path="/candidates/:id" element={<CandidateDetailPage />} />
+                          <Route
+                            path="/plan/create"
+                            element={<CreateTrainingPlanPage />}
+                          />
+                          <Route
+                            path="/plan/edit/:planId"
+                            element={<EditPlanPage />}
+                          />
+                          <Route
+                            path="/plan/details/:planId"
+                            element={<PlanDetailPage />}
+                          />
 
-                          {/* Subject Management Routes */}
+                          {/*  Candidates */}
+                          <Route
+                            path="/candidates-import"
+                            element={<ImportCandidate />}
+                          />
+                          <Route
+                            path="/candidates-view"
+                            element={<CandidatePage />}
+                          />
+                          <Route
+                            path="/candidates/:id"
+                            element={<CandidateDetailPage />}
+                          />
+
+                          {/*  Subjects */}
                           <Route path="/subject" element={<SubjectPage />} />
-                          <Route path="/subject-create" element={<CreateSubjectPage />} />
-                          <Route path="/subject/:subjectId" element={<SubjectDetailPage />} />
-                          <Route path="/subject-edit/:subjectId" element={<UpdateSubjectPage />} />
+                          <Route
+                            path="/subject-create"
+                            element={<CreateSubjectPage />}
+                          />
+                          <Route
+                            path="/subject/:subjectId"
+                            element={<SubjectDetailPage />}
+                          />
+                          <Route
+                            path="/subject-edit/:subjectId"
+                            element={<UpdateSubjectPage />}
+                          />
 
-                          {/* Trainee Management Routes */}
-                          <Route path="/import-assign-trainee" element={<AssignTraineePage />} />
-                          <Route path="/assigned-trainee" element={<AssignedTraineePage />} />
-                          <Route path="/assigned-trainee/:id" element={<AssignedTraineeDetailPage />} />
-                          <Route path="/assigned-trainee-courses/:id" element={<AssignedTraineeCoursePage />} />
+                          {/*  Trainees */}
+                          <Route
+                            path="/import-assign-trainee"
+                            element={<AssignTraineePage />}
+                          />
+                          <Route
+                            path="/assigned-trainee"
+                            element={<AssignedTraineePage />}
+                          />
+                          <Route
+                            path="/assigned-trainee/:id"
+                            element={<AssignedTraineeDetailPage />}
+                          />
+                          <Route
+                            path="/assigned-trainee-courses/:id"
+                            element={<AssignedTraineeCoursePage />}
+                          />
 
-                          {/* Results & Accomplishments Routes */}
-                          <Route path="/accomplishments" element={<AccomplishmentsPage />} />
-                          <Route path="/accomplishment/:id" element={<AccomplishmentDetail />} />
+                          {/*  Accomplishments & Grades */}
+                          <Route
+                            path="/accomplishments"
+                            element={<AccomplishmentsPage />}
+                          />
+                          <Route
+                            path="/accomplishment/:id"
+                            element={<AccomplishmentDetail />}
+                          />
                           <Route path="/grade" element={<GradeImportPage />} />
-                          <Route path="/grade-view" element={<ViewGradePage />} />
-                          <Route path="/grade-update/:id" element={<UpdateGradePage />} />
+                          <Route
+                            path="/grade-view"
+                            element={<ViewGradePage />}
+                          />
+                          <Route
+                            path="/grade-update/:id"
+                            element={<UpdateGradePage />}
+                          />
 
-                          {/* Request Management Routes */}
-                          <Route path="/request" element={<RequestListPage />} />
-                          <Route path="/requests/:id" element={<RequestDetail />} />
-                          <Route path="/send-request" element={<SendRequestPage />} />
+                          {/*  Requests */}
+                          <Route
+                            path="/request"
+                            element={<RequestListPage />}
+                          />
+                          <Route
+                            path="/requests/:id"
+                            element={<RequestDetail />}
+                          />
+                          <Route
+                            path="/send-complaint"
+                            element={<SendRequestPage />}
+                          />
 
-                          {/* Certificate Management Routes */}
-                          <Route path="/certificate-import" element={<ImportCertificatePage />} />
-                          <Route path="/certificate" element={<CertificateTemplateListPage />} />
-                          <Route path="/certificate-template/update/:templateId" element={<UpdateCertificateTemplatePage />} />
-                          <Route path="/certificate-template/:templateId" element={<CertificateTemplateDetailPage />} />
+                          {/*  Certificates */}
+                          <Route
+                            path="/certificate-import"
+                            element={<ImportCertificatePage />}
+                          />
+                          <Route
+                            path="/certificate"
+                            element={<CertificateTemplateListPage />}
+                          />
+                          <Route
+                            path="/certificate-pending"
+                            element={<CertificatePendingPage />}
+                          />
+                          <Route
+                            path="/certificate-active"
+                            element={<CertificateActivePage />}
+                          />
+                          <Route
+                            path="/certificate/:certificateId"
+                            element={<CertificateDetailPage />}
+                          />
+                          <Route
+                            path="/certificate-template"
+                            element={<CertificateTemplateListPage />}
+                          />
+                          <Route
+                            path="/certificate-template/update/:templateId"
+                            element={<UpdateCertificateTemplatePage />}
+                          />
+                          <Route
+                            path="/certificate-template/:templateId"
+                            element={<CertificateTemplateDetailPage />}
+                          />
 
-                          {/* Specialty Management Routes */}
-                          <Route path="/specialty" element={<SpecialtyPage />} />
-                          <Route path="/specialty/edit/:id" element={<EditSpecialtyPage />} />
-                          <Route path="/specialty/create" element={<CreateSpecialtyPage />} />
-                          <Route path="/specialty/tree" element={<SpecialtyTreePage />} />
+                          {/*  Specialty */}
+                          <Route
+                            path="/specialty"
+                            element={<SpecialtyPage />}
+                          />
+                          <Route
+                            path="/specialty/edit/:id"
+                            element={<EditSpecialtyPage />}
+                          />
+                          <Route
+                            path="/specialty/create"
+                            element={<CreateSpecialtyPage />}
+                          />
+                          <Route
+                            path="/specialty/tree"
+                            element={<SpecialtyTreePage />}
+                          />
 
-                          {/* Regulations Routes */}
-                          <Route path="/regulations" element={<RegulationsPage />} />
+                          {/*  Regulations */}
+                          <Route
+                            path="/regulations"
+                            element={<RegulationsPage />}
+                          />
+                          {/* <Route
+                            path="/import-assign-instructor"
+                            element={<AssignInstructorPage />}
+                          /> */}
+                          {/* <Route
+                            path="/plan/:planId"
+                            element={<TrainingPlanDetailPage />}
+                          /> */}
+                          {/* <Route
+                            path="/course/:id"
+                            element={<CourseDetailPage />}
+                          /> */}
                         </Routes>
                         <Footer />
                       </Layout>
