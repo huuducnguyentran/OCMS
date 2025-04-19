@@ -200,6 +200,7 @@ const CertificateTemplateListPage = () => {
     {
       title: "Actions",
       key: "actions",
+      width: 100,
       render: (_, record) => {
         const menu = (
           <Menu>
@@ -315,6 +316,7 @@ const CertificateTemplateListPage = () => {
           rowKey="certificateTemplateId"
           pagination={{ pageSize: 5 }}
           bordered
+          scroll={{ x: "max-content", y: 400 }}
         />
       </div>
 

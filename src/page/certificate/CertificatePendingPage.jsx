@@ -4,7 +4,6 @@ import {
   Spin,
   Empty,
   Input,
-  Select,
   DatePicker,
   Row,
   Col,
@@ -21,14 +20,12 @@ import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { SearchOutlined } from "@ant-design/icons";
 
-const { Option } = Select;
 const { Title } = Typography;
 
 const CertificatePendingPage = () => {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchCode, setSearchCode] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
   const [filterDate, setFilterDate] = useState(null);
   const [selectedCertificates, setSelectedCertificates] = useState([]);
   const navigate = useNavigate();
@@ -83,16 +80,13 @@ const CertificatePendingPage = () => {
       const matchCode = cert.certificateCode
         .toLowerCase()
         .includes(searchCode.toLowerCase());
-      const matchStatus = filterStatus
-        ? cert.status.toLowerCase() === filterStatus.toLowerCase()
-        : true;
       const matchDate = filterDate
         ? dayjs(cert.issueDate).isSame(filterDate, "day")
         : true;
 
-      return matchCode && matchStatus && matchDate;
+      return matchCode && matchDate;
     });
-  }, [certificates, searchCode, filterStatus, filterDate]);
+  }, [certificates, searchCode, filterDate]);
 
   if (loading) {
     return (
@@ -118,19 +112,6 @@ const CertificatePendingPage = () => {
               size="large"
               allowClear
             />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Select
-              placeholder="Filter by Status"
-              value={filterStatus || undefined}
-              onChange={(value) => setFilterStatus(value)}
-              allowClear
-              style={{ width: "100%" }}
-            >
-              <Option value="Pending">Pending</Option>
-              <Option value="Approved">Approved</Option>
-              <Option value="Rejected">Rejected</Option>
-            </Select>
           </Col>
           <Col xs={24} sm={12} md={8}>
             <DatePicker

@@ -84,7 +84,9 @@ const DecisionTemplateListPage = () => {
         template.description.toLowerCase().includes(searchText.toLowerCase());
 
       const matchesStatus =
-        statusFilter !== null ? template.templateStatus === statusFilter : true;
+        statusFilter !== undefined && statusFilter !== null
+          ? template.templateStatus === statusFilter
+          : true;
 
       const matchesDescType = descTypeFilter
         ? template.description
@@ -211,6 +213,7 @@ const DecisionTemplateListPage = () => {
     {
       title: "Actions",
       key: "actions",
+      width: 100,
       render: (_, record) => {
         const menu = (
           <Menu>
@@ -324,6 +327,7 @@ const DecisionTemplateListPage = () => {
           rowKey="decisionTemplateId"
           pagination={{ pageSize: 5 }}
           bordered
+          scroll={{ x: "max-content", y: 400 }}
         />
       </div>
 

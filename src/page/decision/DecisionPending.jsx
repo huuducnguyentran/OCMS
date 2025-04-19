@@ -4,7 +4,6 @@ import {
   Spin,
   Empty,
   Input,
-  Select,
   DatePicker,
   Row,
   Col,
@@ -15,14 +14,12 @@ import dayjs from "dayjs";
 import { SearchOutlined } from "@ant-design/icons";
 import { getPendingDecision } from "../../services/decisionService";
 
-const { Option } = Select;
 const { Title } = Typography;
 
 const DecisionPendingPage = () => {
   const [decisions, setDecisions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchCode, setSearchCode] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
   const [filterDate, setFilterDate] = useState(null);
   const navigate = useNavigate();
 
@@ -46,17 +43,13 @@ const DecisionPendingPage = () => {
       const matchCode = (decision.decisionCode || "")
         .toLowerCase()
         .includes(searchCode.toLowerCase());
-
-      const matchStatus = filterStatus
-        ? decision.status.toString() === filterStatus
-        : true;
       const matchDate = filterDate
         ? dayjs(decision.issueDate).isSame(filterDate, "day")
         : true;
 
-      return matchCode && matchStatus && matchDate;
+      return matchCode && matchDate;
     });
-  }, [decisions, searchCode, filterStatus, filterDate]);
+  }, [decisions, searchCode, filterDate]);
 
   if (loading) {
     return (
@@ -82,18 +75,6 @@ const DecisionPendingPage = () => {
               size="large"
               allowClear
             />
-          </Col>
-          <Col xs={24} sm={12} md={8}>
-            <Select
-              placeholder="Filter by Status"
-              value={filterStatus || undefined}
-              onChange={(value) => setFilterStatus(value)}
-              allowClear
-              style={{ width: "100%" }}
-            >
-              <Option value="1">Active</Option>
-              <Option value="0">Inactive</Option>
-            </Select>
           </Col>
           <Col xs={24} sm={12} md={8}>
             <DatePicker
