@@ -79,8 +79,7 @@ const navItems = [
         path: "/create-account",
         roles: ["Admin"],
       },
-        
-    ]
+    ],
   },
   {
     key: "7",
@@ -192,19 +191,19 @@ const navItems = [
     label: "Certificate",
     icon: "FileProtectOutlined",
     path: "/certificate",
-    roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+    roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
     children: [
       {
         key: "14-1",
         label: "Certificate Pending",
         path: "/certificate-pending",
-        roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+        roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
       },
       {
         key: "14-2",
         label: "Certificate Active",
         path: "/certificate-active",
-        roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+        roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
       },
     ],
   },
@@ -244,6 +243,27 @@ const navItems = [
     icon: "FileProtectOutlined",
     path: "/decision-template",
     roles: ["Admin", "HR", "AOC Manager"],
+  },
+  {
+    key: "19",
+    label: "Decision",
+    icon: "FileProtectOutlined",
+    path: "/decision",
+    roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
+    children: [
+      {
+        key: "19-1",
+        label: "Decision Pending",
+        path: "/decision-pending",
+        roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
+      },
+      {
+        key: "19-2",
+        label: "Decision Active",
+        path: "/decision-active",
+        roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
+      },
+    ],
   },
 ];
 

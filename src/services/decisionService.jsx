@@ -68,7 +68,7 @@ export const updateDecisionTemplate = async (templateId, formData) => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error updating certificate templates:", error);
+    console.error("Error updating decision templates:", error);
     throw error;
   }
 };
@@ -80,7 +80,24 @@ export const deleteDecisionTemplate = async (templateId) => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error updating certificate templates:", error);
+    console.error("Error updating decision templates:", error);
     throw error;
   }
+};
+
+export const getActiveDecision = async () => {
+  const response = await axiosInstance.get(`${API.GET_ALL_ACTIVE_DECISION}`);
+  return response.data;
+};
+
+export const getPendingDecision = async () => {
+  const response = await axiosInstance.get(`${API.GET_ALL_PENDING_DECISION}`);
+  return response.data;
+};
+
+export const signDecision = async (decisionId) => {
+  const response = await axiosInstance.post(
+    `${API.SIGN_DIGITAL_SIGNATURE}/${decisionId}`
+  );
+  return response.data;
 };

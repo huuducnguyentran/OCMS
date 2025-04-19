@@ -65,6 +65,8 @@ import DecisionTemplateListPage from "./page/decision/DecisionTemplatePage";
 import CreateAccountPage from "./page/user/CreateAccountPage";
 import DecisionTemplateDetailPage from "./page/decision/DecisionTemplateDetailPage";
 import UpdateDecisionTemplatePage from "./page/decision/UpdateDecisionTemplatePage";
+import DecisionActivePage from "./page/decision/DecisionActivePage";
+import DecisionPendingPage from "./page/decision/DecisionPending";
 
 function App() {
   return (
@@ -274,6 +276,14 @@ function App() {
                           <Route
                             path="/decision-template/update/:templateId"
                             element={<UpdateDecisionTemplatePage />}
+                          />
+                          <Route
+                            path="/decision-pending"
+                            element={<DecisionPendingPage />}
+                          />
+                          <Route
+                            path="/decision-active"
+                            element={<DecisionActivePage />}
                           />
 
                           {/*  Specialty */}

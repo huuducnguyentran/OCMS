@@ -126,4 +126,9 @@ export const API = {
   IMPORT_DECISION_TEMPLATE: "DecisionTemplate/Create",
   UPDATE_DECISION_TEMPLATE: "DecisionTemplate/Update",
   DELETE_DECISION_TEMPLATE: "DecisionTemplate/Delete",
+
+  // decision
+  GET_ALL_ACTIVE_DECISION: "Decison/GetAllApprovedDecisions",
+  GET_ALL_PENDING_DECISION: "Decison/GetAllDraftDecisions",
+  SIGN_DIGITAL_SIGNATURE_DECISION: "PdfSign",
 };
