@@ -63,6 +63,8 @@ import CreateExCertificatePage from "./page/candidate/CreateExCertificatePage";
 import ImportDecisionPage from "./page/decision/ImportDecisionPage";
 import DecisionTemplateListPage from "./page/decision/DecisionTemplatePage";
 import CreateAccountPage from "./page/user/CreateAccountPage";
+import DecisionTemplateDetailPage from "./page/decision/DecisionTemplateDetailPage";
+import UpdateDecisionTemplatePage from "./page/decision/UpdateDecisionTemplatePage";
 
 function App() {
   return (
@@ -263,6 +265,15 @@ function App() {
                           <Route
                             path="/decision-template"
                             element={<DecisionTemplateListPage />}
+                          />
+                          <Route
+                            path="/decision-template/:templateId"
+                            element={<DecisionTemplateDetailPage />}
+                          />
+
+                          <Route
+                            path="/decision-template/update/:templateId"
+                            element={<UpdateDecisionTemplatePage />}
                           />
 
                           {/*  Specialty */}

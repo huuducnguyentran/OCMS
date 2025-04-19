@@ -122,7 +122,7 @@ export const API = {
 
   // decision template
   GET_ALL_DECISION_TEMPLATE: "DecisionTemplate/GetAll",
-  GET_DECISION_TEMPLATE_BY_ID: "DecisionTemplate",
+  GET_DECISION_TEMPLATE_BY_ID: "DecisionTemplate/GetById",
   IMPORT_DECISION_TEMPLATE: "DecisionTemplate/Create",
   UPDATE_DECISION_TEMPLATE: "DecisionTemplate/Update",
   DELETE_DECISION_TEMPLATE: "DecisionTemplate/Delete",
