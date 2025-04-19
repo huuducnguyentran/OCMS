@@ -63,6 +63,7 @@ import CreateExCertificatePage from "./page/candidate/CreateExCertificatePage";
 import ImportDecisionPage from "./page/decision/ImportDecisionPage";
 import DecisionTemplateListPage from "./page/decision/DecisionTemplatePage";
 import CreateAccountPage from "./page/user/CreateAccountPage";
+import EditExternalCertiPage from "./page/candidate/EditExternalCertiPage";
 
 function App() {
   return (
@@ -153,6 +154,9 @@ function App() {
                           <Route
                             path="/external-certificate/create/:id"
                             element={<CreateExCertificatePage />}
+                          />
+                          <Route path="/external-certificate/edit/:id" 
+                            element={<EditExternalCertiPage />} 
                           />
 
                           {/*  Subjects */}

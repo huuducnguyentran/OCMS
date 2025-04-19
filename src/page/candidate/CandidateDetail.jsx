@@ -7,8 +7,12 @@ import {
   Button,
   Input,
   Tag,
-  Dropdown,
-  Menu,
+  Card,
+  Space,
+  Empty,
+  Typography,
+  Modal,
+  Tooltip
 } from "antd";
 import {
   createCandidateAccount,
@@ -19,14 +23,20 @@ import {
   ArrowLeftOutlined,
   CheckOutlined,
   CloseOutlined,
+  DeleteOutlined,
   EditOutlined,
   MoreOutlined,
   PlusOutlined,
+  UserOutlined,
+  FileOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
-import { getExternalCertificatesByCandidateId } from "../../services/externalCertifcateService";
+import { getExternalCertificatesByCandidateId, deleteExternalCertificate, updateExternalCertificate } from "../../services/externalCertifcateService";
 import { DatePicker, Select } from "antd";
 import dayjs from "dayjs";
 import { CandidateDetailSchema } from "../../../utils/validationSchemas";
+
+const { Title, Text } = Typography;
 
 const CandidateDetailPage = () => {
   const { id } = useParams();
@@ -39,6 +49,13 @@ const CandidateDetailPage = () => {
   const [creatingAccount, setCreatingAccount] = useState(false);
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState("");
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingCertificate, setEditingCertificate] = useState(null);
+  const [editForm, setEditForm] = useState({
+    certificateName: "",
+    certificateCode: "",
+    certificateProvider: "",
+  });
 
   // Lấy role của người dùng từ session storage
   const userRole = sessionStorage.getItem("role");
@@ -96,7 +113,7 @@ const CandidateDetailPage = () => {
     if (isFromRequest) {
       navigate("/request");
     } else {
-      navigate(-1);
+      navigate("/candidates-view");
     }
   };
 
@@ -121,13 +138,89 @@ const CandidateDetailPage = () => {
   };
 
   const handleEdit = (cert) => {
-    console.log("Edit clicked", cert);
-    // Show modal, set form state, etc.
+    setEditingCertificate(cert);
+    setEditForm({
+      certificateName: cert.certificateName,
+      certificateCode: cert.certificateCode,
+      certificateProvider: cert.certificateProvider || "",
+    });
+    setEditModalVisible(true);
   };
 
-  const handleUpdate = (cert) => {
-    console.log("Update clicked", cert);
-    // Trigger API call or open update form
+  const handleUpdateCertificate = async () => {
+    try {
+      // Validate form data
+      if (!editForm.certificateName || !editForm.certificateCode) {
+        message.error("Please fill in all required fields");
+        return;
+      }
+
+      // Tạo payload data với đúng format mà API yêu cầu
+      const updateData = {
+        externalCertificateId: editingCertificate.certificateId, // Thêm ID
+        certificateName: editForm.certificateName.trim(),
+        certificateCode: editForm.certificateCode.trim(),
+        certificateProvider: editForm.certificateProvider?.trim() || "",
+        candidateId: id,
+        certificateFileURL: editingCertificate.certificateFileURL || "",
+        certificateFileURLWithSas: editingCertificate.certificateFileURLWithSas || "",
+        status: editingCertificate.status || 0 // Thêm status nếu cần
+      };
+
+      console.log('Updating certificate with data:', updateData);
+
+      // Gọi API update
+      await updateExternalCertificate(editingCertificate.certificateId, updateData);
+      message.success("Certificate updated successfully");
+      
+      // Refresh certificates list
+      const updatedCerts = await getExternalCertificatesByCandidateId(id);
+      setCertificates(updatedCerts);
+      setEditModalVisible(false);
+      
+      // Reset form
+      setEditForm({
+        certificateName: "",
+        certificateCode: "",
+        certificateProvider: "",
+      });
+      setEditingCertificate(null);
+
+    } catch (error) {
+      console.error("Error updating certificate:", error);
+      console.error("Error response:", error.response);
+      
+      if (error.response?.status === 400) {
+        message.error(error.response?.data?.message || "Invalid request data. Please check your input.");
+      } else {
+        message.error("Failed to update certificate. Please try again.");
+      }
+    }
+  };
+
+  const handleDelete = (cert) => {
+    Modal.confirm({
+      title: "Delete Certificate",
+      content: "Are you sure you want to delete this certificate? This action cannot be undone.",
+      okText: "Yes, Delete",
+      okType: "danger",
+      cancelText: "No",
+      okButtonProps: {
+        className: "bg-red-500 hover:bg-red-600",
+      },
+      onOk: async () => {
+        try {
+          await deleteExternalCertificate(cert.certificateId);
+          message.success("Certificate deleted successfully");
+          // Refresh certificates list
+          const updatedCerts = await getExternalCertificatesByCandidateId(id);
+          setCertificates(updatedCerts);
+        } catch (error) {
+          console.error("Error deleting certificate:", error);
+          message.error("Failed to delete certificate");
+        }
+      },
+    });
   };
 
   const handleSaveEdit = async () => {
@@ -249,176 +342,265 @@ const CandidateDetailPage = () => {
     </Descriptions.Item>
   );
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Breadcrumb */}
-        <div className="flex items-center mb-8 space-x-2">
-          <Button
-            type="link"
-            icon={<ArrowLeftOutlined />}
-            onClick={handleGoBack}
-            className="text-blue-600 hover:text-blue-800 px-0"
-          >
-            {isFromRequest ? "Request List" : "Candidate List"}
-          </Button>
-          <span className="text-gray-400">/</span>
-          <span className="font-semibold text-gray-800">
-            {candidate?.candidateId || candidate}
-          </span>
+  const renderEditModal = () => (
+    <Modal
+      title="Edit Certificate"
+      open={editModalVisible}
+      onCancel={() => setEditModalVisible(false)}
+      onOk={handleUpdateCertificate}
+      okText="Save Changes"
+      cancelText="Cancel"
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Certificate Name
+          </label>
+          <Input
+            value={editForm.certificateName}
+            onChange={(e) =>
+              setEditForm({ ...editForm, certificateName: e.target.value })
+            }
+          />
         </div>
-        <div className="mt-10">
-          <h2 className="text-2xl text-gray-800 font-semibold">
-            External Certificates
-          </h2>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleCreateCertificate}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Certificate Code
+          </label>
+          <Input
+            value={editForm.certificateCode}
+            onChange={(e) =>
+              setEditForm({ ...editForm, certificateCode: e.target.value })
+            }
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Provider
+          </label>
+          <Input
+            value={editForm.certificateProvider}
+            onChange={(e) =>
+              setEditForm({ ...editForm, certificateProvider: e.target.value })
+            }
+          />
+        </div>
+      </div>
+    </Modal>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header Section */}
+        <Card className="shadow-sm">
+          <div className="flex justify-between items-center">
+            <div>
+              <Button
+                type="link"
+                icon={<ArrowLeftOutlined />}
+                onClick={handleGoBack}
+                className="text-blue-600 hover:text-blue-800 px-0 mb-2"
+              >
+                {isFromRequest ? "Request List" : "Candidate List"}
+              </Button>
+              <Title level={2} className="mb-0">
+                Candidate Profile
+              </Title>
+              <Text type="secondary">
+                ID: {candidate?.candidateId}
+              </Text>
+            </div>
+            {!isHeadMaster && (
+              <Space>
+                <Button
+                  onClick={handleCreateAccount}
+                  loading={creatingAccount}
+                  icon={<UserOutlined />}
+                  className="bg-green-500 hover:bg-green-600 text-white border-none"
+                >
+                  Create Account
+                </Button>
+              </Space>
+            )}
+          </div>
+        </Card>
+
+        {/* Candidate Information Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Personal Information */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card 
+              className="shadow-sm"
+              title={
+                <div className="flex items-center space-x-2">
+                  <UserOutlined className="text-blue-500" />
+                  <span>Personal Information</span>
+                </div>
+              }
+            >
+              <Descriptions
+                bordered
+                column={1}
+                labelStyle={{
+                  fontWeight: "600",
+                  backgroundColor: "#f8fafc",
+                  padding: "12px 16px",
+                }}
+                contentStyle={{
+                  backgroundColor: "#ffffff",
+                  padding: "12px 16px",
+                }}
+              >
+                {renderEditableItem("Full Name", "fullName")}
+                {renderEditableItem("Gender", "gender")}
+                {renderEditableItem("Date of Birth", "dateOfBirth")}
+                {renderEditableItem("Email", "email")}
+                {renderEditableItem("Phone Number", "phoneNumber")}
+                {renderEditableItem("Personal ID", "personalID")}
+                {renderEditableItem("Address", "address")}
+                {renderEditableItem("Note", "note")}
+                {renderEditableItem("Specialty ID", "specialtyId")}
+              </Descriptions>
+            </Card>
+          </div>
+
+          {/* Right Column - Status Information */}
+          <Card 
+            className="shadow-sm h-fit"
+            title={
+              <div className="flex items-center space-x-2">
+                <CheckOutlined className="text-green-500" />
+                <span>Status Information</span>
+              </div>
+            }
           >
-            Add Certificate
-          </Button>
-          {certLoading ? (
-            <Spin />
-          ) : certificates.length === 0 ? (
-            <p className="text-gray-500">No certificates found.</p>
-          ) : (
-            <div className="grid md:grid-cols-2 gap-4">
-              {certificates.map((cert, index) => {
-                const menu = (
-                  <Menu>
-                    <Menu.Item key="edit" onClick={() => handleEdit(cert)}>
-                      Edit
-                    </Menu.Item>
-                    <Menu.Item key="update" onClick={() => handleUpdate(cert)}>
-                      Update
-                    </Menu.Item>
-                  </Menu>
-                );
+            <Descriptions 
+              column={1} 
+              bordered
+              labelStyle={{
+                fontWeight: "600",
+                backgroundColor: "#f8fafc",
+                padding: "12px 16px",
+              }}
+              contentStyle={{
+                backgroundColor: "#ffffff",
+                padding: "12px 16px",
+              }}
+            >
+              <Descriptions.Item label="Status">
+                {candidate.candidateStatus === 0 && (
+                  <Tag color="orange">Pending</Tag>
+                )}
+                {candidate.candidateStatus === 1 && (
+                  <Tag color="green">Approved</Tag>
+                )}
+                {candidate.candidateStatus === 2 && (
+                  <Tag color="red">Rejected</Tag>
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label="Created At">
+                {new Date(candidate.createdAt).toLocaleString()}
+              </Descriptions.Item>
+              <Descriptions.Item label="Updated At">
+                {new Date(candidate.updatedAt).toLocaleString()}
+              </Descriptions.Item>
+              <Descriptions.Item label="Imported By">
+                {candidate.importByUserID}
+              </Descriptions.Item>
+              <Descriptions.Item label="Import Request">
+                {candidate.importRequestId}
+              </Descriptions.Item>
+            </Descriptions>
+          </Card>
+        </div>
 
-                return (
-                  <div
-                    key={index}
-                    className="relative border rounded-xl p-4 shadow-sm bg-white hover:shadow-md transition mb-4"
+        {/* External Certificates Section */}
+        <Card 
+          className="shadow-sm"
+          title={
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <FileOutlined className="text-blue-500" />
+                <span className="text-xl font-semibold">External Certificates</span>
+              </div>
+              {!isHeadMaster && (
+                <Space>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => navigate(`/external-certificate/create/${id}`)}
+                    className="bg-blue-500 hover:bg-blue-600"
                   >
-                    {/* Dropdown icon */}
-                    <div className="absolute top-2 right-2 z-10">
-                      <Dropdown overlay={menu} trigger={["click"]}>
-                        <Button
-                          icon={<MoreOutlined />}
-                          type="text"
-                          className="text-gray-600 hover:text-black"
-                        />
-                      </Dropdown>
-                    </div>
-
-                    <p className="text-gray-600">
-                      <strong>Certificate Code:</strong> {cert.certificateCode}
-                    </p>
-                    <p className="text-gray-600">
-                      <strong>Certificate Name:</strong> {cert.certificateName}
-                    </p>
-                    <p className="text-gray-600">
-                      <strong>Provider:</strong>{" "}
-                      {cert.certificateProvider || "-"}
-                    </p>
-                    <p className="text-gray-600">
-                      <strong>Issue Date:</strong>{" "}
-                      {cert.issueDate
-                        ? new Date(cert.issueDate).toLocaleDateString()
-                        : "-"}
-                    </p>
-                    <p className="text-gray-600">
-                      <strong>Expiration Date:</strong>{" "}
-                      {cert.expirationDate
-                        ? new Date(cert.expirationDate).toLocaleDateString()
-                        : "-"}
-                    </p>
-                    {cert.certificateFileURLWithSas ? (
+                    Add Certificate
+                  </Button>
+                  <Button
+                    onClick={() => navigate(`/external-certificate/edit/${id}`)}
+                    icon={<EditOutlined />}
+                    className="border-blue-500 text-blue-500 hover:text-blue-600 hover:border-blue-600"
+                  >
+                    Manage Certificates
+                  </Button>
+                </Space>
+              )}
+            </div>
+          }
+        >
+          {certLoading ? (
+            <div className="flex justify-center py-8">
+              <Spin size="large" />
+            </div>
+          ) : certificates.length === 0 ? (
+            <Empty
+              description="No certificates found"
+              className="py-8"
+            />
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {certificates.map((cert, index) => (
+                <Card
+                  key={index}
+                  className="hover:shadow-md transition border border-gray-200"
+                >
+                  <Card.Meta
+                    title={
+                      <div className="font-semibold text-lg text-blue-600">
+                        {cert.certificateName}
+                      </div>
+                    }
+                    description={
+                      <div className="space-y-2">
+                        <p><strong>Code:</strong> {cert.certificateCode}</p>
+                        <p><strong>Provider:</strong> {cert.certificateProvider || "-"}</p>
+                      </div>
+                    }
+                  />
+                  {cert.certificateFileURLWithSas && (
+                    <div className="mt-4">
                       <img
                         src={cert.certificateFileURLWithSas}
                         alt="Certificate"
-                        className="mt-2 w-full h-auto rounded-lg border"
+                        className="w-full h-48 object-cover rounded-lg border border-gray-200 hover:opacity-90 transition cursor-pointer"
+                        onClick={() => window.open(cert.certificateFileURLWithSas, '_blank')}
                         onError={(e) => {
                           e.target.style.display = "none";
-                          const parent = e.target.parentNode;
                           const errorText = document.createElement("p");
                           errorText.className = "text-red-500 text-sm mt-2";
-                          errorText.innerText =
-                            "Certificate file not accessible or requires authentication.";
-                          parent.appendChild(errorText);
+                          errorText.innerText = "Certificate image not available";
+                          e.target.parentNode.appendChild(errorText);
                         }}
                       />
-                    ) : (
-                      <p className="text-gray-500">
-                        No certificate file uploaded.
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
+                    </div>
+                  )}
+                </Card>
+              ))}
             </div>
           )}
-        </div>
-
-        <h2 className="text-2xl text-gray-800 font-semibold mb-6">
-          Candidate Detail
-        </h2>
-        <Descriptions
-          bordered
-          column={1}
-          labelStyle={{
-            fontWeight: "600",
-            width: 320,
-            whiteSpace: "nowrap",
-            wordBreak: "keep-all",
-          }}
-        >
-          <Descriptions.Item label="Candidate ID">
-            {candidate.candidateId}
-          </Descriptions.Item>
-          {renderEditableItem("Full Name", "fullName")}
-          {renderEditableItem("Gender", "gender")}
-          {renderEditableItem("Date of Birth", "dateOfBirth")}
-          {renderEditableItem("Address", "address")}
-          {renderEditableItem("Email", "email")}
-          {renderEditableItem("Phone Number", "phoneNumber")}
-          {renderEditableItem("Personal ID", "personalID")}
-          {renderEditableItem("Note", "note")}
-          {renderEditableItem("Specialty ID", "specialtyId")}
-          <Descriptions.Item label="Candidate Status">
-            {candidate.candidateStatus === 0 && (
-              <Tag color="orange">Pending</Tag>
-            )}
-            {candidate.candidateStatus === 1 && (
-              <Tag color="green">Approved</Tag>
-            )}
-            {candidate.candidateStatus === 2 && <Tag color="red">Rejected</Tag>}
-          </Descriptions.Item>
-          <Descriptions.Item label="Created At">
-            {new Date(candidate.createdAt).toLocaleString()}
-          </Descriptions.Item>
-          <Descriptions.Item label="Updated At">
-            {new Date(candidate.updatedAt).toLocaleString()}
-          </Descriptions.Item>
-          <Descriptions.Item label="Imported By User ID">
-            {candidate.importByUserID}
-          </Descriptions.Item>
-          <Descriptions.Item label="Import Request ID">
-            {candidate.importRequestId}
-          </Descriptions.Item>
-        </Descriptions>
-        {!isHeadMaster && (
-          <Button
-            type="primary"
-            onClick={handleCreateAccount}
-            loading={creatingAccount}
-            className="mt-4"
-          >
-            Create Account
-          </Button>
-        )}
+        </Card>
       </div>
+
+      {/* Edit Certificate Modal */}
+      {renderEditModal()}
     </div>
   );
 };

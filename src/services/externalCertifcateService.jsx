@@ -36,3 +36,37 @@ export const createExternalCertificate = (candidateId, formData) => {
     }
   );
 };
+
+export const updateExternalCertificate = async (id, data) => {
+  const token = sessionStorage.getItem("token");
+  const isFormData = data instanceof FormData;
+  
+  
+  return axiosInstance.put(
+    `/${API.UPDATE_EXTERNAL_CERTIFICATE}/${id}`, 
+    data,
+    {
+      headers: {
+        "Content-Type": isFormData ? "multipart/form-data" : "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+};
+
+export const deleteExternalCertificate = async (id) => {
+  const token = sessionStorage.getItem("token");
+  try {
+    const response = await axiosInstance.delete(
+      `/${API.DELETE_EXTERNAL_CERTIFICATE}/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
