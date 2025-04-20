@@ -43,6 +43,7 @@ export const updateUser = async (id, userData) => {
     throw error;
   }
 };
+
 export const updateAvatar = async (formData) => {
   try {
     const response = await axiosInstance.put(
@@ -89,6 +90,61 @@ export const getAllSpecialties = async () => {
     return response.data;
   } catch (error) {
     console.error("Error fetching specialties:", error?.response || error.message);
+    throw error;
+  }
+};
+
+export const updateUserDetails = async (userId, userData) => {
+  try {
+    const response = await axiosInstance.put(`/api/User/${userId}/details`, userData);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to update user details:", error);
+    throw error.response?.data || error.message || "Failed to update user details";
+  }
+};
+
+export const exportTraineeInfo = async (traineeId) => {
+  try {
+    // Thiết lập responseType là 'blob' để nhận dữ liệu nhị phân
+    const response = await axiosInstance.get(`/Report/export-trainee-info/${traineeId}`, {
+      responseType: 'blob'
+    });
+    
+    // Lấy tên file từ header Content-Disposition nếu có
+    const contentDisposition = response.headers['content-disposition'];
+    let filename = 'TraineeInfo.xlsx';
+    
+    if (contentDisposition) {
+      const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+      const matches = filenameRegex.exec(contentDisposition);
+      if (matches != null && matches[1]) {
+        filename = matches[1].replace(/['"]/g, '');
+      }
+    }
+    
+    // Tạo URL từ blob
+    const blob = new Blob([response.data], { 
+      type: response.headers['content-type'] 
+    });
+    const blobUrl = window.URL.createObjectURL(blob);
+    
+    // Tạo link và kích hoạt download
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Dọn dẹp
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    }, 100);
+    
+    return true;
+  } catch (error) {
+    console.error("Error exporting trainee info:", error);
     throw error;
   }
 };
