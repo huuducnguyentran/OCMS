@@ -13,7 +13,7 @@ const AccountPage = () => {
   const [filteredAccounts, setFilteredAccounts] = useState([]);
   const [sortedInfo, setSortedInfo] = useState({});
 
-  const handleChange = (pagination, filters, sorter) => {
+  const handleChange = ( sorter) => {
     setSortedInfo(sorter);
   };
 
@@ -35,6 +35,15 @@ const AccountPage = () => {
       ellipsis: true,
       sorter: (a, b) => a.username.localeCompare(b.username),
       sortOrder: sortedInfo.columnKey === 'username' ? sortedInfo.order : null,
+    },
+    {
+      title: "Specialty",
+      dataIndex: "specialtyId",
+      key: "specialtyId",
+      width: 150,
+      ellipsis: true,
+      sorter: (a, b) => a.specialtyId.localeCompare(b.specialtyId),
+      sortOrder: sortedInfo.columnKey === 'specialtyId' ? sortedInfo.order : null,
     },
     {
       title: "Full Name",
@@ -111,7 +120,9 @@ const AccountPage = () => {
         (account.fullName || '').toLowerCase().includes(searchValue) ||               // Tìm theo Full Name
         (account.email || '').toLowerCase().includes(searchValue) ||                  // Tìm theo Email
         (account.phoneNumber || '').toLowerCase().includes(searchValue) ||            // Tìm theo Phone
-        (account.roleName || '').toLowerCase().includes(searchValue)                  // Tìm theo Role
+        (account.roleName || '').toLowerCase().includes(searchValue) 
+        (account.departmentId || '').toLowerCase().includes(searchValue)      
+        (account.specialtyId || '').toLowerCase().includes(searchValue)           // Tìm theo Role
       );
       setFilteredAccounts(filtered);
     }

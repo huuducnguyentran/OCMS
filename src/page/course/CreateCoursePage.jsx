@@ -73,7 +73,7 @@ const CreateCoursePage = () => {
             <Button 
               size="large"
               icon={<ArrowLeftOutlined />} 
-              onClick={() => navigate("/course")}
+              onClick={() => navigate("/all-courses")}
               className="flex items-center text-gray-600 hover:text-gray-800 border-gray-300"
             >
               Back to Courses
