@@ -60,12 +60,14 @@ const DecisionActivePage = () => {
   }
 
   return (
-    <div className="p-4">
-      <Title level={3}>Active Decisions List</Title>
+    <div className="p-4 sm:p-8 min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <Title level={3} className="text-blue-800 mb-6">
+        Active Decisions List
+      </Title>
 
       {/* Filters */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
-        <Row gutter={[16, 16]} className="mb-4">
+      <div className="mb-10 p-6 bg-white rounded-2xl shadow border border-gray-200">
+        <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} md={8}>
             <Input
               placeholder="Search by Decision Code"
@@ -81,6 +83,7 @@ const DecisionActivePage = () => {
               placeholder="Filter by Issue Date"
               value={filterDate}
               onChange={(date) => setFilterDate(date)}
+              size="large"
               style={{ width: "100%" }}
               allowClear
             />
@@ -119,9 +122,15 @@ const DecisionActivePage = () => {
                 <p>
                   <strong>Issued By:</strong> {decision.issuedBy}
                 </p>
-                <p>
-                  <strong>Status:</strong>{" "}
-                  {decision.status === 1 ? "Active" : "Inactive"}
+                <p className="text-sm text-gray-700 mb-1">
+                  <strong className="text-gray-800">Status:</strong>{" "}
+                  <span
+                    className={`px-2 py-1 rounded-full text-white text-xs ${
+                      decision.status === 1 ? "bg-green-500" : "bg-gray-400"
+                    }`}
+                  >
+                    {decision.status === 1 ? "Active" : "Inactive"}
+                  </span>
                 </p>
                 <p>
                   <strong>Issue Date:</strong>{" "}

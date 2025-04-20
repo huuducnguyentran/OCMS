@@ -22,7 +22,7 @@ export const API = {
   DELETE_EXTERNAL_CERTIFICATE: "ExternalCertificate",
 
   // Request
-  GET_ALL_REQUEST: "Requests",
+  GET_ALL_REQUEST: "Requests/head-master/requests",
   GET_REQUEST_BY_ID: "Requests",
   APPROVE_REQUEST: "Requests",
   REJECT_REQUEST: "Requests",
@@ -103,6 +103,7 @@ export const API = {
   //certificate
   GET_PENDING_CERTIFICATE: "Certificate/pending",
   GET_ACTIVE_CERTIFICATE: "Certificate/active",
+  GET_TRAINEE_CERTIFICATE_FROM_OTHRER_USER: "Certificate/trainee",
   GET_TRAINEE_CERTIFICATE: "Certificate/trainee",
   GET_ALL_CERTIFICATE: "Certificate",
   GET_CERTIFICATE_BY_ID: "Certificate",

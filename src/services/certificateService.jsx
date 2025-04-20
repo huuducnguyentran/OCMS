@@ -104,9 +104,16 @@ export const getCertificateById = async (certificateId) => {
   return response.data;
 };
 
-export const getTraineeCertificateById = async (userId) => {
+export const getTraineeCertificateByOtherId = async (userId) => {
   const response = await axiosInstance.get(
     `${API.GET_TRAINEE_CERTIFICATE}/${userId}`
+  );
+  return response.data;
+};
+
+export const getTraineeCertificateById = async () => {
+  const response = await axiosInstance.get(
+    `${API.GET_TRAINEE_CERTIFICATE}/view`
   );
   return response.data;
 };
