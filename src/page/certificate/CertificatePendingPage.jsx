@@ -4,26 +4,30 @@ import {
   Spin,
   Empty,
   Input,
-  Select,
   DatePicker,
   Row,
   Col,
   Typography,
+  Button,
+  Checkbox,
+  message,
 } from "antd";
-import { getPendingCertificate } from "../../services/certificateService";
+import {
+  getPendingCertificate,
+  signCertificate,
+} from "../../services/certificateService";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { SearchOutlined } from "@ant-design/icons";
 
-const { Option } = Select;
 const { Title } = Typography;
 
 const CertificatePendingPage = () => {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchCode, setSearchCode] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
   const [filterDate, setFilterDate] = useState(null);
+  const [selectedCertificates, setSelectedCertificates] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,21 +45,48 @@ const CertificatePendingPage = () => {
     fetchCertificates();
   }, []);
 
+  const handleCheckboxChange = (certificateId, checked) => {
+    setSelectedCertificates((prev) =>
+      checked
+        ? [...prev, certificateId]
+        : prev.filter((id) => id !== certificateId)
+    );
+  };
+
+  const handleSignCertificates = async () => {
+    if (selectedCertificates.length === 0) {
+      message.warning("Please select at least one certificate.");
+      return;
+    }
+
+    try {
+      for (const certId of selectedCertificates) {
+        await signCertificate(certId);
+      }
+
+      message.success("Selected certificates signed successfully!");
+
+      const updated = await getPendingCertificate();
+      setCertificates(updated);
+      setSelectedCertificates([]);
+    } catch (error) {
+      console.error("Signing failed:", error);
+      message.error("Failed to sign one or more certificates.");
+    }
+  };
+
   const filteredCertificates = useMemo(() => {
     return certificates.filter((cert) => {
       const matchCode = cert.certificateCode
         .toLowerCase()
         .includes(searchCode.toLowerCase());
-      const matchStatus = filterStatus
-        ? cert.status.toLowerCase() === filterStatus.toLowerCase()
-        : true;
       const matchDate = filterDate
         ? dayjs(cert.issueDate).isSame(filterDate, "day")
         : true;
 
-      return matchCode && matchStatus && matchDate;
+      return matchCode && matchDate;
     });
-  }, [certificates, searchCode, filterStatus, filterDate]);
+  }, [certificates, searchCode, filterDate]);
 
   if (loading) {
     return (
@@ -68,6 +99,7 @@ const CertificatePendingPage = () => {
   return (
     <div className="p-4">
       <Title level={3}>Certificate Management List</Title>
+
       {/* Filters */}
       <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
         <Row gutter={[16, 16]} className="mb-4">
@@ -82,19 +114,6 @@ const CertificatePendingPage = () => {
             />
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <Select
-              placeholder="Filter by Status"
-              value={filterStatus || undefined}
-              onChange={(value) => setFilterStatus(value)}
-              allowClear
-              style={{ width: "100%" }}
-            >
-              <Option value="Pending">Pending</Option>
-              <Option value="Approved">Approved</Option>
-              <Option value="Rejected">Rejected</Option>
-            </Select>
-          </Col>
-          <Col xs={24} sm={12} md={8}>
             <DatePicker
               placeholder="Filter by Issue Date"
               value={filterDate}
@@ -104,6 +123,14 @@ const CertificatePendingPage = () => {
             />
           </Col>
         </Row>
+
+        <Button
+          type="primary"
+          onClick={handleSignCertificates}
+          disabled={selectedCertificates.length === 0}
+        >
+          Sign Selected ({selectedCertificates.length})
+        </Button>
       </div>
 
       {/* Certificate List */}
@@ -116,35 +143,46 @@ const CertificatePendingPage = () => {
           {filteredCertificates.map((cert) => (
             <div
               key={cert.certificateId}
-              onClick={() => navigate(`/certificate/${cert.certificateId}`)}
-              className="cursor-pointer"
+              className="relative border rounded-2xl shadow-md hover:shadow-lg transition"
             >
-              <Card
-                title={cert.certificateCode}
-                bordered
-                className="rounded-2xl shadow-md hover:shadow-lg transition"
-                cover={
-                  <iframe
-                    src={cert.certificateURLwithSas}
-                    title="Certificate Preview"
-                    className="w-full h-64 rounded-t-2xl"
-                  />
+              <Checkbox
+                className="absolute top-2 left-2 z-10 bg-white p-1 rounded"
+                checked={selectedCertificates.includes(cert.certificateId)}
+                onChange={(e) =>
+                  handleCheckboxChange(cert.certificateId, e.target.checked)
                 }
+              />
+              <div
+                onClick={() => navigate(`/certificate/${cert.certificateId}`)}
+                className="cursor-pointer"
               >
-                <p>
-                  <strong>User ID:</strong> {cert.userId}
-                </p>
-                <p>
-                  <strong>Course ID:</strong> {cert.courseId}
-                </p>
-                <p>
-                  <strong>Status:</strong> {cert.status}
-                </p>
-                <p>
-                  <strong>Issue Date:</strong>{" "}
-                  {new Date(cert.issueDate).toLocaleDateString()}
-                </p>
-              </Card>
+                <Card
+                  title={cert.certificateCode}
+                  bordered={false}
+                  className="rounded-2xl"
+                  cover={
+                    <iframe
+                      src={cert.certificateURLwithSas}
+                      title="Certificate Preview"
+                      className="w-full h-64 rounded-t-2xl"
+                    />
+                  }
+                >
+                  <p>
+                    <strong>User ID:</strong> {cert.userId}
+                  </p>
+                  <p>
+                    <strong>Course ID:</strong> {cert.courseId}
+                  </p>
+                  <p>
+                    <strong>Status:</strong> {cert.status}
+                  </p>
+                  <p>
+                    <strong>Issue Date:</strong>{" "}
+                    {new Date(cert.issueDate).toLocaleDateString()}
+                  </p>
+                </Card>
+              </div>
             </div>
           ))}
         </div>

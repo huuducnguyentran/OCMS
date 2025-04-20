@@ -63,8 +63,16 @@ import CreateExCertificatePage from "./page/candidate/CreateExCertificatePage";
 import ImportDecisionPage from "./page/decision/ImportDecisionPage";
 import DecisionTemplateListPage from "./page/decision/DecisionTemplatePage";
 import CreateAccountPage from "./page/user/CreateAccountPage";
+
 import UpdateAccountPage from "./page/user/UpdateAccountPage";
 import ExportCertificatePage from "./page/report/ExportCertificatePage";
+
+import DecisionTemplateDetailPage from "./page/decision/DecisionTemplateDetailPage";
+import UpdateDecisionTemplatePage from "./page/decision/UpdateDecisionTemplatePage";
+import DecisionActivePage from "./page/decision/DecisionActivePage";
+import DecisionPendingPage from "./page/decision/DecisionPending";
+import EditExternalCertiPage from "./page/candidate/EditExternalCertiPage";
+
 
 function App() {
   return (
@@ -156,6 +164,10 @@ function App() {
                           <Route
                             path="/external-certificate/create/:id"
                             element={<CreateExCertificatePage />}
+                          />
+                          <Route
+                            path="/external-certificate/edit/:id"
+                            element={<EditExternalCertiPage />}
                           />
 
                           {/*  Subjects */}
@@ -266,6 +278,23 @@ function App() {
                           <Route
                             path="/decision-template"
                             element={<DecisionTemplateListPage />}
+                          />
+                          <Route
+                            path="/decision-template/:templateId"
+                            element={<DecisionTemplateDetailPage />}
+                          />
+
+                          <Route
+                            path="/decision-template/update/:templateId"
+                            element={<UpdateDecisionTemplatePage />}
+                          />
+                          <Route
+                            path="/decision-pending"
+                            element={<DecisionPendingPage />}
+                          />
+                          <Route
+                            path="/decision-active"
+                            element={<DecisionActivePage />}
                           />
 
                           {/*  Specialty */}

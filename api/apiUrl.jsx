@@ -22,7 +22,7 @@ export const API = {
   DELETE_EXTERNAL_CERTIFICATE: "ExternalCertificate",
 
   // Request
-  GET_ALL_REQUEST: "Requests",
+  GET_ALL_REQUEST: "Requests/head-master/requests",
   GET_REQUEST_BY_ID: "Requests",
   APPROVE_REQUEST: "Requests",
   REJECT_REQUEST: "Requests",
@@ -103,6 +103,7 @@ export const API = {
   //certificate
   GET_PENDING_CERTIFICATE: "Certificate/pending",
   GET_ACTIVE_CERTIFICATE: "Certificate/active",
+  GET_TRAINEE_CERTIFICATE_FROM_OTHRER_USER: "Certificate/trainee",
   GET_TRAINEE_CERTIFICATE: "Certificate/trainee",
   GET_ALL_CERTIFICATE: "Certificate",
   GET_CERTIFICATE_BY_ID: "Certificate",
@@ -122,8 +123,13 @@ export const API = {
 
   // decision template
   GET_ALL_DECISION_TEMPLATE: "DecisionTemplate/GetAll",
-  GET_DECISION_TEMPLATE_BY_ID: "DecisionTemplate",
+  GET_DECISION_TEMPLATE_BY_ID: "DecisionTemplate/GetById",
   IMPORT_DECISION_TEMPLATE: "DecisionTemplate/Create",
   UPDATE_DECISION_TEMPLATE: "DecisionTemplate/Update",
   DELETE_DECISION_TEMPLATE: "DecisionTemplate/Delete",
+
+  // decision
+  GET_ALL_ACTIVE_DECISION: "Decison/GetAllApprovedDecisions",
+  GET_ALL_PENDING_DECISION: "Decison/GetAllDraftDecisions",
+  SIGN_DIGITAL_SIGNATURE_DECISION: "PdfSign",
 };

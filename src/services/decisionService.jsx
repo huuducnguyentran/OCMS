@@ -40,21 +40,21 @@ export const fetchDecisionTemplates = async () => {
 export const fetchDecisionTemplatebyId = async (id) => {
   try {
     const response = await axiosInstance.get(
-      `/${API.GET_DECISION_TEMPLATE_BY_ID}/${id}/`,
+      `/${API.GET_DECISION_TEMPLATE_BY_ID}/${id}`,
       {
         headers: {
-          Accept: "text/plain",
+          Accept: "application/json", // or remove this line
         },
       }
     );
     return response.data;
   } catch (error) {
-    console.error("Error fetching certificate templates:", error);
+    console.error("Error fetching decision template by ID:", error);
     throw error;
   }
 };
 
-export const updateCertificateTemplate = async (templateId, formData) => {
+export const updateDecisionTemplate = async (templateId, formData) => {
   try {
     const response = await axiosInstance.put(
       `/${API.UPDATE_DECISION_TEMPLATE}/${templateId}/`,
@@ -68,7 +68,7 @@ export const updateCertificateTemplate = async (templateId, formData) => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error updating certificate templates:", error);
+    console.error("Error updating decision templates:", error);
     throw error;
   }
 };
@@ -80,7 +80,24 @@ export const deleteDecisionTemplate = async (templateId) => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error updating certificate templates:", error);
+    console.error("Error updating decision templates:", error);
     throw error;
   }
+};
+
+export const getActiveDecision = async () => {
+  const response = await axiosInstance.get(`${API.GET_ALL_ACTIVE_DECISION}`);
+  return response.data;
+};
+
+export const getPendingDecision = async () => {
+  const response = await axiosInstance.get(`${API.GET_ALL_PENDING_DECISION}`);
+  return response.data;
+};
+
+export const signDecision = async (decisionId) => {
+  const response = await axiosInstance.post(
+    `${API.SIGN_DIGITAL_SIGNATURE}/${decisionId}`
+  );
+  return response.data;
 };

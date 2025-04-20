@@ -29,6 +29,7 @@ import { useEffect, useRef, useState } from "react";
 import dayjs from "dayjs";
 import {
   deleteDecisionTemplate,
+  fetchDecisionTemplatebyId,
   fetchDecisionTemplates,
 } from "../../services/decisionService";
 
@@ -56,8 +57,9 @@ const DecisionTemplateListPage = () => {
     const loadTemplates = async () => {
       try {
         const data = await fetchDecisionTemplates();
-        setTemplates(data);
-        setFilteredTemplates(data);
+        const templates = data.templates || []; // Extract templates array
+        setTemplates(templates);
+        setFilteredTemplates(templates);
       } catch (err) {
         message.error("Failed to fetch decision templates.");
         console.error("Error fetching templates:", err);
@@ -82,7 +84,9 @@ const DecisionTemplateListPage = () => {
         template.description.toLowerCase().includes(searchText.toLowerCase());
 
       const matchesStatus =
-        statusFilter !== null ? template.templateStatus === statusFilter : true;
+        statusFilter !== undefined && statusFilter !== null
+          ? template.templateStatus === statusFilter
+          : true;
 
       const matchesDescType = descTypeFilter
         ? template.description
@@ -115,8 +119,7 @@ const DecisionTemplateListPage = () => {
       loadingTimeoutRef.current = null;
     }
   };
-
-  const handlePreview = (templateUrl) => {
+  const handlePreview = async (templateId) => {
     setLoading(true);
     setIsModalVisible(true);
     setPreviewError(null);
@@ -130,10 +133,15 @@ const DecisionTemplateListPage = () => {
       }
     }, 15000);
 
-    if (templateUrl) {
-      setPreviewUrl(templateUrl);
-    } else {
-      setPreviewError("Invalid template preview URL.");
+    try {
+      const data = await fetchDecisionTemplatebyId(templateId);
+      if (data?.templateContentWithSas) {
+        setPreviewUrl(data.templateContentWithSas);
+      } else {
+        setPreviewError("No preview content available.");
+      }
+    } catch (error) {
+      setPreviewError("Failed to fetch template content.", error);
     }
 
     setLoading(false);
@@ -148,6 +156,14 @@ const DecisionTemplateListPage = () => {
       title: "Template ID",
       dataIndex: "decisionTemplateId",
       key: "decisionTemplateId",
+      render: (id) => (
+        <Button
+          type="link"
+          onClick={() => navigate(`/decision-template/${id}`)}
+        >
+          {id}
+        </Button>
+      ),
     },
     {
       title: "Template Name",
@@ -166,6 +182,17 @@ const DecisionTemplateListPage = () => {
       render: (status) => (status === 1 ? "Active" : "Inactive"),
     },
     {
+      title: "Created By",
+      dataIndex: "createdByUserName",
+      key: "createdByUserName",
+    },
+    {
+      title: "Approved By",
+      dataIndex: "approvedByUserName",
+      key: "approvedByUserName",
+      render: (name) => name || "—",
+    },
+    {
       title: "Created At",
       dataIndex: "createdAt",
       key: "createdAt",
@@ -177,7 +204,7 @@ const DecisionTemplateListPage = () => {
       render: (_, record) => (
         <Button
           type="link"
-          onClick={() => handlePreview(record.templateContent)}
+          onClick={() => handlePreview(record.decisionTemplateId)}
         >
           View
         </Button>
@@ -186,6 +213,7 @@ const DecisionTemplateListPage = () => {
     {
       title: "Actions",
       key: "actions",
+      width: 100,
       render: (_, record) => {
         const menu = (
           <Menu>
@@ -204,10 +232,10 @@ const DecisionTemplateListPage = () => {
                 title="Are you sure you want to delete this template?"
                 onConfirm={async () => {
                   try {
-                    await deleteDecisionTemplate(record.decisionTemplateId); // Rename to deleteDecisionTemplate
+                    await deleteDecisionTemplate(record.decisionTemplateId);
                     message.success("Template deleted successfully.");
                     const data = await fetchDecisionTemplates();
-                    setTemplates(data);
+                    setTemplates(data.templates || []);
                   } catch (err) {
                     message.error("Failed to delete template.");
                     console.error("Delete error:", err);
@@ -299,6 +327,7 @@ const DecisionTemplateListPage = () => {
           rowKey="decisionTemplateId"
           pagination={{ pageSize: 5 }}
           bordered
+          scroll={{ x: "max-content", y: 400 }}
         />
       </div>
 
