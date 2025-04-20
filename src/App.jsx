@@ -67,6 +67,7 @@ import DecisionTemplateDetailPage from "./page/decision/DecisionTemplateDetailPa
 import UpdateDecisionTemplatePage from "./page/decision/UpdateDecisionTemplatePage";
 import DecisionActivePage from "./page/decision/DecisionActivePage";
 import DecisionPendingPage from "./page/decision/DecisionPending";
+import EditExternalCertiPage from "./page/candidate/EditExternalCertiPage";
 
 function App() {
   return (
@@ -157,6 +158,10 @@ function App() {
                           <Route
                             path="/external-certificate/create/:id"
                             element={<CreateExCertificatePage />}
+                          />
+                          <Route
+                            path="/external-certificate/edit/:id"
+                            element={<EditExternalCertiPage />}
                           />
 
                           {/*  Subjects */}
