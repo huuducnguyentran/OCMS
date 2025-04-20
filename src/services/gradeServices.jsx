@@ -13,7 +13,8 @@ export const gradeServices = {
     });
     return response.data;
   },
-
+ 
+  
   getAllGrades: async () => {
     const response = await axiosInstance.get(API.GET_ALL_GRADES);
     return response.data;
@@ -53,4 +54,48 @@ export const gradeServices = {
       throw error.response?.data?.message || 'Failed to delete grade';
     }
   },
+};
+export const  exportCourseResults = async () => {
+  try {
+    // Thiết lập responseType là 'blob' để nhận dữ liệu nhị phân
+    const response = await axiosInstance.get(`/Report/export-course-result`, {
+      responseType: 'blob'
+    });
+    
+    // Lấy tên file từ header Content-Disposition nếu có
+    const contentDisposition = response.headers['content-disposition'];
+    let filename = 'CourseResults.xlsx';
+    
+    if (contentDisposition) {
+      const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+      const matches = filenameRegex.exec(contentDisposition);
+      if (matches != null && matches[1]) {
+        filename = matches[1].replace(/['"]/g, '');
+      }
+    }
+    
+    // Tạo URL từ blob
+    const blob = new Blob([response.data], { 
+      type: response.headers['content-type'] 
+    });
+    const blobUrl = window.URL.createObjectURL(blob);
+    
+    // Tạo link và kích hoạt download
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Dọn dẹp
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    }, 100);
+    
+    return true;
+  } catch (error) {
+    console.error("Error exporting trainee info:", error);
+    throw error;
+  }
 };

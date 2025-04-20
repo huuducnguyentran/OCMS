@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { Table, Button, Input, Space, Tag, Card, Typography, Modal, message, Tooltip, Dropdown } from "antd";
 import { getCandidates, deleteCandidate } from "../../services/candidateService";
 import { useNavigate } from "react-router-dom";
-import { SearchOutlined, UserOutlined, FileAddOutlined, EditOutlined, DeleteOutlined, PlusOutlined, MoreOutlined } from "@ant-design/icons";
+import { SearchOutlined, UserOutlined, FileAddOutlined, EditOutlined, DeleteOutlined, PlusOutlined, MoreOutlined ,DownloadOutlined, ReloadOutlined} from "@ant-design/icons";
 import { deleteExternalCertificate } from "../../services/externalCertifcateService";
+import * as XLSX from 'xlsx';
 
 const { Title } = Typography;
 
@@ -12,10 +13,15 @@ const CandidatePage = () => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
+  const [userRole, setUserRole] = useState('');
   const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
+
+    // Lấy role người dùng từ session
+    const role = sessionStorage.getItem('role');
+    setUserRole(role);  
     fetchCandidates();
   }, []);
 
@@ -26,8 +32,43 @@ const CandidatePage = () => {
       setCandidates(data || []);
     } catch (error) {
       console.error("Failed to fetch candidates:", error);
+      message.error("Failed to load candidates");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Hàm xử lý xuất dữ liệu
+  const handleExportData = () => {
+    try {
+      // Chuẩn bị dữ liệu để xuất
+      const dataToExport = candidates.map(candidate => ({
+        'Candidate ID': candidate.candidateId,
+        'Full Name': candidate.fullName,
+        'Gender': candidate.gender,
+        'Date of Birth': candidate.dateOfBirth ? new Date(candidate.dateOfBirth).toLocaleDateString() : '',
+        'Address': candidate.address || '',
+        'Email': candidate.email || '',
+        'Phone': candidate.phoneNumber || '',
+        'Personal ID': candidate.personalID || '',
+        'Note': candidate.note || ''
+      }));
+
+      // Tạo workbook và worksheet
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Candidates");
+
+      // Tạo tên file với timestamp
+      const date = new Date();
+      const fileName = `candidates_${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}.xlsx`;
+
+      // Xuất file
+      XLSX.writeFile(workbook, fileName);
+      message.success("Candidate data exported successfully!");
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      message.error("Failed to export data. Please try again.");
     }
   };
 
@@ -207,6 +248,21 @@ const CandidatePage = () => {
   );
 
   return (
+
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl text-gray-900 font-semibold">
+            Candidate List
+          </h2>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={fetchCandidates}
+            loading={loading}
+            type="primary"
+          >
+            Refresh
+          </Button>
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
       <Card className="max-w-7xl mx-auto shadow-lg">
         <div className="flex justify-between items-center mb-6">
@@ -223,7 +279,6 @@ const CandidatePage = () => {
             />
           </Space>
         </div>
-
         <Table
           columns={columns}
           dataSource={filteredCandidates.map((item) => ({
@@ -232,6 +287,24 @@ const CandidatePage = () => {
           }))}
           bordered
           loading={loading}
+          scroll={{ x: "max-content", y: 500 }}
+        />
+
+        {/* Nút Export dành cho Reviewer */}
+        {userRole === 'Reviewer' && (
+          <div className="mt-6 flex justify-end">
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              size="large"
+              onClick={handleExportData}
+              className="bg-green-600 hover:bg-green-700 border-0"
+            >
+              Export Candidate Information
+            </Button>
+          </div>
+        )}
+      </div>
           scroll={{ x: 1500, y: 'calc(100vh - 300px)' }}
           pagination={{
             pageSize: 10,
@@ -250,6 +323,7 @@ const CandidatePage = () => {
           </button>
         </Tooltip> */}
       </Card>
+
     </div>
   );
 };

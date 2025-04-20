@@ -86,13 +86,13 @@ const navItems = [
     label: "Candidates",
     icon: "SolutionOutlined", // Person review/interview
     path: "/candidates",
-    roles: ["Admin", "HR"],
+    roles: ["Admin", "HR","Reviewer"],
     children: [
       {
         key: "7-1",
         label: "View Candidates",
         path: "/candidates-view",
-        roles: ["Admin", "HR"],
+        roles: ["Admin", "HR","Reviewer"],
       },
       {
         key: "7-2",
@@ -264,6 +264,13 @@ const navItems = [
         roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
       },
     ],
+  },
+  {
+    key: "20",
+    label: "Reports",
+    icon: "FileExcelOutlined",
+    path: "/export-certificate",
+    roles: ["Reviewer"],
   },
 ];
 

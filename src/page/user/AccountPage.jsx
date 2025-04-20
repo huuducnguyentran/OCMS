@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Table, Tag, Typography, Button, Space, Input, message } from "antd";
-import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
-import { getAllUsers } from "../../services/userService";
+import { ReloadOutlined, SearchOutlined, DownloadOutlined, EditOutlined } from '@ant-design/icons';
+import { getAllUsers, exportTraineeInfo } from "../../services/userService";
+import { useNavigate } from "react-router-dom";
+import * as XLSX from 'xlsx';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -12,9 +14,41 @@ const AccountPage = () => {
   const [searchText, setSearchText] = useState('');
   const [filteredAccounts, setFilteredAccounts] = useState([]);
   const [sortedInfo, setSortedInfo] = useState({});
+  const [userRole, setUserRole] = useState('');
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+  });
+  const navigate = useNavigate();
 
-  const handleChange = ( sorter) => {
+  useEffect(() => {
+    // Lấy role người dùng từ session
+    const role = sessionStorage.getItem('role');
+    setUserRole(role);
+  }, []);
+
+
+  const handleChange = (pagination, filters, sorter) => {
+    console.log('Pagination changed:', pagination);
+    setPagination(pagination);
     setSortedInfo(sorter);
+  };
+
+  // Hàm chuyển hướng đến trang cập nhật
+  const navigateToUpdate = (userId) => {
+    navigate(`/account/update/${userId}`);
+  };
+
+  // Hàm xử lý xuất thông tin học viên
+  const handleExportTraineeInfo = async (userId) => {
+    try {
+      message.loading({ content: "Đang chuẩn bị tải xuống...", key: "exportLoading" });
+      await exportTraineeInfo(userId);
+      message.success({ content: "Tải xuống thành công", key: "exportLoading" });
+    } catch (error) {
+      console.error("Error exporting trainee info:", error);
+      message.error({ content: "Không thể tải xuống file. Vui lòng thử lại", key: "exportLoading" });
+    }
   };
 
   const columns = [
@@ -96,7 +130,6 @@ const AccountPage = () => {
         return <Tag color={color}>{roleName}</Tag>;
       },
     },
-
     {
       title: "Date of Birth",
       dataIndex: "dateOfBirth",
@@ -106,6 +139,36 @@ const AccountPage = () => {
       sortOrder: sortedInfo.columnKey === 'dateOfBirth' ? sortedInfo.order : null,
       render: (date) => new Date(date).toLocaleDateString(),
     },
+    // Thêm cột Action nếu người dùng là Admin hoặc Reviewer
+    ...(userRole === 'Admin' || userRole === 'Reviewer' ? [
+      {
+        title: "Action",
+        key: "action",
+        width: 100,
+        fixed: "right",
+        render: (_, record) => (
+          userRole === 'Admin' ? (
+            <Button 
+              type="primary" 
+              icon={<EditOutlined />} 
+              size="small"
+              onClick={() => navigateToUpdate(record.userId)}
+              className="bg-blue-500 hover:bg-blue-600"
+            />
+          ) : (
+            <Button 
+              type="primary" 
+              icon={<DownloadOutlined />} 
+              size="small"
+              onClick={() => handleExportTraineeInfo(record.userId)}
+              disabled={record.roleName !== "Trainee"}
+              className="bg-green-500 hover:bg-green-600"
+              title={record.roleName !== "Trainee" ? "Only available for Trainee accounts" : "Export trainee information"}
+            />
+          )
+        ),
+      },
+    ] : []),
   ];
 
   const handleSearch = (value) => {
@@ -125,6 +188,39 @@ const AccountPage = () => {
         (account.specialtyId || '').toLowerCase().includes(searchValue)           // Tìm theo Role
       );
       setFilteredAccounts(filtered);
+    }
+  };
+
+  // Hàm xử lý xuất dữ liệu
+  const handleExportData = () => {
+    try {
+      // Chuẩn bị dữ liệu để xuất
+      const dataToExport = filteredAccounts.map(account => ({
+        'User ID': account.userId,
+        'Username': account.username,
+        'Full Name': account.fullName,
+        'Email': account.email,
+        'Phone': account.phoneNumber,
+        'Gender': account.gender,
+        'Role': account.roleName,
+        'Date of Birth': account.dateOfBirth ? new Date(account.dateOfBirth).toLocaleDateString() : '',
+      }));
+
+      // Tạo workbook và worksheet
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Accounts");
+
+      // Tạo tên file với timestamp
+      const date = new Date();
+      const fileName = `accounts_${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}.xlsx`;
+
+      // Xuất file
+      XLSX.writeFile(workbook, fileName);
+      message.success("Data exported successfully!");
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      message.error("Failed to export data. Please try again.");
     }
   };
 
@@ -198,14 +294,33 @@ const AccountPage = () => {
           onChange={handleChange}
           loading={loading}
           pagination={{
+            ...pagination,
             total: filteredAccounts.length,
-            pageSize: 10,
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} records`,
+            onChange: (page, pageSize) => {
+              console.log('Page changed to:', page);
+              console.log('PageSize changed to:', pageSize);
+              setPagination({ current: page, pageSize: pageSize });
+            },
           }}
           bordered
           scroll={{ x: "max-content", y: 500 }}
         />
+
+        {userRole === 'Reviewer' && (
+          <div className="mt-6 flex justify-end">
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              size="large"
+              onClick={handleExportData}
+              className="bg-green-600 hover:bg-green-700 border-0"
+            >
+              Export All Information
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

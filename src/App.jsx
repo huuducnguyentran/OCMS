@@ -63,11 +63,16 @@ import CreateExCertificatePage from "./page/candidate/CreateExCertificatePage";
 import ImportDecisionPage from "./page/decision/ImportDecisionPage";
 import DecisionTemplateListPage from "./page/decision/DecisionTemplatePage";
 import CreateAccountPage from "./page/user/CreateAccountPage";
+
+import UpdateAccountPage from "./page/user/UpdateAccountPage";
+import ExportCertificatePage from "./page/report/ExportCertificatePage";
+
 import DecisionTemplateDetailPage from "./page/decision/DecisionTemplateDetailPage";
 import UpdateDecisionTemplatePage from "./page/decision/UpdateDecisionTemplatePage";
 import DecisionActivePage from "./page/decision/DecisionActivePage";
 import DecisionPendingPage from "./page/decision/DecisionPending";
 import EditExternalCertiPage from "./page/candidate/EditExternalCertiPage";
+
 
 function App() {
   return (
@@ -96,6 +101,7 @@ function App() {
                           {/*  Dashboard & User Profile */}
                           <Route path="/home" element={<HomePage />} />
                           <Route path="/accounts" element={<AccountPage />} />
+                          <Route path="/account/update/:userId" element={<UpdateAccountPage />} />
                           <Route
                             path="/profile/:userId"
                             element={<PersonalProfilePage />}
@@ -314,6 +320,11 @@ function App() {
                             path="/regulations"
                             element={<RegulationsPage />}
                           />
+                                                    <Route
+                            path="/export-certificate"
+                            element={<ExportCertificatePage />}
+                          />
+
                           {/* <Route
                             path="/import-assign-instructor"
                             element={<AssignInstructorPage />}
