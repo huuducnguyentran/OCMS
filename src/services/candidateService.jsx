@@ -130,3 +130,21 @@ export const updateCandidate = async (id, payload) => {
     throw error;
   }
 };
+
+export const deleteCandidate = async (id) => {
+  try {
+    const token = sessionStorage.getItem("token");
+    const response = await axiosInstance.delete(
+      `/${API.DELETE_CANDIDATE}/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting candidate:", error);
+    throw error;
+  }
+};

@@ -42,7 +42,7 @@ export const fetchCertificateTemplates = async () => {
 export const fetchCertificateTemplatebyId = async (id) => {
   try {
     const response = await axiosInstance.get(
-      `/${API.GET_CERTIFICATE_TEMPLATE_BY_ID}/${id}/`,
+      `/${API.GET_CERTIFICATE_TEMPLATE_BY_ID}/${id}`,
       {
         headers: {
           Accept: "text/plain",
@@ -104,9 +104,16 @@ export const getCertificateById = async (certificateId) => {
   return response.data;
 };
 
-export const getTraineeCertificateById = async (userId) => {
+export const getTraineeCertificateByOtherId = async (userId) => {
   const response = await axiosInstance.get(
     `${API.GET_TRAINEE_CERTIFICATE}/${userId}`
+  );
+  return response.data;
+};
+
+export const getTraineeCertificateById = async () => {
+  const response = await axiosInstance.get(
+    `${API.GET_TRAINEE_CERTIFICATE}/view`
   );
   return response.data;
 };

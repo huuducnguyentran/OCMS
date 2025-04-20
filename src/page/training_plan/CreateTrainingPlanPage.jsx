@@ -7,7 +7,7 @@ import { ArrowLeftOutlined, SaveOutlined, ReloadOutlined } from "@ant-design/ico
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { trainingPlanService } from '../../services/trainingPlanService';
-import { getTrainingPlanSchema, applyTrainingPlanValidation } from "../../../utils/validationSchemas";
+import { applyTrainingPlanValidation } from "../../../utils/validationSchemas";
 import axiosInstance from "../../../utils/axiosInstance";
 
 const { TextArea } = Input;
@@ -32,7 +32,8 @@ const CreateTrainingPlanPage = () => {
       setLoadingSpecialties(true);
       const response = await axiosInstance.get("Specialty");
       if (response.data.success && response.data.data) {
-        setSpecialties(response.data.data);
+        const activeSpecialties = response.data.data.filter(specialty => specialty.status === 0);
+        setSpecialties(activeSpecialties);
       }
     } catch (error) {
       console.error("Failed to fetch specialties:", error);
@@ -83,7 +84,7 @@ const CreateTrainingPlanPage = () => {
   // Helper function for rendering specialty options
   const renderSpecialtyOptions = (specialties) => {
     return specialties.map(specialty => {
-      if (specialty.children && specialty.children.length > 0) {
+      if (specialty.children && specialty.children.length > 0 ) {
         return (
           <Select.OptGroup key={specialty.specialtyId} label={specialty.specialtyName}>
             <Option key={specialty.specialtyId} value={specialty.specialtyId}>

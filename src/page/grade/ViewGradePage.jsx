@@ -19,9 +19,11 @@ import {
   DeleteOutlined,
   MoreOutlined,
   FilterOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
-import { gradeServices } from "../../services/gradeServices";
+import { gradeServices,exportCourseResults} from "../../services/gradeServices";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from 'xlsx';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -32,39 +34,45 @@ const ViewGradePage = () => {
   const [searchText, setSearchText] = useState("");
   const [filteredGrades, setFilteredGrades] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState("all");
+  const [userRole, setUserRole] = useState('');
   const [subjectList, setSubjectList] = useState([]);
   const [sortedInfo, setSortedInfo] = useState({});
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+  });
   const navigate = useNavigate();
 
   const handleChange = (pagination, filters, sorter) => {
+    setPagination(pagination);
     setSortedInfo(sorter);
   };
+  useEffect(() => {
+    // Lấy role người dùng từ session
+    const role = sessionStorage.getItem('role');
+    setUserRole(role);
+  }, []);
 
   const columns = [
     {
-      title: "Grade ID",
-      dataIndex: "gradeId",
-      key: "gradeId",
-      width: 120,
-      sorter: (a, b) => a.gradeId.localeCompare(b.gradeId),
-      sortOrder: sortedInfo.columnKey === "gradeId" ? sortedInfo.order : null,
+      title: "No.",
+      key: "index",
+      width: 70,
+      fixed: "left",
+      align: "center",
+      render: (_, __, index) => {
+        // Tính số thứ tự dựa trên trang hiện tại và số bản ghi mỗi trang
+        const { current, pageSize } = pagination;
+        return ((current - 1) * pageSize) + index + 1;
+      }
     },
     {
-      title: "Trainee ID",
-      dataIndex: "traineeAssignID",
-      key: "traineeAssignID",
+      title: "Trainee",
+      dataIndex: "fullname",
+      key: "fullname",
       width: 120,
-      sorter: (a, b) => a.traineeAssignID.localeCompare(b.traineeAssignID),
-      sortOrder:
-        sortedInfo.columnKey === "traineeAssignID" ? sortedInfo.order : null,
-    },
-    {
-      title: "Subject",
-      dataIndex: "subjectId",
-      key: "subjectId",
-      width: 120,
-      sorter: (a, b) => a.subjectId.localeCompare(b.subjectId),
-      sortOrder: sortedInfo.columnKey === "subjectId" ? sortedInfo.order : null,
+      sorter: (a, b) => a.fullname.localeCompare(b.fullname),
+      sortOrder: sortedInfo.columnKey === "fullname" ? sortedInfo.order : null,
       // filteredValue: [searchText],
       // onFilter: (value, record) => {
       //   return record.subjectId.toLowerCase().includes(value.toLowerCase());
@@ -162,14 +170,19 @@ const ViewGradePage = () => {
       sorter: (a, b) => a.totalScore - b.totalScore,
       sortOrder:
         sortedInfo.columnKey === "totalScore" ? sortedInfo.order : null,
-      render: (score) => (
-        <Tag
-          color={score >= 5 ? "success" : "error"}
-          className="w-16 text-center font-semibold"
-        >
-          {score}
-        </Tag>
-      ),
+      render: (score) => {
+        const roundedScore = Number(score).toFixed(2);
+        const formattedScore = parseFloat(roundedScore);
+        
+        return (
+          <Tag
+            color={score >= 5 ? "success" : "error"}
+            className="w-16 text-center font-semibold"
+          >
+            {formattedScore}
+          </Tag>
+        );
+      },
     },
     {
       title: "Status",
@@ -374,6 +387,54 @@ const ViewGradePage = () => {
       setLoading(false);
     }
   };
+  const handleExportCourseResults = async () => {
+    try {
+      message.loading({ content: "Đang chuẩn bị tải xuống...", key: "exportLoading" });
+      await exportCourseResults();
+      message.success({ content: "Tải xuống thành công", key: "exportLoading" });
+    } catch (error) {
+      console.error("Error exporting trainee info:", error);
+      message.error({ content: "Không thể tải xuống file. Vui lòng thử lại", key: "exportLoading" });
+    }
+  };
+
+  const handleExportData = () => {
+    try {
+      message.loading({ content: "Đang chuẩn bị xuất file...", key: "export" });
+      
+      // Chuẩn bị dữ liệu để xuất
+      const dataToExport = filteredGrades.map(grade => ({
+        'Grade ID': grade.gradeId,
+        'Trainee ID': grade.traineeAssignID,
+        'Subject': grade.subjectId,
+        'Participation Score': grade.participantScore,
+        'Assignment Score': grade.assignmentScore,
+        'Final Exam Score': grade.finalExamScore,
+        'Resit Score': grade.finalResitScore || '-',
+        'Total Score': Number(grade.totalScore).toFixed(2),
+        'Status': grade.gradeStatus,
+        'Remarks': grade.remarks || '',
+        'Graded By': grade.gradedByInstructorId,
+        'Evaluation Date': grade.evaluationDate ? new Date(grade.evaluationDate).toLocaleString() : '',
+      }));
+
+      // Tạo workbook và worksheet
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Grades");
+
+      // Tạo tên file với timestamp
+      const date = new Date();
+      const fileName = `grades_${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}.xlsx`;
+
+      // Xuất file
+      XLSX.writeFile(workbook, fileName);
+      message.success({ content: "Xuất file thành công!", key: "export" });
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      message.error({ content: "Không thể xuất file. Vui lòng thử lại!", key: "export" });
+    }
+  };
 
   useEffect(() => {
     fetchGrades();
@@ -448,8 +509,8 @@ const ViewGradePage = () => {
           dataSource={filteredGrades}
           onChange={handleChange}
           pagination={{
+            ...pagination,
             total: filteredGrades.length,
-            pageSize: 10,
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} records`,
           }}
@@ -458,6 +519,36 @@ const ViewGradePage = () => {
           bordered
           size="middle"
         />
+
+        {userRole === 'Reviewer' && (
+          <div className="mt-6 flex justify-end">
+            <div className="flex items-center gap-2 p-5">
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              size="large"
+              onClick={handleExportData}
+              className="bg-green-600 hover:bg-green-700 border-0"
+            >
+              Export All Information
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              size="large"
+              onClick={handleExportCourseResults}
+              className="bg-green-600 hover:bg-green-700 border-0"
+            >
+              Export Course Results
+            </Button>
+          </div>
+
+          </div>
+          
+        )}
+
       </div>
     </div>
   );

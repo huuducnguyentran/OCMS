@@ -430,3 +430,143 @@ export const SchedulePageValidationSchema = {
     return timeString;
   }
 };
+
+// Add these helper functions at the top of validationSchemas.jsx
+const calculateAge = (birthDate) => {
+  const today = new Date();
+  const birth = new Date(birthDate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+};
+
+// Update the CreateAccountSchema validation messages to be more immediate
+export const CreateAccountSchema = Yup.object({
+  fullName: Yup.string()
+    .required("Full name is required")
+    .min(3, "Full name must be at least 3 characters")
+    .max(50, "Full name must not exceed 50 characters")
+    .matches(
+      /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂẾưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ\s\W|_]+$/,
+      "Full name can only contain letters, spaces and diacritics"
+    )
+    .trim(),
+
+  email: Yup.string()
+    .required("Email is required")
+    .email("Invalid email format")    
+    .max(100, "Email must not exceed 100 characters")
+    .trim(),
+
+  gender: Yup.string()
+    .required("Gender is required")
+    .oneOf(["Male", "Female", "Other"], "Invalid gender selection"),
+
+  dateOfBirth: Yup.date()
+    .required("Date of birth is required")
+    .max(new Date(), "Date of birth cannot be in the future")
+    .test("age", "User must be at least 18 years old", (value) => {
+      if (!value) return false;
+      const today = new Date();
+      const birthDate = new Date(value);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age >= 18;
+    }),
+
+  phoneNumber: Yup.string()
+    .required("Phone number is required")
+    .matches(/^[0-9]{10}$/, "Phone number must be exactly 10 digits")
+    .trim(),
+
+  address: Yup.string()
+    .required("Address is required")
+    .min(5, "Address must be at least 5 characters")
+    .max(200, "Address must not exceed 200 characters")
+    .matches(
+      /^[0-9a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂẾưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ\s,.-/#]+$/,
+      "Address can contain letters, numbers, and special characters (,./-#)"
+    )
+    .trim(),
+
+  roleId: Yup.number()
+    .required("Role is required")
+    .test("valid-role", "Invalid role selection", (value) => {
+      const validRoles = [2, 3, 4, 5, 6, 8];
+      return validRoles.includes(value);
+    }),
+
+  specialtyId: Yup.string()
+    .required("Specialty is required")
+    .trim(),
+
+  departmentId: Yup.string()
+    .nullable()
+    .trim(),
+
+  status: Yup.number()
+    .default(0)
+    .oneOf([0, 1], "Invalid status"),
+
+  isAssign: Yup.boolean()
+    .required("Assignment status is required")
+});
+
+// Update the validation function to support real-time validation
+export const applyCreateAccountValidation = async (values, validateField = null) => {
+  try {
+    if (validateField) {
+      // Real-time validation for a single field
+      const fieldValue = values[validateField];
+      await Yup.reach(CreateAccountSchema, validateField).validate(fieldValue);
+      return {
+        isValid: true,
+        values: { [validateField]: fieldValue },
+        errors: null,
+      };
+    } else {
+      // Validate all fields
+      const validatedValues = await CreateAccountSchema.validate(values, {
+        abortEarly: false,
+      });
+      return {
+        isValid: true,
+        values: validatedValues,
+        errors: null,
+      };
+    }
+  } catch (error) {
+    const errors = {};
+    if (error.inner && error.inner.length > 0) {
+      error.inner.forEach((err) => {
+        errors[err.path] = err.message;
+      });
+    } else {
+      // Single field validation error
+      errors[error.path] = error.message;
+    }
+    return {
+      isValid: false,
+      values: null,
+      errors,
+    };
+  }
+};
+
+// Add a new helper function for real-time field validation
+export const validateField = async (fieldName, value) => {
+  try {
+    await Yup.reach(CreateAccountSchema, fieldName).validate(value);
+    return { isValid: true, error: null };
+  } catch (error) {
+    return { isValid: false, error: error.message };
+  }
+};

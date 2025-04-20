@@ -5,7 +5,7 @@ import { API } from "../../api/apiUrl";
 export const getAllRequests = async () => {
   try {
     const response = await axiosInstance.get(`/${API.GET_ALL_REQUEST}`);
-    return response.data;
+    return response.data.requests;
   } catch (error) {
     console.error("Error fetching requests:", error?.response || error.message);
     throw error;

@@ -66,19 +66,33 @@ const navItems = [
     icon: "TeamOutlined", // Better for multiple user accounts
     path: "/accounts",
     roles: ["Admin", "Reviewer"],
+    children: [
+      {
+        key: "6-1",
+        label: "View Accounts",
+        path: "/accounts",
+        roles: ["Admin", "Reviewer"],
+      },
+      {
+        key: "6-2",
+        label: "Create Account",
+        path: "/create-account",
+        roles: ["Admin"],
+      },
+    ],
   },
   {
     key: "7",
     label: "Candidates",
     icon: "SolutionOutlined", // Person review/interview
     path: "/candidates",
-    roles: ["Admin", "HR"],
+    roles: ["Admin", "HR","Reviewer"],
     children: [
       {
         key: "7-1",
         label: "View Candidates",
         path: "/candidates-view",
-        roles: ["Admin", "HR"],
+        roles: ["Admin", "HR","Reviewer"],
       },
       {
         key: "7-2",
@@ -118,9 +132,9 @@ const navItems = [
   },
   {
     key: "10",
-    label: "Send Request",
+    label: "Send Complaint",
     icon: "FileAddOutlined",
-    path: "/send-request",
+    path: "/send-complaint",
     roles: ["Trainee", "Training staff", "HR", "AOC Manager"],
   },
   {
@@ -140,7 +154,7 @@ const navItems = [
         key: "11-2",
         label: "Assigned Trainee",
         path: "/assigned-trainee",
-        roles: ["Admin", "Training staff", "HeadMaster", "Trainee"],
+        roles: ["Admin", "Training staff", "Trainee"],
       },
     ],
   },
@@ -177,19 +191,19 @@ const navItems = [
     label: "Certificate",
     icon: "FileProtectOutlined",
     path: "/certificate",
-    roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+    roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
     children: [
       {
         key: "14-1",
         label: "Certificate Pending",
         path: "/certificate-pending",
-        roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+        roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
       },
       {
         key: "14-2",
         label: "Certificate Active",
         path: "/certificate-active",
-        roles: ["Admin", "HR", "AOC Manager", "Training staff"],
+        roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
       },
     ],
   },
@@ -222,6 +236,41 @@ const navItems = [
       "HR",
       "AOC Manager",
     ],
+  },
+  {
+    key: "18",
+    label: "Decision Template",
+    icon: "FileProtectOutlined",
+    path: "/decision-template",
+    roles: ["Admin", "HR", "AOC Manager"],
+  },
+  {
+    key: "19",
+    label: "Decision",
+    icon: "FileProtectOutlined",
+    path: "/decision",
+    roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
+    children: [
+      {
+        key: "19-1",
+        label: "Decision Pending",
+        path: "/decision-pending",
+        roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
+      },
+      {
+        key: "19-2",
+        label: "Decision Active",
+        path: "/decision-active",
+        roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
+      },
+    ],
+  },
+  {
+    key: "20",
+    label: "Reports",
+    icon: "FileExcelOutlined",
+    path: "/export-certificate",
+    roles: ["Reviewer"],
   },
 ];
 

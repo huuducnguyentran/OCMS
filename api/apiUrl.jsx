@@ -10,13 +10,19 @@ export const API = {
   UPDATE_CANDIDATE: "Candidate",
   DELETE_CANDIDATE: "Candidate",
 
+  // Notification
   SEND_NOTI: "/notifications/send",
   CHECK_NOTI: "/api/notifications/mark-as-read/",
   VIEW_NOTI_BY_USER_ID: "/api/notifications/",
+
+  //external certificate
   GET_EXTERNAL_CERTIFICATE_BY_ID: "ExternalCertificate/candidate",
+  CREATE_EXTERNAL_CERTIFICATE: "ExternalCertificate",
+  UPDATE_EXTERNAL_CERTIFICATE: "ExternalCertificate",
+  DELETE_EXTERNAL_CERTIFICATE: "ExternalCertificate",
 
   // Request
-  GET_ALL_REQUEST: "Requests",
+  GET_ALL_REQUEST: "Requests/head-master/requests",
   GET_REQUEST_BY_ID: "Requests",
   APPROVE_REQUEST: "Requests",
   REJECT_REQUEST: "Requests",
@@ -24,8 +30,10 @@ export const API = {
   GET_ALL_EDU_OFFICER_REQUEST: "Requests/edu-officer/requests",
   CREATE_REQUEST: "Requests",
 
+  // User
   GET_ALL_USER: "User",
   GET_USER_BY_ID: "User",
+  CREATE_USER: "User",
   GET_USER_PROiLE: "User/profile",
   UPDATE_USER: "User",
   UPDATE_USER_AVATAR: "/User/avatar",
@@ -95,6 +103,7 @@ export const API = {
   //certificate
   GET_PENDING_CERTIFICATE: "Certificate/pending",
   GET_ACTIVE_CERTIFICATE: "Certificate/active",
+  GET_TRAINEE_CERTIFICATE_FROM_OTHRER_USER: "Certificate/trainee",
   GET_TRAINEE_CERTIFICATE: "Certificate/trainee",
   GET_ALL_CERTIFICATE: "Certificate",
   GET_CERTIFICATE_BY_ID: "Certificate",
@@ -111,4 +120,16 @@ export const API = {
 
   // digital signature
   SIGN_DIGITAL_SIGNATURE: "PdfSign",
+
+  // decision template
+  GET_ALL_DECISION_TEMPLATE: "DecisionTemplate/GetAll",
+  GET_DECISION_TEMPLATE_BY_ID: "DecisionTemplate/GetById",
+  IMPORT_DECISION_TEMPLATE: "DecisionTemplate/Create",
+  UPDATE_DECISION_TEMPLATE: "DecisionTemplate/Update",
+  DELETE_DECISION_TEMPLATE: "DecisionTemplate/Delete",
+
+  // decision
+  GET_ALL_ACTIVE_DECISION: "Decison/GetAllApprovedDecisions",
+  GET_ALL_PENDING_DECISION: "Decison/GetAllDraftDecisions",
+  SIGN_DIGITAL_SIGNATURE_DECISION: "PdfSign",
 };
