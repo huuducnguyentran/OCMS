@@ -103,12 +103,14 @@ export const API = {
   //certificate
   GET_PENDING_CERTIFICATE: "Certificate/pending",
   GET_ACTIVE_CERTIFICATE: "Certificate/active",
+  GET_REVOKED_CERTIFICATE: "Certificate/revoked",
   GET_TRAINEE_CERTIFICATE_FROM_OTHRER_USER: "Certificate/trainee",
   GET_TRAINEE_CERTIFICATE: "Certificate/trainee",
   GET_ALL_CERTIFICATE: "Certificate",
   GET_CERTIFICATE_BY_ID: "Certificate",
   CREATE_CERTIFICATE: "Certificate",
   UPDATE_CERTIFICATE: "Certificate",
+  REVOKE_CERTIFICATE: "Certificate/revoke",
 
   // Specialty APIs
   GET_ALL_SPECIALTY: "Specialty",

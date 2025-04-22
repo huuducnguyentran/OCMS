@@ -1,10 +1,32 @@
 // src/pages/CandidatePage.jsx
 import { useEffect, useState } from "react";
-import { Table, Button, Input, Space, Tag, Card, Typography, Modal, message, Tooltip, Dropdown } from "antd";
-import { getCandidates, deleteCandidate } from "../../services/candidateService";
+import {
+  Table,
+  Button,
+  Input,
+  Space,
+  Tag,
+  Card,
+  Typography,
+  Modal,
+  message,
+  Dropdown,
+} from "antd";
+import {
+  getCandidates,
+  deleteCandidate,
+} from "../../services/candidateService";
 import { useNavigate } from "react-router-dom";
-import { SearchOutlined, UserOutlined, FileAddOutlined, EditOutlined, DeleteOutlined, PlusOutlined, MoreOutlined } from "@ant-design/icons";
-import { deleteExternalCertificate } from "../../services/externalCertifcateService";
+import {
+  SearchOutlined,
+  UserOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  MoreOutlined,
+  DownloadOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
+import * as XLSX from "xlsx";
 
 const { Title } = Typography;
 
@@ -12,10 +34,12 @@ const CandidatePage = () => {
   const [candidates, setCandidates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
+  const [userRole, setUserRole] = useState("");
   const navigate = useNavigate();
-  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
+    const role = sessionStorage.getItem("role");
+    setUserRole(role);
     fetchCandidates();
   }, []);
 
@@ -26,18 +50,55 @@ const CandidatePage = () => {
       setCandidates(data || []);
     } catch (error) {
       console.error("Failed to fetch candidates:", error);
+      message.error("Failed to load candidates");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleExportData = () => {
+    try {
+      const dataToExport = candidates.map((candidate) => ({
+        "Candidate ID": candidate.candidateId,
+        "Full Name": candidate.fullName,
+        Gender: candidate.gender,
+        "Date of Birth": candidate.dateOfBirth
+          ? new Date(candidate.dateOfBirth).toLocaleDateString()
+          : "",
+        Address: candidate.address || "",
+        Email: candidate.email || "",
+        Phone: candidate.phoneNumber || "",
+        "Personal ID": candidate.personalID || "",
+        Note: candidate.note || "",
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Candidates");
+
+      const date = new Date();
+      const fileName = `candidates_${date.getFullYear()}-${
+        date.getMonth() + 1
+      }-${date.getDate()}_${date.getHours()}-${date.getMinutes()}.xlsx`;
+
+      XLSX.writeFile(workbook, fileName);
+      message.success("Candidate data exported successfully!");
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      message.error("Failed to export data. Please try again.");
+    }
+  };
+
   const getStatusTag = (status) => {
     const statusMap = {
-      0: { color: 'orange', text: 'Pending' },
-      1: { color: 'green', text: 'Approved' },
-      2: { color: 'red', text: 'Rejected' }
+      0: { color: "orange", text: "Pending" },
+      1: { color: "green", text: "Approved" },
+      2: { color: "red", text: "Rejected" },
     };
-    const { color, text } = statusMap[status] || { color: 'default', text: 'Unknown' };
+    const { color, text } = statusMap[status] || {
+      color: "default",
+      text: "Unknown",
+    };
     return <Tag color={color}>{text}</Tag>;
   };
 
@@ -52,11 +113,16 @@ const CandidatePage = () => {
             <div>ID: {record.candidateId}</div>
             <div>Name: {record.fullName}</div>
             <div>Email: {record.email}</div>
-            <div>Status: {
-              record.candidateStatus === 0 ? "Pending" :
-              record.candidateStatus === 1 ? "Approved" :
-              record.candidateStatus === 2 ? "Rejected" : "Unknown"
-            }</div>
+            <div>
+              Status:{" "}
+              {record.candidateStatus === 0
+                ? "Pending"
+                : record.candidateStatus === 1
+                ? "Approved"
+                : record.candidateStatus === 2
+                ? "Rejected"
+                : "Unknown"}
+            </div>
           </div>
         </div>
       ),
@@ -66,14 +132,14 @@ const CandidatePage = () => {
       width: 500,
       centered: true,
       okButtonProps: {
-        className: 'bg-red-500 hover:bg-red-600'
+        className: "bg-red-500 hover:bg-red-600",
       },
       onOk: async () => {
         try {
           setLoading(true);
           await deleteCandidate(record.candidateId);
           message.success("Candidate deleted successfully");
-          fetchCandidates(); // Refresh danh sách
+          fetchCandidates();
         } catch (error) {
           console.error("Error deleting candidate:", error);
           if (error.response?.status === 404) {
@@ -91,22 +157,22 @@ const CandidatePage = () => {
   const getActionItems = (record) => ({
     items: [
       {
-        key: 'edit',
+        key: "edit",
         icon: <EditOutlined />,
-        label: 'Edit',
-        onClick: () => navigate(`/candidates/${record.candidateId}`)
+        label: "Edit",
+        onClick: () => navigate(`/candidates/${record.candidateId}`),
       },
       {
-        type: 'divider'
+        type: "divider",
       },
       {
-        key: 'delete',
+        key: "delete",
         icon: <DeleteOutlined />,
-        label: 'Delete',
+        label: "Delete",
         danger: true,
-        onClick: () => handleDelete(record)
-      }
-    ]
+        onClick: () => handleDelete(record),
+      },
+    ],
   });
 
   const columns = [
@@ -115,14 +181,14 @@ const CandidatePage = () => {
       dataIndex: "candidateId",
       key: "candidateId",
       width: 100,
-      fixed: 'left',
-      render: (text) => <span className="font-medium">{text}</span>
+      fixed: "left",
+      render: (text) => <span className="font-medium">{text}</span>,
     },
     {
       title: "Full Name",
       dataIndex: "fullName",
       key: "fullName",
-      fixed: 'left',
+      fixed: "left",
       width: 200,
       render: (text, record) => (
         <a
@@ -138,7 +204,7 @@ const CandidatePage = () => {
       dataIndex: "candidateStatus",
       key: "status",
       width: 120,
-      render: (status) => getStatusTag(status)
+      render: getStatusTag,
     },
     {
       title: "Gender",
@@ -168,7 +234,7 @@ const CandidatePage = () => {
           key: "phoneNumber",
           width: 150,
         },
-      ]
+      ],
     },
     {
       title: "Address",
@@ -179,27 +245,27 @@ const CandidatePage = () => {
     {
       title: "Actions",
       key: "actions",
-      fixed: 'right',
+      fixed: "right",
       width: 80,
       render: (_, record) => (
         <Space size="small">
           <Dropdown
             menu={getActionItems(record)}
             placement="bottomRight"
-            trigger={['click']}
+            trigger={["click"]}
           >
-            <Button 
-              type="text" 
-              icon={<MoreOutlined />} 
+            <Button
+              type="text"
+              icon={<MoreOutlined />}
               className="text-gray-600 hover:text-blue-600"
             />
           </Dropdown>
         </Space>
       ),
-    }
+    },
   ];
 
-  const filteredCandidates = candidates.filter(candidate => 
+  const filteredCandidates = candidates.filter((candidate) =>
     Object.values(candidate)
       .join(" ")
       .toLowerCase()
@@ -218,9 +284,17 @@ const CandidatePage = () => {
             <Input
               placeholder="Search candidates..."
               prefix={<SearchOutlined />}
-              onChange={e => setSearchText(e.target.value)}
+              onChange={(e) => setSearchText(e.target.value)}
               className="min-w-[300px]"
             />
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={fetchCandidates}
+              loading={loading}
+              type="primary"
+            >
+              Refresh
+            </Button>
           </Space>
         </div>
 
@@ -232,7 +306,7 @@ const CandidatePage = () => {
           }))}
           bordered
           loading={loading}
-          scroll={{ x: 1500, y: 'calc(100vh - 300px)' }}
+          scroll={{ x: 1500, y: "calc(100vh - 300px)" }}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
@@ -241,14 +315,19 @@ const CandidatePage = () => {
           className="shadow-sm"
         />
 
-        {/* <Tooltip title="Add New Candidate" placement="left">
-          <button
-            onClick={() => navigate("/candidate-create")}
-            className="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 animate__animated animate__bounceIn"
-          >
-            <PlusOutlined className="text-xl" />
-          </button>
-        </Tooltip> */}
+        {userRole === "Reviewer" && (
+          <div className="mt-6 flex justify-end">
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              size="large"
+              onClick={handleExportData}
+              className="bg-green-600 hover:bg-green-700 border-0"
+            >
+              Export Candidate Information
+            </Button>
+          </div>
+        )}
       </Card>
     </div>
   );

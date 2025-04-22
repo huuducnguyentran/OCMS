@@ -9,52 +9,52 @@ import {
   Col,
   Typography,
 } from "antd";
+import { getRevokedCertificate } from "../../services/certificateService";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { SearchOutlined } from "@ant-design/icons";
-import { getActiveDecision } from "../../services/decisionService";
 
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
-const DecisionActivePage = () => {
-  const [decisions, setDecisions] = useState([]);
+const CertificateRevokedPage = () => {
+  const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchCode, setSearchCode] = useState("");
   const [filterDate, setFilterDate] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchDecisions = async () => {
+    const fetchCertificates = async () => {
       try {
-        const data = await getActiveDecision();
-        setDecisions(data);
+        const data = await getRevokedCertificate();
+        setCertificates(data);
       } catch (error) {
-        console.error("Failed to fetch decisions:", error);
+        console.error("Failed to fetch revoked certificates:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDecisions();
+    fetchCertificates();
   }, []);
 
-  const filteredDecisions = useMemo(() => {
-    return decisions.filter((decision) => {
-      const matchCode = decision.decisionCode
+  const filteredCertificates = useMemo(() => {
+    return certificates.filter((cert) => {
+      const matchCode = cert.certificateCode
         .toLowerCase()
         .includes(searchCode.toLowerCase());
-      const decisionDate = dayjs(decision.issueDate);
+
+      const certDate = dayjs(cert.issueDate);
       const matchDate =
         filterDate && filterDate.length === 2
-          ? decisionDate.isAfter(
-              filterDate[0].startOf("day").subtract(1, "ms")
-            ) && decisionDate.isBefore(filterDate[1].endOf("day").add(1, "ms"))
+          ? certDate.isAfter(filterDate[0].startOf("day").subtract(1, "ms")) &&
+            certDate.isBefore(filterDate[1].endOf("day").add(1, "ms"))
           : true;
 
       return matchCode && matchDate;
     });
-  }, [decisions, searchCode, filterDate]);
+  }, [certificates, searchCode, filterDate]);
 
   if (loading) {
     return (
@@ -65,17 +65,14 @@ const DecisionActivePage = () => {
   }
 
   return (
-    <div className="p-4 sm:p-8 min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <Title level={3} className="text-blue-800 mb-6">
-        Active Decisions List
-      </Title>
-
+    <div className="p-4">
+      <Title level={3}>Revoked Certificates List</Title>
       {/* Filters */}
-      <div className="mb-10 p-6 bg-white rounded-2xl shadow border border-gray-200">
-        <Row gutter={[16, 16]}>
+      <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+        <Row gutter={[16, 16]} className="mb-4">
           <Col xs={24} sm={12} md={8}>
             <Input
-              placeholder="Search by Decision Code"
+              placeholder="Search by Certificate Code"
               value={searchCode}
               onChange={(e) => setSearchCode(e.target.value)}
               prefix={<SearchOutlined />}
@@ -95,50 +92,52 @@ const DecisionActivePage = () => {
         </Row>
       </div>
 
-      {/* Decision List */}
-      {filteredDecisions.length === 0 ? (
+      {/* Certificate List */}
+      {filteredCertificates.length === 0 ? (
         <div className="flex justify-center items-center h-[60vh]">
-          <Empty description="No decisions match the filters" />
+          <Empty description="No revoked certificates match the filters" />
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {filteredDecisions.map((decision) => (
+          {filteredCertificates.map((cert) => (
             <div
-              key={decision.decisionId}
-              onClick={() => navigate(`/decision/${decision.decisionId}`)}
+              key={cert.certificateId}
+              onClick={() => navigate(`/certificate/${cert.certificateId}`)}
               className="cursor-pointer"
             >
               <Card
-                title={decision.decisionCode}
+                title={cert.certificateCode}
                 bordered
                 className="rounded-2xl shadow-md hover:shadow-lg transition"
                 cover={
                   <iframe
-                    src={decision.contentWithSas}
-                    title="Decision Preview"
+                    src={cert.certificateURLwithSas}
+                    title="Certificate Preview"
                     className="w-full h-64 rounded-t-2xl"
                   />
                 }
               >
                 <p>
-                  <strong>Title:</strong> {decision.title}
+                  <strong>User ID:</strong> {cert.userId}
                 </p>
                 <p>
-                  <strong>Issued By:</strong> {decision.issuedBy}
+                  <strong>Course ID:</strong> {cert.courseId}
                 </p>
-                <p className="text-sm text-gray-700 mb-1">
-                  <strong className="text-gray-800">Status:</strong>{" "}
-                  <span
-                    className={`px-2 py-1 rounded-full text-white text-xs ${
-                      decision.status === 1 ? "bg-green-500" : "bg-gray-400"
-                    }`}
-                  >
-                    {decision.status === 1 ? "Active" : "Inactive"}
-                  </span>
-                </p>
+                <span
+                  className={`px-2 py-1 rounded-full text-white text-xs ${
+                    cert.status === "Active"
+                      ? "bg-green-500"
+                      : cert.status === "Revoked"
+                      ? "bg-red-500"
+                      : "bg-gray-400"
+                  }`}
+                >
+                  {cert.status}
+                </span>
+
                 <p>
                   <strong>Issue Date:</strong>{" "}
-                  {new Date(decision.issueDate).toLocaleDateString()}
+                  {new Date(cert.issueDate).toLocaleDateString()}
                 </p>
               </Card>
             </div>
@@ -149,4 +148,4 @@ const DecisionActivePage = () => {
   );
 };
 
-export default DecisionActivePage;
+export default CertificateRevokedPage;
