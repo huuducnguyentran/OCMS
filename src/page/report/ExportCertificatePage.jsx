@@ -51,7 +51,7 @@ const ExportCertificatePage = () => {
         </div>
       </Card>
     </div>
-    </div>
+</div>
   );
 };
 

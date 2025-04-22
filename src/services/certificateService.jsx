@@ -124,3 +124,21 @@ export const signCertificate = async (certificateId) => {
   );
   return response.data;
 };
+
+export const revokeCertificate = async (certificateId, revokeReason) => {
+  try {
+    const response = await axiosInstance.post(
+      `/Certificate/revoke/${certificateId}`,
+      { revokeReason },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error revoking certificate:", error);
+    throw error;
+  }
+};
