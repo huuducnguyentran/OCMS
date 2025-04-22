@@ -8,16 +8,24 @@ import {
   Row,
   Col,
   Typography,
+  message,
+  Button,
+  Checkbox,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { SearchOutlined } from "@ant-design/icons";
-import { getPendingDecision } from "../../services/decisionService";
+import {
+  getPendingDecision,
+  signDecision,
+} from "../../services/decisionService";
 
 const { Title } = Typography;
+const { RangePicker } = DatePicker;
 
 const DecisionPendingPage = () => {
   const [decisions, setDecisions] = useState([]);
+  const [selectedDecisions, setSelectedDecisions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchCode, setSearchCode] = useState("");
   const [filterDate, setFilterDate] = useState(null);
@@ -38,19 +46,49 @@ const DecisionPendingPage = () => {
     fetchDecisions();
   }, []);
 
+  const handleCheckboxChange = (decisionId, checked) => {
+    setSelectedDecisions((prev) =>
+      checked ? [...prev, decisionId] : prev.filter((id) => id !== decisionId)
+    );
+  };
+
+  const handleSignDecisions = async () => {
+    if (selectedDecisions.length === 0) {
+      message.warning("Please select at least one decision.");
+      return;
+    }
+
+    try {
+      for (const id of selectedDecisions) {
+        await signDecision(id); // Make sure this service exists
+      }
+      message.success("Selected decisions signed successfully!");
+
+      const updated = await getPendingDecision();
+      setDecisions(updated);
+      setSelectedDecisions([]);
+    } catch (error) {
+      console.error("Signing failed:", error);
+      message.error("Failed to sign one or more decisions.");
+    }
+  };
+
   const filteredDecisions = useMemo(() => {
     return decisions.filter((decision) => {
-      const matchCode = (decision.decisionCode || "")
+      const matchCode = decision.decisionCode
         .toLowerCase()
         .includes(searchCode.toLowerCase());
-      const matchDate = filterDate
-        ? dayjs(decision.issueDate).isSame(filterDate, "day")
-        : true;
+      const decisionDate = dayjs(decision.issueDate);
+      const matchDate =
+        filterDate && filterDate.length === 2
+          ? decisionDate.isAfter(
+              filterDate[0].startOf("day").subtract(1, "ms")
+            ) && decisionDate.isBefore(filterDate[1].endOf("day").add(1, "ms"))
+          : true;
 
       return matchCode && matchDate;
     });
   }, [decisions, searchCode, filterDate]);
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[80vh]">
@@ -77,13 +115,23 @@ const DecisionPendingPage = () => {
             />
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <DatePicker
-              placeholder="Filter by Issue Date"
+            <RangePicker
+              placeholder={["From Date", "To Date"]}
               value={filterDate}
-              onChange={(date) => setFilterDate(date)}
+              onChange={(dates) => setFilterDate(dates)}
               style={{ width: "100%" }}
               allowClear
             />
+          </Col>
+          <Col xs={24} md={8} className="flex justify-end">
+            <Button
+              type="primary"
+              onClick={handleSignDecisions}
+              disabled={selectedDecisions.length === 0}
+              size="large"
+            >
+              Sign Selected ({selectedDecisions.length})
+            </Button>
           </Col>
         </Row>
       </div>
@@ -98,36 +146,53 @@ const DecisionPendingPage = () => {
           {filteredDecisions.map((decision) => (
             <div
               key={decision.decisionId}
-              onClick={() => navigate(`/decision/${decision.decisionId}`)}
-              className="cursor-pointer"
+              className="relative group rounded-2xl border border-gray-200 shadow-md hover:shadow-lg transition-all bg-white"
             >
-              <Card
-                title={decision.decisionCode}
-                bordered
-                className="rounded-2xl shadow-md hover:shadow-lg transition"
-                cover={
-                  <iframe
-                    src={decision.contentWithSas}
-                    title="Decision Preview"
-                    className="w-full h-64 rounded-t-2xl"
-                  />
+              <Checkbox
+                className="absolute top-2 right-2 z-10 bg-white p-1 rounded"
+                checked={selectedDecisions.includes(decision.decisionId)}
+                onChange={(e) =>
+                  handleCheckboxChange(decision.decisionId, e.target.checked)
                 }
+              />
+              <div
+                onClick={() => navigate(`/decision/${decision.decisionId}`)}
+                className="cursor-pointer"
               >
-                <p>
-                  <strong>Title:</strong> {decision.title}
-                </p>
-                <p>
-                  <strong>Issued By:</strong> {decision.issuedBy}
-                </p>
-                <p>
-                  <strong>Status:</strong>{" "}
-                  {decision.status === 1 ? "Active" : "Inactive"}
-                </p>
-                <p>
-                  <strong>Issue Date:</strong>{" "}
-                  {new Date(decision.issueDate).toLocaleDateString()}
-                </p>
-              </Card>
+                <Card
+                  title={decision.decisionCode}
+                  bordered
+                  className="rounded-2xl shadow-md hover:shadow-lg transition"
+                  cover={
+                    <iframe
+                      src={decision.contentWithSas}
+                      title="Decision Preview"
+                      className="w-full h-64 rounded-t-2xl"
+                    />
+                  }
+                >
+                  <p>
+                    <strong>Title:</strong> {decision.title}
+                  </p>
+                  <p>
+                    <strong>Issued By:</strong> {decision.issuedBy}
+                  </p>
+                  <p className="text-sm text-gray-700 mb-1">
+                    <strong className="text-gray-800">Status:</strong>{" "}
+                    <span
+                      className={`px-2 py-1 rounded-full text-white text-xs ${
+                        decision.status === 1 ? "bg-green-500" : "bg-gray-400"
+                      }`}
+                    >
+                      {decision.status === 1 ? "Active" : "Inactive"}
+                    </span>
+                  </p>
+                  <p>
+                    <strong>Issue Date:</strong>{" "}
+                    {new Date(decision.issueDate).toLocaleDateString()}
+                  </p>
+                </Card>
+              </div>
             </div>
           ))}
         </div>

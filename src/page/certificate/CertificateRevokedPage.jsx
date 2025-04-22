@@ -9,7 +9,7 @@ import {
   Col,
   Typography,
 } from "antd";
-import { getActiveCertificate } from "../../services/certificateService";
+import { getRevokedCertificate } from "../../services/certificateService";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { SearchOutlined } from "@ant-design/icons";
@@ -17,7 +17,7 @@ import { SearchOutlined } from "@ant-design/icons";
 const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
-const CertificateActivePage = () => {
+const CertificateRevokedPage = () => {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchCode, setSearchCode] = useState("");
@@ -27,10 +27,10 @@ const CertificateActivePage = () => {
   useEffect(() => {
     const fetchCertificates = async () => {
       try {
-        const data = await getActiveCertificate();
+        const data = await getRevokedCertificate();
         setCertificates(data);
       } catch (error) {
-        console.error("Failed to fetch certificates:", error);
+        console.error("Failed to fetch revoked certificates:", error);
       } finally {
         setLoading(false);
       }
@@ -66,7 +66,7 @@ const CertificateActivePage = () => {
 
   return (
     <div className="p-4">
-      <Title level={3}>Active Certificates List</Title>
+      <Title level={3}>Revoked Certificates List</Title>
       {/* Filters */}
       <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
         <Row gutter={[16, 16]} className="mb-4">
@@ -95,7 +95,7 @@ const CertificateActivePage = () => {
       {/* Certificate List */}
       {filteredCertificates.length === 0 ? (
         <div className="flex justify-center items-center h-[60vh]">
-          <Empty description="No certificates match the filters" />
+          <Empty description="No revoked certificates match the filters" />
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -123,20 +123,18 @@ const CertificateActivePage = () => {
                 <p>
                   <strong>Course ID:</strong> {cert.courseId}
                 </p>
-                <p className="text-sm text-gray-700 mb-1">
-                  <strong className="text-gray-800">Status:</strong>{" "}
-                  <span
-                    className={`px-2 py-1 rounded-full text-white text-xs ${
-                      cert.status === "Active"
-                        ? "bg-green-500"
-                        : cert.status === "Revoked"
-                        ? "bg-red-500"
-                        : "bg-gray-400"
-                    }`}
-                  >
-                    {cert.status}
-                  </span>
-                </p>
+                <span
+                  className={`px-2 py-1 rounded-full text-white text-xs ${
+                    cert.status === "Active"
+                      ? "bg-green-500"
+                      : cert.status === "Revoked"
+                      ? "bg-red-500"
+                      : "bg-gray-400"
+                  }`}
+                >
+                  {cert.status}
+                </span>
+
                 <p>
                   <strong>Issue Date:</strong>{" "}
                   {new Date(cert.issueDate).toLocaleDateString()}
@@ -150,4 +148,4 @@ const CertificateActivePage = () => {
   );
 };
 
-export default CertificateActivePage;
+export default CertificateRevokedPage;

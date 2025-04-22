@@ -15,6 +15,7 @@ import { SearchOutlined } from "@ant-design/icons";
 import { getActiveDecision } from "../../services/decisionService";
 
 const { Title } = Typography;
+const { RangePicker } = DatePicker;
 
 const DecisionActivePage = () => {
   const [decisions, setDecisions] = useState([]);
@@ -43,9 +44,13 @@ const DecisionActivePage = () => {
       const matchCode = decision.decisionCode
         .toLowerCase()
         .includes(searchCode.toLowerCase());
-      const matchDate = filterDate
-        ? dayjs(decision.issueDate).isSame(filterDate, "day")
-        : true;
+      const decisionDate = dayjs(decision.issueDate);
+      const matchDate =
+        filterDate && filterDate.length === 2
+          ? decisionDate.isAfter(
+              filterDate[0].startOf("day").subtract(1, "ms")
+            ) && decisionDate.isBefore(filterDate[1].endOf("day").add(1, "ms"))
+          : true;
 
       return matchCode && matchDate;
     });
@@ -79,11 +84,10 @@ const DecisionActivePage = () => {
             />
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <DatePicker
-              placeholder="Filter by Issue Date"
+            <RangePicker
+              placeholder={["From Date", "To Date"]}
               value={filterDate}
-              onChange={(date) => setFilterDate(date)}
-              size="large"
+              onChange={(dates) => setFilterDate(dates)}
               style={{ width: "100%" }}
               allowClear
             />
