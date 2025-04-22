@@ -72,7 +72,11 @@ import UpdateDecisionTemplatePage from "./page/decision/UpdateDecisionTemplatePa
 import DecisionActivePage from "./page/decision/DecisionActivePage";
 import DecisionPendingPage from "./page/decision/DecisionPending";
 import EditExternalCertiPage from "./page/candidate/EditExternalCertiPage";
+import DepartmentPage from "./page/department/DepartmentPage";
+import EditDepartmentPage from "./page/department/EditDepartmentPage";
+import CreateDepartmentPage from "./page/department/CreateDepartmentPage";
 import CertificateRevokedPage from "./page/certificate/CertificateRevokedPage";
+
 
 function App() {
   return (
@@ -344,6 +348,19 @@ function App() {
                             path="/course/:id"
                             element={<CourseDetailPage />}
                           /> */}
+                          {/* Department */}
+                          <Route
+                            path="/department"
+                            element={<DepartmentPage />}
+                          />
+                          <Route
+                            path="/department/edit/:id"
+                            element={<EditDepartmentPage />}
+                          />
+                          <Route
+                            path="/department/create"
+                            element={<CreateDepartmentPage />}
+                          />
                         </Routes>
                         <Footer />
                       </Layout>

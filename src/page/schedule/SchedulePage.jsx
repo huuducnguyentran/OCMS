@@ -6,8 +6,6 @@ import {
   ClockCircleOutlined,
   UserSwitchOutlined,
   PlusOutlined,
-  SearchOutlined,
-  UnorderedListOutlined,
   BookOutlined,
   InfoCircleOutlined,
   TagsOutlined,
@@ -19,6 +17,8 @@ import { SchedulePageValidationSchema } from '../../../utils/validationSchemas';
 const { Option } = Select;
 
 const SchedulePage = () => {
+  // State cho instructor filter (chỉ dùng khi TrainingStaff)
+  const [selectedInstructor, setSelectedInstructor] = useState('INST-1');
   const location = useLocation();
   const navigate = useNavigate();
   const [scheduleData, setScheduleData] = useState([]);
@@ -80,9 +80,6 @@ const SchedulePage = () => {
   // Format date as DD/MM
   const formatDateShort = SchedulePageValidationSchema.formatDateShort;
 
-  // Format date with day of month and month
-  const formatDateFull = SchedulePageValidationSchema.formatDateFull;
-
   // Check token and determine user role
   useEffect(() => {
     const token = sessionStorage.getItem("token");
@@ -97,7 +94,7 @@ const SchedulePage = () => {
     if (role) {
       setUserRole(role);
     } else {
-      const userId = sessionStorage.getItem("userId");
+      const userId = sessionStorage.getItem("role");
       if (userId && userId.startsWith("TS-")) {
         setUserRole("TrainingStaff");
       } else {
@@ -105,6 +102,28 @@ const SchedulePage = () => {
       }
     }
   }, [navigate]);
+
+  // Fetch instructor list nếu là TrainingStaff
+  useEffect(() => {
+    const fetchInstructors = async () => {
+      if (userRole === "TrainingStaff" || userRole === "Training staff") {
+        try {
+          const token = sessionStorage.getItem("token");
+          const response = await trainingScheduleService.getAllInstructors(token);
+          if (response && Array.isArray(response)) {
+            setInstructorList(response);
+          } else if (response && response.data && Array.isArray(response.data)) {
+            setInstructorList(response.data);
+          } else {
+            setInstructorList([]);
+          }
+        } catch (error) {
+          setInstructorList([]);
+        }
+      }
+    };
+    fetchInstructors();
+  }, [userRole]);
 
   // Fetch schedule data based on user role
   useEffect(() => {
@@ -114,58 +133,59 @@ const SchedulePage = () => {
   }, [userRole, viewMode]);
 
   // Fetch subjects list
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      try {
-        setLoading(true);
-        console.log("Fetching subjects from API...");
+  // useEffect(() => {
+  //   const fetchSubjects = async () => {
+  //     try {
+  //       setLoading(true);
+  //       console.log("Fetching subjects from API...");
 
-        let response;
-        if (userRole === "Instructor") {
-          response = await trainingScheduleService.getInstructorSubjects();
-          console.log("Instructor subjects response:", response);
+  //       let response;
+  //       if (userRole === "Instructor") {
+  //         response = await trainingScheduleService.getInstructorSubjects();
+  //         console.log("Instructor subjects response:", response);
           
-          if (response && response.data) {
-            const subjects = response.data.map(subject => ({
-              subjectId: subject.subjectId,
-              subjectName: subject.subjectName,
-              courseId: subject.courseId,
-              schedules: subject.schedules || []
-            }));
+  //         if (response && response.data) {
+  //           const subjects = response.data.map(subject => ({
+  //             subjectId: subject.subjectId,
+  //             subjectName: subject.subjectName,
+  //             courseId: subject.courseId,
+  //             schedules: subject.schedules || []
+  //           }));
             
-          setSubjects(subjects);
-          setSubjectOptions(subjects);
+  //         setSubjects(subjects);
+  //         setSubjectOptions(subjects);
             
-            // Process schedules
-            if (response.schedules && Array.isArray(response.schedules)) {
-              setScheduleData(response.schedules);
-            }
-          }
-        } else if (userRole === "Trainee") {
-          response = await trainingScheduleService.getTraineeSubjects();
-          // Process trainee data...
-        }
+  //           // Process schedules
+  //           if (response.schedules && Array.isArray(response.schedules)) {
+  //             setScheduleData(response.schedules);
+  //           }
+  //         }
+  //       } else if (userRole === "Trainee") {
+  //         response = await trainingScheduleService.getTraineeSubjects();
+  //         // Process trainee data...
+  //       } else if (userRole === "TrainingStaff") {
+  //         response = await trainingScheduleService.getAllSubjects();
+  //       }
 
-        if (!response || (!response.data && !response.schedules)) {
-          console.warn("No subjects returned or invalid format");
-          message.warning("Không tìm thấy môn học nào");
-          setSubjects([]);
-          setScheduleData([]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch subjects:", error);
-          message.error("Không thể tải danh sách môn học");
-        setSubjects([]);
-        setScheduleData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       if (!response || (!response.data && !response.schedules)) {
+  //         console.warn("No subjects returned or invalid format");
+  //         setSubjects([]);
+  //         setScheduleData([]);
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to fetch subjects:", error);
+  //         message.error("Không thể tải danh sách môn học");
+  //       setSubjects([]);
+  //       setScheduleData([]);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    if (userRole) {
-    fetchSubjects();
-    }
-  }, [userRole]);
+  //   if (userRole) {
+  //   fetchSubjects();
+  //   }
+  // }, [userRole]);
 
   const fetchScheduleData = async () => {
     try {
@@ -256,26 +276,25 @@ const SchedulePage = () => {
           }
         } else if (userRole === "Trainee") {
           response = await trainingScheduleService.getTraineeSubjects();
-          
-          // Process the response specific for trainee format
+          // Lọc dữ liệu chỉ lấy subject có schedules status 'Incoming' và không rỗng
           if (response && response.data && Array.isArray(response.data)) {
-            // Extract schedules from all subjects
-            const allSchedules = [];
-            
-            response.data.forEach(subject => {
-              if (subject.schedules && Array.isArray(subject.schedules)) {
-                // Add subject information to each schedule
-                const schedulesWithSubjectInfo = subject.schedules.map(schedule => ({
+            const filteredSubjects = response.data
+              .map(subject => ({
+                ...subject,
+                schedules: (subject.schedules || []).filter(sch => sch.status === "Incoming")
+              }))
+              .filter(subject => subject.schedules.length > 0);
+            setSubjects(filteredSubjects);
+            // Gộp tất cả schedules lại để hiển thị
+            setScheduleData(filteredSubjects.flatMap(subject =>
+              subject.schedules
+                .filter(schedule => schedule.status === "Incoming")
+                .map(schedule => ({
                   ...schedule,
                   subjectID: subject.subjectId,
                   subjectName: subject.subjectName
-                }));
-                
-                allSchedules.push(...schedulesWithSubjectInfo);
-              }
-            });
-            
-            setScheduleData(allSchedules);
+                }))
+            ));
             return;
           }
         } else {
@@ -420,17 +439,33 @@ const SchedulePage = () => {
     return days1.some(day => days2.includes(day));
   };
 
+  // Lấy danh sách unique instructor từ scheduleData
+  const getInstructorOptions = () => {
+    const map = new Map();
+    scheduleData.forEach(item => {
+      if (item.instructorID && !map.has(item.instructorID)) {
+        map.set(item.instructorID, true);
+      }
+    });
+    return Array.from(map.keys());
+  };
+
   // Process schedule data into time slots
   const processScheduleData = () => {
-    if (!Array.isArray(scheduleData) || scheduleData.length === 0) {
+    // Lọc lịch theo instructor nếu chọn
+    let filteredData = scheduleData;
+    if ((userRole === "TrainingStaff" || userRole === "Training staff") && selectedInstructor && selectedInstructor !== 'all') {
+      filteredData = scheduleData.filter(sch => sch.instructorID === selectedInstructor);
+    }
+    if (!Array.isArray(filteredData) || filteredData.length === 0) {
       return [];
     }
 
     // Get all unique time slots and format them
-    const uniqueTimeSlots = [...new Set(scheduleData.map((item) => item.classTime))]
+    const uniqueTimeSlots = [...new Set(filteredData.map((item) => item.classTime))]
       .sort()
       .map(timeSlot => {
-        const schedule = scheduleData.find(s => s.classTime === timeSlot);
+        const schedule = filteredData.find(s => s.classTime === timeSlot);
         const duration = schedule.subjectPeriod ? 
           parseFloat(schedule.subjectPeriod.substring(0, 5)) : 0;
         
@@ -471,12 +506,13 @@ const SchedulePage = () => {
         const currentDate = weekDates[dayIndex];
         
         // Find schedules for this time slot and day
-        const matchingSchedules = scheduleData.filter((schedule) => {
+        const matchingSchedules = filteredData.filter((schedule) => {
           const scheduleDays = parseDaysOfWeek(schedule.daysOfWeek);
           return (
-            schedule.classTime === timeSlot.start && 
-            scheduleDays.includes(day) && 
-            isCourseActiveOnDate(schedule, currentDate)
+            schedule.classTime === timeSlot.start &&
+            scheduleDays.includes(day) &&
+            isCourseActiveOnDate(schedule, currentDate) &&
+            ((userRole !== "Trainee" && userRole !== "Instructor") || schedule.status === "Incoming")
           );
         });
 
@@ -532,16 +568,22 @@ const SchedulePage = () => {
                 <div>{schedule.location || "N/A"}</div>
                 {schedule.courseId && <div>Course: {schedule.courseId}</div>}
                 {userRole === "TrainingStaff" && (
-                  <>
-                    <div>Instructor: {schedule.instructorID}</div>
-                    <div>
-                      Status:
-                      <Tag color={schedule.status === "Pending" ? "orange" : "green"}>
-                        {schedule.status}
-                      </Tag>
-                    </div>
-                  </>
-                )}
+  <>
+    <div>Instructor: {schedule.instructorID}</div>
+    <div>
+      Status:
+      {schedule.status === "Incoming" && (
+        <Tag color="green">Incoming</Tag>
+      )}
+      {schedule.status === "Pending" && (
+        <Tag color="orange">Pending</Tag>
+      )}
+      {schedule.status !== "Incoming" && schedule.status !== "Pending" && (
+        <Tag>{schedule.status}</Tag>
+      )}
+    </div>
+  </>
+)}
               </div>
             </div>
           );
@@ -716,7 +758,30 @@ const SchedulePage = () => {
         </div>
       );
     }
-  
+  };
+
+  // Instructor Filter chỉ hiển thị cho TrainingStaff
+
+
+  const renderInstructorFilter = () => {
+    if (userRole === "TrainingStaff" || userRole === "Training staff") {
+      const instructorOptions = getInstructorOptions();
+      return (
+        <div className="mb-4">
+          <label className="mr-2 font-medium">Instructor:</label>
+          <Select
+            style={{ width: 220 }}
+            value={selectedInstructor}
+            onChange={setSelectedInstructor}
+            allowClear={false}
+          >
+            {instructorOptions.map(instId => (
+              <Option key={instId} value={instId}>{instId}</Option>
+            ))}
+          </Select>
+        </div>
+      );
+    }
     return null;
   };
 
@@ -744,62 +809,6 @@ const SchedulePage = () => {
   };
 
   // Handle subject change
-  const handleSubjectChange = async (subjectId) => {
-    try {
-      console.log("Selected subject ID:", subjectId);
-      if (!subjectId) {
-        setSelectedSubjectId(null);
-        setSelectedSubjectDetails(null);
-        setScheduleData([]);
-        fetchScheduleData();
-        return;
-      }
-
-      setLoading(true);
-      setSelectedSubjectId(subjectId);
-
-      try {
-        // Call API to get subject info and schedules
-        const data = await trainingScheduleService.getScheduleBySubjectId(
-          subjectId
-        );
-        console.log("API response:", data);
-
-        // Check and update schedule data
-        if (data.schedules && data.schedules.length > 0) {
-          setScheduleData(data.schedules);
-          console.log("Schedule data set:", data.schedules);
-        } else {
-          console.log("No schedules found for this subject");
-          message.info("Không có lịch học cho môn này");
-          setScheduleData([]);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-
-        if (error.response) {
-          if (error.response.status === 404) {
-            message.error("Không tìm thấy môn học");
-          } else {
-            message.error(`Lỗi server: ${error.response.status}`);
-          }
-        } else if (error.request) {
-          message.error("Không thể kết nối đến server");
-        } else {
-          message.error("Lỗi khi tải dữ liệu");
-        }
-
-        setScheduleData([]);
-      }
-    } catch (error) {
-      console.error("Error in handleSubjectChange:", error);
-      message.error("Có lỗi xảy ra");
-      setScheduleData([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Render subject selector
   const renderSubjectSelector = () => {
     // Search function with setTimeout
@@ -844,118 +853,6 @@ const SchedulePage = () => {
       subjects: subjects.length,
       options: (searchTerm ? subjectOptions : subjects).length,
     });
-
-    return (
-      <div className="mb-6 bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <CalendarOutlined className="text-xl text-indigo-600" />
-            </div>
-            <span className="text-lg font-semibold text-gray-700">Select Subject</span>
-          </div>
-          
-          <Select
-            showSearch
-            className="w-full"
-            size="large"
-            placeholder={
-              <div className="flex items-center gap-2 text-gray-400">
-                <SearchOutlined />
-                <span>Search your enrolled subjects...</span>
-              </div>
-            }
-            optionFilterProp="children"
-            onChange={(value, option) => {
-              console.log("Selected subject:", option);
-              if (value === "get_all") {
-                setSelectedSubjectId(null);
-                setSelectedSubjectDetails(null);
-                fetchScheduleData();
-              } else {
-                handleSubjectChange(option?.key);
-              }
-            }}
-            onSearch={handleSearch}
-            loading={searchLoading}
-            value={
-              selectedSubjectId
-                ? subjects.find((s) => s.subjectId === selectedSubjectId)?.subjectName
-                : undefined
-            }
-            allowClear
-            onClear={() => {
-              setSelectedSubjectId(null);
-              setSelectedSubjectDetails(null);
-              fetchScheduleData();
-            }}
-            filterOption={false}
-            notFoundContent={
-              searchLoading ? (
-                <div className="flex items-center justify-center p-4">
-                  <Spin size="small" />
-                  <span className="ml-2">Searching...</span>
-                </div>
-              ) : (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="No subjects found"
-                />
-              )
-            }
-            dropdownRender={menu => (
-              <div>
-                {/* View All Option */}
-                <div className="px-4 py-3 hover:bg-indigo-50 cursor-pointer transition-colors"
-                     onClick={() => {
-                       setSelectedSubjectId(null);
-                       setSelectedSubjectDetails(null);
-                       fetchScheduleData();
-                     }}>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <UnorderedListOutlined className="text-blue-600" />
-                </div>
-                    <div>
-                      <div className="font-medium text-blue-600">View All My Subjects</div>
-                      <div className="text-xs text-gray-500">Show schedule for all your enrolled subjects</div>
-                </div>
-              </div>
-                </div>
-
-                {/* Divider */}
-                <div className="my-2 px-4">
-                  <div className="border-t border-gray-200"></div>
-                  <div className="text-xs text-center text-gray-400 -mt-2.5 bg-white w-fit mx-auto px-4">
-                    Your Enrolled Subjects
-                  </div>
-                </div>
-
-                {/* Menu Items */}
-                {menu}
-              </div>
-            )}
-          >
-            {/* Subject Options */}
-            {(searchTerm ? subjectOptions : subjects).map((subject) => (
-              <Option key={subject.subjectId} value={subject.subjectId}>
-                <div className="flex items-center gap-3 py-1">
-                  <div className="p-2 bg-indigo-50 rounded-lg">
-                    <BookOutlined className="text-indigo-600" />
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-700">{subject.subjectName}</div>
-                  <div className="text-xs text-gray-500">
-                      Course: {subject.courseId || "N/A"}
-                    </div>
-                  </div>
-                </div>
-              </Option>
-            ))}
-          </Select>
-        </div>
-      </div>
-    );
   };
 
   // Render year and week selector
@@ -1073,8 +970,28 @@ const SchedulePage = () => {
             {renderViewSelector()}
             {renderSubjectSelector()}
             {renderDateSelector()}
+            {/* Instructor Dropdown for TrainingStaff */}
+            {(userRole === "TrainingStaff" || userRole === "Training staff") && (
+              <div className="mb-4" style={{ maxWidth: 300 }}>
+                <label className="mr-2 font-medium">Instructor:</label>
+                <Select
+                  style={{ width: '100%' }}
+                  value={selectedInstructor}
+                  onChange={setSelectedInstructor}
+                  dropdownMatchSelectWidth={false}
+                  showSearch
+                  optionFilterProp="children"
+                >
+                   {Array.from(new Set(scheduleData.map(item => item.instructorID)))
+                    .filter(Boolean)
+                    .map(instId => (
+                      <Option key={instId} value={instId}>{instId}</Option>
+                    ))}
+                </Select>
+              </div>
+            )}
+
           </div>
-          <div className="mb-4 sm:mb-0 sm:hidden">{renderCreateButton()}</div>
         </div>
 
         {/* Table Section */}
