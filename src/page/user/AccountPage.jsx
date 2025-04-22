@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Table, Tag, Typography, Button, Space, Input, message } from "antd";
-import { ReloadOutlined, SearchOutlined, DownloadOutlined, EditOutlined } from '@ant-design/icons';
+import { Table, Tag, Typography, Button, Space, Input, message, Popconfirm } from "antd";
+import { ReloadOutlined, SearchOutlined, DownloadOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { getAllUsers, exportTraineeInfo } from "../../services/userService";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from 'xlsx';
@@ -27,6 +27,9 @@ const AccountPage = () => {
     setUserRole(role);
   }, []);
 
+  // Kiểm tra nếu user là Admin
+  const isAdmin = userRole === 'Admin';
+  const isReviewer = userRole === 'Reviewer';
 
   const handleChange = (pagination, filters, sorter) => {
     console.log('Pagination changed:', pagination);
@@ -48,6 +51,22 @@ const AccountPage = () => {
     } catch (error) {
       console.error("Error exporting trainee info:", error);
       message.error({ content: "Không thể tải xuống file. Vui lòng thử lại", key: "exportLoading" });
+    }
+  };
+
+  // Hàm xử lý xóa tài khoản
+  const handleDeleteConfirm = (userId) => {
+    try {
+      message.loading({ content: "Đang xóa tài khoản...", key: "deleteAccount" });
+      // Gọi API xóa tài khoản tại đây 
+      // Ví dụ: await deleteUser(userId);
+      
+      // Sau khi xóa thành công, cập nhật lại danh sách
+      fetchAccounts();
+      message.success({ content: "Xóa tài khoản thành công", key: "deleteAccount" });
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      message.error({ content: "Không thể xóa tài khoản. Vui lòng thử lại", key: "deleteAccount" });
     }
   };
 
@@ -140,21 +159,37 @@ const AccountPage = () => {
       render: (date) => new Date(date).toLocaleDateString(),
     },
     // Thêm cột Action nếu người dùng là Admin hoặc Reviewer
-    ...(userRole === 'Admin' || userRole === 'Reviewer' ? [
+    ...(isAdmin || isReviewer ? [
       {
         title: "Action",
         key: "action",
         width: 100,
         fixed: "right",
         render: (_, record) => (
-          userRole === 'Admin' ? (
-            <Button 
-              type="primary" 
-              icon={<EditOutlined />} 
-              size="small"
-              onClick={() => navigateToUpdate(record.userId)}
-              className="bg-blue-500 hover:bg-blue-600"
-            />
+          isAdmin ? (
+            <Space direction="horizontal" size="small">
+              <Button 
+                type="primary" 
+                icon={<EditOutlined />} 
+                size="small"
+                onClick={() => navigateToUpdate(record.userId)}
+                className="w-full bg-blue-500 hover:bg-blue-600"
+              />
+              <Popconfirm
+                title="Xóa tài khoản"
+                description="Bạn có chắc chắn muốn xóa tài khoản này?"
+                onConfirm={() => handleDeleteConfirm(record.userId)}
+                okText="Có"
+                cancelText="Không"
+              >
+                <Button 
+                  icon={<DeleteOutlined/>} 
+                  size="small"
+                  className="w-full"
+                  danger
+                />
+              </Popconfirm>
+            </Space>
           ) : (
             <Button 
               type="primary" 
@@ -308,7 +343,7 @@ const AccountPage = () => {
           scroll={{ x: "max-content", y: 500 }}
         />
 
-        {userRole === 'Reviewer' && (
+        {isReviewer && (
           <div className="mt-6 flex justify-end">
             <Button
               type="primary"

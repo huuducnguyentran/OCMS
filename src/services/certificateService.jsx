@@ -130,18 +130,20 @@ export const signCertificate = async (certificateId) => {
   return response.data;
 };
 
-export const revokeCertificate = async (
-  certificateId,
-  revokeReason = "No longer valid"
-) => {
-  const response = await axiosInstance.post(
-    `${API.REVOKE_CERTIFICATE}/${certificateId}`,
-    { revokeReason }, // sending required body
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-  return response.data;
+export const revokeCertificate = async (certificateId, revokeReason) => {
+  try {
+    const response = await axiosInstance.post(
+     `${API.REVOKE_CERTIFICATE}/${certificateId}`,
+      { revokeReason },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error revoking certificate:", error);
+    throw error;
+  }
 };
