@@ -132,4 +132,13 @@ export const API = {
   GET_ALL_ACTIVE_DECISION: "Decison/GetAllApprovedDecisions",
   GET_ALL_PENDING_DECISION: "Decison/GetAllDraftDecisions",
   SIGN_DIGITAL_SIGNATURE_DECISION: "PdfSign",
+
+// Department
+  GET_ALL_DEPARTMENTS: "Department",
+  GET_DEPARTMENT_BY_ID: "Department",
+  CREATE_DEPARTMENT: "Department", 
+  UPDATE_DEPARTMENT: "Department",
+  DELETE_DEPARTMENT: "Department",
+  ASSIGN_TO_DEPARTMENT: "Department/assign-to-department",
+  REMOVE_FROM_DEPARTMENT: "Department/remove-from-department",
 };
