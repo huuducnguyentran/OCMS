@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Spin, Empty, Button, message } from "antd";
 import {
   getCertificateById,
+  revokeCertificate,
   signCertificate,
 } from "../../services/certificateService";
 import { ArrowLeftOutlined, CheckCircleOutlined } from "@ant-design/icons";
@@ -39,6 +40,17 @@ const CertificateDetailPage = () => {
     } catch (error) {
       console.error("Signing failed:", error);
       message.error("Failed to sign certificate.");
+    }
+  };
+  const handleRevokeCertificate = async () => {
+    try {
+      await revokeCertificate(certificateId);
+      message.success("Certificate revoked successfully!");
+      const updated = await getCertificateById(certificateId);
+      setCertificate(updated);
+    } catch (error) {
+      console.error("Revocation failed:", error);
+      message.error("Failed to revoke certificate.");
     }
   };
 
@@ -114,6 +126,9 @@ const CertificateDetailPage = () => {
           </Button>
         </div>
       )}
+      <Button danger onClick={handleRevokeCertificate}>
+        Revoke Certificate
+      </Button>
     </div>
   );
 };

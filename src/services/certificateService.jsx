@@ -97,6 +97,11 @@ export const getActiveCertificate = async () => {
   return response.data;
 };
 
+export const getRevokedCertificate = async () => {
+  const response = await axiosInstance.get(`${API.GET_REVOKED_CERTIFICATE}`);
+  return response.data;
+};
+
 export const getCertificateById = async (certificateId) => {
   const response = await axiosInstance.get(
     `${API.GET_CERTIFICATE_BY_ID}/${certificateId}`
@@ -128,7 +133,7 @@ export const signCertificate = async (certificateId) => {
 export const revokeCertificate = async (certificateId, revokeReason) => {
   try {
     const response = await axiosInstance.post(
-      `/Certificate/revoke/${certificateId}`,
+     `${API.REVOKE_CERTIFICATE}/${certificateId}`,
       { revokeReason },
       {
         headers: {

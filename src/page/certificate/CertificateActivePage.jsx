@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { SearchOutlined, UndoOutlined } from "@ant-design/icons";
 
+
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
@@ -110,6 +111,7 @@ const CertificateActivePage = () => {
                     certDate.isBefore(endDate.add(1, 'day'));
       }
 
+
       return matchSearch && matchDate;
     });
   }, [certificates, searchText, filterDateRange]);
@@ -193,8 +195,19 @@ const CertificateActivePage = () => {
                 <p>
                   <strong>Course ID:</strong> {cert.courseId}
                 </p>
-                <p>
-                  <strong>Status:</strong> {cert.status}
+                <p className="text-sm text-gray-700 mb-1">
+                  <strong className="text-gray-800">Status:</strong>{" "}
+                  <span
+                    className={`px-2 py-1 rounded-full text-white text-xs ${
+                      cert.status === "Active"
+                        ? "bg-green-500"
+                        : cert.status === "Revoked"
+                        ? "bg-red-500"
+                        : "bg-gray-400"
+                    }`}
+                  >
+                    {cert.status}
+                  </span>
                 </p>
                 <p>
                   <strong>Issue Date:</strong>{" "}
