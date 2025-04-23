@@ -1,5 +1,4 @@
 // src/components/Navbar.jsx
-// src/components/Navbar.jsx
 import { Layout, Menu, Badge } from "antd";
 import { Link } from "react-router-dom";
 import navItems from "../data/NavItem";
@@ -105,11 +104,14 @@ const Navbar = () => {
   };
 
   const filteredNavItems = navItems
-    .filter((item) => item.roles.includes(storedRole))
+    .filter(
+      (item) => Array.isArray(item.roles) && item.roles.includes(storedRole)
+    ) // Check if item.roles is an array
     .map((item) => {
       if (item.children) {
-        const filteredChildren = item.children.filter((child) =>
-          child.roles.includes(storedRole)
+        const filteredChildren = item.children.filter(
+          (child) =>
+            Array.isArray(child.roles) && child.roles.includes(storedRole) // Check for each child role
         );
         if (filteredChildren.length === 0) return null;
 
