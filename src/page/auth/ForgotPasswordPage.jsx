@@ -145,7 +145,6 @@ const ForgotPassword = () => {
     try {
       const responseMessage = await forgotPassword(email);
       message.success(responseMessage || "Password reset email sent!");
-      navigate("/reset-password");
     } catch (errorMessage) {
       message.error(errorMessage);
     } finally {

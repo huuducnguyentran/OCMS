@@ -76,6 +76,7 @@ import DepartmentPage from "./page/department/DepartmentPage";
 import EditDepartmentPage from "./page/department/EditDepartmentPage";
 import CreateDepartmentPage from "./page/department/CreateDepartmentPage";
 import CertificateRevokedPage from "./page/certificate/CertificateRevokedPage";
+import DecisionDetailPage from "./page/decision/DecisionDetailPage";
 
 
 function App() {
@@ -306,6 +307,10 @@ function App() {
                           <Route
                             path="/decision-active"
                             element={<DecisionActivePage />}
+                          />
+                          <Route
+                            path="/decision/:decisionId"
+                            element={<DecisionDetailPage />}
                           />
 
                           {/*  Specialty */}
