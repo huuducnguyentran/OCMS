@@ -73,6 +73,7 @@ import DecisionActivePage from "./page/decision/DecisionActivePage";
 import DecisionPendingPage from "./page/decision/DecisionPending";
 import EditExternalCertiPage from "./page/candidate/EditExternalCertiPage";
 import CertificateRevokedPage from "./page/certificate/CertificateRevokedPage";
+import DecisionDetailPage from "./page/decision/DecisionDetailPage";
 
 function App() {
   return (
@@ -302,6 +303,10 @@ function App() {
                           <Route
                             path="/decision-active"
                             element={<DecisionActivePage />}
+                          />
+                          <Route
+                            path="/decision/:decisionId"
+                            element={<DecisionDetailPage />}
                           />
 
                           {/*  Specialty */}
