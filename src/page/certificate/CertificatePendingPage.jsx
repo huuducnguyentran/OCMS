@@ -11,6 +11,7 @@ import {
   Button,
   Checkbox,
   message,
+  Tooltip,
 } from "antd";
 import {
   getPendingCertificate,
@@ -21,14 +22,17 @@ import dayjs from "dayjs";
 import { SearchOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
+const { RangePicker } = DatePicker;
 
 const CertificatePendingPage = () => {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchCode, setSearchCode] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [filterDate, setFilterDate] = useState(null);
   const [selectedCertificates, setSelectedCertificates] = useState([]);
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
+  const isHeadMaster = userRole === "HeadMaster";
 
   useEffect(() => {
     const fetchCertificates = async () => {
@@ -46,6 +50,11 @@ const CertificatePendingPage = () => {
   }, []);
 
   const handleCheckboxChange = (certificateId, checked) => {
+    if (!isHeadMaster) {
+      message.warning("Only HeadMaster can select certificates for signing");
+      return;
+    }
+    
     setSelectedCertificates((prev) =>
       checked
         ? [...prev, certificateId]
@@ -53,7 +62,26 @@ const CertificatePendingPage = () => {
     );
   };
 
+  const handleSelectAll = (checked) => {
+    if (!isHeadMaster) {
+      message.warning("Only HeadMaster can select certificates for signing");
+      return;
+    }
+    
+    if (checked) {
+      const allCertificateIds = filteredCertificates.map(cert => cert.certificateId);
+      setSelectedCertificates(allCertificateIds);
+    } else {
+      setSelectedCertificates([]);
+    }
+  };
+
   const handleSignCertificates = async () => {
+    if (!isHeadMaster) {
+      message.warning("Only HeadMaster can sign certificates");
+      return;
+    }
+    
     if (selectedCertificates.length === 0) {
       message.warning("Please select at least one certificate.");
       return;
@@ -77,16 +105,27 @@ const CertificatePendingPage = () => {
 
   const filteredCertificates = useMemo(() => {
     return certificates.filter((cert) => {
-      const matchCode = cert.certificateCode
-        .toLowerCase()
-        .includes(searchCode.toLowerCase());
-      const matchDate = filterDate
-        ? dayjs(cert.issueDate).isSame(filterDate, "day")
-        : true;
+      const searchLower = searchText.toLowerCase();
+      const matchSearchText = 
+        cert.certificateCode.toLowerCase().includes(searchLower) ||
+        cert.userId.toString().toLowerCase().includes(searchLower) ||
+        cert.courseId.toString().toLowerCase().includes(searchLower);
 
-      return matchCode && matchDate;
+      const certDate = dayjs(cert.issueDate);
+      const matchDate =
+        filterDate && filterDate.length === 2
+          ? certDate.isAfter(filterDate[0].startOf("day").subtract(1, "ms")) &&
+            certDate.isBefore(filterDate[1].endOf("day").add(1, "ms"))
+          : true;
+
+      return matchSearchText && matchDate;
     });
-  }, [certificates, searchCode, filterDate]);
+  }, [certificates, searchText, filterDate]);
+
+  const areAllSelected = filteredCertificates.length > 0 && 
+    filteredCertificates.every(cert => 
+      selectedCertificates.includes(cert.certificateId)
+    );
 
   if (loading) {
     return (
@@ -97,69 +136,92 @@ const CertificatePendingPage = () => {
   }
 
   return (
-    <div className="p-4">
-      <Title level={3}>Certificate Management List</Title>
+    <div className="p-6">
+      <Title level={3} className="mb-4">
+        Pending Certificates
+      </Title>
 
       {/* Filters */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
-        <Row gutter={[16, 16]} className="mb-4">
+      <Card className="!mb-6 border rounded-xl shadow-sm bg-white">
+        <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={8}>
             <Input
-              placeholder="Search by Certificate Code"
-              value={searchCode}
-              onChange={(e) => setSearchCode(e.target.value)}
+              placeholder="Search by Certificate, User ID or Course ID"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
               prefix={<SearchOutlined />}
               size="large"
               allowClear
             />
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <DatePicker
-              placeholder="Filter by Issue Date"
+            <RangePicker
+              placeholder={["From Date", "To Date"]}
               value={filterDate}
-              onChange={(date) => setFilterDate(date)}
+              onChange={(dates) => setFilterDate(dates)}
               style={{ width: "100%" }}
               allowClear
+              size="large"
             />
           </Col>
+          <Col xs={24} md={8} className="flex justify-end items-center gap-3">
+            <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can select certificates"}>
+              <Checkbox 
+                checked={areAllSelected}
+                onChange={(e) => handleSelectAll(e.target.checked)}
+                disabled={!isHeadMaster || filteredCertificates.length === 0}
+              >
+                Select All
+              </Checkbox>
+            </Tooltip>
+            <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can sign certificates"}>
+              <Button
+                type="primary"
+                onClick={handleSignCertificates}
+                disabled={!isHeadMaster || selectedCertificates.length === 0}
+                size="large"
+              >
+                Sign ({selectedCertificates.length})
+              </Button>
+            </Tooltip>
+          </Col>
         </Row>
+      </Card>
 
-        <Button
-          type="primary"
-          onClick={handleSignCertificates}
-          disabled={selectedCertificates.length === 0}
-        >
-          Sign Selected ({selectedCertificates.length})
-        </Button>
-      </div>
-
-      {/* Certificate List */}
+      {/* Certificate Cards */}
       {filteredCertificates.length === 0 ? (
         <div className="flex justify-center items-center h-[60vh]">
           <Empty description="No certificates match the filters" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {filteredCertificates.map((cert) => (
             <div
               key={cert.certificateId}
-              className="relative border rounded-2xl shadow-md hover:shadow-lg transition"
+              className="relative group rounded-2xl border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 bg-white"
             >
-              <Checkbox
-                className="absolute top-2 left-2 z-10 bg-white p-1 rounded"
-                checked={selectedCertificates.includes(cert.certificateId)}
-                onChange={(e) =>
-                  handleCheckboxChange(cert.certificateId, e.target.checked)
-                }
-              />
+              <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can select certificates"}>
+                <Checkbox
+                  className="absolute top-3 right-3 z-10 p-1 rounded bg-white bg-opacity-70"
+                  checked={selectedCertificates.includes(cert.certificateId)}
+                  onChange={(e) =>
+                    handleCheckboxChange(cert.certificateId, e.target.checked)
+                  }
+                  disabled={!isHeadMaster}
+                />
+              </Tooltip>
               <div
                 onClick={() => navigate(`/certificate/${cert.certificateId}`)}
                 className="cursor-pointer"
               >
                 <Card
-                  title={cert.certificateCode}
+                  title={
+                    <span className="text-base font-semibold">
+                      {cert.certificateCode}
+                    </span>
+                  }
                   bordered={false}
-                  className="rounded-2xl"
+                  className="rounded-2xl border-none"
                   cover={
                     <iframe
                       src={cert.certificateURLwithSas}
@@ -168,19 +230,30 @@ const CertificatePendingPage = () => {
                     />
                   }
                 >
-                  <p>
-                    <strong>User ID:</strong> {cert.userId}
-                  </p>
-                  <p>
-                    <strong>Course ID:</strong> {cert.courseId}
-                  </p>
-                  <p>
-                    <strong>Status:</strong> {cert.status}
-                  </p>
-                  <p>
-                    <strong>Issue Date:</strong>{" "}
-                    {new Date(cert.issueDate).toLocaleDateString()}
-                  </p>
+                  <div className="space-y-2 text-sm">
+                    <p>
+                      <strong>User ID:</strong> {cert.userId}
+                    </p>
+                    <p>
+                      <strong>Course ID:</strong> {cert.courseId}
+                    </p>
+                    <p>
+                      <strong>Status:</strong>{" "}
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium text-white ${
+                          cert.status === "Active"
+                            ? "bg-green-500"
+                            : "bg-gray-400"
+                        }`}
+                      >
+                        {cert.status}
+                      </span>
+                    </p>
+                    <p>
+                      <strong>Issue Date:</strong>{" "}
+                      {new Date(cert.issueDate).toLocaleDateString()}
+                    </p>
+                  </div>
                 </Card>
               </div>
             </div>

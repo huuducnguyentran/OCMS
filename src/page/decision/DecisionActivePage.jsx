@@ -15,11 +15,12 @@ import { SearchOutlined } from "@ant-design/icons";
 import { getActiveDecision } from "../../services/decisionService";
 
 const { Title } = Typography;
+const { RangePicker } = DatePicker;
 
 const DecisionActivePage = () => {
   const [decisions, setDecisions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchCode, setSearchCode] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [filterDate, setFilterDate] = useState(null);
   const navigate = useNavigate();
 
@@ -40,16 +41,23 @@ const DecisionActivePage = () => {
 
   const filteredDecisions = useMemo(() => {
     return decisions.filter((decision) => {
-      const matchCode = decision.decisionCode
-        .toLowerCase()
-        .includes(searchCode.toLowerCase());
-      const matchDate = filterDate
-        ? dayjs(decision.issueDate).isSame(filterDate, "day")
-        : true;
+      const searchLower = searchText.toLowerCase();
+      const matchSearch = 
+        decision.decisionCode.toLowerCase().includes(searchLower) ||
+        decision.title.toLowerCase().includes(searchLower) ||
+        decision.issuedBy.toLowerCase().includes(searchLower);
+        
+      const decisionDate = dayjs(decision.issueDate);
+      const matchDate =
+        filterDate && filterDate.length === 2
+          ? decisionDate.isAfter(
+              filterDate[0].startOf("day").subtract(1, "ms")
+            ) && decisionDate.isBefore(filterDate[1].endOf("day").add(1, "ms"))
+          : true;
 
-      return matchCode && matchDate;
+      return matchSearch && matchDate;
     });
-  }, [decisions, searchCode, filterDate]);
+  }, [decisions, searchText, filterDate]);
 
   if (loading) {
     return (
@@ -70,20 +78,19 @@ const DecisionActivePage = () => {
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} md={8}>
             <Input
-              placeholder="Search by Decision Code"
-              value={searchCode}
-              onChange={(e) => setSearchCode(e.target.value)}
+              placeholder="Search by Decision Code, Title or Issued By"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
               prefix={<SearchOutlined />}
               size="large"
               allowClear
             />
           </Col>
           <Col xs={24} sm={12} md={8}>
-            <DatePicker
-              placeholder="Filter by Issue Date"
+            <RangePicker
+              placeholder={["From Date", "To Date"]}
               value={filterDate}
-              onChange={(date) => setFilterDate(date)}
-              size="large"
+              onChange={(dates) => setFilterDate(dates)}
               style={{ width: "100%" }}
               allowClear
             />

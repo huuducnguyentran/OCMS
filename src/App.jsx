@@ -72,7 +72,8 @@ import UpdateDecisionTemplatePage from "./page/decision/UpdateDecisionTemplatePa
 import DecisionActivePage from "./page/decision/DecisionActivePage";
 import DecisionPendingPage from "./page/decision/DecisionPending";
 import EditExternalCertiPage from "./page/candidate/EditExternalCertiPage";
-
+import CertificateRevokedPage from "./page/certificate/CertificateRevokedPage";
+import DecisionDetailPage from "./page/decision/DecisionDetailPage";
 
 function App() {
   return (
@@ -101,7 +102,10 @@ function App() {
                           {/*  Dashboard & User Profile */}
                           <Route path="/home" element={<HomePage />} />
                           <Route path="/accounts" element={<AccountPage />} />
-                          <Route path="/account/update/:userId" element={<UpdateAccountPage />} />
+                          <Route
+                            path="/account/update/:userId"
+                            element={<UpdateAccountPage />}
+                          />
                           <Route
                             path="/profile/:userId"
                             element={<PersonalProfilePage />}
@@ -254,6 +258,10 @@ function App() {
                             element={<CertificateActivePage />}
                           />
                           <Route
+                            path="/certificate-revoked"
+                            element={<CertificateRevokedPage />}
+                          />
+                          <Route
                             path="/certificate/:certificateId"
                             element={<CertificateDetailPage />}
                           />
@@ -296,6 +304,10 @@ function App() {
                             path="/decision-active"
                             element={<DecisionActivePage />}
                           />
+                          <Route
+                            path="/decision/:decisionId"
+                            element={<DecisionDetailPage />}
+                          />
 
                           {/*  Specialty */}
                           <Route
@@ -320,7 +332,7 @@ function App() {
                             path="/regulations"
                             element={<RegulationsPage />}
                           />
-                                                    <Route
+                          <Route
                             path="/export-certificate"
                             element={<ExportCertificatePage />}
                           />

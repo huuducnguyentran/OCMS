@@ -1,9 +1,10 @@
 // pages/CertificateDetailPage.jsx
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Spin, Empty, Button, message } from "antd";
+import { Spin, Empty, Button, message, Tooltip } from "antd";
 import {
   getCertificateById,
+  revokeCertificate,
   signCertificate,
 } from "../../services/certificateService";
 import { ArrowLeftOutlined, CheckCircleOutlined } from "@ant-design/icons";
@@ -13,6 +14,8 @@ const CertificateDetailPage = () => {
   const navigate = useNavigate();
   const [certificate, setCertificate] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
+  const isHeadMaster = userRole === "HeadMaster";
 
   useEffect(() => {
     const fetchCertificate = async () => {
@@ -30,6 +33,11 @@ const CertificateDetailPage = () => {
   }, [certificateId]);
 
   const handleSignCertificate = async () => {
+    if (!isHeadMaster) {
+      message.warning("Only HeadMaster can sign certificates");
+      return;
+    }
+
     try {
       await signCertificate(certificateId);
       message.success("Certificate signed successfully!");
@@ -39,6 +47,23 @@ const CertificateDetailPage = () => {
     } catch (error) {
       console.error("Signing failed:", error);
       message.error("Failed to sign certificate.");
+    }
+  };
+  
+  const handleRevokeCertificate = async () => {
+    if (!isHeadMaster) {
+      message.warning("Only HeadMaster can revoke certificates");
+      return;
+    }
+
+    try {
+      await revokeCertificate(certificateId);
+      message.success("Certificate revoked successfully!");
+      const updated = await getCertificateById(certificateId);
+      setCertificate(updated);
+    } catch (error) {
+      console.error("Revocation failed:", error);
+      message.error("Failed to revoke certificate.");
     }
   };
 
@@ -104,15 +129,29 @@ const CertificateDetailPage = () => {
       </div>
       {certificate.status === "Pending" && (
         <div className="flex justify-end mt-8">
-          <Button
-            type="primary"
-            icon={<CheckCircleOutlined />}
-            onClick={handleSignCertificate}
-            className="text-white bg-green-600 hover:bg-green-700"
-          >
-            Sign Certificate
-          </Button>
+          <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can sign certificates"}>
+            <Button
+              type="primary"
+              icon={<CheckCircleOutlined />}
+              onClick={handleSignCertificate}
+              disabled={!isHeadMaster}
+              className={`text-white ${isHeadMaster ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500 cursor-not-allowed'}`}
+            >
+              Sign Certificate
+            </Button>
+          </Tooltip>
         </div>
+      )}
+      {certificate.status !== "Pending" && certificate.status !== "Revoked" &&(
+        <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can revoke certificates"}>
+          <Button 
+            danger 
+            onClick={handleRevokeCertificate}
+            disabled={!isHeadMaster}
+          >
+            Revoke Certificate
+          </Button>
+        </Tooltip>
       )}
     </div>
   );

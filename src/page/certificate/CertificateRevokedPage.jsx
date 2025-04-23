@@ -1,0 +1,151 @@
+import { useEffect, useState, useMemo } from "react";
+import {
+  Card,
+  Spin,
+  Empty,
+  Input,
+  DatePicker,
+  Row,
+  Col,
+  Typography,
+} from "antd";
+import { getRevokedCertificate } from "../../services/certificateService";
+import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
+import { SearchOutlined } from "@ant-design/icons";
+
+const { Title } = Typography;
+const { RangePicker } = DatePicker;
+
+const CertificateRevokedPage = () => {
+  const [certificates, setCertificates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchCode, setSearchCode] = useState("");
+  const [filterDate, setFilterDate] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      try {
+        const data = await getRevokedCertificate();
+        setCertificates(data);
+      } catch (error) {
+        console.error("Failed to fetch revoked certificates:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCertificates();
+  }, []);
+
+  const filteredCertificates = useMemo(() => {
+    return certificates.filter((cert) => {
+      const matchCode = cert.certificateCode
+        .toLowerCase()
+        .includes(searchCode.toLowerCase());
+
+      const certDate = dayjs(cert.issueDate);
+      const matchDate =
+        filterDate && filterDate.length === 2
+          ? certDate.isAfter(filterDate[0].startOf("day").subtract(1, "ms")) &&
+            certDate.isBefore(filterDate[1].endOf("day").add(1, "ms"))
+          : true;
+
+      return matchCode && matchDate;
+    });
+  }, [certificates, searchCode, filterDate]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-[80vh]">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4">
+      <Title level={3}>Revoked Certificates List</Title>
+      {/* Filters */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+        <Row gutter={[16, 16]} className="mb-4">
+          <Col xs={24} sm={12} md={8}>
+            <Input
+              placeholder="Search by Certificate Code"
+              value={searchCode}
+              onChange={(e) => setSearchCode(e.target.value)}
+              prefix={<SearchOutlined />}
+              size="large"
+              allowClear
+            />
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <RangePicker
+              placeholder={["From Date", "To Date"]}
+              value={filterDate}
+              onChange={(dates) => setFilterDate(dates)}
+              style={{ width: "100%" }}
+              allowClear
+            />
+          </Col>
+        </Row>
+      </div>
+
+      {/* Certificate List */}
+      {filteredCertificates.length === 0 ? (
+        <div className="flex justify-center items-center h-[60vh]">
+          <Empty description="No revoked certificates match the filters" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {filteredCertificates.map((cert) => (
+            <div
+              key={cert.certificateId}
+              onClick={() => navigate(`/certificate/${cert.certificateId}`)}
+              className="cursor-pointer"
+            >
+              <Card
+                title={cert.certificateCode}
+                bordered
+                className="rounded-2xl shadow-md hover:shadow-lg transition"
+                cover={
+                  <iframe
+                    src={cert.certificateURLwithSas}
+                    title="Certificate Preview"
+                    className="w-full h-64 rounded-t-2xl"
+                  />
+                }
+              >
+                <p>
+                  <strong>User ID:</strong> {cert.userId}
+                </p>
+                <p>
+                  <strong>Course ID:</strong> {cert.courseId}
+                </p>
+                <span
+                  className={`px-2 py-1 rounded-full text-white text-xs ${
+                    cert.status === "Active"
+                      ? "bg-green-500"
+                      : cert.status === "Revoked"
+                      ? "bg-red-500"
+                      : "bg-gray-400"
+                  }`}
+                >
+                  {cert.status}
+                </span>
+
+                <p>
+                  <strong>Issue Date:</strong>{" "}
+                  {new Date(cert.issueDate).toLocaleDateString()}
+                </p>
+              </Card>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CertificateRevokedPage;
