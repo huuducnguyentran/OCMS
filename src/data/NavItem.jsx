@@ -273,10 +273,16 @@ const navItems = [
   },
   {
     key: "20",
+    label: "Department",
+    icon: "FileProtectOutlined",
+    path: "/department",
+    roles: [ "HR", "AOC Manager", "Training staff", "HeadMaster","Admin"],
+  },
+    {
+    key: "21",
     label: "Reports",
     icon: "FileExcelOutlined",
     path: "/export-certificate",
-    roles: ["Reviewer"],
   },
 ];
 

@@ -1,0 +1,228 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Form,
+  Input,
+  Button,
+  Card,
+  message,
+  Space,
+  Typography,
+  Select,
+  Spin,
+  Popconfirm
+} from 'antd';
+import {
+  SaveOutlined,
+  DeleteOutlined,
+  ArrowLeftOutlined,
+  UserOutlined
+} from '@ant-design/icons';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  getDepartmentById,
+  updateDepartment,
+  deleteDepartment,
+  getAllUsers
+} from '../../services/departmentServices';
+
+const { Title, Text } = Typography;
+const { TextArea } = Input;
+const { Option } = Select;
+
+const EditDepartmentPage = () => {
+  const [form] = Form.useForm();
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const [loading, setLoading] = useState(false);
+  const [department, setDepartment] = useState(null);
+  const [users, setUsers] = useState([]);
+  const isAdmin = sessionStorage.getItem('role') === 'Admin';
+
+  useEffect(() => {
+    if (!isAdmin) {
+      message.error('You do not have permission to edit departments');
+      navigate('/department');
+      return;
+    }
+    fetchDepartment();
+    fetchUsers();
+  }, [id]);
+
+  const fetchUsers = async () => {
+    try {
+      // Lọc users có role phù hợp (ví dụ: Manager, Admin, etc.)
+      const filteredUsers = await getAllUsers();
+      setUsers(filteredUsers);
+      console.log('Fetched users:', filteredUsers);
+    } catch (error) {
+      message.error('Failed to fetch users list');
+    }
+  };
+
+  const fetchDepartment = async () => {
+    try {
+      setLoading(true);
+      const data = await getDepartmentById(id);
+      setDepartment(data);
+      console.log('Fetched department:', data);
+      form.setFieldsValue({
+        departmentName: data.departmentName,
+        departmentDescription: data.departmentDescription,
+        managerId: data.managerId,
+      });
+    } catch (error) {
+      message.error('Failed to fetch department details');
+      navigate('/department');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (values) => {
+    try {
+      setLoading(true);
+      const updateData = {
+        departmentName: values.departmentName,
+        departmentDescription: values.departmentDescription,
+        managerId: values.managerId,
+      };
+      
+      await updateDepartment(id, updateData);
+      message.success('Department updated successfully');
+      navigate('/department');
+    } catch (error) {
+      message.error('Failed to update department');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      setLoading(true);
+      await deleteDepartment(id);
+      message.success('Department deleted successfully');
+      navigate('/department');
+    } catch (error) {
+      message.error('Failed to delete department');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="max-w-3xl mx-auto">
+        <Card className="shadow-md">
+          <div className="mb-6">
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate('/department')}
+              className="mb-4"
+            >
+              Back to Departments
+            </Button>
+            <Title level={2}>Edit Department</Title>
+            <Text type="secondary">
+              Update department information or delete department
+            </Text>
+          </div>
+
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={handleSubmit}
+          >
+            <Form.Item
+              name="departmentName"
+              label="Department Name"
+              rules={[
+                { required: true, message: 'Please enter department name' },
+              ]}
+            >
+              <Input placeholder="Enter department name" />
+            </Form.Item>
+
+            <Form.Item
+              name="departmentDescription"
+              label="Description"
+            >
+              <TextArea
+                placeholder="Enter department description"
+                rows={4}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="managerId"
+              label="Manager"
+              rules={[
+                { required: true, message: 'Please select manager' },
+              ]}
+            >
+              <Select
+                placeholder="Select a manager"
+                suffixIcon={<UserOutlined />}
+                showSearch
+                optionFilterProp="children"
+                filterOption={(input, option) => {
+                  const searchText = option.children.toString().toLowerCase();
+                  return searchText.indexOf(input.toLowerCase()) >= 0;
+                }}
+              >
+                {users.map(user => (
+                  <Option key={user.userId} value={user.userId}>
+                    {user.userId} - {user.fullName} ({user.roleName})
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <div className="flex justify-between mt-6">
+              <Popconfirm
+                title="Are you sure you want to delete this department?"
+                onConfirm={handleDelete}
+                okText="Yes"
+                cancelText="No"
+                okButtonProps={{ danger: true }}
+              >
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  loading={loading}
+                >
+                  Delete Department
+                </Button>
+              </Popconfirm>
+
+              <Space>
+                <Button onClick={() => navigate('/department')}>
+                  Cancel
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  htmlType="submit"
+                  loading={loading}
+                  className="bg-blue-500 hover:bg-blue-600"
+                >
+                  Save Changes
+                </Button>
+              </Space>
+            </div>
+          </Form>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default EditDepartmentPage;
