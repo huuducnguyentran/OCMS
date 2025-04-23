@@ -11,6 +11,7 @@ import {
   Button,
   Checkbox,
   message,
+  Tooltip,
 } from "antd";
 import {
   getPendingCertificate,
@@ -26,10 +27,12 @@ const { RangePicker } = DatePicker;
 const CertificatePendingPage = () => {
   const [certificates, setCertificates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchCode, setSearchCode] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [filterDate, setFilterDate] = useState(null);
   const [selectedCertificates, setSelectedCertificates] = useState([]);
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
+  const isHeadMaster = userRole === "HeadMaster";
 
   useEffect(() => {
     const fetchCertificates = async () => {
@@ -47,6 +50,11 @@ const CertificatePendingPage = () => {
   }, []);
 
   const handleCheckboxChange = (certificateId, checked) => {
+    if (!isHeadMaster) {
+      message.warning("Only HeadMaster can select certificates for signing");
+      return;
+    }
+    
     setSelectedCertificates((prev) =>
       checked
         ? [...prev, certificateId]
@@ -54,7 +62,26 @@ const CertificatePendingPage = () => {
     );
   };
 
+  const handleSelectAll = (checked) => {
+    if (!isHeadMaster) {
+      message.warning("Only HeadMaster can select certificates for signing");
+      return;
+    }
+    
+    if (checked) {
+      const allCertificateIds = filteredCertificates.map(cert => cert.certificateId);
+      setSelectedCertificates(allCertificateIds);
+    } else {
+      setSelectedCertificates([]);
+    }
+  };
+
   const handleSignCertificates = async () => {
+    if (!isHeadMaster) {
+      message.warning("Only HeadMaster can sign certificates");
+      return;
+    }
+    
     if (selectedCertificates.length === 0) {
       message.warning("Please select at least one certificate.");
       return;
@@ -78,9 +105,11 @@ const CertificatePendingPage = () => {
 
   const filteredCertificates = useMemo(() => {
     return certificates.filter((cert) => {
-      const matchCode = cert.certificateCode
-        .toLowerCase()
-        .includes(searchCode.toLowerCase());
+      const searchLower = searchText.toLowerCase();
+      const matchSearchText = 
+        cert.certificateCode.toLowerCase().includes(searchLower) ||
+        cert.userId.toString().toLowerCase().includes(searchLower) ||
+        cert.courseId.toString().toLowerCase().includes(searchLower);
 
       const certDate = dayjs(cert.issueDate);
       const matchDate =
@@ -89,9 +118,14 @@ const CertificatePendingPage = () => {
             certDate.isBefore(filterDate[1].endOf("day").add(1, "ms"))
           : true;
 
-      return matchCode && matchDate;
+      return matchSearchText && matchDate;
     });
-  }, [certificates, searchCode, filterDate]);
+  }, [certificates, searchText, filterDate]);
+
+  const areAllSelected = filteredCertificates.length > 0 && 
+    filteredCertificates.every(cert => 
+      selectedCertificates.includes(cert.certificateId)
+    );
 
   if (loading) {
     return (
@@ -112,9 +146,9 @@ const CertificatePendingPage = () => {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={8}>
             <Input
-              placeholder="Search by Certificate Code"
-              value={searchCode}
-              onChange={(e) => setSearchCode(e.target.value)}
+              placeholder="Search by Certificate, User ID or Course ID"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
               prefix={<SearchOutlined />}
               size="large"
               allowClear
@@ -130,15 +164,26 @@ const CertificatePendingPage = () => {
               size="large"
             />
           </Col>
-          <Col xs={24} md={8} className="flex justify-end">
-            <Button
-              type="primary"
-              onClick={handleSignCertificates}
-              disabled={selectedCertificates.length === 0}
-              size="large"
-            >
-              Sign ({selectedCertificates.length})
-            </Button>
+          <Col xs={24} md={8} className="flex justify-end items-center gap-3">
+            <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can select certificates"}>
+              <Checkbox 
+                checked={areAllSelected}
+                onChange={(e) => handleSelectAll(e.target.checked)}
+                disabled={!isHeadMaster || filteredCertificates.length === 0}
+              >
+                Select All
+              </Checkbox>
+            </Tooltip>
+            <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can sign certificates"}>
+              <Button
+                type="primary"
+                onClick={handleSignCertificates}
+                disabled={!isHeadMaster || selectedCertificates.length === 0}
+                size="large"
+              >
+                Sign ({selectedCertificates.length})
+              </Button>
+            </Tooltip>
           </Col>
         </Row>
       </Card>
@@ -155,13 +200,16 @@ const CertificatePendingPage = () => {
               key={cert.certificateId}
               className="relative group rounded-2xl border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 bg-white"
             >
-              <Checkbox
-                className="absolute bottom-30 right-3 z-10 p-1 rounded "
-                checked={selectedCertificates.includes(cert.certificateId)}
-                onChange={(e) =>
-                  handleCheckboxChange(cert.certificateId, e.target.checked)
-                }
-              />
+              <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can select certificates"}>
+                <Checkbox
+                  className="absolute top-3 right-3 z-10 p-1 rounded bg-white bg-opacity-70"
+                  checked={selectedCertificates.includes(cert.certificateId)}
+                  onChange={(e) =>
+                    handleCheckboxChange(cert.certificateId, e.target.checked)
+                  }
+                  disabled={!isHeadMaster}
+                />
+              </Tooltip>
               <div
                 onClick={() => navigate(`/certificate/${cert.certificateId}`)}
                 className="cursor-pointer"

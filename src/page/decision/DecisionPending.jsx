@@ -11,6 +11,7 @@ import {
   message,
   Button,
   Checkbox,
+  Tooltip,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -27,9 +28,11 @@ const DecisionPendingPage = () => {
   const [decisions, setDecisions] = useState([]);
   const [selectedDecisions, setSelectedDecisions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchCode, setSearchCode] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [filterDate, setFilterDate] = useState(null);
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
+  const isHeadMaster = userRole === "HeadMaster";
 
   useEffect(() => {
     const fetchDecisions = async () => {
@@ -47,12 +50,36 @@ const DecisionPendingPage = () => {
   }, []);
 
   const handleCheckboxChange = (decisionId, checked) => {
+    if (!isHeadMaster) {
+      message.warning("Only HeadMaster can select decisions for signing");
+      return;
+    }
+    
     setSelectedDecisions((prev) =>
       checked ? [...prev, decisionId] : prev.filter((id) => id !== decisionId)
     );
   };
 
+  const handleSelectAll = (checked) => {
+    if (!isHeadMaster) {
+      message.warning("Only HeadMaster can select decisions for signing");
+      return;
+    }
+    
+    if (checked) {
+      const allDecisionIds = filteredDecisions.map(decision => decision.decisionId);
+      setSelectedDecisions(allDecisionIds);
+    } else {
+      setSelectedDecisions([]);
+    }
+  };
+
   const handleSignDecisions = async () => {
+    if (!isHeadMaster) {
+      message.warning("Only HeadMaster can sign decisions");
+      return;
+    }
+    
     if (selectedDecisions.length === 0) {
       message.warning("Please select at least one decision.");
       return;
@@ -60,7 +87,7 @@ const DecisionPendingPage = () => {
 
     try {
       for (const id of selectedDecisions) {
-        await signDecision(id); // Make sure this service exists
+        await signDecision(id);
       }
       message.success("Selected decisions signed successfully!");
 
@@ -75,9 +102,12 @@ const DecisionPendingPage = () => {
 
   const filteredDecisions = useMemo(() => {
     return decisions.filter((decision) => {
-      const matchCode = decision.decisionCode
-        .toLowerCase()
-        .includes(searchCode.toLowerCase());
+      const searchLower = searchText.toLowerCase();
+      const matchSearch = 
+        decision.decisionCode.toLowerCase().includes(searchLower) ||
+        decision.title.toLowerCase().includes(searchLower) ||
+        decision.issuedBy.toLowerCase().includes(searchLower);
+        
       const decisionDate = dayjs(decision.issueDate);
       const matchDate =
         filterDate && filterDate.length === 2
@@ -86,9 +116,15 @@ const DecisionPendingPage = () => {
             ) && decisionDate.isBefore(filterDate[1].endOf("day").add(1, "ms"))
           : true;
 
-      return matchCode && matchDate;
+      return matchSearch && matchDate;
     });
-  }, [decisions, searchCode, filterDate]);
+  }, [decisions, searchText, filterDate]);
+
+  const areAllSelected = filteredDecisions.length > 0 && 
+    filteredDecisions.every(decision => 
+      selectedDecisions.includes(decision.decisionId)
+    );
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[80vh]">
@@ -106,9 +142,9 @@ const DecisionPendingPage = () => {
         <Row gutter={[16, 16]} className="mb-4">
           <Col xs={24} sm={12} md={8}>
             <Input
-              placeholder="Search by Decision Code"
-              value={searchCode}
-              onChange={(e) => setSearchCode(e.target.value)}
+              placeholder="Search by Decision Code, Title or Issued By"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
               prefix={<SearchOutlined />}
               size="large"
               allowClear
@@ -123,15 +159,26 @@ const DecisionPendingPage = () => {
               allowClear
             />
           </Col>
-          <Col xs={24} md={8} className="flex justify-end">
-            <Button
-              type="primary"
-              onClick={handleSignDecisions}
-              disabled={selectedDecisions.length === 0}
-              size="large"
-            >
-              Sign Selected ({selectedDecisions.length})
-            </Button>
+          <Col xs={24} md={8} className="flex justify-end items-center gap-3">
+            <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can select decisions"}>
+              <Checkbox 
+                checked={areAllSelected}
+                onChange={(e) => handleSelectAll(e.target.checked)}
+                disabled={!isHeadMaster || filteredDecisions.length === 0}
+              >
+                Select All
+              </Checkbox>
+            </Tooltip>
+            <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can sign decisions"}>
+              <Button
+                type="primary"
+                onClick={handleSignDecisions}
+                disabled={!isHeadMaster || selectedDecisions.length === 0}
+                size="large"
+              >
+                Sign Selected ({selectedDecisions.length})
+              </Button>
+            </Tooltip>
           </Col>
         </Row>
       </div>
@@ -148,13 +195,16 @@ const DecisionPendingPage = () => {
               key={decision.decisionId}
               className="relative group rounded-2xl border border-gray-200 shadow-md hover:shadow-lg transition-all bg-white"
             >
-              <Checkbox
-                className="absolute top-2 right-2 z-10 bg-white p-1 rounded"
-                checked={selectedDecisions.includes(decision.decisionId)}
-                onChange={(e) =>
-                  handleCheckboxChange(decision.decisionId, e.target.checked)
-                }
-              />
+              <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can select decisions"}>
+                <Checkbox
+                  className="absolute top-2 right-2 z-10 bg-white p-1 rounded"
+                  checked={selectedDecisions.includes(decision.decisionId)}
+                  onChange={(e) =>
+                    handleCheckboxChange(decision.decisionId, e.target.checked)
+                  }
+                  disabled={!isHeadMaster}
+                />
+              </Tooltip>
               <div
                 onClick={() => navigate(`/decision/${decision.decisionId}`)}
                 className="cursor-pointer"

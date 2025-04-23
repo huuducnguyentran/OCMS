@@ -2,27 +2,30 @@
 import { Input, Button, message, Form } from "antd";
 import { useState, useEffect } from "react";
 import { resetPassword } from "../../services/authServices";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { ArrowLeftOutlined, LockOutlined, CheckCircleFilled, CloseCircleFilled } from "@ant-design/icons";
-import * as THREE from 'three';
+// import * as THREE from 'three'; // Tạm thời vô hiệu hóa Three.js
 
 const ResetPassword = () => {
   // Get token from URL query params
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  const location = useLocation();
+  
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordMatch, setPasswordMatch] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [tokenError, setTokenError] = useState(false);
   const navigate = useNavigate();
 
-  // Redirect if no token provided
+  // Check for token
   useEffect(() => {
     if (!token) {
-      message.error("Invalid password reset link. Please request a new link.");
-      navigate("/forgot-password");
+      setTokenError(true);
+      message.warning("No reset token found. You can request a new password reset link.");
     }
-  }, [token, navigate]);
+  }, [token]);
 
   // Check password confirmation
   useEffect(() => {
@@ -35,134 +38,9 @@ const ResetPassword = () => {
     }
   }, [newPassword, confirmPassword]);
 
-  useEffect(() => {
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 3000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    const container = document.getElementById('animation-container');
-    if (container) {
-      container.appendChild(renderer.domElement);
-    }
-
-    // Create sky with gradient
-    const createSky = () => {
-      const geometry = new THREE.SphereGeometry(1000, 60, 40);
-      geometry.scale(-1, 1, 1);
-
-      const uniforms = {
-        topColor: { value: new THREE.Color(0x0066ff) },
-        bottomColor: { value: new THREE.Color(0x000033) },
-        offset: { value: 500 },
-        exponent: { value: 0.7 }
-      };
-
-      const skyMaterial = new THREE.ShaderMaterial({
-        uniforms: uniforms,
-        vertexShader: `
-          varying vec3 vWorldPosition;
-          void main() {
-            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-            vWorldPosition = worldPosition.xyz;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: `
-          uniform vec3 topColor;
-          uniform vec3 bottomColor;
-          uniform float offset;
-          uniform float exponent;
-          varying vec3 vWorldPosition;
-          void main() {
-            float h = normalize(vWorldPosition + offset).y;
-            gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
-          }
-        `,
-        side: THREE.BackSide
-      });
-
-      return new THREE.Mesh(geometry, skyMaterial);
-    };
-
-    // Create stars
-    const createStars = () => {
-      const geometry = new THREE.BufferGeometry();
-      const vertices = [];
-
-      for (let i = 0; i < 15000; i++) {
-        const x = Math.random() * 3000 - 1500;
-        const y = Math.random() * 3000 - 1500;
-        const z = Math.random() * 3000 - 1500;
-        vertices.push(x, y, z);
-      }
-
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-
-      const material = new THREE.PointsMaterial({
-        color: 0xffffff,
-        size: 2,
-        transparent: true,
-        opacity: 0.8,
-        sizeAttenuation: true
-      });
-
-      const stars = new THREE.Points(geometry, material);
-      stars.userData = {
-        originalOpacity: material.opacity
-      };
-      return stars;
-    };
-
-    const sky = createSky();
-    const stars = createStars();
-    scene.add(sky);
-    scene.add(stars);
-
-    camera.position.z = 1;
-    camera.position.y = 50;
-    camera.rotation.x = -Math.PI * 0.1;
-
-    let time = 0;
-
-    const animate = () => {
-      requestAnimationFrame(animate);
-      time += 0.0005;
-
-      camera.position.y = 50 + Math.sin(time) * 10;
-      camera.position.x = Math.sin(time * 0.5) * 20;
-      camera.lookAt(scene.position);
-
-      stars.rotation.y += 0.0001;
-      stars.rotation.x += 0.00005;
-
-      stars.material.opacity = stars.userData.originalOpacity * (0.8 + 0.2 * Math.sin(time * 2));
-
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (container && container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
-      scene.clear();
-    };
-  }, []);
-
   const handleReset = async () => {
-    if (!token) {
-      message.error("Invalid reset token. Please request a new password reset.");
+    if (tokenError || !token) {
+      message.error("No valid reset token found. Please request a new password reset.");
       return;
     }
 
@@ -178,11 +56,15 @@ const ResetPassword = () => {
 
     setLoading(true);
     try {
-      const responseMessage = await resetPassword(token, newPassword);
+      // Use token from URL
+      const tokenToUse = token;
+      const responseMessage = await resetPassword(tokenToUse, newPassword);
+      
       message.success(responseMessage || "Password has been reset successfully!");
       navigate("/login");
-    } catch (errorMessage) {
-      message.error(errorMessage);
+    } catch (error) {
+      console.error("Reset password error:", error);
+      message.error(typeof error === 'string' ? error : "Failed to reset password. Please try again with a valid token.");
     } finally {
       setLoading(false);
     }
@@ -218,61 +100,74 @@ const ResetPassword = () => {
                   <p className="text-blue-200/80">Enter your new password</p>
                 </div>
 
-                <Form className="space-y-6">
-                  <Form.Item>
-                    <Input.Password
-                      prefix={<LockOutlined className="text-gray-400" />}
-                      placeholder="Enter new password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="h-12 bg-white/10 border-gray-500/30 text-white rounded-lg"
-                      autoComplete="new-password"
-                    />
-                  </Form.Item>
-
-                  <Form.Item>
-                    <div className="relative">
+                {tokenError || !token ? (
+                  <div className="text-red-400 bg-red-900/20 p-4 rounded-lg mb-6">
+                    <p>No valid reset token found. Please request a new password reset from the Forgot Password page.</p>
+                    <Button 
+                      type="primary" 
+                      onClick={() => navigate("/forgot-password")}
+                      className="mt-4 bg-blue-600 hover:bg-blue-700 border-0"
+                    >
+                      Go to Forgot Password
+                    </Button>
+                  </div>
+                ) : (
+                  <Form className="space-y-6">
+                    <Form.Item>
                       <Input.Password
                         prefix={<LockOutlined className="text-gray-400" />}
-                        placeholder="Confirm new password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className={`h-12 bg-white/10 text-white rounded-lg ${
-                          passwordMatch === false 
-                            ? "border-red-500" 
-                            : passwordMatch === true 
-                              ? "border-green-500" 
-                              : "border-gray-500/30"
-                        }`}
+                        placeholder="Enter new password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="h-12 bg-white/10 border-gray-500/30 text-white rounded-lg"
                         autoComplete="new-password"
                       />
-                      {passwordMatch !== null && (
-                        <span className="absolute right-3 top-3">
-                          {passwordMatch ? (
-                            <CheckCircleFilled className="text-green-500 text-lg" />
-                          ) : (
-                            <CloseCircleFilled className="text-red-500 text-lg" />
-                          )}
-                        </span>
-                      )}
-                    </div>
-                    {passwordMatch === false && (
-                      <div className="text-red-500 text-sm mt-1">
-                        Passwords do not match
-                      </div>
-                    )}
-                  </Form.Item>
+                    </Form.Item>
 
-                  <Button
-                    type="primary"
-                    loading={loading}
-                    onClick={handleReset}
-                    disabled={!newPassword || passwordMatch !== true}
-                    className="w-full h-12 text-lg font-medium bg-gradient-to-r from-blue-600 to-indigo-600 border-0 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Reset Password
-                  </Button>
-                </Form>
+                    <Form.Item>
+                      <div className="relative">
+                        <Input.Password
+                          prefix={<LockOutlined className="text-gray-400" />}
+                          placeholder="Confirm new password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className={`h-12 bg-white/10 text-white rounded-lg ${
+                            passwordMatch === false 
+                              ? "border-red-500" 
+                              : passwordMatch === true 
+                                ? "border-green-500" 
+                                : "border-gray-500/30"
+                          }`}
+                          autoComplete="new-password"
+                        />
+                        {passwordMatch !== null && (
+                          <span className="absolute right-3 top-3">
+                            {passwordMatch ? (
+                              <CheckCircleFilled className="text-green-500 text-lg" />
+                            ) : (
+                              <CloseCircleFilled className="text-red-500 text-lg" />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                      {passwordMatch === false && (
+                        <div className="text-red-500 text-sm mt-1">
+                          Passwords do not match
+                        </div>
+                      )}
+                    </Form.Item>
+
+                    <Button
+                      type="primary"
+                      loading={loading}
+                      onClick={handleReset}
+                      disabled={!newPassword || passwordMatch !== true}
+                      className="w-full h-12 text-lg font-medium bg-gradient-to-r from-blue-600 to-indigo-600 border-0 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Reset Password
+                    </Button>
+                  </Form>
+                )}
               </div>
 
               {/* Right Side - Branding */}
@@ -280,11 +175,11 @@ const ResetPassword = () => {
                 <div className="text-center">
                   <h1 className="text-4xl font-bold mb-4">
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-indigo-200">
-                      FlightVault
+                      OCMS
                     </span>
                   </h1>
                   <p className="text-blue-200/80 text-lg mb-8">
-                    Your Gateway to the Skies
+                    Online Certificate Management System
                   </p>
                   <div className="space-y-4">
                     <div className="text-gray-300 bg-white/5 p-6 rounded-lg">
