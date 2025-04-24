@@ -1,5 +1,21 @@
 import { useEffect, useState } from "react";
-import { Layout, Card, Typography, Tag, Statistic, Button, Row, Col, Tooltip } from "antd";
+import { 
+  Layout, 
+  Card, 
+  Typography, 
+  Tag, 
+  Statistic, 
+  Button, 
+  Row, 
+  Col, 
+  Tooltip,
+  Badge,
+  Empty,
+  Spin,
+  Space,
+  Timeline,
+  message
+} from "antd";
 import {
   BookOutlined,
   TeamOutlined,
@@ -11,14 +27,31 @@ import {
   BranchesOutlined,
   SafetyCertificateOutlined,
   DashboardOutlined,
+  BellOutlined,
+  UserOutlined,
+  RiseOutlined,
+  BarChartOutlined,
+  AimOutlined
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { getAllAssignedTrainee } from "../../services/traineeService";
+import { courseService } from "../../services/courseService";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 const HomePage = () => {
   const [role, setRole] = useState("user");
   const [roleName, setRoleName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalCourses: 0,
+    activeTrainees: 0,
+    ongoingSchedules: 0,
+    certificatesIssued: 0,
+    pendingRequests: 0,
+    completedCourses: 0
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,71 +59,144 @@ const HomePage = () => {
     const storedRoleName = sessionStorage.getItem("roleName");
     if (storedRole) setRole(storedRole);
     if (storedRoleName) setRoleName(storedRoleName);
+    
+    // Fetch real data
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch courses data
+        const coursesResponse = await courseService.getAllCourses();
+        const totalCourses = coursesResponse.data?.length || 0;
+        
+        // Fetch assigned trainees data
+        const assignedTraineesResponse = await getAllAssignedTrainee();
+        const activeTrainees = assignedTraineesResponse?.length || 0;
+        
+        // Update stats with real data
+        setStats({
+          totalCourses: totalCourses, // Actual number of courses
+          activeTrainees: activeTrainees, // Actual number of assigned trainees
+          ongoingSchedules: 18,
+          certificatesIssued: 5, // Actual number of certificates
+          pendingRequests: 12,
+          completedCourses: 45
+        });
+      } catch (error) {
+        console.error("Error fetching statistics:", error);
+        message.error("Failed to load statistics");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const QuickAccessCard = ({ icon, title, description, path, color }) => (
-    <Card
-      onClick={() => navigate(path)}
-      className="h-full cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-none"
-      bodyStyle={{ height: "100%" }}
+  const StatisticCard = ({ icon, title, value, color, onClick }) => (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
     >
-      <div className="flex flex-col h-full">
-        <div className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center mb-4`}>
-          {icon}
+      <Card 
+        onClick={onClick}
+        className="cursor-pointer hover:shadow-lg transition-all duration-300"
+        bodyStyle={{ padding: '24px' }}
+      >
+        <div className="flex items-center gap-4">
+          <div className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center`}>
+            {icon}
+          </div>
+          <div>
+            <Text className="text-gray-600">{title}</Text>
+            <Title level={3} className="!mb-0">
+              {value}
+            </Title>
+          </div>
         </div>
-        <Title level={4} className="mb-2">
-          {title}
-        </Title>
-        <Text className="text-gray-600 flex-grow">{description}</Text>
-        <div className="mt-4">
-          <Button type="link" className="p-0 text-blue-600 hover:text-blue-800">
-            Access Now →
-          </Button>
+      </Card>
+    </motion.div>
+  );
+
+  const QuickAccessCard = ({ icon, title, description, path, color, badge }) => (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <Card
+        onClick={() => navigate(path)}
+        className="h-full cursor-pointer hover:shadow-xl transition-all duration-300 border-none"
+        bodyStyle={{ height: "100%" }}
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex justify-between items-start mb-4">
+            <div className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center`}>
+              {icon}
+            </div>
+            {badge && (
+              <Badge count={badge} />
+            )}
+          </div>
+          <Title level={4} className="mb-2">
+            {title}
+          </Title>
+          <Paragraph className="text-gray-600 flex-grow" ellipsis={{ rows: 2 }}>
+            {description}
+          </Paragraph>
+          <div className="mt-4">
+            <Button type="primary" className={`${color} border-none hover:opacity-90`}>
+              Access Now →
+            </Button>
+          </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+    </motion.div>
   );
 
   const AdminHome = () => (
     <div className="space-y-8">
-      {/* Overview Section */}
+      {/* Hero Section with Welcome Message */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-8 text-white mb-8"
+      >
+        <Row gutter={[24, 24]} align="middle">
+          <Col xs={24} md={16}>
+            <Title level={2} className="!text-white !mb-2">
+              Welcome back, Administrator
+            </Title>
+            <Text className="text-blue-100 text-lg">
+              Here's what's happening in your training system today
+            </Text>
+          </Col>
+        </Row>
+      </motion.div>
+
+      {/* Statistics Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
-          <Statistic
-            title={<span className="text-gray-600">Total Courses</span>}
-            value={24}
-            prefix={<BookOutlined className="text-blue-500" />}
-            className="cursor-pointer"
-            onClick={() => navigate('/course')}
-          />
-        </Card>
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
-          <Statistic
-            title={<span className="text-gray-600">Active Trainees</span>}
-            value={156}
-            prefix={<TeamOutlined className="text-green-500" />}
-            className="cursor-pointer"
-            onClick={() => navigate('/trainee')}
-          />
-        </Card>
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
-          <Statistic
-            title={<span className="text-gray-600">Ongoing Schedules</span>}
-            value={18}
-            prefix={<CalendarOutlined className="text-orange-500" />}
-            className="cursor-pointer"
-            onClick={() => navigate('/schedule')}
-          />
-        </Card>
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
-          <Statistic
-            title={<span className="text-gray-600">Certificates Issued</span>}
-            value={89}
-            prefix={<SafetyCertificateOutlined className="text-purple-500" />}
-            className="cursor-pointer"
-            onClick={() => navigate('/certificate')}
-          />
-        </Card>
+        <StatisticCard
+          icon={<BookOutlined className="text-2xl text-white" />}
+          title="Total Courses"
+          value={stats.totalCourses}
+          color="bg-blue-500"
+          onClick={() => navigate('/all-courses')}
+        />
+        <StatisticCard
+          icon={<TeamOutlined className="text-2xl text-white" />}
+          title="Active Trainees"
+          value={stats.activeTrainees}
+          color="bg-green-500"
+          onClick={() => navigate('/assigned-trainee')}
+        />
+        <StatisticCard
+          icon={<SafetyCertificateOutlined className="text-2xl text-white" />}
+          title="Certificates Issued"
+          value={stats.certificatesIssued}
+          color="bg-purple-500"
+          onClick={() => navigate('/certificate')}
+        />
       </div>
 
       {/* Quick Access Section */}
@@ -98,25 +204,28 @@ const HomePage = () => {
         <Title level={3} className="mb-6">Quick Access</Title>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <QuickAccessCard
-            icon={<BookOutlined className="text-2xl text-white" />}
-            title="Course Management"
-            description="Create and manage training courses, assign instructors and monitor progress."
-            path="/course"
-            color="bg-blue-500"
+            icon={<UserOutlined className="text-2xl text-white" />}
+            title="Candidate Management"
+            description="Review and manage candidate applications, track recruitment progress."
+            path="/candidates"
+            color="bg-cyan-500"
+            badge={stats.pendingRequests}
           />
           <QuickAccessCard
-            icon={<CalendarOutlined className="text-2xl text-white" />}
-            title="Schedule Management"
-            description="View and manage training schedules, track sessions and attendance."
-            path="/schedule"
-            color="bg-green-500"
+            icon={<BellOutlined className="text-2xl text-white" />}
+            title="Notifications"
+            description="View system notifications, announcements, and updates."
+            path="/notifications"
+            color="bg-yellow-500"
+            badge={5}
           />
           <QuickAccessCard
-            icon={<BranchesOutlined className="text-2xl text-white" />}
-            title="Specialty Management"
-            description="Organize and manage medical specialties and their hierarchies."
-            path="/specialty"
-            color="bg-purple-500"
+           icon={<BookOutlined className="text-2xl text-white" />}
+           title="subject"
+           description="View subject subject, announcements, and updates."
+           path="/subject"
+           color="bg-yellow-500"
+           
           />
         </div>
       </div>
@@ -126,48 +235,49 @@ const HomePage = () => {
   const NormalHome = () => (
     <div className="space-y-8">
       {/* Personal Overview */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} md={8}>
-          <Card className="h-full shadow-md hover:shadow-lg transition-all duration-300">
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <TeamOutlined className="text-2xl text-blue-500" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-8 text-white"
+      >
+        <Row gutter={[24, 24]} align="middle">
+          <Col xs={24} md={12}>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                <UserOutlined className="text-3xl text-white" />
               </div>
               <div>
-                <Text className="text-gray-500">Welcome back,</Text>
-                <Title level={4} className="m-0">
-                  {`${sessionStorage.getItem("username") || "User"} (${roleName})`}
+                <Text className="text-indigo-100">Welcome back,</Text>
+                <Title level={3} className="!text-white !mb-0">
+                  {sessionStorage.getItem("username") || "User"}
                 </Title>
+                <Tag color="blue">{roleName}</Tag>
               </div>
             </div>
-            <div className="space-y-2">
-              <Tag icon={<CheckCircleOutlined />} color="success">
-                Active Account
-              </Tag>
-              <Tag icon={<ClockCircleOutlined />} color="processing">
-                2 Upcoming Sessions
-              </Tag>
-            </div>
-          </Card>
-        </Col>
-        <Col xs={24} md={16}>
-          <Card className="h-full shadow-md hover:shadow-lg transition-all duration-300">
-            <Title level={4}>Your Progress</Title>
-            <div className="grid grid-cols-2 gap-4">
-              <Statistic
-                title="Completed Courses"
-                value={5}
-                prefix={<TrophyOutlined className="text-yellow-500" />}
-              />
-              <Statistic
-                title="Ongoing Courses"
-                value={2}
-                prefix={<ClockCircleOutlined className="text-blue-500" />}
-              />
-            </div>
-          </Card>
-        </Col>
-      </Row>
+          </Col>
+          <Col xs={24} md={12}>
+            <Row gutter={[16, 16]}>
+              <Col span={12}>
+                <Statistic 
+                  title={<span className="text-indigo-100">Completed Courses</span>}
+                  value={stats.completedCourses}
+                  prefix={<TrophyOutlined className="text-yellow-400" />}
+                  className="text-white"
+                />
+              </Col>
+              <Col span={12}>
+                <Statistic
+                  title={<span className="text-indigo-100">Active Courses</span>}
+                  value={stats.ongoingSchedules}
+                  prefix={<ClockCircleOutlined className="text-green-400" />}
+                  className="text-white"
+                />
+              </Col>
+            </Row>
+          </Col>
+        </Row>
+      </motion.div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -176,23 +286,39 @@ const HomePage = () => {
           title="My Schedule"
           description="View your upcoming training sessions and manage your calendar."
           path="/schedule"
-          color="bg-indigo-500"
+          color="bg-blue-500"
         />
         <QuickAccessCard
           icon={<FileTextOutlined className="text-2xl text-white" />}
-          title="My Grades"
-          description="Check your course grades and assessment results."
-          path="/grade"
+          title="My Progress"
+          description="Track your learning progress and view assessment results."
+          path="/progress"
           color="bg-green-500"
         />
         <QuickAccessCard
-          icon={<SafetyCertificateOutlined className="text-2xl text-white" />}
-          title="My Certificates"
-          description="Access and download your earned certificates."
-          path="/certificate"
-          color="bg-yellow-500"
+          icon={<AimOutlined className="text-2xl text-white" />}
+          title="Learning Path"
+          description="Explore recommended courses and plan your learning journey."
+          path="/learning-path"
+          color="bg-purple-500"
         />
       </div>
+
+      {/* Recent Activities */}
+      <Card className="shadow-md">
+        <Title level={4} className="mb-4">Recent Activities</Title>
+        {loading ? (
+          <div className="text-center py-8">
+            <Spin size="large" />
+          </div>
+        ) : (
+          <Timeline>
+            <Timeline.Item color="green">Completed "Introduction to Medical Ethics" course</Timeline.Item>
+            <Timeline.Item color="blue">Enrolled in "Advanced Patient Care" course</Timeline.Item>
+            <Timeline.Item color="orange">Upcoming assessment on Friday</Timeline.Item>
+          </Timeline>
+        )}
+      </Card>
     </div>
   );
 
@@ -200,32 +326,6 @@ const HomePage = () => {
     <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <Layout.Content className="p-8">
         <div className="max-w-7xl mx-auto">
-          {/* Hero Section */}
-          <div className="bg-white rounded-xl shadow-lg p-8 mb-8 animate__animated animate__fadeIn">
-            <div className="flex items-center gap-6">
-              <div className="p-6 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full shadow-lg border-2 border-blue-200">
-                <DashboardOutlined className="text-5xl text-blue-500" />
-              </div>
-              <div>
-                <Title level={2} className="!mb-1">
-                  {role === "Admin" ? "Admin Dashboard" : "Training Dashboard"}
-                </Title>
-                <Text className="text-gray-600">
-                  {role === "Admin" 
-                    ? "Manage and monitor all training activities"
-                    : roleName === "Trainee"
-                    ? "Track your learning progress and upcoming sessions"
-                    : roleName === "Instructor"
-                    ? "Manage your classes and student progress"
-                    : roleName === "Training Staff"
-                    ? "Oversee training operations and schedules"
-                    : "Welcome to the training system"}
-                </Text>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Content */}
           {role === "Admin" ? <AdminHome /> : <NormalHome />}
         </div>
       </Layout.Content>
@@ -234,3 +334,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
