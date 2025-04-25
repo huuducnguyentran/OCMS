@@ -40,6 +40,8 @@ export const API = {
   UPDATE_PASSWORD: "User",
   FORGOT_PASSWORD: "User/forgot-password",
   RESET_PASSWORD: "User/reset-password",
+  ACTIVATE_USER: "User/activate",
+  DEACTIVATE_USER: "User/deactivate",
 
   // Trainee Assign
   ASSIGN_TRAINEE: "TraineeAssign/import",
@@ -48,6 +50,7 @@ export const API = {
   GET_ASSIGNED_TRAINEE_BY_ID: "TraineeAssign",
   UPDATE_ASSIGNED_TRAINEE: "TraineeAssign",
   GET_ASSIGNED_TRAINEE_COURSE: "TraineeAssign/trainee",
+  GET_TRAINEES_BY_REQUEST_ID: "TraineeAssign/subject/{requestId}/traineesByRequestId",
 
   // Training Plan
   GET_ALL_TRAINING_PLANS: "TrainingPlan",

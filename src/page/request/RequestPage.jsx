@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Spin,
   Tag,
@@ -16,6 +16,7 @@ import {
   Card,
   List,
   Popconfirm,
+  Alert,
 } from "antd";
 import {
   CalendarOutlined,
@@ -32,6 +33,7 @@ import {
   EyeOutlined,
   UserOutlined,
   IdcardOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -65,6 +67,9 @@ const RequestTypeEnum = {
   11: "Delete",
   12: "Assign Trainee",
   13: "Add Trainee Assign",
+  14: "Certificate Template",
+  15: "Decision Template",
+  16: "Sign Request",
 };
 
 // Hàm helper để kiểm tra xem request type có phải loại training plan không
@@ -110,6 +115,58 @@ const isComplaintType = (requestType) => {
   return Number(requestType) === 3;
 };
 
+// Hàm helper để kiểm tra xem request type có phải loại Certificate Template không
+const isCertificateTemplateType = (requestType) => {
+  if (typeof requestType === "string") {
+    if (requestType === "CertificateTemplate" || requestType === "Certificate Template") return true;
+    
+    // Thử chuyển về số nếu không khớp với tên
+    const type = parseInt(requestType, 10);
+    if (!isNaN(type)) {
+      return type === 14;
+    }
+    return false;
+  }
+  
+  // Trường hợp requestType là số
+  return Number(requestType) === 14;
+};
+
+// Hàm helper để kiểm tra xem request type có phải loại Decision Template không
+const isDecisionTemplateType = (requestType) => {
+  if (typeof requestType === "string") {
+    if (requestType === "DecisionTemplate" || requestType === "Decision Template") return true;
+    
+    // Thử chuyển về số nếu không khớp với tên
+    const type = parseInt(requestType, 10);
+    if (!isNaN(type)) {
+      return type === 15;
+    }
+    return false;
+  }
+  
+  // Trường hợp requestType là số
+  return Number(requestType) === 16;
+};
+
+// Hàm helper để kiểm tra xem request type có phải loại Assign Trainee không
+const isTraineeAssignType = (requestType) => {
+  if (typeof requestType === "string") {
+    if (requestType === "AssignTrainee" || requestType === "Assign Trainee") return true;
+    if (requestType === "AddTraineeAssign" || requestType === "Add Trainee Assign") return true;
+    
+    // Thử chuyển về số nếu không khớp với tên
+    const type = parseInt(requestType, 10);
+    if (!isNaN(type)) {
+      return type === 12 || type === 13;
+    }
+    return false;
+  }
+  
+  // Trường hợp requestType là số
+  return Number(requestType) === 12 || Number(requestType) === 13;
+};
+
 const RequestList = () => {
   const storedRole = sessionStorage.getItem("role");
   const isAdmin = storedRole === "Admin";
@@ -141,6 +198,17 @@ const RequestList = () => {
   const [candidateData, setCandidateData] = useState([]);
   const [candidateLoading, setCandidateLoading] = useState(false);
   const navigate = useNavigate();
+
+  // State cho preview template
+  const [templatePreviewVisible, setTemplatePreviewVisible] = useState(false);
+  const [templatePreviewUrl, setTemplatePreviewUrl] = useState("");
+  const [templatePreviewLoading, setTemplatePreviewLoading] = useState(false);
+  const [templatePreviewError, setTemplatePreviewError] = useState(null);
+  const templateLoadingTimeoutRef = useRef(null);
+
+  // State cho danh sách học viên
+  const [traineesData, setTraineesData] = useState([]);
+  const [traineesLoading, setTraineesLoading] = useState(false);
 
   const toggleFilters = () => {
     setShowFilters(!showFilters);
@@ -182,16 +250,6 @@ const RequestList = () => {
   const applyFilters = (data) => {
     let filtered = [...data];
 
-    // Lọc bỏ request Candidate Import nếu người dùng là HeadMaster
-    if (storedRole === "HeadMaster") {
-      filtered = filtered.filter(request => {
-        const requestType = Number(request.requestType);
-        const requestTypeStr = String(request.requestType).toLowerCase();
-        return requestType !== 9 && 
-               !requestTypeStr.includes('candidateimport') && 
-               !requestTypeStr.includes('candidate import');
-      });
-    }
 
     if (searchText) {
       filtered = filtered.filter(
@@ -308,6 +366,7 @@ const RequestList = () => {
     setRequestByUser(null);
     setApprovedByUser(null);
     setCandidateData([]);
+    setTraineesData([]);
 
     try {
       const requestData = await getRequestById(record.requestId);
@@ -368,6 +427,25 @@ const RequestList = () => {
           setCandidateLoading(false);
         }
       }
+
+      // Nếu là yêu cầu gán học viên (requestType = 12 hoặc 13)
+      if (isTraineeAssignType(requestData.requestType)) {
+        console.log(
+          "Detected trainee assign request, fetching trainee data..."
+        );
+        setTraineesLoading(true);
+        try {
+          const { getTraineesByRequestId } = await import('../../services/requestService');
+          const traineesResult = await getTraineesByRequestId(record.requestId);
+          console.log("Trainees Data:", traineesResult);
+          setTraineesData(traineesResult || []);
+        } catch (traineesError) {
+          console.error("Failed to fetch trainees details", traineesError);
+          setTraineesData([]);
+        } finally {
+          setTraineesLoading(false);
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch request details", error);
       message.error("Failed to load request details");
@@ -383,6 +461,7 @@ const RequestList = () => {
     setRequestByUser(null);
     setApprovedByUser(null);
     setCandidateData([]);
+    setTraineesData([]);
   };
 
   // Hàm approve request
@@ -517,6 +596,101 @@ const RequestList = () => {
     navigate(`/candidates/${candidateId}`);
     handleCloseDetails();
   };
+
+  // Hàm hiển thị preview certificate template
+  const handleViewCertificateTemplate = async (templateId) => {
+    setTemplatePreviewLoading(true);
+    setTemplatePreviewError(null);
+    setTemplatePreviewVisible(true);
+    setTemplatePreviewUrl("");
+
+    // Set timeout để tránh trường hợp loading quá lâu
+    templateLoadingTimeoutRef.current = setTimeout(() => {
+      if (templatePreviewLoading) {
+        setTemplatePreviewLoading(false);
+        setTemplatePreviewError("Preview loading timeout. The server took too long to respond.");
+      }
+    }, 15000);
+
+    try {
+      const { fetchCertificateTemplatebyId } = await import("../../services/certificateService");
+      const data = await fetchCertificateTemplatebyId(templateId);
+      
+      if (data?.templateFileWithSas) {
+        setTemplatePreviewUrl(data.templateFileWithSas);
+      } else {
+        setTemplatePreviewError("No template preview available");
+      }
+    } catch (error) {
+      console.error("Failed to fetch certificate template:", error);
+      setTemplatePreviewError(`Error loading template: ${error.message || "Unknown error"}`);
+    } finally {
+      if (templateLoadingTimeoutRef.current) {
+        clearTimeout(templateLoadingTimeoutRef.current);
+        templateLoadingTimeoutRef.current = null;
+      }
+      setTemplatePreviewLoading(false);
+    }
+  };
+
+  // Hàm hiển thị preview decision template
+  const handleViewDecisionTemplate = async (templateId) => {
+    setTemplatePreviewLoading(true);
+    setTemplatePreviewError(null);
+    setTemplatePreviewVisible(true);
+    setTemplatePreviewUrl("");
+
+    // Set timeout để tránh trường hợp loading quá lâu
+    templateLoadingTimeoutRef.current = setTimeout(() => {
+      if (templatePreviewLoading) {
+        setTemplatePreviewLoading(false);
+        setTemplatePreviewError("Preview loading timeout. The server took too long to respond.");
+      }
+    }, 15000);
+
+    try {
+      const { fetchDecisionTemplatebyId } = await import("../../services/decisionService");
+      const data = await fetchDecisionTemplatebyId(templateId);
+      
+      if (data?.templateContentWithSas) {
+        setTemplatePreviewUrl(data.templateContentWithSas);
+      } else {
+        setTemplatePreviewError("No template preview available");
+      }
+    } catch (error) {
+      console.error("Failed to fetch decision template:", error);
+      setTemplatePreviewError(`Error loading template: ${error.message || "Unknown error"}`);
+    } finally {
+      if (templateLoadingTimeoutRef.current) {
+        clearTimeout(templateLoadingTimeoutRef.current);
+        templateLoadingTimeoutRef.current = null;
+      }
+      setTemplatePreviewLoading(false);
+    }
+  };
+
+  // Đóng modal template preview
+  const closeTemplatePreview = () => {
+    setTemplatePreviewVisible(false);
+    if (templatePreviewUrl) {
+      URL.revokeObjectURL(templatePreviewUrl);
+      setTemplatePreviewUrl("");
+    }
+    setTemplatePreviewError(null);
+    if (templateLoadingTimeoutRef.current) {
+      clearTimeout(templateLoadingTimeoutRef.current);
+      templateLoadingTimeoutRef.current = null;
+    }
+  };
+
+  // Thêm cleanup cho timeout khi component unmount
+  useEffect(() => {
+    return () => {
+      if (templateLoadingTimeoutRef.current) {
+        clearTimeout(templateLoadingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const columns = [
     {
@@ -888,6 +1062,72 @@ const RequestList = () => {
                       </div>
                     )}
 
+                    {/* Hiển thị thông tin học viên khi loại yêu cầu là gán học viên */}
+                    {isTraineeAssignType(currentRequest.requestType) && (
+                      <div className="border-t border-gray-200 pt-3 mt-3">
+                        <div className="flex items-center gap-2 text-gray-600 mb-2">
+                          <IdcardOutlined className="text-indigo-500" />
+                          <span className="text-sm font-semibold">
+                            Assigned Trainees:
+                          </span>
+                        </div>
+
+                        {traineesLoading ? (
+                          <div className="flex justify-center py-2">
+                            <Spin size="small" />
+                          </div>
+                        ) : traineesData.length > 0 ? (
+                          <div className="bg-gray-50 p-3 rounded-md">
+                            <List
+                              size="small"
+                              bordered
+                              dataSource={traineesData}
+                              renderItem={(trainee) => (
+                                <List.Item>
+                                  <div className="w-full flex items-center justify-between">
+                                    <div>
+                                      <span
+                                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                        onClick={() => navigate(`/assigned-trainee/${trainee.traineeId}`)}
+                                      >
+                                        {trainee.traineeId}
+                                      </span>
+                                      <span className="mx-2">-</span>
+                                      <span className="font-medium">
+                                        Course: {trainee.courseId}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      {trainee.requestStatus === "Pending" && (
+                                        <Tag color="orange">Pending</Tag>
+                                      )}
+                                      {trainee.requestStatus === "Approved" && (
+                                        <Tag color="green">Approved</Tag>
+                                      )}
+                                      {trainee.requestStatus === "Rejected" && (
+                                        <Tag color="red">Rejected</Tag>
+                                      )}
+                                    </div>
+                                  </div>
+                                </List.Item>
+                              )}
+                            />
+                            {traineesData.length > 3 && (
+                              <div className="mt-2 text-right">
+                                <span className="text-gray-500 text-sm">
+                                  Total: {traineesData.length} trainees
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-500">
+                            No trainees information available.
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     {currentRequest.requestEntityId &&
                       !(
                         Number(currentRequest.requestType) === 9 ||
@@ -901,6 +1141,10 @@ const RequestList = () => {
                             ? "Training Plan ID: "
                             : isComplaintType(currentRequest.requestType)
                             ? "Subject ID: "
+                            : isCertificateTemplateType(currentRequest.requestType)
+                            ? "Certificate Template ID: "
+                            : isDecisionTemplateType(currentRequest.requestType)
+                            ? "Decision Template ID: "
                             : "Entity ID: "}
                           {
                             // Nếu là các loại request về training plan thì hiển thị link
@@ -920,6 +1164,24 @@ const RequestList = () => {
                               >
                                 {currentRequest.requestEntityId}
                               </Link>
+                            ) : isCertificateTemplateType(currentRequest.requestType) ? (
+                              <Button 
+                                type="link" 
+                                className="text-blue-600 hover:text-blue-800 hover:underline p-0"
+                                onClick={() => handleViewCertificateTemplate(currentRequest.requestEntityId)}
+                                title="Click to preview Certificate Template"
+                              >
+                                {currentRequest.requestEntityId}
+                              </Button>
+                            ) : isDecisionTemplateType(currentRequest.requestType) ? (
+                              <Button 
+                                type="link" 
+                                className="text-blue-600 hover:text-blue-800 hover:underline p-0"
+                                onClick={() => handleViewDecisionTemplate(currentRequest.requestEntityId)}
+                                title="Click to preview Decision Template"
+                              >
+                                {currentRequest.requestEntityId}
+                              </Button>
                             ) : (
                               currentRequest.requestEntityId
                             )
@@ -1052,6 +1314,27 @@ const RequestList = () => {
                       </Button>
                     ))}
 
+                  {/* Thêm nút xem chi tiết học viên nếu là request gán học viên */}
+                  {isTraineeAssignType(currentRequest.requestType) &&
+                    traineesData.length > 0 &&
+                    (traineesData.length === 1 ? (
+                      <Button
+                        type="primary"
+                        className="bg-blue-500 hover:bg-blue-600"
+                        onClick={() => navigate(`/assigned-trainee/${traineesData[0].traineeId}`)}
+                      >
+                        View Trainee Details
+                      </Button>
+                    ) : (
+                      <Button
+                        type="primary"
+                        className="bg-blue-500 hover:bg-blue-600"
+                        onClick={() => navigate('/assigned-trainee')}
+                      >
+                        {`View All Trainees`}
+                      </Button>
+                    ))}
+
                   {/* Thêm nút view training plan nếu là request liên quan đến training plan */}
                   {currentRequest.requestEntityId &&
                     isTrainingPlanType(currentRequest.requestType) && (
@@ -1080,6 +1363,29 @@ const RequestList = () => {
                           View Subject
                         </Button>
                       </Link>
+                    )}
+
+                  {/* Thêm nút để xem Certificate Template */}
+                  {currentRequest.requestEntityId &&
+                    isCertificateTemplateType(currentRequest.requestType) && (
+                      <Button
+                        type="primary"
+                        className="bg-blue-500 hover:bg-blue-600"
+                        onClick={() => handleViewCertificateTemplate(currentRequest.requestEntityId)}
+                      >
+                        Preview Certificate Template
+                      </Button>
+                    )}
+                    
+                  {currentRequest.requestEntityId &&
+                    isDecisionTemplateType(currentRequest.requestType) && (
+                      <Button
+                        type="primary"
+                        className="bg-blue-500 hover:bg-blue-600"
+                        onClick={() => handleViewDecisionTemplate(currentRequest.requestEntityId)}
+                      >
+                        Preview Decision Template
+                      </Button>
                     )}
 
                   <Button onClick={handleCloseDetails}>Close</Button>
@@ -1112,6 +1418,54 @@ const RequestList = () => {
                 className="w-full"
               />
             </div>
+          </Modal>
+
+          {/* Modal xem trước template */}
+          <Modal
+            title="Template Preview"
+            open={templatePreviewVisible}
+            onCancel={closeTemplatePreview}
+            footer={[
+              <Button key="close" onClick={closeTemplatePreview}>
+                Close
+              </Button>,
+            ]}
+            width={800}
+            maskClosable
+            closable
+            destroyOnClose
+          >
+            {templatePreviewLoading ? (
+              <div className="flex justify-center items-center h-60">
+                <Spin tip="Loading template..." />
+              </div>
+            ) : templatePreviewError ? (
+              <Alert
+                message="Error Loading Preview"
+                description={
+                  <Space direction="vertical">
+                    <div>{templatePreviewError}</div>
+                    <Button type="primary" danger onClick={closeTemplatePreview}>
+                      <CloseCircleOutlined /> Close Preview
+                    </Button>
+                  </Space>
+                }
+                type="error"
+                showIcon
+                icon={<WarningOutlined />}
+              />
+            ) : (
+              templatePreviewUrl && (
+                <iframe
+                  src={templatePreviewUrl}
+                  title="Template Preview"
+                  style={{ width: "100%", height: "600px", border: "none" }}
+                  onError={() =>
+                    setTemplatePreviewError("Failed to load template content.")
+                  }
+                />
+              )
+            )}
           </Modal>
         </div>
       </div>

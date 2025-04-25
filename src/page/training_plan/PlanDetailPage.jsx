@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Table, Tag, Empty, Spin, Button, Typography, Breadcrumb, Statistic, Row, Col, Divider } from 'antd';
+import { Card, Table, Tag, Empty, Spin, Button, Typography, Breadcrumb, Statistic, Row, Col, Divider, message } from 'antd';
 import { 
   ArrowLeftOutlined, 
   CalendarOutlined, 
@@ -10,7 +10,8 @@ import {
   CheckCircleOutlined,
   ScheduleOutlined,
   PlusOutlined,
-  MinusOutlined
+  MinusOutlined,
+  TagOutlined
 } from '@ant-design/icons';
 import { trainingPlanService } from '../../services/trainingPlanService';
 
@@ -151,9 +152,9 @@ const PlanDetailPage = () => {
           <Col xs={24} sm={12} md={6}>
             <Card bordered={false} className="h-full shadow-sm hover:shadow-md transition-shadow">
               <Statistic
-                title="Status"
-                value={planDetails?.trainingPlanStatus || 'N/A'}
-                prefix={<CheckCircleOutlined className="text-indigo-500" />}
+                title="Specialty"
+                value={planDetails?.specialtyId || 'N/A'}
+                prefix={<TagOutlined className="text-indigo-500" />}
               />
             </Card>
           </Col>
@@ -184,6 +185,12 @@ const PlanDetailPage = () => {
                     {planDetails?.startDate ? new Date(planDetails.startDate).toLocaleDateString() : "N/A"}
                   </Text>
                 </div>
+                <div>
+                  <Text className="text-gray-500 block">Specialty ID</Text>
+                  <Tag color="cyan" className="mt-1 text-base px-3 py-1">
+                    {planDetails?.specialtyId || "N/A"}
+                  </Tag>
+                </div>
               </div>
             </Col>
             <Col xs={24} md={12}>
@@ -198,6 +205,12 @@ const PlanDetailPage = () => {
                   <Text className="text-gray-500 block">End Date</Text>
                   <Text strong className="text-base">
                     {planDetails?.endDate ? new Date(planDetails.endDate).toLocaleDateString() : "N/A"}
+                  </Text>
+                </div>
+                <div>
+                  <Text className="text-gray-500 block">Created By</Text>
+                  <Text strong className="text-base">
+                    {planDetails?.createByUserId || "N/A"}
                   </Text>
                 </div>
               </div>
