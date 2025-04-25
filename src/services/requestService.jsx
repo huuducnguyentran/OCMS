@@ -37,6 +37,21 @@ export const getRequestById = async (id) => {
   }
 };
 
+// Lấy danh sách học viên được gán vào khóa học theo request ID
+export const getTraineesByRequestId = async (requestId) => {
+  try {
+    const endpoint = API.GET_TRAINEES_BY_REQUEST_ID.replace('{requestId}', requestId);
+    const response = await axiosInstance.get(`/${endpoint}`);
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error fetching trainees by request ID:",
+      error?.response || error.message
+    );
+    throw error;
+  }
+};
+
 // Approve request
 export const approveRequest = async (id) => {
   try {
@@ -85,7 +100,7 @@ export const createRequest = async (data) => {
   }
 };
 
-export const deleteRequest = async (id) => {
+export const deleteRequest = async (id) => {  
   try {
     const response = await axiosInstance.delete(`/${API.DELETE_REQUEST}/${id}`);
     return response.data;

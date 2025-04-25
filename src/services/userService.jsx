@@ -148,3 +148,23 @@ export const exportTraineeInfo = async (traineeId) => {
     throw error;
   }
 };
+
+export const activateUser = async (userId) => {
+  try {
+    const response = await axiosInstance.put(`/${API.ACTIVATE_USER}/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error activating user:", error);
+    throw error;
+  }
+};
+
+export const deactivateUser = async (userId) => {
+  try {
+    const response = await axiosInstance.put(`/${API.DEACTIVATE_USER}/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deactivating user:", error);
+    throw error;
+  }
+};

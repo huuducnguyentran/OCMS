@@ -128,7 +128,7 @@ const navItems = [
     label: "Request",
     icon: "SelectOutlined",
     path: "/request",
-    roles: ["Admin", "Training staff", "HeadMaster"],
+    roles: ["Training staff", "HeadMaster"],
   },
   {
     key: "10",
