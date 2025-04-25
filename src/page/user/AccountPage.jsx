@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Table, Tag, Typography, Button, Space, Input, message, Popconfirm } from "antd";
+import { Table, Tag, Typography, Button, Space, Input, message, Popconfirm, Switch } from "antd";
 import { ReloadOutlined, SearchOutlined, DownloadOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { getAllUsers, exportTraineeInfo } from "../../services/userService";
+import { getAllUsers, exportTraineeInfo, activateUser, deactivateUser } from "../../services/userService";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from 'xlsx';
 
@@ -67,6 +67,30 @@ const AccountPage = () => {
     } catch (error) {
       console.error("Error deleting account:", error);
       message.error({ content: "Không thể xóa tài khoản. Vui lòng thử lại", key: "deleteAccount" });
+    }
+  };
+
+  // Hàm xử lý kích hoạt/vô hiệu hóa tài khoản
+  const handleToggleStatus = async (userId, checked) => {
+    try {
+      message.loading({ content: checked ? "Đang kích hoạt tài khoản..." : "Đang vô hiệu hóa tài khoản...", key: "toggleStatus" });
+      
+      if (checked) {
+        await activateUser(userId);
+        message.success({ content: "Kích hoạt tài khoản thành công", key: "toggleStatus" });
+      } else {
+        await deactivateUser(userId);
+        message.success({ content: "Vô hiệu hóa tài khoản thành công", key: "toggleStatus" });
+      }
+      
+      // Cập nhật lại danh sách tài khoản
+      fetchAccounts();
+    } catch (error) {
+      console.error("Error toggling account status:", error);
+      message.error({ 
+        content: checked ? "Không thể kích hoạt tài khoản. Vui lòng thử lại" : "Không thể vô hiệu hóa tài khoản. Vui lòng thử lại", 
+        key: "toggleStatus" 
+      });
     }
   };
 
@@ -158,38 +182,40 @@ const AccountPage = () => {
       sortOrder: sortedInfo.columnKey === 'dateOfBirth' ? sortedInfo.order : null,
       render: (date) => new Date(date).toLocaleDateString(),
     },
+    {
+      title: "Status",
+      dataIndex: "accountStatus",
+      key: "accountStatus",
+      width: 100,
+      fixed: "right",
+      render: (accountStatus, record) => {
+        const isActive = accountStatus === "Active";
+        return (
+          <Switch
+            checked={isActive}
+            onChange={(checked) => handleToggleStatus(record.userId, checked)}
+            disabled={!isAdmin}
+            className={isActive ? "bg-green-500" : "bg-gray-400"}
+          />
+        );
+      },
+    },
     // Thêm cột Action nếu người dùng là Admin hoặc Reviewer
     ...(isAdmin || isReviewer ? [
       {
         title: "Action",
         key: "action",
-        width: 100,
+        width: 80,
         fixed: "right",
         render: (_, record) => (
           isAdmin ? (
-            <Space direction="horizontal" size="small">
-              <Button 
-                type="primary" 
-                icon={<EditOutlined />} 
-                size="small"
-                onClick={() => navigateToUpdate(record.userId)}
-                className="w-full bg-blue-500 hover:bg-blue-600"
-              />
-              <Popconfirm
-                title="Xóa tài khoản"
-                description="Bạn có chắc chắn muốn xóa tài khoản này?"
-                onConfirm={() => handleDeleteConfirm(record.userId)}
-                okText="Có"
-                cancelText="Không"
-              >
-                <Button 
-                  icon={<DeleteOutlined/>} 
-                  size="small"
-                  className="w-full"
-                  danger
-                />
-              </Popconfirm>
-            </Space>
+            <Button 
+              type="primary" 
+              icon={<EditOutlined />} 
+              size="small"
+              onClick={() => navigateToUpdate(record.userId)}
+              className="w-full bg-blue-500 hover:bg-blue-600"
+            />
           ) : (
             <Button 
               type="primary" 

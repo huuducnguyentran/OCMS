@@ -16,6 +16,7 @@ const CertificateDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
   const isHeadMaster = userRole === "HeadMaster";
+  const isTrainingStaff = userRole === "Training staff";
 
   useEffect(() => {
     const fetchCertificate = async () => {
@@ -143,11 +144,11 @@ const CertificateDetailPage = () => {
         </div>
       )}
       {certificate.status !== "Pending" && certificate.status !== "Revoked" &&(
-        <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can revoke certificates"}>
+        <Tooltip title={isTrainingStaff ? "" : "Only TrainingStaff can revoke certificates"}>
           <Button 
             danger 
             onClick={handleRevokeCertificate}
-            disabled={!isHeadMaster}
+            disabled={!isTrainingStaff}
           >
             Revoke Certificate
           </Button>

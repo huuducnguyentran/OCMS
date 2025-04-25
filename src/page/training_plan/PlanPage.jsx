@@ -93,11 +93,13 @@ const PlanPage = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Filter and sort states
+  // Sort and filter states
   const [searchText, setSearchText] = useState("");
   const [selectedStatusValues, setSelectedStatusValues] = useState([]);
   const [selectedLevelValues, setSelectedLevelValues] = useState([]);
+  const [selectedSpecialtyValues, setSelectedSpecialtyValues] = useState([]);
   const [dateSort, setDateSort] = useState("desc"); // 'asc' hoặc 'desc'
+  const [specialtySort, setSpecialtySort] = useState("asc"); // 'asc' hoặc 'desc'
   const [filterVisible, setFilterVisible] = useState(false);
   const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
   const isTrainee = userRole === "Trainee";
@@ -161,7 +163,8 @@ const PlanPage = () => {
         (plan) =>
           (plan.planName &&
             plan.planName.toLowerCase().includes(lowerSearchText)) ||
-          (plan.planId && plan.planId.toLowerCase().includes(lowerSearchText))
+          (plan.planId && plan.planId.toLowerCase().includes(lowerSearchText)) ||
+          (plan.specialtyId && plan.specialtyId.toLowerCase().includes(lowerSearchText))
       );
     }
 
@@ -177,6 +180,24 @@ const PlanPage = () => {
       result = result.filter((plan) =>
         selectedLevelValues.includes(plan.planLevel)
       );
+    }
+
+    // Filter by specialty
+    if (selectedSpecialtyValues.length > 0) {
+      result = result.filter((plan) =>
+        selectedSpecialtyValues.includes(plan.specialtyId)
+      );
+    }
+
+    // Sort by specialty
+    if (specialtySort !== null) {
+      result.sort((a, b) => {
+        const specialtyA = a.specialtyId || '';
+        const specialtyB = b.specialtyId || '';
+        return specialtySort === "asc"
+          ? specialtyA.localeCompare(specialtyB)
+          : specialtyB.localeCompare(specialtyA);
+      });
     }
 
     // Sort by date
@@ -205,7 +226,7 @@ const PlanPage = () => {
     if (trainingPlans.length > 0) {
       applyFilters(trainingPlans);
     }
-  }, [searchText, selectedStatusValues, selectedLevelValues, dateSort]);
+  }, [searchText, selectedStatusValues, selectedLevelValues, selectedSpecialtyValues, dateSort, specialtySort]);
 
   const getStatusColor = (status) => {
     if (!status) return "default";
@@ -302,6 +323,26 @@ const PlanPage = () => {
     navigate(`/plan/details/${planId}`);
   };
 
+  // Add function to get unique specialties
+  const getUniqueSpecialties = () => {
+    if (!trainingPlans || !Array.isArray(trainingPlans)) return [];
+    
+    const specialties = trainingPlans
+      .map(plan => plan.specialtyId)
+      .filter(specialty => specialty) // Remove undefined/null values
+      .filter((specialty, index, array) => array.indexOf(specialty) === index); // Remove duplicates
+    
+    return specialties.map(specialty => ({ label: specialty, value: specialty }));
+  };
+
+  const handleSpecialtyChange = (values) => {
+    setSelectedSpecialtyValues(values);
+  };
+
+  const handleSpecialtySortChange = () => {
+    setSpecialtySort((prev) => (prev === "asc" ? "desc" : "asc"));
+  };
+
   // Cập nhật getCardActions để thêm nút Details
   const getCardActions = (plan) => {
     const actions = [
@@ -350,6 +391,8 @@ const PlanPage = () => {
   };
 
   const renderFilterSection = () => {
+    const specialtyOptions = getUniqueSpecialties();
+    
     return (
       <Card
         className="mb-6 w-full shadow-md animate__animated animate__fadeIn"
@@ -395,18 +438,54 @@ const PlanPage = () => {
           </Col>
 
           <Col xs={24} md={isTrainee ? 12 : 8}>
-            <div className="mb-2 font-semibold">Date Sort</div>
-            <Button
-              type="default"
-              icon={
-                <SortAscendingOutlined rotate={dateSort === "desc" ? 180 : 0} />
-              }
-              onClick={handleDateSortChange}
-              className="w-full"
-            >
-              Sort Date {dateSort === "asc" ? "Ascending ↑" : "Descending ↓"}
-            </Button>
+            <div className="mb-2 font-semibold">
+              Date Sort / Specialty Sort
+            </div>
+            <Space direction="vertical" className="w-full">
+              <Button
+                type="default"
+                icon={
+                  <SortAscendingOutlined rotate={dateSort === "desc" ? 180 : 0} />
+                }
+                onClick={handleDateSortChange}
+                className="w-full"
+              >
+                Sort Date {dateSort === "asc" ? "Ascending ↑" : "Descending ↓"}
+              </Button>
+              <Button
+                type="default"
+                icon={
+                  <SortAscendingOutlined rotate={specialtySort === "desc" ? 180 : 0} />
+                }
+                onClick={handleSpecialtySortChange}
+                className="w-full"
+              >
+                Sort Specialty {specialtySort === "asc" ? "Ascending ↑" : "Descending ↓"}
+              </Button>
+            </Space>
           </Col>
+
+          {specialtyOptions.length > 0 && (
+            <Col xs={24}>
+              <div className="mb-2 font-semibold">
+                Specialty Filter{" "}
+                <span className="text-gray-500 text-xs">
+                  (none selected = show all)
+                </span>
+              </div>
+              <Checkbox.Group
+                value={selectedSpecialtyValues}
+                onChange={handleSpecialtyChange}
+                className="flex flex-wrap gap-2"
+              >
+                {specialtyOptions.map((specialty) => (
+                  <Checkbox key={specialty.value} value={specialty.value}>
+                    {specialty.label}
+                  </Checkbox>
+                ))}
+              </Checkbox.Group>
+            </Col>
+          )}
         </Row>
       </Card>
     );
@@ -634,6 +713,10 @@ const PlanPage = () => {
                       <Tag color="blue" className="mb-2">
                         {plan.planId}
                       </Tag>
+                      <div className="mt-2">
+                      <Tag color="cyan">Specialty: {plan.specialtyId || "N/A"}</Tag>
+                    </div>
+
                     </div>
                     <CalendarOutlined className="text-2xl text-blue-500" />
                   </div>
