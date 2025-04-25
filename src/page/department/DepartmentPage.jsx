@@ -75,42 +75,40 @@ const DepartmentPage = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    try {
-      setLoading(true);
-      await deleteDepartment(id);
-      message.success('Department deleted successfully');
-      fetchDepartments();
-    } catch (error) {
-      message.error('Failed to delete department');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleActivate = async (id, currentStatus) => {
-    console.log('Attempting to activate department:', id);
+  const handleStatusChange = async (id, currentStatus) => {
+    console.log('Handling status change for department:', id);
     console.log('Current status:', currentStatus);
 
-    if (currentStatus === 0) {
-      console.log('Department is already active');
-      message.info('Department is already active');
-      return;
-    }
-
     try {
       setLoading(true);
-      console.log('Calling activateDepartment API...');
-      const response = await activateDepartment(id);
-      console.log('API Response:', response);
       
-      if (response) {
-        message.success('Department activated successfully');
-        await fetchDepartments();
+      if (currentStatus === 1) { // Nếu đang inactive -> active
+        console.log('Activating department...');
+        const response = await activateDepartment(id);
+        if (response) {
+          message.success('Department activated successfully');
+        }
+      } else { // Nếu đang active -> delete
+        const confirmDelete = window.confirm(
+          'Deactivating this department will delete it permanently. Are you sure?'
+        );
+        if (confirmDelete) {
+          await deleteDepartment(id);
+          message.success('Department deleted successfully');
+        } else {
+          setLoading(false);
+          return;
+        }
       }
+      
+      await fetchDepartments();
     } catch (error) {
-      console.error('Error activating department:', error);
-      message.error('Failed to activate department. Please try again.');
+      console.error('Error handling status change:', error);
+      message.error(
+        currentStatus === 1 
+          ? 'Failed to activate department' 
+          : 'Failed to delete department'
+      );
     } finally {
       setLoading(false);
     }
@@ -209,10 +207,14 @@ const DepartmentPage = () => {
       key: 'status',
       render: (status, record) => (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Tooltip title={status === 0 ? "Already active" : "Click to activate"}>
+          <Tooltip title={
+            status === 0 
+              ? "Switch off to delete department" 
+              : "Switch on to activate department"
+          }>
             <Switch
               checked={status === 0}
-              onChange={() => handleActivate(record.departmentId, status)}
+              onChange={() => handleStatusChange(record.departmentId, status)}
               checkedChildren="Active"
               unCheckedChildren="Inactive"
               style={{
@@ -220,7 +222,7 @@ const DepartmentPage = () => {
                 width: '90px',
                 height: '28px'
               }}
-              disabled={status === 0 || !isAdmin}
+              disabled={!isAdmin}
             />
           </Tooltip>
           {status === 0 ? (
@@ -258,8 +260,7 @@ const DepartmentPage = () => {
       render: (_, record) => {
         const menu = (
           <Menu style={{ padding: '8px 0' }}>
-            
-            {isAdmin && [
+            {isAdmin && (
               <Menu.Item 
                 key="edit" 
                 icon={<EditOutlined />}
@@ -267,26 +268,8 @@ const DepartmentPage = () => {
                 style={{ padding: '10px 16px', fontSize: '15px' }}
               >
                 Edit Department
-              </Menu.Item>,
-              <Menu.Divider key="divider" />,
-              <Menu.Item
-                key="delete"
-                icon={<DeleteOutlined />}
-                danger
-                style={{ padding: '10px 16px', fontSize: '15px' }}
-              >
-                <Popconfirm
-                  title="Are you sure you want to delete this department?"
-                  description="This action cannot be undone"
-                  onConfirm={() => handleDelete(record.departmentId)}
-                  okText="Yes"
-                  cancelText="No"
-                  okButtonProps={{ danger: true }}
-                >
-                  Delete Department
-                </Popconfirm>
               </Menu.Item>
-            ]}
+            )}
             <Menu.Item 
               key="assign" 
               icon={<UserSwitchOutlined />}
