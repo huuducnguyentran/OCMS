@@ -5,12 +5,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
 import axios from "axios";
+import dayjs from "dayjs";
+import { AZURE_COMPUTER_VISION_ENDPOINT, AZURE_COMPUTER_VISION_API_KEY } from "../../../utils/apiConfig";
 
 const { Title, Text } = Typography;
-
-// Azure Computer Vision API Configuration
-const AZURE_COMPUTER_VISION_ENDPOINT = "https://ocms-web-certificate.cognitiveservices.azure.com/";
-const AZURE_COMPUTER_VISION_API_KEY = "8rHOmSoL7gQ4J7kmIl6OwMTmbeVYi8caawNgkOkxEbDRUiV8PShBJQQJ99BDACYeBjFXJ3w3AAAFACOG9MDn";
 
 const CreateExCertificatePage = () => {
   const [form] = Form.useForm();
@@ -44,6 +42,20 @@ const CreateExCertificatePage = () => {
       }
     }
     
+    // Kiểm tra xem có phải là chứng chỉ TOEIC không
+    for (const line of textLines) {
+      if (/toeic|test of english|listening and reading/i.test(line)) {
+        return "TOEIC Certificate";
+      }
+    }
+    
+    // Kiểm tra xem có phải là chứng chỉ TOEFL không
+    for (const line of textLines) {
+      if (/toefl|test of english as a foreign language/i.test(line)) {
+        return "TOEFL Certificate";
+      }
+    }
+    
     return null;
   };
 
@@ -52,7 +64,55 @@ const CreateExCertificatePage = () => {
     // Kiểm tra loại chứng chỉ
     const certificateName = extractCertificateName(textLines);
     
-    // Xử lý riêng cho IELTS
+    // Xử lý riêng cho TOEFL
+    if (certificateName === "TOEFL Certificate") {
+      // Tìm Registration Number hoặc Appointment Number (16 chữ số, thường chia làm 4 nhóm)
+      for (const line of textLines) {
+        if (/registration number|appointment number/i.test(line)) {
+          // Tìm mẫu 4 nhóm số, mỗi nhóm 4 số
+          const match = line.match(/\d{4}\s+\d{4}\s+\d{4}\s+\d{4}/);
+          if (match) return match[0];
+          
+          // Tìm mẫu 16 chữ số liên tiếp
+          const match2 = line.match(/\d{16}/);
+          if (match2) return match2[0].replace(/(.{4})(?=.)/g, '$1 '); // Chia thành nhóm 4 số
+          
+          // Lấy tất cả số trong dòng này
+          const allDigits = line.match(/\d+/g);
+          if (allDigits && allDigits.join('').length >= 16) {
+            return allDigits.join('').substring(0, 16).replace(/(.{4})(?=.)/g, '$1 ');
+          }
+        }
+      }
+      
+      // Tìm bất kỳ dãy 16 chữ số nào trong văn bản
+      for (const line of textLines) {
+        const match = line.match(/\d{16}/);
+        if (match) return match[0].replace(/(.{4})(?=.)/g, '$1 ');
+        
+        // Hoặc tìm mẫu 4 nhóm số, mỗi nhóm 4 số
+        const groupMatch = line.match(/\d{4}\s+\d{4}\s+\d{4}\s+\d{4}/);
+        if (groupMatch) return groupMatch[0];
+      }
+    }
+    
+    // Xử lý riêng cho TOEIC
+    if (certificateName === "TOEIC Certificate") {
+      // Tìm mã chứng chỉ TOEIC là dãy 7 chữ số
+      for (const line of textLines) {
+        // Tìm chuỗi có đúng 7 chữ số liên tiếp 
+        const match = line.match(/\b\d{7}\b/);
+        if (match) return match[0];
+      }
+      
+      // Tìm bất kỳ chuỗi nào có dạng mã/số hiệu
+      for (const line of textLines) {
+        const match = line.match(/\b([A-Z0-9]{6,8})\b/i);
+        if (match) return match[1];
+      }
+    }
+    
+    // Xử lý cho IELTS và các chứng chỉ khác
     if (certificateName === "IELTS Certificate") {
       // Mẫu cho số báo danh IELTS (thường là 6-7 chữ số)
       for (const line of textLines) {
@@ -119,6 +179,26 @@ const CreateExCertificatePage = () => {
   const extractPossibleIssuer = (textLines) => {
     // Kiểm tra loại chứng chỉ
     const certificateName = extractCertificateName(textLines);
+    
+    // Xử lý riêng cho TOEFL - tổ chức cấp luôn là ETS
+    if (certificateName === "TOEFL Certificate") {
+      return "ETS (Educational Testing Service)";
+    }
+    
+    // Xử lý riêng cho TOEIC
+    if (certificateName === "TOEIC Certificate") {
+      // Kiểm tra tổ chức cấp TOEIC phổ biến
+      for (const line of textLines) {
+        if (/ETS|educational testing service/i.test(line)) {
+          return "ETS (Educational Testing Service)";
+        }
+        if (/IIBC|institute for international business communication/i.test(line)) {
+          return "IIBC (Institute for International Business Communication)";
+        }
+      }
+      
+      return "ETS (Educational Testing Service)";
+    }
     
     // Xử lý riêng cho IELTS
     if (certificateName === "IELTS Certificate") {
@@ -197,6 +277,333 @@ const CreateExCertificatePage = () => {
     
     // Kiểm tra loại chứng chỉ
     const certificateName = extractCertificateName(textLines);
+    
+    // Xử lý riêng cho TOEFL
+    if (certificateName === "TOEFL Certificate") {
+      // Tìm ngày cấp từ Test Date
+      let issueDate = null;
+      
+      // Tìm dòng có "Test Date"
+      for (const line of textLines) {
+        if (/test date/i.test(line)) {
+          // Tìm định dạng ngày trong cùng dòng
+          // Hỗ trợ định dạng như "19 Sep 2015" hoặc "DD/MM/YYYY"
+          const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+          
+          // Tìm định dạng DD Tháng YYYY (ví dụ: 19 Sep 2015)
+          const dateMatch1 = line.match(/(\d{1,2})\s+([A-Za-z]{3,})\s+(\d{4})/i);
+          if (dateMatch1) {
+            const day = parseInt(dateMatch1[1], 10);
+            const month = monthNames.findIndex(m => dateMatch1[2].toLowerCase().includes(m)) + 1;
+            const year = parseInt(dateMatch1[3], 10);
+            
+            if (month > 0) {
+              issueDate = `${day}/${month}/${year}`;
+            }
+          } else {
+            // Tìm định dạng DD/MM/YYYY
+            const dateMatch2 = line.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/);
+            if (dateMatch2) {
+              issueDate = `${dateMatch2[1]}/${dateMatch2[2]}/${dateMatch2[3]}`;
+            }
+          }
+          
+          if (issueDate) {
+            break;
+          }
+        }
+      }
+      
+      // Nếu tìm được ngày cấp, thêm vào danh sách
+      if (issueDate) {
+        dates.push({
+          type: 'issueDate',
+          date: issueDate,
+          priority: 10
+        });
+        
+        // Tự động tính ngày hết hạn (cộng thêm 2 năm)
+        try {
+          const parts = issueDate.split(/[\/\.-]/);
+          if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10) + 2; // Cộng thêm 2 năm
+            
+            const expiryDate = new Date(year, month, day);
+            const day2 = expiryDate.getDate();
+            const month2 = expiryDate.getMonth() + 1;
+            const year2 = expiryDate.getFullYear();
+            
+            dates.push({
+              type: 'expiryDate',
+              date: `${day2}/${month2}/${year2}`,
+              priority: 10,
+              calculated: true
+            });
+          }
+        } catch (e) {
+          console.error("Error calculating TOEFL expiry date:", e);
+        }
+      } else {
+        // Nếu không tìm được ngày cấp từ "Test Date", tìm tất cả các ngày trong văn bản
+        const allDates = [];
+        
+        for (const line of textLines) {
+          // Tìm định dạng DD/MM/YYYY
+          const dateMatches = [...line.matchAll(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/g)];
+          for (const match of dateMatches) {
+            allDates.push({
+              day: parseInt(match[1], 10),
+              month: parseInt(match[2], 10) - 1,
+              year: parseInt(match[3], 10),
+              date: new Date(parseInt(match[3], 10), parseInt(match[2], 10) - 1, parseInt(match[1], 10))
+            });
+          }
+          
+          // Tìm định dạng "DD Month YYYY"
+          const monthPatterns = [
+            /(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})/gi,
+            /(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/gi
+          ];
+          
+          for (const pattern of monthPatterns) {
+            const dateMatches = [...line.matchAll(pattern)];
+            for (const match of dateMatches) {
+              const monthName = match[2].toLowerCase().substring(0, 3);
+              const monthIndex = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"].indexOf(monthName);
+              
+              if (monthIndex !== -1) {
+                allDates.push({
+                  day: parseInt(match[1], 10),
+                  month: monthIndex,
+                  year: parseInt(match[3], 10),
+                  date: new Date(parseInt(match[3], 10), monthIndex, parseInt(match[1], 10))
+                });
+              }
+            }
+          }
+        }
+        
+        // Sắp xếp các ngày theo thứ tự thời gian
+        allDates.sort((a, b) => a.date - b.date);
+        
+        // Nếu tìm được ít nhất một ngày, dùng làm ngày cấp
+        if (allDates.length > 0) {
+          // Bỏ qua ngày cũ nhất (có thể là ngày sinh)
+          const issueDateObj = allDates.length > 1 ? allDates[1] : allDates[0];
+          
+          dates.push({
+            type: 'issueDate',
+            date: `${issueDateObj.day}/${issueDateObj.month + 1}/${issueDateObj.year}`,
+            priority: 8
+          });
+          
+          // Tính ngày hết hạn
+          const expiryDate = new Date(issueDateObj.year + 2, issueDateObj.month, issueDateObj.day);
+          dates.push({
+            type: 'expiryDate',
+            date: `${expiryDate.getDate()}/${expiryDate.getMonth() + 1}/${expiryDate.getFullYear()}`,
+            priority: 8,
+            calculated: true
+          });
+        }
+      }
+      
+      return dates;
+    }
+    
+    // Xử lý riêng cho IELTS - IELTS không có "issue date" rõ ràng, chỉ có ngày trên giấy chứng nhận
+    if (certificateName === "IELTS Certificate") {
+      // IELTS chỉ có ngày như một đường viền và một ngày, không có từ "issue date" rõ ràng
+      const allFoundDates = [];
+      
+      // Tìm tất cả ngày trong chứng chỉ IELTS
+      for (const line of textLines) {
+        // Tìm bất kỳ định dạng ngày nào, không cần từ khóa "date"
+        let dateMatches = [...line.matchAll(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/g)];
+        // Hoặc định dạng như 18/FEB/2023 phổ biến trong IELTS
+        const altMatches = [...line.matchAll(/(\d{1,2})\/([A-Za-z]{3})\/(\d{4})/g)];
+        
+        if (dateMatches.length > 0) {
+          for (const match of dateMatches) {
+            allFoundDates.push({
+              day: parseInt(match[1], 10),
+              month: parseInt(match[2], 10) - 1,
+              year: parseInt(match[3], 10),
+              text: `${match[1]}/${match[2]}/${match[3]}`
+            });
+          }
+        }
+        
+        if (altMatches.length > 0) {
+          const monthMap = {
+            'JAN': 0, 'FEB': 1, 'MAR': 2, 'APR': 3, 'MAY': 4, 'JUN': 5,
+            'JUL': 6, 'AUG': 7, 'SEP': 8, 'OCT': 9, 'NOV': 10, 'DEC': 11
+          };
+          
+          for (const match of altMatches) {
+            const monthStr = match[2].toUpperCase();
+            if (monthMap[monthStr] !== undefined) {
+              allFoundDates.push({
+                day: parseInt(match[1], 10),
+                month: monthMap[monthStr],
+                year: parseInt(match[3], 10),
+                text: `${match[1]}/${match[2]}/${match[3]}`
+              });
+            }
+          }
+        }
+      }
+      
+      // Sắp xếp ngày theo mới nhất (trễ nhất)
+      allFoundDates.sort((a, b) => {
+        const dateA = new Date(a.year, a.month, a.day);
+        const dateB = new Date(b.year, b.month, b.day);
+        return dateB - dateA; // Sắp xếp giảm dần (mới nhất trước)
+      });
+      
+      console.log("Tất cả ngày tìm thấy trong IELTS:", allFoundDates);
+      
+      // Lấy ngày mới nhất làm ngày cấp (thường là ngày có điểm, không phải ngày thi)
+      if (allFoundDates.length > 0) {
+        const latestDate = allFoundDates[0]; // Ngày mới nhất
+        
+        dates.push({
+          type: 'issueDate',
+          date: `${latestDate.day}/${latestDate.month + 1}/${latestDate.year}`,
+          priority: 10
+        });
+        
+        // Tự động thêm ngày hết hạn 2 năm sau ngày cấp (tất cả chứng chỉ IELTS có hạn 2 năm)
+        try {
+          const expiryDate = new Date(latestDate.year + 2, latestDate.month, latestDate.day);
+          const day2 = expiryDate.getDate();
+          const month2 = expiryDate.getMonth() + 1;
+          const year2 = expiryDate.getFullYear();
+          
+          dates.push({
+            type: 'expiryDate',
+            date: `${day2}/${month2}/${year2}`,
+            priority: 9,
+            calculated: true
+          });
+        } catch (e) {
+          console.error("Error calculating IELTS expiry date:", e);
+        }
+      }
+      // Nếu không tìm thấy ngày nào, không cần xử lý thêm
+    }
+    
+    // Xử lý riêng cho giấy phép lái xe - tìm cả ngày cấp và ngày hết hạn
+    if (certificateName === "Driver License") {
+      let issueDateFound = false;
+      let expiryDateFound = false;
+      
+      // Tìm ngày hết hạn trước (thường có từ khóa "valid until", "có giá trị đến", "expiry date" v.v)
+      for (const line of textLines) {
+        if (/có giá trị đến|expires|valid until|expiry date|expiration date|valid to/i.test(line)) {
+          // Kiểm tra nếu là không thời hạn
+          if (/không thời hạn|no expiration/i.test(line)) {
+            dates.push({
+              type: 'expiryDate',
+              date: "Không thời hạn",
+              priority: 10
+            });
+            expiryDateFound = true;
+          } else {
+            // Tìm định dạng ngày DD/MM/YYYY
+            const match = line.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/);
+            if (match) {
+              dates.push({
+                type: 'expiryDate',
+                date: `${match[1]}/${match[2]}/${match[3]}`,
+                priority: 10
+              });
+              expiryDateFound = true;
+            }
+          }
+        }
+      }
+      
+      // Tìm ngày cấp (thường có từ khóa "issue date", "cấp ngày", v.v)
+      for (const line of textLines) {
+        if (/cấp ngày|issue date|issued on|ngày\/date|date of issue/i.test(line)) {
+          const match = line.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/);
+          if (match) {
+            dates.push({
+              type: 'issueDate',
+              date: `${match[1]}/${match[2]}/${match[3]}`,
+              priority: 10
+            });
+            issueDateFound = true;
+          }
+        }
+      }
+      
+      // Nếu không tìm được ngày cấp/ngày hết hạn cụ thể, tìm các ngày trong văn bản
+      if (!issueDateFound || !expiryDateFound) {
+        const allFoundDates = [];
+        
+        // Tìm tất cả ngày trong giấy phép lái xe
+        for (const line of textLines) {
+          let dateMatches = [...line.matchAll(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/g)];
+          
+          if (dateMatches.length > 0) {
+            for (const match of dateMatches) {
+              allFoundDates.push({
+                day: parseInt(match[1], 10),
+                month: parseInt(match[2], 10) - 1,
+                year: parseInt(match[3], 10),
+                text: `${match[1]}/${match[2]}/${match[3]}`,
+                line: line
+              });
+            }
+          }
+        }
+        
+        // Sắp xếp ngày theo thứ tự thời gian (cũ đến mới)
+        allFoundDates.sort((a, b) => {
+          const dateA = new Date(a.year, a.month, a.day);
+          const dateB = new Date(b.year, b.month, b.day);
+          return dateA - dateB;
+        });
+        
+        console.log("Tất cả ngày tìm thấy trong GPLX:", allFoundDates);
+        
+        // Nếu có ít nhất 2 ngày khác nhau, giả định ngày đầu tiên là ngày cấp, ngày sau là ngày hết hạn
+        if (allFoundDates.length >= 2) {
+          // Ngày cấp (ngày đầu tiên nếu chưa tìm thấy)
+          if (!issueDateFound) {
+            const firstDate = allFoundDates[0];
+            dates.push({
+              type: 'issueDate',
+              date: `${firstDate.day}/${firstDate.month + 1}/${firstDate.year}`,
+              priority: 8
+            });
+          }
+          
+          // Ngày hết hạn (ngày cuối cùng nếu chưa tìm thấy)
+          if (!expiryDateFound) {
+            const lastDate = allFoundDates[allFoundDates.length - 1];
+            dates.push({
+              type: 'expiryDate',
+              date: `${lastDate.day}/${lastDate.month + 1}/${lastDate.year}`,
+              priority: 8
+            });
+          }
+        } 
+        // Nếu chỉ tìm thấy 1 ngày, đó có thể là ngày cấp
+        else if (allFoundDates.length === 1 && !issueDateFound) {
+          const onlyDate = allFoundDates[0];
+          dates.push({
+            type: 'issueDate',
+            date: `${onlyDate.day}/${onlyDate.month + 1}/${onlyDate.year}`,
+            priority: 7
+          });
+        }
+      }
+    }
     
     // Xử lý chung cho các loại chứng chỉ - tìm ngày ở cuối trang 
     // Tập trung vào 7 dòng cuối cùng
@@ -284,63 +691,6 @@ const CreateExCertificatePage = () => {
           }
           
           break;
-        }
-      }
-    }
-    
-    // Xử lý riêng cho IELTS
-    if (certificateName === "IELTS Certificate" && !dates.some(d => d.type === 'issueDate')) {
-      // IELTS thường có định dạng DD/MM/YYYY hoặc ngày thi và ngày cấp
-      for (const line of textLines) {
-        // Tìm ngày cấp trong mục "Date" trên phiếu điểm IELTS
-        if (/date/i.test(line) && !/date of birth/i.test(line)) {
-          // Tìm định dạng ngày DD/MM/YYYY hoặc DD-MM-YYYY
-          let dateMatch = line.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/);
-          // Hoặc định dạng như 18/FEB/2023
-          if (!dateMatch) {
-            dateMatch = line.match(/(\d{1,2})\/([A-Za-z]{3})\/(\d{4})/);
-          }
-          
-          if (dateMatch) {
-            dates.push({
-              type: 'issueDate',
-              date: `${dateMatch[1]}/${dateMatch[2]}/${dateMatch[3]}`,
-              priority: 7
-            });
-            
-            // Tự động thêm ngày hết hạn 2 năm sau ngày cấp
-            try {
-              let day, month, year;
-              
-              if (isNaN(dateMatch[2])) {
-                const monthMap = {
-                  'JAN': 1, 'FEB': 2, 'MAR': 3, 'APR': 4, 'MAY': 5, 'JUN': 6,
-                  'JUL': 7, 'AUG': 8, 'SEP': 9, 'OCT': 10, 'NOV': 11, 'DEC': 12
-                };
-                day = parseInt(dateMatch[1], 10);
-                month = monthMap[dateMatch[2].toUpperCase()] - 1;
-                year = parseInt(dateMatch[3], 10);
-              } else {
-                day = parseInt(dateMatch[1], 10);
-                month = parseInt(dateMatch[2], 10) - 1;
-                year = parseInt(dateMatch[3], 10);
-              }
-              
-              const expiryDate = new Date(year + 2, month, day);
-              const day2 = expiryDate.getDate();
-              const month2 = expiryDate.getMonth() + 1;
-              const year2 = expiryDate.getFullYear();
-              
-              dates.push({
-                type: 'expiryDate',
-                date: `${day2}/${month2}/${year2}`,
-                priority: 6,
-                calculated: true
-              });
-            } catch (e) {
-              console.error("Error calculating IELTS expiry date:", e);
-            }
-          }
         }
       }
     }
@@ -567,8 +917,8 @@ const CreateExCertificatePage = () => {
             if (isNaN(dateParts[1])) {
               // Tháng là chữ
               const monthMap = {
-                'JAN': 1, 'FEB': 2, 'MAR': 3, 'APR': 4, 'MAY': 5, 'JUN': 6,
-                'JUL': 7, 'AUG': 8, 'SEP': 9, 'OCT': 10, 'NOV': 11, 'DEC': 12
+                'JAN': 0, 'FEB': 1, 'MAR': 2, 'APR': 3, 'MAY': 4, 'JUN': 5,
+                'JUL': 6, 'AUG': 7, 'SEP': 8, 'OCT': 9, 'NOV': 10, 'DEC': 11
               };
               day = parseInt(dateParts[0], 10);
               month = monthMap[dateParts[1].toUpperCase()] - 1;
@@ -680,6 +1030,16 @@ const CreateExCertificatePage = () => {
           possibleDates: possibleDates,
         };
         
+        // Kiểm tra xem có phải là chứng chỉ/giấy phép hợp lệ không
+        const isCertificateOrLicense = 
+          (possibleCertName !== null) || // Đã nhận dạng được tên chứng chỉ cụ thể
+          (possibleCode !== null && possibleDates.length > 0) || // Có mã số và ngày tháng
+          (/certificate|chứng chỉ|diploma|bằng|license|giấy phép|ielts|toefl|toeic/i.test(extractedText.join(' ')));
+          
+        if (!isCertificateOrLicense) {
+          throw new Error('Cannot detect certificate or license in the image. Please upload a valid certificate image.');
+        }
+        
         // Hiển thị trong console các thông tin trích xuất được để debug
         console.log("Tất cả ngày tìm thấy:", possibleDates);
         console.log("Certificate Name:", certificateInfo.possibleCertName);
@@ -703,9 +1063,10 @@ const CreateExCertificatePage = () => {
                   'JUL': 6, 'AUG': 7, 'SEP': 8, 'OCT': 9, 'NOV': 10, 'DEC': 11
                 };
                 
-                if (monthMap[monthStr] !== undefined) {
-                  const date = new Date(year, monthMap[monthStr], day);
-                  console.log("Converted date with text month:", date);
+                if (monthMap[monthStr.toUpperCase()] !== undefined) {
+                  // Tạo đối tượng dayjs (tương thích với Ant Design)
+                  const date = dayjs().year(year).month(monthMap[monthStr.toUpperCase()]).date(day);
+                  console.log("Converted date with text month:", date.format('DD/MM/YYYY'));
                   return date;
                 }
               }
@@ -719,8 +1080,9 @@ const CreateExCertificatePage = () => {
                 
                 // Đảm bảo giá trị hợp lệ
                 if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
-                  const date = new Date(year, month, day);
-                  console.log("Converted numeric date:", date);
+                  // Tạo đối tượng dayjs (tương thích với Ant Design)
+                  const date = dayjs().year(year).month(month).date(day);
+                  console.log("Converted numeric date:", date.format('DD/MM/YYYY'));
                   return date;
                 }
               }
@@ -760,11 +1122,9 @@ const CreateExCertificatePage = () => {
           if (issueDate && issueDate !== "Không thời hạn") {
             const momentDate = convertToMoment(issueDate);
             if (momentDate) {
-              console.log("Thiết lập ngày cấp với giá trị:", momentDate);
               // Thiết lập giá trị ngày cấp
               setTimeout(() => {
                 form.setFieldsValue({ issueDate: momentDate });
-                console.log("Đã thiết lập ngày cấp!");
               }, 500);
             }
           }
@@ -778,14 +1138,18 @@ const CreateExCertificatePage = () => {
           if (expiryDate && expiryDate !== "Không thời hạn") {
             const momentDate = convertToMoment(expiryDate);
             if (momentDate) {
-              console.log("Thiết lập ngày hết hạn với giá trị:", momentDate);
               // Thiết lập giá trị ngày hết hạn
               setTimeout(() => {
                 form.setFieldsValue({ expirationDate: momentDate });
-                console.log("Đã thiết lập ngày hết hạn!");
               }, 500);
             }
           }
+        }
+        
+        // Thêm thông báo đặc biệt cho IELTS
+        if (certificateInfo.possibleCertName === "IELTS Certificate") {
+          setTimeout(() => {
+          }, 1500);
         }
         
         // Trích xuất điểm IELTS nếu là chứng chỉ IELTS
@@ -818,44 +1182,56 @@ const CreateExCertificatePage = () => {
           completed: true
         });
         
-        message.success("Certificate analyzed successfully!");
-        
-        // Hiển thị thông tin về ngày tháng được tính tự động
-        if (issueDates.some(d => d.type === 'issueDate') || expiryDates.some(d => d.type === 'expiryDate')) {
-          setTimeout(() => {
-            message.info(`Đã phát hiện và điền thông tin ngày tháng. Vui lòng kiểm tra lại trước khi gửi.`);
-          }, 1000);
-        }
+        message.success("Analyzed successfully!");
         
         return certificateInfo;
       } catch (error) {
-        console.error("Error extracting information:", error);
-        // Vẫn trả về thông tin văn bản thô nếu phân tích thất bại
-        return { text: extractedText.join('\n') };
+        console.error("Error analyzing image with Azure:", error);
+        message.error("Analyze failed: " + (error.message || "Unknown error"));
+        
+        // Reset trạng thái phân tích và kết quả
+        setAnalysisResult(null);
+        form.resetFields();
+        
+        // Quan trọng: không chuyển tiếp lỗi để phương thức xử lý đúng
+        return null;
+      } finally {
+        setAnalyzing(false);
       }
     } catch (error) {
       console.error("Error analyzing image with Azure:", error);
-      message.error("Failed to analyze certificate image: " + (error.message || "Unknown error"));
+      message.error("Phân tích ảnh thất bại: " + (error.message || "Lỗi không xác định"));
+      
+      // Reset trạng thái phân tích và kết quả
+      setAnalysisResult(null);
+      form.resetFields();
+      
       throw error;
-    } finally {
-      setAnalyzing(false);
     }
   };
 
   // Xử lý phân tích ảnh
   const handleAnalyzeImage = async () => {
     if (!fileList.length) {
-      message.error("Please upload an image first!");
+      message.error("Vui lòng tải lên ảnh trước!");
       return;
     }
     
     const file = fileList[0].originFileObj;
     
     try {
-      await analyzeImageWithAzure(file);
+      const result = await analyzeImageWithAzure(file);
+      
+      // Kiểm tra nếu không có kết quả (lỗi) thì xóa file đã chọn
+      if (!result) {
+        setFileList([]);
+      }
     } catch (error) {
       console.error("Error analyzing image:", error);
-      message.error("Failed to analyze image: " + (error.message || "Unknown error"));
+      message.error(error.message || "Không thể phân tích ảnh. Vui lòng đảm bảo đây là ảnh chứng chỉ hợp lệ.");
+      
+      // Reset file đã chọn khi phân tích thất bại
+      setFileList([]);
     }
   };
 
@@ -1093,4 +1469,3 @@ const CreateExCertificatePage = () => {
 };
 
 export default CreateExCertificatePage;
-
