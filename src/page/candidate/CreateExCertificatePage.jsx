@@ -6,12 +6,9 @@ import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
 import axios from "axios";
 import dayjs from "dayjs";
+import { AZURE_COMPUTER_VISION_ENDPOINT, AZURE_COMPUTER_VISION_API_KEY } from "../../../utils/apiConfig";
 
 const { Title, Text } = Typography;
-
-// Azure Computer Vision API Configuration
-const AZURE_COMPUTER_VISION_ENDPOINT = "https://ocms-web-certificate.cognitiveservices.azure.com/";
-const AZURE_COMPUTER_VISION_API_KEY = "8rHOmSoL7gQ4J7kmIl6OwMTmbeVYi8caawNgkOkxEbDRUiV8PShBJQQJ99BDACYeBjFXJ3w3AAAFACOG9MDn";
 
 const CreateExCertificatePage = () => {
   const [form] = Form.useForm();
