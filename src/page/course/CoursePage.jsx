@@ -38,6 +38,7 @@ const CoursePage = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [sortedInfo, setSortedInfo] = useState({});
 
   // Fetch data on mount and when refreshed
   useEffect(() => {
@@ -97,6 +98,11 @@ const CoursePage = () => {
     }
   };
 
+  // Thêm hàm xử lý thay đổi sorting
+  const handleChange = (pagination, filters, sorter) => {
+    setSortedInfo(sorter);
+  };
+
   // Table configuration
   const columns = [
     {
@@ -104,11 +110,15 @@ const CoursePage = () => {
       dataIndex: "courseId",
       key: "courseId",
       width: 120,
+      sorter: (a, b) => a.courseId.localeCompare(b.courseId),
+      sortOrder: sortedInfo.columnKey === 'courseId' && sortedInfo.order,
     },
     {
       title: "Course Name",
       dataIndex: "courseName",
       key: "courseName",
+      sorter: (a, b) => a.courseName.localeCompare(b.courseName),
+      sortOrder: sortedInfo.columnKey === 'courseName' && sortedInfo.order,
       render: (text, record) => (
         <a
           onClick={() => setSelectedCourse(record)}
@@ -123,6 +133,8 @@ const CoursePage = () => {
       dataIndex: "courseLevel",
       key: "courseLevel",
       width: 120,
+      sorter: (a, b) => a.courseLevel - b.courseLevel,
+      sortOrder: sortedInfo.columnKey === 'courseLevel' && sortedInfo.order,
       render: (level) => {
         const levels = ["Initial", "Recurrent", "Relearn"];
         return levels[level] || level;
@@ -133,6 +145,8 @@ const CoursePage = () => {
       dataIndex: "status",
       key: "status",
       width: 120,
+      sorter: (a, b) => a.status.localeCompare(b.status),
+      sortOrder: sortedInfo.columnKey === 'status' && sortedInfo.order,
       render: (status) => (
         <Tag color={getStatusColor(status)} className="rounded-full px-3 py-1">
           {status}
@@ -144,6 +158,8 @@ const CoursePage = () => {
       dataIndex: "progress",
       key: "progress",
       width: 120,
+      sorter: (a, b) => a.progress.localeCompare(b.progress),
+      sortOrder: sortedInfo.columnKey === 'progress' && sortedInfo.order,
       render: (progress) => (
         <Tag
           color={getProgressColor(progress)}
@@ -158,6 +174,8 @@ const CoursePage = () => {
       dataIndex: "createdAt",
       key: "createdAt",
       width: 180,
+      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      sortOrder: sortedInfo.columnKey === 'createdAt' && sortedInfo.order,
       render: (date) => new Date(date).toLocaleDateString(),
     },
     {
@@ -505,7 +523,14 @@ const CoursePage = () => {
             }
             className="!mt-6 shadow-md rounded-lg overflow-hidden"
             extra={
-              <div className="flex items-center">
+              <div className="flex items-center space-x-3">
+                <Button
+                  onClick={() => setSortedInfo({})}
+                  size="small"
+                  className="border-gray-300 text-gray-600"
+                >
+                  Clear Sorting
+                </Button>
                 <Text className="mr-2">Total: {courses.length}</Text>
                 <Button
                   icon={<ReloadOutlined />}
@@ -522,6 +547,7 @@ const CoursePage = () => {
               dataSource={courses}
               rowKey="courseId"
               pagination={{ pageSize: 10 }}
+              onChange={handleChange}
               rowClassName={(record) =>
                 `hover:bg-gray-50 transition-colors ${
                   selectedCourse?.courseId === record.courseId

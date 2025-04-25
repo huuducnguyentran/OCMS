@@ -143,4 +143,5 @@ export const API = {
   DELETE_DEPARTMENT: "Department",
   ASSIGN_TO_DEPARTMENT: "Department/assign-to-department",
   REMOVE_FROM_DEPARTMENT: "Department/remove-from-department",
+  ACTIVATE_DEPARTMENT: "Department/activate",
 };

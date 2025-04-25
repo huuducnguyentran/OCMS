@@ -9,7 +9,10 @@ import {
   Typography,
   Select,
   Spin,
-  Popconfirm
+  Popconfirm,
+  Tooltip,
+  Tag,
+  Switch
 } from 'antd';
 import {
   SaveOutlined,
@@ -37,6 +40,7 @@ const EditDepartmentPage = () => {
   const [department, setDepartment] = useState(null);
   const [users, setUsers] = useState([]);
   const isAdmin = sessionStorage.getItem('role') === 'Admin';
+  const [departmentStatus, setDepartmentStatus] = useState(0);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -64,6 +68,7 @@ const EditDepartmentPage = () => {
       setLoading(true);
       const data = await getDepartmentById(id);
       setDepartment(data);
+      setDepartmentStatus(data.status);
       console.log('Fetched department:', data);
       form.setFieldsValue({
         departmentName: data.departmentName,
@@ -97,16 +102,20 @@ const EditDepartmentPage = () => {
     }
   };
 
-  const handleDelete = async () => {
-    try {
-      setLoading(true);
-      await deleteDepartment(id);
-      message.success('Department deleted successfully');
-      navigate('/department');
-    } catch (error) {
-      message.error('Failed to delete department');
-    } finally {
-      setLoading(false);
+  const handleStatusChange = async (checked) => {
+    if (!checked) {
+      try {
+        const confirmDelete = window.confirm(
+          'Deactivating this department will delete it permanently. Are you sure?'
+        );
+        if (confirmDelete) {
+          await deleteDepartment(id);
+          message.success('Department deleted successfully');
+          navigate('/department');
+        }
+      } catch (error) {
+        message.error('Failed to delete department');
+      }
     }
   };
 
@@ -186,23 +195,38 @@ const EditDepartmentPage = () => {
               </Select>
             </Form.Item>
 
-            <div className="flex justify-between mt-6">
-              <Popconfirm
-                title="Are you sure you want to delete this department?"
-                onConfirm={handleDelete}
-                okText="Yes"
-                cancelText="No"
-                okButtonProps={{ danger: true }}
-              >
-                <Button
-                  danger
-                  icon={<DeleteOutlined />}
-                  loading={loading}
-                >
-                  Delete Department
-                </Button>
-              </Popconfirm>
+            {/* <Form.Item
+              label="Status"
+              className="mb-4"
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Tooltip title={
+                  departmentStatus === 0 
+                    ? "Switch off to delete department" 
+                    : "Switch on to activate department"
+                }>
+                  <Switch
+                    checked={departmentStatus === 0}
+                    onChange={handleStatusChange}
+                    checkedChildren="Active"
+                    unCheckedChildren="Inactive"
+                    style={{
+                      backgroundColor: departmentStatus === 0 ? '#52c41a' : '#ff4d4f',
+                      width: '90px',
+                      height: '28px'
+                    }}
+                    disabled={!isAdmin}
+                  />
+                </Tooltip>
+                {departmentStatus === 0 ? (
+                  <Tag color="success">Active</Tag>
+                ) : (
+                  <Tag color="error">Inactive</Tag>
+                )}
+              </div>
+            </Form.Item> */}
 
+            <div className="flex justify-end mt-6">
               <Space>
                 <Button onClick={() => navigate('/department')}>
                   Cancel

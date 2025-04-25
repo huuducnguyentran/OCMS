@@ -80,3 +80,13 @@ export const getAllUsers = async () => {
     throw error;
   }
 };
+
+// Activate department
+export const activateDepartment = async (id) => {
+  try {
+    const response = await axiosInstance.put(`${API.ACTIVATE_DEPARTMENT}/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

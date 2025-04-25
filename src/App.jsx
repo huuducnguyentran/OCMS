@@ -77,7 +77,7 @@ import EditDepartmentPage from "./page/department/EditDepartmentPage";
 import CreateDepartmentPage from "./page/department/CreateDepartmentPage";
 import CertificateRevokedPage from "./page/certificate/CertificateRevokedPage";
 import DecisionDetailPage from "./page/decision/DecisionDetailPage";
-
+import AssignDepartmentPage from "./page/department/AssignDepartment";
 
 function App() {
   return (
@@ -365,6 +365,10 @@ function App() {
                           <Route
                             path="/department/create"
                             element={<CreateDepartmentPage />}
+                          />
+                          <Route
+                            path="/department/assign/:departmentId"
+                            element={<AssignDepartmentPage />}
                           />
                         </Routes>
                         <Footer />
