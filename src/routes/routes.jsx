@@ -50,7 +50,7 @@ const routes = [
     element: <ForgotPasswordPage />,
   },
   {
-    path: "/reset-password",
+    path: "/reset-password/:token",
     element: <ResetPasswordPage />,
   },
   {

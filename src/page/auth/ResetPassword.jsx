@@ -2,14 +2,13 @@
 import { Input, Button, message, Form } from "antd";
 import { useState, useEffect } from "react";
 import { resetPassword } from "../../services/authServices";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ArrowLeftOutlined, LockOutlined, CheckCircleFilled, CloseCircleFilled } from "@ant-design/icons";
 // import * as THREE from 'three'; // Tạm thời vô hiệu hóa Three.js
 
 const ResetPassword = () => {
-  // Get token from URL query params
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  // Get token from URL path params instead of query params
+  const { token } = useParams();
   const location = useLocation();
   
   const [newPassword, setNewPassword] = useState("");
@@ -56,9 +55,8 @@ const ResetPassword = () => {
 
     setLoading(true);
     try {
-      // Use token from URL
-      const tokenToUse = token;
-      const responseMessage = await resetPassword(tokenToUse, newPassword);
+      // Use token from URL path
+      const responseMessage = await resetPassword(token, newPassword);
       
       message.success(responseMessage || "Password has been reset successfully!");
       navigate("/login");
@@ -162,8 +160,8 @@ const ResetPassword = () => {
                       loading={loading}
                       onClick={handleReset}
                       disabled={!newPassword || passwordMatch !== true}
-                      className="w-full h-12 text-lg font-medium bg-gradient-to-r from-blue-600 to-indigo-600 border-0 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
+                      className="w-full h-12 text-lg font-medium bg-gradient-to-r from-blue-600 to-indigo-600 border-0 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300"
+                      >
                       Reset Password
                     </Button>
                   </Form>
