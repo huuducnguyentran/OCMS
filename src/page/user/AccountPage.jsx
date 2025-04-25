@@ -5,7 +5,7 @@ import { getAllUsers, exportTraineeInfo } from "../../services/userService";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from 'xlsx';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { Search } = Input;
 
 const AccountPage = () => {
@@ -212,16 +212,24 @@ const AccountPage = () => {
       setFilteredAccounts(accounts);
     } else {
       const searchValue = value.toLowerCase().trim();
-      const filtered = accounts.filter(account => 
-        (account.userId?.toString() || '').toLowerCase().includes(searchValue) ||      // Tìm theo UserID
-        (account.username || '').toLowerCase().includes(searchValue) ||                // Tìm theo Username
-        (account.fullName || '').toLowerCase().includes(searchValue) ||               // Tìm theo Full Name
-        (account.email || '').toLowerCase().includes(searchValue) ||                  // Tìm theo Email
-        (account.phoneNumber || '').toLowerCase().includes(searchValue) ||            // Tìm theo Phone
-        (account.roleName || '').toLowerCase().includes(searchValue) 
-        (account.departmentId || '').toLowerCase().includes(searchValue)      
-        (account.specialtyId || '').toLowerCase().includes(searchValue)           // Tìm theo Role
-      );
+      const filtered = accounts.filter(account => {
+        // Chuyển đổi date of birth thành chuỗi để tìm kiếm
+        const dateOfBirthStr = account.dateOfBirth ? 
+          new Date(account.dateOfBirth).toLocaleDateString() : '';
+        
+        // Tìm kiếm trong tất cả các trường
+        return (
+          (account.userId?.toString() || '').toLowerCase().includes(searchValue) ||      // User ID
+          (account.username || '').toLowerCase().includes(searchValue) ||                // Username
+          (account.specialtyId || '').toLowerCase().includes(searchValue) ||            // Specialty
+          (account.fullName || '').toLowerCase().includes(searchValue) ||               // Full Name
+          (account.email || '').toLowerCase().includes(searchValue) ||                  // Email
+          (account.phoneNumber || '').toLowerCase().includes(searchValue) ||            // Phone
+          (account.gender || '').toLowerCase().includes(searchValue) ||                 // Gender
+          (account.roleName || '').toLowerCase().includes(searchValue) ||              // Role
+          dateOfBirthStr.toLowerCase().includes(searchValue)                           // Date of Birth
+        );
+      });
       setFilteredAccounts(filtered);
     }
   };
@@ -292,7 +300,7 @@ const AccountPage = () => {
             </Title>
             <Space size="large">
               <Search
-                placeholder="Search by User ID, Username, Full Name, Email, Phone, or Role"
+                placeholder="Search by ID, Username, Specialty, Name, Email, Phone, Gender, Role, or Date"
                 allowClear
                 enterButton={<SearchOutlined />}
                 size="large"
@@ -314,12 +322,15 @@ const AccountPage = () => {
           </div>
         </div>
 
-        {/* Search Results Summary */}
+        {/* Hiển thị kết quả tìm kiếm chi tiết hơn */}
         {searchText && (
           <div className="mb-4">
             <Tag color="blue" className="text-sm px-3 py-1">
-              Tìm thấy {filteredAccounts.length} kết quả cho từ khóa "{searchText}"
+              Found {filteredAccounts.length} results for "{searchText}"
             </Tag>
+            <Text type="secondary" className="ml-2">
+              Searching in: User ID, Username, Specialty, Full Name, Email, Phone, Gender, Role, Date of Birth
+            </Text>
           </div>
         )}
 
