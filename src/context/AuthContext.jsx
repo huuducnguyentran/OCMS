@@ -8,9 +8,12 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const publicRoutes = ["/forgot-password", "/reset-password", "/login"];
   const isPublicRoute = (pathname) => {
-    return publicRoutes.includes(pathname);
+    const publicPaths = ["/forgot-password", "/login"];
+    if (pathname.startsWith("/reset-password/")) {
+      return true;
+    }
+    return publicPaths.includes(pathname);
   };
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -64,7 +67,7 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
 
     const handleVisibilityChange = () => {
-      if (!document.hidden && !publicRoutes.includes(location.pathname)) {
+      if (!document.hidden && !isPublicRoute(location.pathname)) {
         checkAuth();
       }
     };
