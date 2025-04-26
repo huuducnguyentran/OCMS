@@ -286,30 +286,93 @@ const CreateExCertificatePage = () => {
       // Tìm dòng có "Test Date"
       for (const line of textLines) {
         if (/test date/i.test(line)) {
-          // Tìm định dạng ngày trong cùng dòng
-          // Hỗ trợ định dạng như "19 Sep 2015" hoặc "DD/MM/YYYY"
+          // Hỗ trợ định dạng như "May 19, 2024" hoặc "DD/MM/YYYY"
           const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
           
-          // Tìm định dạng DD Tháng YYYY (ví dụ: 19 Sep 2015)
-          const dateMatch1 = line.match(/(\d{1,2})\s+([A-Za-z]{3,})\s+(\d{4})/i);
+          // Tìm định dạng tháng tên tháng ngày, năm (ví dụ: May 19, 2024)
+          const dateMatch1 = line.match(/([A-Za-z]{3,})\s+(\d{1,2}),?\s+(\d{4})/i);
           if (dateMatch1) {
-            const day = parseInt(dateMatch1[1], 10);
-            const month = monthNames.findIndex(m => dateMatch1[2].toLowerCase().includes(m)) + 1;
+            const monthName = dateMatch1[1].toLowerCase();
+            const day = parseInt(dateMatch1[2], 10);
             const year = parseInt(dateMatch1[3], 10);
+            
+            const month = monthNames.findIndex(m => monthName.includes(m)) + 1;
             
             if (month > 0) {
               issueDate = `${day}/${month}/${year}`;
             }
           } else {
-            // Tìm định dạng DD/MM/YYYY
-            const dateMatch2 = line.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/);
+            // Tìm định dạng DD Tháng YYYY (ví dụ: 19 May 2024)
+            const dateMatch2 = line.match(/(\d{1,2})\s+([A-Za-z]{3,})\s+(\d{4})/i);
             if (dateMatch2) {
-              issueDate = `${dateMatch2[1]}/${dateMatch2[2]}/${dateMatch2[3]}`;
+              const day = parseInt(dateMatch2[1], 10);
+              const monthName = dateMatch2[2].toLowerCase();
+              const year = parseInt(dateMatch2[3], 10);
+              
+              const month = monthNames.findIndex(m => monthName.includes(m)) + 1;
+              
+              if (month > 0) {
+                issueDate = `${day}/${month}/${year}`;
+              }
+            } else {
+              // Tìm định dạng DD/MM/YYYY
+              const dateMatch3 = line.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/);
+              if (dateMatch3) {
+                issueDate = `${dateMatch3[1]}/${dateMatch3[2]}/${dateMatch3[3]}`;
+              }
             }
           }
           
           if (issueDate) {
             break;
+          }
+        }
+      }
+      
+      // Thử tìm theo các mẫu TOEFL phổ biến
+      if (!issueDate) {
+        for (const line of textLines) {
+          // Tìm các mẫu ngày TOEFL phổ biến
+          if (/test date|test taker score report/i.test(line)) {
+            // Tìm định dạng tháng tên tháng ngày, năm (ví dụ: May 19, 2024)
+            const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+            const dateMatch = line.match(/([A-Za-z]{3,})\s+(\d{1,2}),?\s+(\d{4})/i);
+            
+            if (dateMatch) {
+              const monthName = dateMatch[1].toLowerCase();
+              const day = parseInt(dateMatch[2], 10);
+              const year = parseInt(dateMatch[3], 10);
+              
+              const month = monthNames.findIndex(m => monthName.includes(m)) + 1;
+              
+              if (month > 0) {
+                issueDate = `${day}/${month}/${year}`;
+                break;
+              }
+            }
+          }
+        }
+      }
+      
+      // Nếu vẫn không tìm được, tìm kiếm tất cả các dòng
+      if (!issueDate) {
+        const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+        
+        for (const line of textLines) {
+          // Tìm định dạng tháng tên tháng ngày, năm (ví dụ: May 19, 2024)
+          const dateMatch = line.match(/([A-Za-z]{3,})\s+(\d{1,2}),?\s+(\d{4})/i);
+          
+          if (dateMatch) {
+            const monthName = dateMatch[1].toLowerCase();
+            const day = parseInt(dateMatch[2], 10);
+            const year = parseInt(dateMatch[3], 10);
+            
+            const month = monthNames.findIndex(m => monthName.includes(m)) + 1;
+            
+            if (month > 0) {
+              issueDate = `${day}/${month}/${year}`;
+              break;
+            }
           }
         }
       }
@@ -324,7 +387,6 @@ const CreateExCertificatePage = () => {
         
         // Tự động tính ngày hết hạn (cộng thêm 2 năm)
         try {
-        
           const parts = issueDate.split(/[\/\.-]/);
           if (parts.length === 3) {
             const day = parseInt(parts[0], 10);
@@ -384,6 +446,23 @@ const CreateExCertificatePage = () => {
               }
             }
           }
+          
+          // Tìm định dạng "Month DD, YYYY"
+          const monthFirstPattern = /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{1,2}),?\s+(\d{4})/gi;
+          const dateMatches2 = [...line.matchAll(monthFirstPattern)];
+          for (const match of dateMatches2) {
+            const monthName = match[1].toLowerCase().substring(0, 3);
+            const monthIndex = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"].indexOf(monthName);
+            
+            if (monthIndex !== -1) {
+              allDates.push({
+                day: parseInt(match[2], 10),
+                month: monthIndex,
+                year: parseInt(match[3], 10),
+                date: new Date(parseInt(match[3], 10), monthIndex, parseInt(match[2], 10))
+              });
+            }
+          }
         }
         
         // Sắp xếp các ngày theo thứ tự thời gian
@@ -408,6 +487,136 @@ const CreateExCertificatePage = () => {
             priority: 8,
             calculated: true
           });
+        }
+      }
+      
+      return dates;
+    }
+    
+    // Xử lý riêng cho TOEIC
+    if (certificateName === "TOEIC Certificate") {
+      // TOEIC thường có Test Date và Valid Until trong định dạng YYYY/MM/DD hoặc các định dạng khác
+      let testDate = null;
+      let validUntil = null;
+      
+      // Tìm Test Date và Valid Until
+      for (const line of textLines) {
+        // Tìm định dạng YYYY/MM/DD
+        const yyyymmddMatches = [...line.matchAll(/(\d{4})[\/\.-](\d{1,2})[\/\.-](\d{1,2})/g)];
+        
+        if (yyyymmddMatches.length > 0) {
+          // Nếu tìm thấy 2 ngày trong cùng một dòng, giả định đó là ngày cấp và ngày hết hạn
+          if (yyyymmddMatches.length >= 2) {
+            const first = yyyymmddMatches[0];
+            const second = yyyymmddMatches[1];
+            
+            // Chuyển đổi sang định dạng DD/MM/YYYY
+            testDate = `${first[3]}/${first[2]}/${first[1]}`;
+            validUntil = `${second[3]}/${second[2]}/${second[1]}`;
+            break;
+          } else if (/test date|test/i.test(line)) {
+            const match = yyyymmddMatches[0];
+            testDate = `${match[3]}/${match[2]}/${match[1]}`;
+          } else if (/valid until|valid/i.test(line)) {
+            const match = yyyymmddMatches[0];
+            validUntil = `${match[3]}/${match[2]}/${match[1]}`;
+          }
+        }
+        
+        // Kiểm tra các trường khác
+        if (line.toLowerCase().includes("test date") && !testDate) {
+          const match = line.match(/(\d{4})[\/\.-](\d{1,2})[\/\.-](\d{1,2})/);
+          if (match) {
+            testDate = `${match[3]}/${match[2]}/${match[1]}`;
+          }
+        }
+        
+        if ((line.toLowerCase().includes("valid until") || line.toLowerCase().includes("valid to")) && !validUntil) {
+          const match = line.match(/(\d{4})[\/\.-](\d{1,2})[\/\.-](\d{1,2})/);
+          if (match) {
+            validUntil = `${match[3]}/${match[2]}/${match[1]}`;
+          }
+        }
+      }
+      
+      // Nếu vẫn không tìm được, kiểm tra tất cả các ngày trong định dạng YYYY/MM/DD
+      if (!testDate || !validUntil) {
+        const allDates = [];
+        
+        for (const line of textLines) {
+          const yyyymmddMatches = [...line.matchAll(/(\d{4})[\/\.-](\d{1,2})[\/\.-](\d{1,2})/g)];
+          
+          for (const match of yyyymmddMatches) {
+            const year = parseInt(match[1], 10);
+            const month = parseInt(match[2], 10) - 1;
+            const day = parseInt(match[3], 10);
+            
+            if (year >= 2000 && month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+              allDates.push({
+                date: new Date(year, month, day),
+                formattedDate: `${day}/${month + 1}/${year}`,
+                original: `${match[1]}/${match[2]}/${match[3]}`
+              });
+            }
+          }
+        }
+        
+        // Sắp xếp ngày theo thứ tự tăng dần
+        allDates.sort((a, b) => a.date - b.date);
+        
+        // Nếu có nhiều hơn 1 ngày, lấy ngày đầu tiên làm test date và ngày thứ hai làm valid until
+        if (allDates.length >= 2) {
+          if (!testDate) {
+            testDate = allDates[0].formattedDate;
+          }
+          
+          if (!validUntil) {
+            validUntil = allDates[1].formattedDate;
+          }
+        } else if (allDates.length === 1 && !testDate) {
+          testDate = allDates[0].formattedDate;
+        }
+      }
+      
+      // Thêm ngày cấp vào danh sách
+      if (testDate) {
+        dates.push({
+          type: 'issueDate',
+          date: testDate,
+          priority: 10
+        });
+      }
+      
+      // Thêm ngày hết hạn vào danh sách
+      if (validUntil) {
+        dates.push({
+          type: 'expiryDate',
+          date: validUntil,
+          priority: 10
+        });
+      } else if (testDate) {
+        // Nếu không tìm thấy ngày hết hạn nhưng có ngày cấp, tự động tính ngày hết hạn
+        try {
+          const parts = testDate.split(/[\/\.-]/);
+          if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10) + 2; // Cộng thêm 2 năm
+            
+            const expiryDate = new Date(year, month, day);
+            const day2 = expiryDate.getDate();
+            const month2 = expiryDate.getMonth() + 1;
+            const year2 = expiryDate.getFullYear();
+            
+            dates.push({
+              type: 'expiryDate',
+              date: `${day2}/${month2}/${year2}`,
+              priority: 9,
+              calculated: true
+            });
+          }
+        } catch (e) {
+          console.error("Error calculating TOEIC expiry date:", e);
         }
       }
       
@@ -463,9 +672,7 @@ const CreateExCertificatePage = () => {
         const dateB = new Date(b.year, b.month, b.day);
         return dateB - dateA; // Sắp xếp giảm dần (mới nhất trước)
       });
-      
-      console.log("Tất cả ngày tìm thấy trong IELTS:", allFoundDates);
-      
+            
       // Lấy ngày mới nhất làm ngày cấp (thường là ngày có điểm, không phải ngày thi)
       if (allFoundDates.length > 0) {
         const latestDate = allFoundDates[0]; // Ngày mới nhất
@@ -500,8 +707,134 @@ const CreateExCertificatePage = () => {
     if (certificateName === "Driver License") {
       let issueDateFound = false;
       let expiryDateFound = false;
+      let dateOfBirth = null;
       
-      // Tìm ngày hết hạn trước (thường có từ khóa "valid until", "có giá trị đến", "expiry date" v.v)
+      
+      // Tìm ngày sinh trước để đảm bảo không nhầm lẫn
+      for (const line of textLines) {
+        if (/date of birth|ngày sinh/i.test(line)) {
+          const match = line.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/);
+          if (match) {
+            dateOfBirth = `${match[1]}/${match[2]}/${match[3]}`;
+          }
+        }
+      }
+      
+      const lastLines = textLines.slice(-10); 
+      
+      for (const line of lastLines) {
+        
+        // TRƯỜNG HỢP ĐẶC BIỆT: Xử lý mẫu "TP. Ho Chi Minh, ngay/date 2 1 thang/month 01 nåm/year 2022"
+        if (line.includes("ngay/date") && line.includes("thang/month") && line.includes("nam/year") || 
+            line.includes("ngay/date") && line.includes("thang/month") && line.includes("nåm/year")) {
+          
+          // Trường hợp số ngày bị tách (vd: "2 1" thay vì "21")
+          let day = null;
+          let month = null;
+          let year = null;
+          
+          // Tìm số ngày (có thể bị tách)
+          const dayPattern = /ngay\/date\s*(\d+)\s*(\d*)/i;
+          const dayMatch = line.match(dayPattern);
+          if (dayMatch) {
+            // Nếu có 2 số liên tiếp sau "ngay/date"
+            if (dayMatch[1] && dayMatch[2]) {
+              day = parseInt(dayMatch[1] + dayMatch[2], 10);
+            } else if (dayMatch[1]) {
+              day = parseInt(dayMatch[1], 10);
+            }
+          }
+          
+          // Tìm tháng
+          const monthPattern = /thang\/month\s*(\d+)/i;
+          const monthMatch = line.match(monthPattern);
+          if (monthMatch && monthMatch[1]) {
+            month = parseInt(monthMatch[1], 10);
+          }
+          
+          // Tìm năm
+          const yearPattern = /n[aåă]m\/year\s*(\d{4})/i;
+          const yearMatch = line.match(yearPattern);
+          if (yearMatch && yearMatch[1]) {
+            year = parseInt(yearMatch[1], 10);
+          }
+          
+          // Nếu tìm thấy đủ ngày, tháng, năm
+          if (day && month && year) {
+            const issueDateStr = `${day}/${month}/${year}`;            
+            dates.push({
+              type: 'issueDate',
+              date: issueDateStr,
+              priority: 200, // Độ ưu tiên cao nhất
+              source: "special_format_exact_match"
+            });
+            
+            issueDateFound = true;
+            break;
+          }
+        }
+        
+        // Pattern đặc biệt của bằng lái xe Việt Nam: "ngày/date X tháng/month Y năm/year Z"
+        if (/ng[aà]y.{0,5}date.*\d+.*th[aá]ng.{0,5}month.*\d+.*n[aăå]m.{0,5}year.*\d{4}/i.test(line)) {
+          
+          // Trích xuất số từ sau "ngày/date", "tháng/month", "năm/year"
+          const dayMatch = line.match(/ng[aà]y.{0,5}date.*?(\d{1,2})/i);
+          const monthMatch = line.match(/th[aá]ng.{0,5}month.*?(\d{1,2})/i);
+          const yearMatch = line.match(/n[aăå]m.{0,5}year.*?(\d{4})/i);
+          
+          if (dayMatch && monthMatch && yearMatch) {
+            const day = parseInt(dayMatch[1], 10);
+            const month = parseInt(monthMatch[1], 10);
+            const year = parseInt(yearMatch[1], 10);
+            
+            const issueDateStr = `${day}/${month}/${year}`;
+                        dates.push({
+              type: 'issueDate',
+              date: issueDateStr,
+              priority: 100, // Độ ưu tiên cao nhất
+              source: "special_format"
+            });
+            
+            issueDateFound = true;
+            // Đã tìm thấy ngày cấp với độ chính xác cao, dừng tìm kiếm
+            break;
+          }
+        }
+      }
+      
+      // Nếu không tìm thấy trong các dòng cuối, tìm trong toàn bộ văn bản
+      if (!issueDateFound) {
+        for (const line of textLines) {
+          if (/ngày.{0,5}date.*\d+.*tháng.{0,5}month.*\d+.*năm.{0,5}year.*\d{4}/i.test(line)) {
+            
+            // Trích xuất số từ sau "ngày/date", "tháng/month", "năm/year"
+            const dayMatch = line.match(/ngày.{0,5}date.*?(\d{1,2})/i);
+            const monthMatch = line.match(/tháng.{0,5}month.*?(\d{1,2})/i);
+            const yearMatch = line.match(/năm.{0,5}year.*?(\d{4})/i);
+            
+            if (dayMatch && monthMatch && yearMatch) {
+              const day = parseInt(dayMatch[1], 10);
+              const month = parseInt(monthMatch[1], 10);
+              const year = parseInt(yearMatch[1], 10);
+              
+              const issueDateStr = `${day}/${month}/${year}`;              
+              // Thêm ngày cấp vào danh sách với độ ưu tiên cao
+              dates.push({
+                type: 'issueDate',
+                date: issueDateStr,
+                priority: 95, // Độ ưu tiên cao
+                source: "special_format"
+              });
+              
+              issueDateFound = true;
+              break;
+            }
+          }
+        }
+      }
+      
+      // Tìm ngày hết hạn
+      // ... phần code tìm ngày hết hạn giữ nguyên ...
       for (const line of textLines) {
         if (/có giá trị đến|expires|valid until|expiry date|expiration date|valid to/i.test(line)) {
           // Kiểm tra nếu là không thời hạn
@@ -527,92 +860,31 @@ const CreateExCertificatePage = () => {
         }
       }
       
-      // Tìm ngày cấp (thường có từ khóa "issue date", "cấp ngày", v.v)
-      for (const line of textLines) {
-        if (/cấp ngày|issue date|issued on|ngày\/date|date of issue/i.test(line)) {
-          const match = line.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/);
-          if (match) {
-            dates.push({
-              type: 'issueDate',
-              date: `${match[1]}/${match[2]}/${match[3]}`,
-              priority: 10
-            });
-            issueDateFound = true;
+      // Tìm ngày cấp theo cách khác nếu chưa tìm thấy
+      if (!issueDateFound) {
+        // ... phần code tìm ngày cấp khác giữ nguyên ...
+        for (const line of textLines) {
+          if (/cấp ngày|issue date|issued on|ngày\/date|date of issue/i.test(line)) {
+            const match = line.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/);
+            if (match) {
+              // Kiểm tra nếu đây không phải là ngày sinh
+              if (!dateOfBirth || dateOfBirth !== `${match[1]}/${match[2]}/${match[3]}`) {
+                dates.push({
+                  type: 'issueDate',
+                  date: `${match[1]}/${match[2]}/${match[3]}`,
+                  priority: 10
+                });
+                issueDateFound = true;
+              }
+            }
           }
         }
       }
       
-      // Nếu không tìm được ngày cấp/ngày hết hạn cụ thể, tìm các ngày trong văn bản
-      if (!issueDateFound || !expiryDateFound) {
-        const allFoundDates = [];
-        
-        // Tìm tất cả ngày trong giấy phép lái xe
-        for (const line of textLines) {
-          let dateMatches = [...line.matchAll(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/g)];
-          
-          if (dateMatches.length > 0) {
-            for (const match of dateMatches) {
-              allFoundDates.push({
-                day: parseInt(match[1], 10),
-                month: parseInt(match[2], 10) - 1,
-                year: parseInt(match[3], 10),
-                text: `${match[1]}/${match[2]}/${match[3]}`,
-                line: line
-              });
-            }
-          }
-        }
-        
-        // Sắp xếp ngày theo thứ tự thời gian (cũ đến mới)
-        allFoundDates.sort((a, b) => {
-          const dateA = new Date(a.year, a.month, a.day);
-          const dateB = new Date(b.year, b.month, b.day);
-          return dateA - dateB;
-        });
-        
-        console.log("Tất cả ngày tìm thấy trong GPLX:", allFoundDates);
-        
-        // Nếu có ít nhất 2 ngày khác nhau, giả định ngày đầu tiên là ngày cấp, ngày sau là ngày hết hạn
-        if (allFoundDates.length >= 2) {
-          // Ngày cấp (ngày đầu tiên nếu chưa tìm thấy)
-          if (!issueDateFound) {
-            const firstDate = allFoundDates[0];
-            dates.push({
-              type: 'issueDate',
-              date: `${firstDate.day}/${firstDate.month + 1}/${firstDate.year}`,
-              priority: 8
-            });
-          }
-          
-          // Ngày hết hạn (ngày cuối cùng nếu chưa tìm thấy)
-          if (!expiryDateFound) {
-            const lastDate = allFoundDates[allFoundDates.length - 1];
-            dates.push({
-              type: 'expiryDate',
-              date: `${lastDate.day}/${lastDate.month + 1}/${lastDate.year}`,
-              priority: 8
-            });
-          }
-        } 
-        // Nếu chỉ tìm thấy 1 ngày, đó có thể là ngày cấp
-        else if (allFoundDates.length === 1 && !issueDateFound) {
-          const onlyDate = allFoundDates[0];
-          dates.push({
-            type: 'issueDate',
-            date: `${onlyDate.day}/${onlyDate.month + 1}/${onlyDate.year}`,
-            priority: 7
-          });
-        }
-      } 
-      // Nếu chỉ tìm thấy 1 ngày, đó có thể là ngày cấp
-      else if (allFoundDates.length === 1 && !issueDateFound) {
-        const onlyDate = allFoundDates[0];
-        dates.push({
-          type: 'issueDate',
-          date: `${onlyDate.day}/${onlyDate.month + 1}/${onlyDate.year}`,
-          priority: 7
-        });
-      }
+      // QUAN TRỌNG: Sắp xếp lại danh sách ngày theo độ ưu tiên trước khi trả về
+      dates.sort((a, b) => (b.priority || 0) - (a.priority || 0));
+      
+      return dates;
     }
     
     // Xử lý chung cho các loại chứng chỉ - tìm ngày ở cuối trang 
@@ -709,52 +981,113 @@ const CreateExCertificatePage = () => {
     if (certificateName === "Driver License" && !dates.some(d => d.type === 'issueDate')) {
       // Mẫu định dạng ngày tháng năm Việt Nam ở góc phải dưới
       const vietnameseDatePattern = /ngày\/date\s*(\d{1,2})\s*tháng\/month\s*(\d{1,2})\s*năm\/year\s*(\d{4})/i;
+      
+      // Pattern mở rộng để bắt nhiều định dạng hơn
+      const vietnameseDatePatternGeneral = /ng[aà]y.{0,5}date.*?(\d{1,2}).*?th[aá]ng.{0,5}month.*?(\d{1,2}).*?n[aăå]m.{0,5}year.*?(\d{4})/i;
+      
+      // Pattern đặc biệt cho trường hợp số ngày bị tách rời
+      const splitDayPattern = /ng[aà]y.{0,5}date\s*(\d+)\s+(\d+)\s+th[aá]ng.{0,5}month\s*(\d{1,2})\s+n[aăå]m.{0,5}year\s*(\d{4})/i; 
+      
+      // Các pattern khác
       const vietnameseDatePattern2 = /ngày\s*(\d{1,2})\s*tháng\s*(\d{1,2})\s*năm\s*(\d{4})/i;
       const vietnameseDatePattern3 = /(\d{1,2})\s*tháng\s*(\d{1,2})\s*năm\s*(\d{4})/i;
       
+      // Xác định ngày sinh để không nhầm lẫn
+      let dateOfBirth = null;
+      for (const line of textLines) {
+        if (/date of birth|ngày sinh/i.test(line)) {
+          const match = line.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/);
+          if (match) {
+            dateOfBirth = `${match[1]}/${match[2]}/${match[3]}`;
+          }
+        }
+      }
+      
       for (const line of lastLines) {
-        // Mẫu 1: ngày/date DD tháng/month MM năm/year YYYY
-        let match = line.match(vietnameseDatePattern);
-        if (match) {
-          const issueDate = `${match[1]}/${match[2]}/${match[3]}`;
-          dates.push({
-            type: 'issueDate',
-            date: issueDate,
-            priority: 10
-          });
+        // Kiểm tra trường hợp số ngày bị tách rời
+        let splitMatch = line.match(splitDayPattern);
+        if (splitMatch) {
+          // Ghép số ngày lại nếu bị tách (vd: "2 1" thành "21")
+          const day = parseInt(splitMatch[1] + splitMatch[2], 10);
+          const month = parseInt(splitMatch[3], 10);
+          const year = parseInt(splitMatch[4], 10);
           
-          // QUAN TRỌNG: Bỏ việc tự động thêm ngày hết hạn cho bằng lái xe
+          const issueDate = `${day}/${month}/${year}`;
+          
+          // Kiểm tra nếu không phải ngày sinh
+          if (!dateOfBirth || issueDate !== dateOfBirth) {
+            dates.push({
+              type: 'issueDate',
+              date: issueDate,
+              priority: 150,
+              source: "split_day_pattern"
+            });
+          }
           continue;
         }
         
-        // Mẫu 2: ngày DD tháng MM năm YYYY
+        // Kiểm tra pattern mở rộng trước
+        let match = line.match(vietnameseDatePatternGeneral);
+        if (match) {
+          const issueDate = `${match[1]}/${match[2]}/${match[3]}`;          
+          // Kiểm tra nếu không phải ngày sinh
+          if (!dateOfBirth || issueDate !== dateOfBirth) {
+            dates.push({
+              type: 'issueDate',
+              date: issueDate,
+              priority: 100,
+              source: "special_pattern"
+            });
+          }
+          continue;
+        }
+        
+        // Tiếp tục với các pattern khác
+        match = line.match(vietnameseDatePattern);
+        if (match) {
+          const issueDate = `${match[1]}/${match[2]}/${match[3]}`;
+          // Kiểm tra nếu không phải ngày sinh
+          if (!dateOfBirth || issueDate !== dateOfBirth) {
+            dates.push({
+              type: 'issueDate',
+              date: issueDate,
+              priority: 10
+            });
+          }
+          continue;
+        }
+        
         match = line.match(vietnameseDatePattern2);
         if (match) {
           const issueDate = `${match[1]}/${match[2]}/${match[3]}`;
-          dates.push({
-            type: 'issueDate',
-            date: issueDate,
-            priority: 9
-          });
-          
-          // QUAN TRỌNG: Bỏ việc tự động thêm ngày hết hạn cho bằng lái xe
+          // Kiểm tra nếu không phải ngày sinh
+          if (!dateOfBirth || issueDate !== dateOfBirth) {
+            dates.push({
+              type: 'issueDate',
+              date: issueDate,
+              priority: 9
+            });
+          }
           continue;
         }
         
-        // Mẫu 3: DD tháng MM năm YYYY
         match = line.match(vietnameseDatePattern3);
         if (match) {
           const issueDate = `${match[1]}/${match[2]}/${match[3]}`;
-          dates.push({
-            type: 'issueDate',
-            date: issueDate,
-            priority: 8
-          });
-          
-          // QUAN TRỌNG: Bỏ việc tự động thêm ngày hết hạn cho bằng lái xe
+          // Kiểm tra nếu không phải ngày sinh
+          if (!dateOfBirth || issueDate !== dateOfBirth) {
+            dates.push({
+              type: 'issueDate',
+              date: issueDate,
+              priority: 8
+            });
+          }
           continue;
         }
       }
+      
+      // QUAN TRỌNG: Sắp xếp lại danh sách ngày theo độ ưu tiên
+      dates.sort((a, b) => (b.priority || 0) - (a.priority || 0));
     }
     
     // Tìm ngày cấp trong toàn bộ văn bản nếu chưa tìm thấy
@@ -963,14 +1296,24 @@ const CreateExCertificatePage = () => {
           }
         }
       }
-      
-      console.log("Extracted text:", extractedText); // Để debug
-      
+            
       try {
         // Trích xuất thông tin chứng chỉ
         const possibleCertName = extractCertificateName(extractedText);
         const possibleCode = extractPossibleCertificateCode(extractedText);
         const possibleIssuer = extractPossibleIssuer(extractedText);
+
+        
+        // Log chi tiết về việc tìm ngày sinh
+        for (const line of extractedText) {
+          if (/date of birth|ngày sinh/i.test(line)) {
+            const match = line.match(/(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{4})/);
+            if (match) {
+            }
+          }
+        }
+        
+                
         const possibleDates = extractPossibleDates(extractedText);
         
         const certificateInfo = {
@@ -990,16 +1333,10 @@ const CreateExCertificatePage = () => {
         if (!isCertificateOrLicense) {
           throw new Error('Cannot detect certificate or license in the image. Please upload a valid certificate image.');
         }
-        
-        // Hiển thị trong console các thông tin trích xuất được để debug
-        console.log("Tất cả ngày tìm thấy:", possibleDates);
-        console.log("Certificate Name:", certificateInfo.possibleCertName);
-        console.log("Certificate Code:", certificateInfo.possibleCode);
-        console.log("Issuing Organization:", certificateInfo.possibleIssuer);
+
         
         // Tạo hàm trợ giúp để chuyển đổi chuỗi ngày sang đối tượng moment
         const convertToMoment = (dateString) => {
-          console.log("Converting date string to moment:", dateString);
           try {
             // Kiểm tra xem chuỗi ngày có chứa chữ cái không (ví dụ: FEB)
             if (/[A-Za-z]/.test(dateString)) {
@@ -1017,7 +1354,6 @@ const CreateExCertificatePage = () => {
                 if (monthMap[monthStr.toUpperCase()] !== undefined) {
                   // Tạo đối tượng dayjs (tương thích với Ant Design)
                   const date = dayjs().year(year).month(monthMap[monthStr.toUpperCase()]).date(day);
-                  console.log("Converted date with text month:", date.format('DD/MM/YYYY'));
                   return date;
                 }
               }
@@ -1033,7 +1369,6 @@ const CreateExCertificatePage = () => {
                 if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
                   // Tạo đối tượng dayjs (tương thích với Ant Design)
                   const date = dayjs().year(year).month(month).date(day);
-                  console.log("Converted numeric date:", date.format('DD/MM/YYYY'));
                   return date;
                 }
               }
@@ -1061,15 +1396,10 @@ const CreateExCertificatePage = () => {
         const issueDates = possibleDates.filter(d => d.type === 'issueDate');
         const expiryDates = possibleDates.filter(d => d.type === 'expiryDate');
         
-        // In ra tất cả ngày tìm thấy để debug
-        console.log("Ngày cấp tìm thấy:", issueDates);
-        console.log("Ngày hết hạn tìm thấy:", expiryDates);
         
         // Thiết lập ngày cấp
         if (issueDates.length > 0) {
-          const issueDate = issueDates[0].date;
-          console.log("Đang xử lý ngày cấp:", issueDate);
-          
+          const issueDate = issueDates[0].date;          
           if (issueDate && issueDate !== "Không thời hạn") {
             const momentDate = convertToMoment(issueDate);
             if (momentDate) {
@@ -1083,9 +1413,7 @@ const CreateExCertificatePage = () => {
         
         // Thiết lập ngày hết hạn
         if (expiryDates.length > 0) {
-          const expiryDate = expiryDates[0].date;
-          console.log("Đang xử lý ngày hết hạn:", expiryDate);
-          
+          const expiryDate = expiryDates[0].date;          
           if (expiryDate && expiryDate !== "Không thời hạn") {
             const momentDate = convertToMoment(expiryDate);
             if (momentDate) {
@@ -1150,8 +1478,7 @@ const CreateExCertificatePage = () => {
         setAnalyzing(false);
       }
     } catch (error) {
-      console.error("Error analyzing image with Azure:", error);
-      message.error("Phân tích ảnh thất bại: " + (error.message || "Lỗi không xác định"));
+      message.error("Analyze failed: " + (error.message || "Undetected Error"));
       
       // Reset trạng thái phân tích và kết quả
       setAnalysisResult(null);
@@ -1164,7 +1491,7 @@ const CreateExCertificatePage = () => {
   // Xử lý phân tích ảnh
   const handleAnalyzeImage = async () => {
     if (!fileList.length) {
-      message.error("Vui lòng tải lên ảnh trước!");
+      message.error("Please upload the image!");
       return;
     }
     
@@ -1178,8 +1505,7 @@ const CreateExCertificatePage = () => {
         setFileList([]);
       }
     } catch (error) {
-      console.error("Error analyzing image:", error);
-      message.error(error.message || "Không thể phân tích ảnh. Vui lòng đảm bảo đây là ảnh chứng chỉ hợp lệ.");
+      message.error(error.message || "Cannot analyze image,Please try again.");
       
       // Reset file đã chọn khi phân tích thất bại
       setFileList([]);
@@ -1215,7 +1541,6 @@ const CreateExCertificatePage = () => {
       message.success("Certificate uploaded successfully!");
       navigate(`/candidates/${candidateId}`);
     } catch (error) {
-      console.error("Upload error:", error);
       message.error("Failed to upload certificate.");
     } finally {
       setUploading(false);
@@ -1290,10 +1615,12 @@ const CreateExCertificatePage = () => {
                     <div>
                       <p><strong>Detected Dates:</strong></p>
                       <ul className="pl-5">
-                        {analysisResult.analysis.possibleDates.map((dateObj, index) => (
+                        {analysisResult.analysis.possibleDates
+                          .filter(dateObj => dateObj.type === 'issueDate' || dateObj.type === 'expiryDate')
+                          .map((dateObj, index) => (
                           <li key={index}>
                             {dateObj.type === 'issueDate' ? 'Issue Date: ' : 
-                             dateObj.type === 'expiryDate' ? 'Expiry Date: ' : 'Date: '}
+                             dateObj.type === 'expiryDate' ? 'Expiry Date: ' : ''}
                             {dateObj.date}
                             {dateObj.calculated && ' (calculated)'}
                           </li>
