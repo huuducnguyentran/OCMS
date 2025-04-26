@@ -134,8 +134,8 @@ export const API = {
   DELETE_DECISION_TEMPLATE: "DecisionTemplate/Delete",
 
   // decision
-  GET_ALL_ACTIVE_DECISION: "Decison/GetAllApprovedDecisions",
-  GET_ALL_PENDING_DECISION: "Decison/GetAllDraftDecisions",
+  GET_ALL_ACTIVE_DECISION: "Decision/GetAllApprovedDecisions",
+  GET_ALL_PENDING_DECISION: "Decision/GetAllDraftDecisions",
   SIGN_DIGITAL_SIGNATURE_DECISION: "PdfSign",
 
 // Department

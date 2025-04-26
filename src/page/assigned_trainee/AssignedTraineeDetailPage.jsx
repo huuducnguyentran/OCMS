@@ -12,6 +12,7 @@ import {
   UpdateAssignedTrainee,
 } from "../../services/traineeService";
 import { courseService } from "../../services/courseService";
+import { getAllUsers } from "../../services/userService";
 
 const AssignedTraineeDetailPage = () => {
   const { id } = useParams();
@@ -21,6 +22,7 @@ const AssignedTraineeDetailPage = () => {
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState("");
   const [courses, setCourses] = useState([]);
+  const [trainees, setTrainees] = useState([]);
 
   useEffect(() => {
     const fetchAssignment = async () => {
@@ -43,7 +45,19 @@ const AssignedTraineeDetailPage = () => {
         message.error("Failed to load courses");
       }
     };
+    
+    const fetchTrainees = async () => {
+      try {
+        const response = await getAllUsers();
+        const traineeList = response.filter((user) => user.roleName === "Trainee");
+        setTrainees(traineeList);
+      } catch (error) {
+        message.error("Failed to load trainees");
+        console.error(error);
+      }
+    };
 
+    fetchTrainees();
     fetchCourses();
     fetchAssignment();
   }, [id]);
@@ -137,6 +151,31 @@ const AssignedTraineeDetailPage = () => {
                     label={`${course.courseName} (${course.courseId})`}
                   >
                     {course.courseName} ({course.courseId})
+                  </Select.Option>
+                ))}
+            </Select>
+          ) : field === "traineeId" ? (
+            <Select
+              showSearch
+              placeholder="Select a Trainee"
+              optionFilterProp="label"
+              onChange={(value) => setEditValue(value)}
+              value={editValue || undefined}
+              style={{ width: 240 }}
+              filterOption={(input, option) =>
+                (option?.label ?? "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+            >
+              {Array.isArray(trainees) &&
+                trainees.map((trainee) => (
+                  <Select.Option
+                    key={trainee.userId}
+                    value={trainee.userId}
+                    label={`${trainee.fullName} (${trainee.userId})`}
+                  >
+                    {trainee.fullName} ({trainee.userId})
                   </Select.Option>
                 ))}
             </Select>
