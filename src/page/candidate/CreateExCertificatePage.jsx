@@ -926,7 +926,7 @@ const CreateExCertificatePage = () => {
               type: 'expiryDate',
               date: `${day2}/${month2}/${year2}`,
               priority: 9,
-              calculated: true // Đánh dấu đây là ngày được tính tự động
+              calculated: true 
             });
           } catch (e) {
             console.error("Error calculating expiry date:", e);
@@ -1465,7 +1465,6 @@ const CreateExCertificatePage = () => {
         
         return certificateInfo;
       } catch (error) {
-        console.error("Error analyzing image with Azure:", error);
         message.error("Analyze failed: " + (error.message || "Unknown error"));
         
         // Reset trạng thái phân tích và kết quả
