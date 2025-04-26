@@ -29,6 +29,16 @@ export const gradeServices = {
     }
   },
 
+  getTraineeGrades: async (userId) => {
+    try {
+      const response = await axiosInstance.get(`${API.GET_TRAINEE_GRADES}/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error('API Error:', error.response?.data);
+      throw error.response?.data?.message || 'Failed to fetch trainee grades';
+    }
+  },
+
   updateGrade: async (gradeId, gradeData) => {
     try {
       // Sử dụng gradeId trong URL và giữ nguyên payload
