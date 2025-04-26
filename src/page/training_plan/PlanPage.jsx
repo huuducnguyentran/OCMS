@@ -67,6 +67,7 @@ const StatusEnum = {
   Pending: 0,
   Approved: 1,
   Rejected: 2,
+  Completed: 3,
 };
 
 // Cập nhật lại các options với giá trị enum
@@ -74,6 +75,7 @@ const statusOptions = [
   { label: "Pending", value: 0 },
   { label: "Approved", value: 1 },
   { label: "Rejected", value: 2 },
+  { label: "Completed", value: 3 },
 ];
 
 const planLevelOptions = [
@@ -104,6 +106,12 @@ const PlanPage = () => {
   const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
   const isTrainee = userRole === "Trainee";
 
+  // Hàm kiểm tra trạng thái "Approved"
+  const isApprovedStatus = (status) => {
+    // Kiểm tra cả trường hợp status là số (1) hoặc chuỗi ("Approved")
+    return status === 1 || status === StatusEnum.Approved || status === "Approved" || status === 3 || status === "Completed" || status === StatusEnum.Completed;
+  };
+
   const fetchTrainingPlans = async () => {
     try {
       setLoading(true);
@@ -116,9 +124,13 @@ const PlanPage = () => {
       if (response) {
         plans = Array.isArray(response) ? response : response.plans || [];
         
-        // Nếu là trainee, chỉ hiển thị các kế hoạch có trạng thái "Approved" (1)
+        // Kiểm tra và log dữ liệu 
+        console.log("API response data:", plans);
+        
+        // Nếu là trainee, chỉ hiển thị các kế hoạch có trạng thái "Approved"
         if (isTrainee) {
-          plans = plans.filter(plan => plan.trainingPlanStatus === 1);
+          plans = plans.filter(plan => isApprovedStatus(plan.trainingPlanStatus));
+          console.log("Filtered plans for trainee:", plans);
         }
       }
 
@@ -168,18 +180,32 @@ const PlanPage = () => {
       );
     }
 
-    // Filter by status using enum values
+    // Filter by status using enum values or string values
     if (selectedStatusValues.length > 0) {
-      result = result.filter((plan) =>
-        selectedStatusValues.includes(plan.trainingPlanStatus)
-      );
+      result = result.filter((plan) => {
+        // Nếu status là chuỗi, chuyển đổi thành giá trị enum tương ứng
+        let statusValue = plan.trainingPlanStatus;
+        if (typeof plan.trainingPlanStatus === 'string') {
+          if (plan.trainingPlanStatus === 'Approved') statusValue = StatusEnum.Approved;
+          else if (plan.trainingPlanStatus === 'Pending') statusValue = StatusEnum.Pending;
+          else if (plan.trainingPlanStatus === 'Rejected') statusValue = StatusEnum.Rejected;
+        }
+        return selectedStatusValues.includes(statusValue);
+      });
     }
 
-    // Filter by plan level using enum values
+    // Filter by plan level using enum values or string values
     if (selectedLevelValues.length > 0) {
-      result = result.filter((plan) =>
-        selectedLevelValues.includes(plan.planLevel)
-      );
+      result = result.filter((plan) => {
+        // Nếu planLevel là chuỗi, chuyển đổi thành giá trị enum tương ứng
+        let levelValue = plan.planLevel;
+        if (typeof plan.planLevel === 'string') {
+          if (plan.planLevel === 'Initial') levelValue = PlanLevelEnum.Initial;
+          else if (plan.planLevel === 'Recurrent') levelValue = PlanLevelEnum.Recurrent;
+          else if (plan.planLevel === 'Relearn') levelValue = PlanLevelEnum.Relearn;
+        }
+        return selectedLevelValues.includes(levelValue);
+      });
     }
 
     // Filter by specialty
@@ -240,6 +266,8 @@ const PlanPage = () => {
         return "green";
       case "Rejected":
         return "red";
+      case "Completed":
+        return "navy";
       default:
         return "default";
     }

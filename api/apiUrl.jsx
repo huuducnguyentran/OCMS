@@ -93,6 +93,7 @@ export const API = {
   GET_PASSED_GRADES: "Grade/passed",
   GET_FAILED_GRADES: "Grade/failed",
   GET_GRADE_BY_ID: "Grade",
+  GET_TRAINEE_GRADES: "Grade/user",
   UPDATE_GRADE: "Grade",
   DELETE_GRADE: "Grade",
 

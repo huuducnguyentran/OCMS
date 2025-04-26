@@ -324,6 +324,7 @@ const CreateExCertificatePage = () => {
         
         // Tự động tính ngày hết hạn (cộng thêm 2 năm)
         try {
+        
           const parts = issueDate.split(/[\/\.-]/);
           if (parts.length === 3) {
             const day = parseInt(parts[0], 10);
@@ -602,6 +603,15 @@ const CreateExCertificatePage = () => {
             priority: 7
           });
         }
+      } 
+      // Nếu chỉ tìm thấy 1 ngày, đó có thể là ngày cấp
+      else if (allFoundDates.length === 1 && !issueDateFound) {
+        const onlyDate = allFoundDates[0];
+        dates.push({
+          type: 'issueDate',
+          date: `${onlyDate.day}/${onlyDate.month + 1}/${onlyDate.year}`,
+          priority: 7
+        });
       }
     }
     
@@ -713,27 +723,7 @@ const CreateExCertificatePage = () => {
             priority: 10
           });
           
-          // Tự động thêm ngày hết hạn 2 năm sau
-          try {
-            const day = parseInt(match[1], 10);
-            const month = parseInt(match[2], 10) - 1;
-            const year = parseInt(match[3], 10);
-            
-            const expiryDate = new Date(year + 2, month, day);
-            const day2 = expiryDate.getDate();
-            const month2 = expiryDate.getMonth() + 1;
-            const year2 = expiryDate.getFullYear();
-            
-            dates.push({
-              type: 'expiryDate',
-              date: `${day2}/${month2}/${year2}`,
-              priority: 9,
-              calculated: true
-            });
-          } catch (e) {
-            console.error("Error calculating driver license expiry date:", e);
-          }
-          
+          // QUAN TRỌNG: Bỏ việc tự động thêm ngày hết hạn cho bằng lái xe
           continue;
         }
         
@@ -747,27 +737,7 @@ const CreateExCertificatePage = () => {
             priority: 9
           });
           
-          // Tự động thêm ngày hết hạn 2 năm sau
-          try {
-            const day = parseInt(match[1], 10);
-            const month = parseInt(match[2], 10) - 1;
-            const year = parseInt(match[3], 10);
-            
-            const expiryDate = new Date(year + 2, month, day);
-            const day2 = expiryDate.getDate();
-            const month2 = expiryDate.getMonth() + 1;
-            const year2 = expiryDate.getFullYear();
-            
-            dates.push({
-              type: 'expiryDate',
-              date: `${day2}/${month2}/${year2}`,
-              priority: 8,
-              calculated: true
-            });
-          } catch (e) {
-            console.error("Error calculating driver license expiry date:", e);
-          }
-          
+          // QUAN TRỌNG: Bỏ việc tự động thêm ngày hết hạn cho bằng lái xe
           continue;
         }
         
@@ -781,27 +751,7 @@ const CreateExCertificatePage = () => {
             priority: 8
           });
           
-          // Tự động thêm ngày hết hạn 2 năm sau
-          try {
-            const day = parseInt(match[1], 10);
-            const month = parseInt(match[2], 10) - 1;
-            const year = parseInt(match[3], 10);
-            
-            const expiryDate = new Date(year + 2, month, day);
-            const day2 = expiryDate.getDate();
-            const month2 = expiryDate.getMonth() + 1;
-            const year2 = expiryDate.getFullYear();
-            
-            dates.push({
-              type: 'expiryDate',
-              date: `${day2}/${month2}/${year2}`,
-              priority: 7,
-              calculated: true
-            });
-          } catch (e) {
-            console.error("Error calculating driver license expiry date:", e);
-          }
-          
+          // QUAN TRỌNG: Bỏ việc tự động thêm ngày hết hạn cho bằng lái xe
           continue;
         }
       }
@@ -907,7 +857,8 @@ const CreateExCertificatePage = () => {
     // Thêm ngày hết hạn tự động nếu đã tìm thấy ngày cấp nhưng chưa có ngày hết hạn
     if (dates.some(d => d.type === 'issueDate') && !dates.some(d => d.type === 'expiryDate')) {
       const issueDate = dates.find(d => d.type === 'issueDate');
-      if (issueDate && issueDate.date !== "Không thời hạn") {
+      // Chỉ tính ngày hết hạn tự động khi KHÔNG phải là bằng lái xe
+      if (issueDate && issueDate.date !== "Không thời hạn" && certificateName !== "Driver License") {
         try {
           // Xử lý các định dạng ngày khác nhau
           let day, month, year;
@@ -1416,7 +1367,7 @@ const CreateExCertificatePage = () => {
             getValueFromEvent={normFile}
             rules={[{ required: true, message: "Please upload a certificate image" }]}
           >
-            <Upload
+            <Upload 
               name="certificateImage"
               listType="picture-card"
               fileList={fileList}

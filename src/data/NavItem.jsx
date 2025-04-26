@@ -107,7 +107,7 @@ const navItems = [
     label: "Grade",
     icon: "FileExcelOutlined",
     path: "/grade-view",
-    roles: ["Instructor", "Admin", "Training staff", "Reviewer"],
+    roles: ["Instructor", "Admin", "Training staff", "Reviewer", "Trainee"],
     children: [
       {
         key: "8-1",
@@ -119,7 +119,13 @@ const navItems = [
         key: "8-2",
         label: "View Grade",
         path: "/grade-view",
-        roles: ["Admin", "Instructor", "Training staff", "Reviewer", "Trainee"],
+        roles: ["Admin", "Instructor", "Training staff", "Reviewer"],
+      },
+      {
+        key: "8-3",
+        label: "My Grades",
+        path: "/trainee-grade",
+        roles: ["Trainee"],
       },
     ],
   },
@@ -181,7 +187,7 @@ const navItems = [
       {
         key: "13-2",
         label: "Trainee Courses",
-        path: "/assigned-trainee-courses/:id",
+        path: "/assigned-trainee-courses",
         roles: ["Trainee"],
       },
     ],
