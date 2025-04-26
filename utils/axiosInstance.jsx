@@ -46,8 +46,63 @@ statusCheckInstance.interceptors.request.use(
 
 // Store the original navigation function - will be set from AuthContext
 let navigateToLogin = null;
+let messageApi = null;
+
 export const setNavigateFunction = (navigateFn) => {
   navigateToLogin = navigateFn;
+};
+
+export const setMessageApi = (api) => {
+  messageApi = api;
+};
+
+// Check if user is authenticated, can be used in any component
+export const requireAuth = (navigate, message) => {
+  const token = sessionStorage.getItem("token");
+  
+  if (!token) {
+    if (message) {
+      message.error("Please login to continue");
+    } else if (messageApi) {
+      messageApi.error("Please login to continue");
+    }
+    
+    if (navigate) {
+      navigate("/login");
+    } else if (navigateToLogin) {
+      navigateToLogin("/login");
+    } else {
+      window.location.href = "/login";
+    }
+    return false;
+  }
+  
+  return true;
+};
+
+// Higher-order component to protect routes
+export const withAuth = (WrappedComponent) => {
+  return (props) => {
+    const token = sessionStorage.getItem("token");
+    
+    // If no token, redirect to login page
+    if (!token) {
+      if (messageApi) {
+        messageApi.error("Please login to continue");
+      }
+      
+      if (navigateToLogin) {
+        navigateToLogin("/login");
+        return null;
+      } else {
+        window.location.href = "/login";
+        return null;
+      }
+    }
+    
+    // If token exists, render the component
+    return <WrappedComponent {...props} />;
+  };
 };
 
 // Check user account status
@@ -112,6 +167,18 @@ axiosInstance.interceptors.response.use(
     
     // If 401 status (unauthorized), let the existing logout mechanism handle it
     if (error.response?.status === 401) {
+      // Clear session and redirect to login
+      sessionStorage.clear();
+      if (navigateToLogin) {
+        navigateToLogin("/login", {
+          state: { 
+            message: "Your session has expired. Please login again.",
+            type: "error" 
+          }
+        });
+      } else {
+        window.location.href = "/login";
+      }
       return Promise.reject(error);
     }
 
