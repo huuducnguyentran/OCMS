@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
-import { Table, Tag, Typography, Button, Space, Input, message, Popconfirm, Switch } from "antd";
-import { ReloadOutlined, SearchOutlined, DownloadOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Tag, Typography, Button, Space, Input, message, Popconfirm, Switch, Modal } from "antd";
+import { ReloadOutlined, SearchOutlined, DownloadOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { getAllUsers, exportTraineeInfo, activateUser, deactivateUser } from "../../services/userService";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from 'xlsx';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
+const { confirm } = Modal;
 
 const AccountPage = () => {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [filteredAccounts, setFilteredAccounts] = useState([]);
   const [sortedInfo, setSortedInfo] = useState({});
@@ -70,27 +72,74 @@ const AccountPage = () => {
     }
   };
 
+  // Cập nhật một tài khoản cụ thể trong danh sách
+  const updateAccountInList = (userId, newStatus) => {
+    setAccounts(prevAccounts => 
+      prevAccounts.map(account => 
+        account.userId === userId 
+          ? { ...account, accountStatus: newStatus } 
+          : account
+      )
+    );
+    
+    setFilteredAccounts(prevFilteredAccounts => 
+      prevFilteredAccounts.map(account => 
+        account.userId === userId 
+          ? { ...account, accountStatus: newStatus } 
+          : account
+      )
+    );
+  };
+
   // Hàm xử lý kích hoạt/vô hiệu hóa tài khoản
-  const handleToggleStatus = async (userId, checked) => {
+  const handleToggleStatus = async (userId, checked, currentStatus) => {
+    // Nếu đang chuyển sang trạng thái Deactivated (tắt), hiển thị xác nhận
+    if (!checked && currentStatus === "Active") {
+      confirm({
+        title: 'Bạn có chắc chắn muốn vô hiệu hóa tài khoản này?',
+        icon: <ExclamationCircleOutlined />,
+        content: 'Tài khoản sẽ không thể đăng nhập sau khi bị vô hiệu hóa.',
+        okText: 'Vô hiệu hóa',
+        okType: 'danger',
+        cancelText: 'Hủy',
+        async onOk() {
+          await toggleAccountStatus(userId, checked);
+        },
+      });
+    } else {
+      // Nếu đang kích hoạt tài khoản, thực hiện luôn
+      await toggleAccountStatus(userId, checked);
+    }
+  };
+
+  // Hàm thực hiện thay đổi trạng thái tài khoản
+  const toggleAccountStatus = async (userId, checked) => {
     try {
-      message.loading({ content: checked ? "Đang kích hoạt tài khoản..." : "Đang vô hiệu hóa tài khoản...", key: "toggleStatus" });
+      setActionLoading(true);
+      const messageKey = "toggleStatus";
+      
+      message.loading({ 
+        content: checked ? "Đang kích hoạt tài khoản..." : "Đang vô hiệu hóa tài khoản...", 
+        key: messageKey 
+      });
       
       if (checked) {
         await activateUser(userId);
-        message.success({ content: "Kích hoạt tài khoản thành công", key: "toggleStatus" });
+        updateAccountInList(userId, "Active");
+        message.success({ content: "Kích hoạt tài khoản thành công", key: messageKey });
       } else {
         await deactivateUser(userId);
-        message.success({ content: "Vô hiệu hóa tài khoản thành công", key: "toggleStatus" });
+        updateAccountInList(userId, "Deactivated");
+        message.success({ content: "Vô hiệu hóa tài khoản thành công", key: messageKey });
       }
-      
-      // Cập nhật lại danh sách tài khoản
-      fetchAccounts();
     } catch (error) {
       console.error("Error toggling account status:", error);
       message.error({ 
         content: checked ? "Không thể kích hoạt tài khoản. Vui lòng thử lại" : "Không thể vô hiệu hóa tài khoản. Vui lòng thử lại", 
         key: "toggleStatus" 
       });
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -193,8 +242,8 @@ const AccountPage = () => {
         return (
           <Switch
             checked={isActive}
-            onChange={(checked) => handleToggleStatus(record.userId, checked)}
-            disabled={!isAdmin}
+            onChange={(checked) => handleToggleStatus(record.userId, checked, accountStatus)}
+            disabled={!isAdmin || actionLoading}
             className={isActive ? "bg-green-500" : "bg-gray-400"}
           />
         );
