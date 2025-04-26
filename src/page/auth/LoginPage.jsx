@@ -1,23 +1,35 @@
 // src/pages/LoginPage.jsx
-import { Input, Button, message, Form } from "antd";
-import { useNavigate } from "react-router-dom";
+import { Input, Button, message, Form, Alert } from "antd";
+import { useNavigate, useLocation } from "react-router-dom";
 import { authServices } from "../../services/authServices";
 import { useAuth } from "../../context/useAuth";
 import { Formik } from "formik";
 import { LoginSchema } from "../../../utils/validationSchemas";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   UserOutlined,
   LockOutlined,
   CheckCircleOutlined,
 } from "@ant-design/icons";
 import * as THREE from "three";
+import axios from "axios";
+import { BASE_URL } from "../../../utils/environment";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setIsAuthenticated } = useAuth();
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    // Kiểm tra xem có thông báo lỗi từ location state không
+    if (location.state?.message) {
+      setErrorMessage(location.state.message);
+      // Clear state để không hiển thị lại thông báo khi refresh
+      window.history.replaceState({}, document.title);
+    }
+    
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
       60,
@@ -157,25 +169,60 @@ const LoginPage = () => {
       }
       scene.clear();
     };
-  }, []);
+  }, [location.state]);
+
+  // Hàm kiểm tra trạng thái tài khoản
+  const checkUserAccountStatus = async (token) => {
+    try {
+      const response = await axios.get(`${BASE_URL}/User/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      return response.data.user.accountStatus;
+    } catch (error) {
+      console.error("Error checking user status:", error);
+      return null;
+    }
+  };
 
   const handleLogin = async (values, { setSubmitting }) => {
     try {
+      setIsSubmitting(true);
+      setErrorMessage(""); // Xóa thông báo lỗi cũ
+      
+      // Bước 1: Đăng nhập để lấy token
       const response = await authServices.loginUser(values);
       const { token, userID, roles } = response.data;
+      
+      // Bước 2: Kiểm tra trạng thái tài khoản trước khi lưu thông tin và chuyển hướng
+      const accountStatus = await checkUserAccountStatus(token);
+      
+      if (accountStatus === "Deactivated") {
+        setErrorMessage("Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ với quản trị viên để biết thêm thông tin.");
+        return;
+      }
 
+      // Bước 3: Lưu thông tin phiên người dùng
       sessionStorage.setItem("token", token);
       sessionStorage.setItem("userID", userID);
       sessionStorage.setItem("role", roles?.[0] || "user");
       sessionStorage.setItem("tokenExpiry", Date.now() + 60 * 60 * 1000);
 
+      // Bước 4: Cập nhật trạng thái xác thực và chuyển hướng
       setIsAuthenticated(true);
-      message.success("Login successful!");
+      message.success("Đăng nhập thành công!");
       navigate("/home");
-    } catch {
-      message.error("Invalid username or password.");
+    } catch (error) {
+      if (error.response?.data?.message === "Account has been deactivated") {
+        setErrorMessage("Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ với quản trị viên để biết thêm thông tin.");
+      } else {
+        setErrorMessage("Tên đăng nhập hoặc mật khẩu không hợp lệ.");
+      }
     } finally {
       setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -200,6 +247,15 @@ const LoginPage = () => {
                     Sign in to continue your journey
                   </p>
                 </div>
+
+                {errorMessage && (
+                  <Alert
+                    message={errorMessage}
+                    type="error"
+                    showIcon
+                    className="mb-4"
+                  />
+                )}
 
                 <Formik
                   initialValues={{ username: "", password: "" }}
@@ -230,6 +286,7 @@ const LoginPage = () => {
                           value={values.username}
                           onChange={handleChange}
                           onBlur={handleBlur}
+                          disabled={isSubmitting || isSubmitting}
                         />
                       </Form.Item>
 
@@ -247,24 +304,27 @@ const LoginPage = () => {
                           value={values.password}
                           onChange={handleChange}
                           onBlur={handleBlur}
+                          disabled={isSubmitting || isSubmitting}
                         />
                       </Form.Item>
 
-                      <div className="flex justify-between items-center">
-                        <label className="text-gray-300 flex items-center cursor-pointer"></label>
-                        <a
-                          href="/forgot-password"
-                          className="text-blue-300 hover:text-blue-200"
+                      <div className="flex items-center justify-between">
+                        <Button
+                          type="link"
+                          onClick={() => navigate("/forgot-password")}
+                          className="text-blue-300 hover:text-blue-100 p-0"
+                          disabled={isSubmitting || isSubmitting}
                         >
-                          Forgot password?
-                        </a>
+                          Forgot Password?
+                        </Button>
                       </div>
 
                       <Button
                         type="primary"
                         htmlType="submit"
-                        loading={isSubmitting}
-                        className="w-full h-12 text-lg font-medium bg-gradient-to-r from-blue-600 to-indigo-600 border-0 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300"
+                        loading={isSubmitting || isSubmitting}
+                        className="w-full h-12 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-lg"
+                        disabled={isSubmitting || isSubmitting}
                       >
                         Sign In
                       </Button>
@@ -273,35 +333,40 @@ const LoginPage = () => {
                 </Formik>
               </div>
 
-              {/* Right Side - Branding */}
-              <div className="w-full md:w-1/2 p-8 bg-gradient-to-br from-blue-900/30 to-indigo-900/30 backdrop-blur-lg">
+              {/* Right Side - Image/Info */}
+              <div className="w-full md:w-1/2 p-8 flex items-center justify-center bg-gradient-to-br from-blue-600/40 to-indigo-700/40 backdrop-blur-sm">
                 <div className="text-center">
-                  <div className="mb-8"></div>
-                  <h1 className="text-4xl font-bold mb-4">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-indigo-200">
-                      FlightVault
-                    </span>
-                  </h1>
-                  <p className="text-blue-200/80 text-lg mb-8">
-                    Your Gateway to the Skies
+                  
+                  <h3 className="text-2xl font-bold text-white mb-4">
+                    Online Course Management System
+                  </h3>
+                  <p className="text-blue-100 mb-6 max-w-sm">
+                    Manage your courses, students, and instructors all in one
+                    place with our comprehensive course management system.
                   </p>
-                  <div className="space-y-4">
-                    <div className="flex items-center text-gray-300 bg-white/5 p-3 rounded-lg">
-                      <CheckCircleOutlined className="mr-3 text-blue-400" />
-                      <span>Professional Training Programs</span>
+                  <div className="space-y-3">
+                    <div className="flex items-center text-white">
+                      <CheckCircleOutlined className="text-green-400 mr-2" />
+                      <span>Streamlined course management</span>
                     </div>
-                    <div className="flex items-center text-gray-300 bg-white/5 p-3 rounded-lg">
-                      <CheckCircleOutlined className="mr-3 text-blue-400" />
-                      <span>Expert Instructors</span>
+                    <div className="flex items-center text-white">
+                      <CheckCircleOutlined className="text-green-400 mr-2" />
+                      <span>Comprehensive analytics</span>
                     </div>
-                    <div className="flex items-center text-gray-300 bg-white/5 p-3 rounded-lg">
-                      <CheckCircleOutlined className="mr-3 text-blue-400" />
-                      <span>Comprehensive Learning</span>
+                    <div className="flex items-center text-white">
+                      <CheckCircleOutlined className="text-green-400 mr-2" />
+                      <span>Secure and reliable platform</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="text-center mt-6">
+            <p className="text-blue-200/70">
+              OCMS - Your Complete Educational Management Solution
+            </p>
           </div>
         </div>
       </div>

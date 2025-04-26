@@ -6,7 +6,7 @@ import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
 import axios from "axios";
 import dayjs from "dayjs";
-import { AZURE_COMPUTER_VISION_ENDPOINT, AZURE_COMPUTER_VISION_API_KEY } from "../../../utils/apiConfig";
+import { AZURE_COMPUTER_VISION_ENDPOINT, AZURE_COMPUTER_VISION_API_KEY } from "../../utils/apiConfig";
 
 const { Title, Text } = Typography;
 
