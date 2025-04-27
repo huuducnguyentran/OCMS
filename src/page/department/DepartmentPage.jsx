@@ -8,14 +8,15 @@ import {
   Typography,
   Tag,
   Tooltip,
-  Badge,
   Popconfirm,
   Row,
   Col,
-  Dropdown,
-  Menu,
   Input,
-  Switch
+  Switch,
+  Statistic,
+  Divider,
+  Badge,
+  Avatar
 } from 'antd';
 import {
   PlusOutlined,
@@ -24,32 +25,18 @@ import {
   TeamOutlined,
   ClockCircleOutlined,
   UserOutlined,
-  EyeOutlined,
-  EllipsisOutlined,
   SearchOutlined,
-  UserSwitchOutlined
+  UserSwitchOutlined,
+  ReloadOutlined,
+  BarsOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getAllDepartments, deleteDepartment, activateDepartment } from '../../services/departmentServices';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
-
-// Định nghĩa tableStyles
-const tableStyles = {
-  header: {
-    backgroundColor: '#f0f7ff',
-    fontWeight: 'bold',
-    fontSize: '16px',
-    padding: '16px 12px',
-    textTransform: 'uppercase',
-    color: '#1890ff'
-  },
-  cell: {
-    fontSize: '15px',
-    padding: '16px 12px'
-  }
-};
 
 const DepartmentPage = () => {
   const [departments, setDepartments] = useState([]);
@@ -58,10 +45,6 @@ const DepartmentPage = () => {
   const navigate = useNavigate();
   const isAdmin = sessionStorage.getItem('role') === 'Admin';
   
-  // Console log để kiểm tra giá trị isAdmin
-  console.log("Is Admin:", isAdmin);
-  console.log("Role from session:", sessionStorage.getItem('role'));
-
   // Fetch departments
   const fetchDepartments = async () => {
     try {
@@ -76,29 +59,17 @@ const DepartmentPage = () => {
   };
 
   const handleStatusChange = async (id, currentStatus) => {
-    console.log('Handling status change for department:', id);
-    console.log('Current status:', currentStatus);
-
     try {
       setLoading(true);
       
       if (currentStatus === 1) { // Nếu đang inactive -> active
-        console.log('Activating department...');
         const response = await activateDepartment(id);
         if (response) {
           message.success('Department activated successfully');
         }
       } else { // Nếu đang active -> delete
-        const confirmDelete = window.confirm(
-          'Deactivating this department will delete it permanently. Are you sure?'
-        );
-        if (confirmDelete) {
-          await deleteDepartment(id);
-          message.success('Department deleted successfully');
-        } else {
-          setLoading(false);
-          return;
-        }
+        await deleteDepartment(id);
+        message.success('Department deleted successfully');
       }
       
       await fetchDepartments();
@@ -128,252 +99,278 @@ const DepartmentPage = () => {
       )
     );
   };
+
+  // Department statistics
+  const activeCount = departments.filter(dept => dept.status === 0).length;
+  const inactiveCount = departments.filter(dept => dept.status === 1).length;
   
   const columns = [
     {
       title: 'Department ID',
       dataIndex: 'departmentId',
       key: 'departmentId',
-      render: (text) => (
-        <Text copyable style={{ fontSize: '16px', fontWeight: '500' }}>
-          {text}
-        </Text>
+      render: text => (
+        <div className="flex items-center">
+          <Text copyable={{ tooltips: ['Copy ID', 'Copied!'] }} style={{ fontSize: '14px', fontWeight: 500 }}>
+            {text}
+          </Text>
+        </div>
       ),
       width: '15%',
+      ellipsis: true,
     },
     {
       title: 'Department Name',
       dataIndex: 'departmentName',
       key: 'departmentName',
-      render: (text) => (
-        <Text strong style={{ fontSize: '16px' }}>
-          {text}
-        </Text>
-      ),
-      width: '20%',
+      render: text => <Text strong className="text-blue-800">{text}</Text>,
+      width: '18%',
+      ellipsis: true,
     },
     {
       title: 'Description',
       dataIndex: 'departmentDescription',
       key: 'departmentDescription',
-      ellipsis: {
-        showTitle: false,
-      },
-      render: (text) => (
+      render: text => (
         <Tooltip placement="topLeft" title={text}>
-          <div style={{ 
-            fontSize: '16px', 
-            maxWidth: '300px', 
-            overflow: 'hidden', 
-            textOverflow: 'ellipsis', 
-            whiteSpace: 'nowrap' 
-          }}>
-            {text}
-          </div>
+          <div className="max-w-md truncate">{text}</div>
         </Tooltip>
       ),
-      width: '25%',
+      width: '20%',
+      ellipsis: true,
     },
     {
       title: 'Specialty',
       dataIndex: 'specialtyId',
       key: 'specialtyId',
-      render: (text) => (
-        <Tag color="blue" style={{ 
-          fontSize: '15px', 
-          padding: '4px 12px',
-          borderRadius: '4px'
-        }}>
+      render: text => (
+        <Tag color="blue" className="text-center px-3 py-1 rounded-full">
           {text}
         </Tag>
       ),
-      width: '15%',
+      width: '12%',
+      ellipsis: true,
     },
     {
       title: 'Manager',
       dataIndex: 'managerUserId',
       key: 'managerUserId',
-      render: (text) => (
-        <Space size="middle">
-          <UserOutlined style={{ fontSize: '18px' }} />
-          <Text style={{ fontSize: '16px' }}>{text}</Text>
-        </Space>
+      render: text => (
+        <div className="flex items-center space-x-2">
+          <Avatar 
+            size="small" 
+            style={{ backgroundColor: '#1890ff' }}
+            icon={<UserOutlined />}
+          />
+          <Text>{text}</Text>
+        </div>
       ),
-      width: '15%',
+      width: '12%',
+      ellipsis: true,
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
       render: (status, record) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Tooltip title={
-            status === 0 
-              ? "Switch off to delete department" 
-              : "Switch on to activate department"
-          }>
+        <div className="flex items-center space-x-2">
+          {isAdmin && (
             <Switch
               checked={status === 0}
               onChange={() => handleStatusChange(record.departmentId, status)}
-              checkedChildren="Active"
-              unCheckedChildren="Inactive"
-              style={{
-                backgroundColor: status === 0 ? '#52c41a' : '#ff4d4f',
-                width: '90px',
-                height: '28px'
-              }}
+              size="small"
+              className="mr-2"
+              loading={loading && record.loading}
               disabled={!isAdmin}
             />
-          </Tooltip>
+          )}
+          
           {status === 0 ? (
-            <Tag color="success" style={{ margin: 0, fontSize: '14px' }}>
-              Active
+            <Tag 
+              icon={<CheckCircleOutlined />} 
+              color="success" 
+              className="px-2 py-1 flex items-center space-x-1 rounded-full"
+            >
+              <span>Active</span>
             </Tag>
           ) : (
-            <Tag color="error" style={{ margin: 0, fontSize: '14px' }}>
-              Inactive
+            <Tag 
+              icon={<CloseCircleOutlined />} 
+              color="error" 
+              className="px-2 py-1 flex items-center space-x-1 rounded-full"
+            >
+              <span>Inactive</span>
             </Tag>
           )}
         </div>
       ),
-      width: '15%',
-    },
-    {
-      title: 'Created At',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (text) => (
-        <Tooltip title={dayjs(text).format('YYYY-MM-DD HH:mm:ss')}>
-          <Space>
-            <ClockCircleOutlined style={{ fontSize: '16px' }} />
-            <span style={{ fontSize: '15px' }}>{dayjs(text).format('YYYY-MM-DD')}</span>
-          </Space>
-        </Tooltip>
-      ),
-      width: '10%',
+      width: '12%',
+      filters: [
+        { text: 'Active', value: 0 },
+        { text: 'Inactive', value: 1 },
+      ],
+      onFilter: (value, record) => record.status === value,
     },
     {
       title: 'Actions',
       key: 'actions',
       fixed: 'right',
-      width: '10%',
-      render: (_, record) => {
-        const menu = (
-          <Menu style={{ padding: '8px 0' }}>
-            {isAdmin && (
-              <Menu.Item 
-                key="edit" 
-                icon={<EditOutlined />}
-                onClick={() => navigate(`/department/edit/${record.departmentId}`)}
-                style={{ padding: '10px 16px', fontSize: '15px' }}
-              >
-                Edit Department
-              </Menu.Item>
-            )}
-            <Menu.Item 
-              key="assign" 
-              icon={<UserSwitchOutlined />}
-              onClick={() => navigate(`/department/assign/${record.departmentId}`)}
-              style={{ padding: '10px 16px', fontSize: '15px' }}
-            >
-              Assign User
-            </Menu.Item>
-          </Menu>
-        );
-
-        return (
-          <Dropdown  
-            overlay={menu} 
-            trigger={['click']} 
-            placement="bottomRight"
-          >
+      width: '12%',
+      render: (_, record) => (
+        <Space size="middle">
+          {isAdmin && (
             <Button 
-              icon={<EllipsisOutlined />} 
-              className="border-none shadow-none" 
-              style={{ fontSize: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            />
-          </Dropdown>
-        );
-      },
+              icon={<EditOutlined />} 
+              onClick={() => navigate(`/department/edit/${record.departmentId}`)}
+              type="primary"
+              size="small"
+              ghost
+              className="flex items-center"
+            >
+              Edit
+            </Button>
+          )}
+          
+          <Button 
+            icon={<UserSwitchOutlined />} 
+            onClick={() => navigate(`/department/assign/${record.departmentId}`)}
+            type="default"
+            size="small"
+            className="flex items-center text-purple-600 border-purple-300"
+          >
+            Assign
+          </Button>
+        </Space>
+      ),
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <Row justify="center">
-        <Col xs={24} xl={22} xxl={20}>
-          <Card 
-            className="shadow-xl rounded-lg" 
-            bodyStyle={{ padding: '24px' }}
-          >
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-              <div>
-                <Title level={2} className="mb-2 flex items-center text-blue-700" style={{ fontSize: '28px' }}>
-                  <TeamOutlined className="mr-3" style={{ fontSize: '28px' }}/>
-                  Departments Management
-                </Title>
-                <Text type="secondary" style={{ fontSize: '16px' }}>
-                  Manage all departments and their information
-                </Text>
-              </div>
-              
-              <Space size="large">
-                <Input
-                  placeholder="Search departments..."
-                  prefix={<SearchOutlined style={{ color: '#1890ff' }}/>}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  style={{ width: 300, height: '42px', fontSize: '15px' }}
-                  allowClear
-                />
-                
-                {isAdmin && (
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => navigate('/department/create')}
-                    className="bg-blue-500 hover:bg-blue-600 shadow-md"
-                    size="large"
-                    style={{ height: '42px', fontSize: '15px', padding: '0 24px' }}
-                  >
-                    Add Department
-                  </Button>
-                )}
-              </Space>
-            </div>
-
-            <Table
-              columns={columns}
-              dataSource={getFilteredData()}
-              loading={loading}
-              rowKey="departmentId"
-              pagination={{
-                pageSize: 8,
-                showSizeChanger: true,
-                showTotal: (total) => `Total ${total} departments`,
-                position: ['bottomCenter'],
-                style: { marginTop: '24px' }
-              }}
-              className="shadow-sm"
-              scroll={{ x: 1200 }}
-              bordered
-              rowClassName={() => 'hover:bg-blue-50'}
-              size="large"
-              style={{
-                fontSize: '16px',
-                '--table-header-bg': '#f0f7ff',
-                '--table-header-color': '#1890ff',
-                '--table-row-hover-bg': '#e6f4ff',
-              }}
-              onRow={(record) => ({
-                style: { 
-                  height: '72px',  // Increased row height
-                  cursor: 'pointer'
-                }
-              })}
+    <div className="min-h-screen bg-slate-50 p-6">
+      <Card 
+        className="shadow-md rounded-lg border-0" 
+        bodyStyle={{ padding: '24px' }}
+      >
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+          <div>
+            <Title level={3} className="mb-2 flex items-center text-blue-800">
+              <TeamOutlined className="mr-2" />
+              Department Management
+            </Title>
+            <Text type="secondary" className="text-sm">
+              View and manage all departments in your organization
+            </Text>
+          </div>
+          
+          <Space size="middle" wrap className="flex-shrink-0 mt-4 md:mt-0">
+            <Input
+              placeholder="Search departments..."
+              prefix={<SearchOutlined className="text-gray-400" />}
+              onChange={e => setSearchText(e.target.value)}
+              style={{ width: 250 }}
+              allowClear
+              className="rounded-lg"
             />
-          </Card>
-        </Col>
-      </Row>
+            
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={fetchDepartments}
+              loading={loading}
+              className="rounded-lg border-gray-300"
+            >
+              Refresh
+            </Button>
+            
+            {isAdmin && (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate('/department/create')}
+                className="bg-blue-600 hover:bg-blue-700 rounded-lg border-0"
+              >
+                New Department
+              </Button>
+            )}
+          </Space>
+        </div>
+
+        {/* Statistics Cards */}
+        <Row gutter={16} className="mb-6">
+          <Col xs={24} sm={8}>
+            <Card className="shadow-sm h-full bg-gradient-to-br from-blue-50 to-blue-100">
+              <Statistic
+                title={<span className="text-blue-800">Total Departments</span>}
+                value={departments.length}
+                prefix={<BarsOutlined className="text-blue-600" />}
+                valueStyle={{ color: '#1890ff' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card className="shadow-sm h-full bg-gradient-to-br from-green-50 to-green-100">
+              <Statistic
+                title={<span className="text-green-800">Active Departments</span>}
+                value={activeCount}
+                prefix={<CheckCircleOutlined className="text-green-600" />}
+                valueStyle={{ color: '#52c41a' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card className="shadow-sm h-full bg-gradient-to-br from-red-50 to-red-100">
+              <Statistic
+                title={<span className="text-red-800">Inactive Departments</span>}
+                value={inactiveCount}
+                prefix={<CloseCircleOutlined className="text-red-600" />}
+                valueStyle={{ color: '#ff4d4f' }}
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        <Card 
+          className="shadow-sm border-0 overflow-hidden" 
+          bodyStyle={{ padding: 0 }}
+        >
+          <div className="p-4 bg-gradient-to-r from-blue-700 to-blue-600 text-white">
+            <Text strong className="text-white text-lg">Department List</Text>
+          </div>
+          <Table
+            columns={columns}
+            dataSource={getFilteredData()}
+            loading={loading}
+            rowKey="departmentId"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: total => `Total ${total} departments`,
+              className: "p-4"
+            }}
+            scroll={{ x: 1100 }}
+            className="department-table"
+            size="middle"
+            rowClassName={(record) => record.status === 0 ? "bg-white hover:bg-blue-50" : "bg-gray-50 hover:bg-gray-100"}
+          />
+        </Card>
+      </Card>
+      
+      <style jsx global>{`
+        .department-table .ant-table-thead > tr > th {
+          background-color: #f0f7ff;
+          color: #1890ff;
+          font-weight: 600;
+          padding: 16px 12px;
+        }
+        
+        .department-table .ant-table-tbody > tr > td {
+          padding: 12px;
+          vertical-align: middle;
+        }
+        
+        .department-table .ant-table-row:hover td {
+          background-color: rgba(24, 144, 255, 0.1);
+        }
+      `}</style>
     </div>
   );
 };

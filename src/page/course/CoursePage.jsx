@@ -15,6 +15,10 @@ import {
   Typography,
   Tooltip,
   Statistic,
+  Modal,
+  Form,
+  Input,
+  Select,
 } from "antd";
 import {
   PlusOutlined,
@@ -24,12 +28,24 @@ import {
   ReloadOutlined,
   EditOutlined,
   EyeOutlined,
+  SendOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { courseService } from "../../services/courseService";
+import { createRequest } from "../../services/requestService";
 
 const { Panel } = Collapse;
 const { Title, Text, Paragraph } = Typography;
+
+const RequestTypeEnum = {
+  UpdateCourse: 10,
+  DeleteCourse: 11
+};
+
+const RequestTypeLabels = {
+  [RequestTypeEnum.UpdateCourse]: "Update Course",
+  [RequestTypeEnum.DeleteCourse]: "Delete Course"
+};
 
 const CoursePage = () => {
   // State management
@@ -39,6 +55,10 @@ const CoursePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sortedInfo, setSortedInfo] = useState({});
+  const [requestModalVisible, setRequestModalVisible] = useState(false);
+  const [requestForm] = Form.useForm();
+  const [selectedCourseForRequest, setSelectedCourseForRequest] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // Fetch data on mount and when refreshed
   useEffect(() => {
@@ -101,6 +121,39 @@ const CoursePage = () => {
   // Thêm hàm xử lý thay đổi sorting
   const handleChange = (pagination, filters, sorter) => {
     setSortedInfo(sorter);
+  };
+
+  // Thêm hàm xử lý request
+  const handleRequest = (course) => {
+    setSelectedCourseForRequest(course);
+    requestForm.resetFields();
+    setRequestModalVisible(true);
+  };
+
+  const handleRequestSubmit = async () => {
+    try {
+      const values = await requestForm.validateFields();
+      setSubmitting(true);
+
+      // Tạo dữ liệu cho request
+      const requestData = {
+        requestEntityId: selectedCourseForRequest.trainingPlanId,
+        requestType: values.requestType,
+        description: values.description,
+        notes: values.notes
+      };
+
+      // Gọi API tạo request từ requestService
+      await createRequest(requestData);
+      
+      message.success(`Request sent for course: ${selectedCourseForRequest.courseName}`);
+      setRequestModalVisible(false);
+    } catch (error) {
+      console.error("Failed to send request:", error);
+      message.error("Failed to send request for this course");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Table configuration
@@ -201,6 +254,17 @@ const CoursePage = () => {
               className="text-gray-600 hover:text-gray-700"
             />
           </Tooltip>
+          {/* Thêm nút Send Request chỉ khi status là Approved */}
+          {record.status === "Approved" && (
+            <Tooltip title="Send Request">
+              <Button
+                size="small"
+                icon={<SendOutlined />}
+                onClick={() => handleRequest(record)}
+                className="text-blue-600 hover:text-blue-700"
+              />
+            </Tooltip>
+          )}
         </div>
       ),
     },
@@ -220,52 +284,87 @@ const CoursePage = () => {
           </span>
         ),
         children: (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 p-4">
-            <div className="space-y-4">
-              <Statistic
-                title="Course ID"
-                value={selectedCourse.courseId}
-                className="bg-gray-50 p-4 rounded-lg"
-              />
-              <Statistic
-                title="Training Plan"
-                value={selectedCourse.trainingPlanId}
-                className="bg-gray-50 p-4 rounded-lg"
-              />
-              <Statistic
-                title="Level"
-                value={
-                  ["Initial", "Recurrent", "Relearn"][
-                    selectedCourse.courseLevel
-                  ] || selectedCourse.courseLevel
-                }
-                className="bg-gray-50 p-4 rounded-lg"
-              />
+          <div className="space-y-6">
+            {/* Status and Actions Row */}
+            <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center space-x-4">
+                <Tag
+                  color={getStatusColor(selectedCourse.status)}
+                  className="px-4 py-2 text-base"
+                >
+                  {selectedCourse.status}
+                </Tag>
+              </div>
+              <div className="flex space-x-3">
+                <Button
+                  icon={<EditOutlined />}
+                  onClick={() => navigate(`/course/edit/${selectedCourse.courseId}`)}
+                  className="flex items-center"
+                >
+                  Edit
+                </Button>
+                {/* Chỉ hiển thị nút Send Request khi status là Approved */}
+                {selectedCourse.status === "Approved" && (
+                  <Button
+                    type="primary"
+                    icon={<SendOutlined />}
+                    onClick={() => handleRequest(selectedCourse)}
+                    className="flex items-center bg-blue-600 hover:bg-blue-700"
+                  >
+                    Send Request
+                  </Button>
+                )}
+              </div>
             </div>
-            <div className="space-y-4">
-              <Statistic
-                title="Progress"
-                value={selectedCourse.progress}
-                valueStyle={{
-                  color:
-                    selectedCourse.progress === "Ongoing"
-                      ? "#1677ff"
-                      : selectedCourse.progress === "Completed"
-                      ? "#52c41a"
-                      : "#8c8c8c",
-                }}
-                className="bg-gray-50 p-4 rounded-lg"
-              />
-              <Statistic
-                title="Created By"
-                value={selectedCourse.createdByUserId || "N/A"}
-                className="bg-gray-50 p-4 rounded-lg"
-              />
-              <Statistic
-                title="Created At"
-                value={new Date(selectedCourse.createdAt).toLocaleString()}
-                className="bg-gray-50 p-4 rounded-lg"
-              />
+
+            {/* Statistics Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
+              <div className="space-y-4">
+                <Statistic
+                  title="Course ID"
+                  value={selectedCourse.courseId}
+                  className="bg-gray-50 p-4 rounded-lg"
+                />
+                <Statistic
+                  title="Training Plan"
+                  value={selectedCourse.trainingPlanId}
+                  className="bg-gray-50 p-4 rounded-lg"
+                />
+                <Statistic
+                  title="Level"
+                  value={
+                    ["Initial", "Recurrent", "Relearn"][
+                      selectedCourse.courseLevel
+                    ] || selectedCourse.courseLevel
+                  }
+                  className="bg-gray-50 p-4 rounded-lg"
+                />
+              </div>
+              <div className="space-y-4">
+                <Statistic
+                  title="Progress"
+                  value={selectedCourse.progress}
+                  valueStyle={{
+                    color:
+                      selectedCourse.progress === "Ongoing"
+                        ? "#1677ff"
+                        : selectedCourse.progress === "Completed"
+                        ? "#52c41a"
+                        : "#8c8c8c",
+                  }}
+                  className="bg-gray-50 p-4 rounded-lg"
+                />
+                <Statistic
+                  title="Created By"
+                  value={selectedCourse.createdByUserId || "N/A"}
+                  className="bg-gray-50 p-4 rounded-lg"
+                />
+                <Statistic
+                  title="Created At"
+                  value={new Date(selectedCourse.createdAt).toLocaleString()}
+                  className="bg-gray-50 p-4 rounded-lg"
+                />
+              </div>
             </div>
           </div>
         ),
@@ -387,6 +486,57 @@ const CoursePage = () => {
           ),
       },
     ];
+  };
+
+  // Thêm component Modal
+  const renderRequestModal = () => {
+    return (
+      <Modal
+        title={`Send Request for Course: ${selectedCourseForRequest?.courseName || ""}`}
+        open={requestModalVisible}
+        onCancel={() => setRequestModalVisible(false)}
+        onOk={handleRequestSubmit}
+        confirmLoading={submitting}
+        okText="Submit Request"
+        width={600}
+      >
+        <Form
+          form={requestForm}
+          layout="vertical"
+          initialValues={{ requestType: RequestTypeEnum.UpdateCourse }}
+        >
+          <Form.Item
+            name="requestType"
+            label="Request Type"
+            rules={[{ required: true, message: "Please select a request type" }]}
+          >
+            <Select placeholder="Select request type">
+              {Object.entries(RequestTypeLabels).map(([value, label]) => (
+                <Select.Option key={value} value={Number(value)}>
+                  {label}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="description"
+            label="Description"
+            rules={[{ required: true, message: "Please enter a description" }]}
+          >
+            <Input.TextArea rows={4} placeholder="Enter request description" />
+          </Form.Item>
+
+          <Form.Item
+            name="notes"
+            label="Notes"
+            rules={[{ required: true, message: "Please enter notes" }]}
+          >
+            <Input.TextArea rows={3} placeholder="Additional notes" />
+          </Form.Item>
+        </Form>
+      </Modal>
+    );
   };
 
   return (
@@ -562,6 +712,9 @@ const CoursePage = () => {
           </Card>
         </Spin>
       </Layout.Content>
+
+      {/* Thêm Modal vào cuối component */}
+      {renderRequestModal()}
     </Layout>
   );
 };

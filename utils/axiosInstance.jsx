@@ -116,7 +116,8 @@ export const checkAccountStatus = async () => {
     
     const response = await statusCheckInstance.get("/User/profile");
     const userData = response.data.user;
-    
+    sessionStorage.setItem("fullname", response.data.fullName);
+
     // Kiểm tra trạng thái tài khoản
     if (userData.accountStatus === "Deactivated") {
       // Xóa dữ liệu phiên khi tài khoản bị vô hiệu hóa
