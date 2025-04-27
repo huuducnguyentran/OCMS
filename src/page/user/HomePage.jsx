@@ -37,7 +37,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { getAllAssignedTrainee } from "../../services/traineeService";
 import { courseService } from "../../services/courseService";
-
+import { getUserProfile } from "../../services/userService";
 const { Title, Text, Paragraph } = Typography;
 
 const HomePage = () => {
@@ -52,6 +52,7 @@ const HomePage = () => {
     pendingRequests: 0,
     completedCourses: 0
   });
+  const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,7 +60,10 @@ const HomePage = () => {
     const storedRoleName = sessionStorage.getItem("roleName");
     if (storedRole) setRole(storedRole);
     if (storedRoleName) setRoleName(storedRoleName);
-    
+    getUserProfile()
+    .then((data) => {
+      setUserData(data);
+    })
     // Fetch real data
     const fetchData = async () => {
       try {
@@ -92,6 +96,7 @@ const HomePage = () => {
 
     fetchData();
   }, []);
+  
 
   const StatisticCard = ({ icon, title, value, color, onClick }) => (
     <motion.div
@@ -207,7 +212,7 @@ const HomePage = () => {
             icon={<UserOutlined className="text-2xl text-white" />}
             title="Candidate Management"
             description="Review and manage candidate applications, track recruitment progress."
-            path="/candidates"
+            path="/candidates-view"
             color="bg-cyan-500"
             badge={stats.pendingRequests}
           />
@@ -250,7 +255,7 @@ const HomePage = () => {
               <div>
                 <Text className="text-indigo-100">Welcome back,</Text>
                 <Title level={3} className="!text-white !mb-0">
-                  {sessionStorage.getItem("username") || "User"}
+                  {userData?.fullName || "User"}
                 </Title>
                 <Tag color="blue">{roleName}</Tag>
               </div>

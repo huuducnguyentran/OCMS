@@ -228,22 +228,6 @@ const navItems = [
     roles: ["Admin", "Training staff"],
   },
   {
-    key: "17",
-    label: "Regulations",
-    icon: "FileProtectOutlined",
-    path: "/regulations",
-    roles: [
-      "Admin",
-      "Training staff",
-      "Trainee",
-      "Instructor",
-      "Reviewer",
-      "HeadMaster",
-      "HR",
-      "AOC Manager",
-    ],
-  },
-  {
     key: "18",
     label: "Decision Template",
     icon: "FileProtectOutlined",
@@ -283,6 +267,22 @@ const navItems = [
     label: "Reports",
     icon: "FileExcelOutlined",
     path: "/export-certificate",
+  },
+  {
+    key: "17",
+    label: "Regulations",
+    icon: "FileProtectOutlined",
+    path: "/regulations",
+    roles: [
+      "Admin",
+      "Training staff",
+      "Trainee",
+      "Instructor",
+      "Reviewer",
+      "HeadMaster",
+      "HR",
+      "AOC Manager",
+    ],
   },
 ];
 
