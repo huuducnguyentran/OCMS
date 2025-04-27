@@ -78,6 +78,7 @@ import CreateDepartmentPage from "./page/department/CreateDepartmentPage";
 import CertificateRevokedPage from "./page/certificate/CertificateRevokedPage";
 import DecisionDetailPage from "./page/decision/DecisionDetailPage";
 import AssignDepartmentPage from "./page/department/AssignDepartment";
+import TraineeGradePage from "./page/grade/TraineeGradePage";
 
 function App() {
   return (
@@ -207,7 +208,7 @@ function App() {
                             element={<AssignedTraineeDetailPage />}
                           />
                           <Route
-                            path="/assigned-trainee-courses/:id"
+                            path="/assigned-trainee-courses"
                             element={<AssignedTraineeCoursePage />}
                           />
 
@@ -224,6 +225,10 @@ function App() {
                           <Route
                             path="/grade-view"
                             element={<ViewGradePage />}
+                          />
+                          <Route
+                            path="/trainee-grade"
+                            element={<TraineeGradePage />}
                           />
                           <Route
                             path="/grade-update/:id"

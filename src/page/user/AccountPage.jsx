@@ -96,12 +96,12 @@ const AccountPage = () => {
     // Nếu đang chuyển sang trạng thái Deactivated (tắt), hiển thị xác nhận
     if (!checked && currentStatus === "Active") {
       confirm({
-        title: 'Bạn có chắc chắn muốn vô hiệu hóa tài khoản này?',
+        title: 'Are you sure you want to deactivate this account?',
         icon: <ExclamationCircleOutlined />,
-        content: 'Tài khoản sẽ không thể đăng nhập sau khi bị vô hiệu hóa.',
-        okText: 'Vô hiệu hóa',
+        content: 'Account will not be able to login after being deactivated.',
+        okText: 'Deactivate',
         okType: 'danger',
-        cancelText: 'Hủy',
+        cancelText: 'Cancel',
         async onOk() {
           await toggleAccountStatus(userId, checked);
         },
@@ -119,23 +119,23 @@ const AccountPage = () => {
       const messageKey = "toggleStatus";
       
       message.loading({ 
-        content: checked ? "Đang kích hoạt tài khoản..." : "Đang vô hiệu hóa tài khoản...", 
+        content: checked ? "Activating account..." : "Deactivating account...", 
         key: messageKey 
       });
       
       if (checked) {
         await activateUser(userId);
         updateAccountInList(userId, "Active");
-        message.success({ content: "Kích hoạt tài khoản thành công", key: messageKey });
+        message.success({ content: "Account activated successfully", key: messageKey });
       } else {
         await deactivateUser(userId);
         updateAccountInList(userId, "Deactivated");
-        message.success({ content: "Vô hiệu hóa tài khoản thành công", key: messageKey });
+        message.success({ content: "Account deactivated successfully", key: messageKey });
       }
     } catch (error) {
       console.error("Error toggling account status:", error);
       message.error({ 
-        content: checked ? "Không thể kích hoạt tài khoản. Vui lòng thử lại" : "Không thể vô hiệu hóa tài khoản. Vui lòng thử lại", 
+        content: checked ? "Cannot activate account. Please try again" : "Cannot deactivate account. Please try again", 
         key: "toggleStatus" 
       });
     } finally {
