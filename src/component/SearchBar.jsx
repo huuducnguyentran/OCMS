@@ -13,7 +13,7 @@ const SearchBar = () => {
     {
       label: "Courses",
       options: [
-        { value: "View All Courses", label: "View All Courses", path: "/course" },
+        { value: "View All Courses", label: "View All Courses", path: "/all-courses" },
         { value: "Create Course", label: "Create Course", path: "/course/create" },
       ],
     },
