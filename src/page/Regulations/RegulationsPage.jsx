@@ -64,27 +64,27 @@ const RegulationsPage = () => {
       color: "blue",
       regulations: [
         {
-          title: "Quy định Chung",
+          title: "General Regulations",
           items: [
-            "Tuân thủ các quy định của ICAO về kế hoạch bay",
-            "Đảm bảo an toàn trong điều phối chuyến bay",
-            "Kiểm tra và cập nhật thông tin thời tiết liên tục"
+            "Comply with ICAO flight plan regulations",
+            "Ensure flight coordination safety",
+            "Continuous weather information monitoring"
           ]
         },
         {
-          title: "Yêu cầu Chuyên môn",
+          title: "Professional Requirements",
           items: [
-            "Chứng chỉ Flight Dispatcher được cấp phép",
-            "Kinh nghiệm tối thiểu 2 năm trong ngành",
-            "Khả năng giao tiếp tiếng Anh chuyên ngành"
+            "Licensed Flight Dispatcher certification",
+            "Minimum 2 years industry experience",
+            "Aviation English communication skills"
           ]
         },
         {
-          title: "Trách nhiệm",
+          title: "Responsibilities",
           items: [
-            "Lập và theo dõi kế hoạch bay",
-            "Phối hợp với phi hành đoàn",
-            "Giám sát điều kiện thời tiết và đường bay"
+            "Flight planning and monitoring",
+            "Crew coordination",
+            "Weather conditions and route monitoring"
           ]
         }
       ]
@@ -96,19 +96,19 @@ const RegulationsPage = () => {
       color: "orange",
       regulations: [
         {
-          title: "Quy định Vận chuyển",
+          title: "Transportation Regulations",
           items: [
-            "Tuân thủ quy định về hàng hóa nguy hiểm",
-            "Quy trình xử lý hành lý đặc biệt",
-            "Tiêu chuẩn đóng gói và bảo quản"
+            "Dangerous goods regulations compliance",
+            "Special baggage handling procedures",
+            "Packaging and storage standards"
           ]
         },
         {
-          title: "An toàn và An ninh",
+          title: "Safety and Security",
           items: [
-            "Kiểm tra an ninh hành lý và hàng hóa",
-            "Quy trình xử lý sự cố thất lạc",
-            "Bảo đảm an toàn kho bãi"
+            "Baggage and cargo security screening",
+            "Lost baggage handling procedures",
+            "Warehouse safety assurance"
           ]
         }
       ]
@@ -120,19 +120,19 @@ const RegulationsPage = () => {
       color: "red",
       regulations: [
         {
-          title: "Quy trình Khẩn cấp",
+          title: "Emergency Procedures",
           items: [
-            "Quy trình sơ tán khẩn cấp",
-            "Xử lý tình huống khẩn cấp trên không",
-            "Phối hợp với đội cứu hộ mặt đất"
+            "Emergency evacuation procedures",
+            "In-flight emergency handling",
+            "Ground rescue team coordination"
           ]
         },
         {
-          title: "Huấn luyện An toàn",
+          title: "Safety Training",
           items: [
-            "Đào tạo an toàn định kỳ",
-            "Thực hành tình huống khẩn cấp",
-            "Cập nhật quy trình an toàn mới"
+            "Regular safety training",
+            "Emergency scenario practice",
+            "Updated safety procedure implementation"
           ]
         }
       ]
@@ -144,19 +144,19 @@ const RegulationsPage = () => {
       color: "green",
       regulations: [
         {
-          title: "Tuyển dụng và Đào tạo",
+          title: "Recruitment and Training",
           items: [
-            "Quy trình tuyển dụng nhân sự hàng không",
-            "Chương trình đào tạo chuyên môn",
-            "Đánh giá năng lực định kỳ"
+            "Aviation personnel recruitment process",
+            "Professional training programs",
+            "Regular performance evaluation"
           ]
         },
         {
-          title: "Phát triển Nghề nghiệp",
+          title: "Career Development",
           items: [
-            "Lộ trình thăng tiến",
-            "Chính sách đãi ngộ",
-            "Đào tạo nâng cao"
+            "Career progression path",
+            "Compensation policies",
+            "Advanced training opportunities"
           ]
         }
       ]
@@ -168,19 +168,19 @@ const RegulationsPage = () => {
       color: "purple",
       regulations: [
         {
-          title: "Chiến lược Marketing",
+          title: "Marketing Strategy",
           items: [
-            "Xây dựng kế hoạch marketing",
-            "Phát triển sản phẩm dịch vụ",
-            "Quản lý thương hiệu"
+            "Marketing plan development",
+            "Service product development",
+            "Brand management"
           ]
         },
         {
-          title: "Quy định Bán hàng",
+          title: "Sales Regulations",
           items: [
-            "Chính sách giá và khuyến mãi",
-            "Quy trình đặt vé và thanh toán",
-            "Chăm sóc khách hàng"
+            "Pricing and promotion policies",
+            "Booking and payment procedures",
+            "Customer service standards"
           ]
         }
       ]
@@ -189,51 +189,51 @@ const RegulationsPage = () => {
 
   const certificateTypes = [
     {
-      title: "Chứng chỉ Phi công Vận tải Hàng không (ATPL)",
+      title: "Airline Transport Pilot License (ATPL)",
       icon: <ThunderboltOutlined className="text-yellow-500" />,
       requirements: [
-        "Tối thiểu 1500 giờ bay tích lũy",
-        "Hoàn thành chương trình đào tạo ATPL được phê duyệt",
-        "Đạt các bài kiểm tra lý thuyết ATPL",
-        "Đạt kiểm tra thực hành theo tiêu chuẩn",
-        "Có chứng chỉ sức khỏe loại 1 còn hiệu lực",
-        "Đạt trình độ tiếng Anh ICAO cấp độ 4 trở lên"
+        "Minimum 1500 flight hours accumulated",
+        "Completion of approved ATPL training program",
+        "Pass ATPL theoretical examinations",
+        "Pass practical test according to standards",
+        "Valid Class 1 medical certificate",
+        "ICAO English Level 4 or higher"
       ],
-      validity: "24 tháng",
+      validity: "24 months",
       notes: [
-        "Phải duy trì đủ giờ bay theo quy định để giữ hiệu lực",
-        "Yêu cầu kiểm tra định kỳ mỗi 12 tháng"
+        "Must maintain required flight hours to maintain validity",
+        "Requires check every 12 months"
       ]
     },
     {
-      title: "Chứng chỉ Phi công Thương mại (CPL)",
+      title: "Commercial Pilot License (CPL)",
       icon: <GlobalOutlined className="text-blue-500" />,
       requirements: [
-        "Tối thiểu 250 giờ bay tích lũy",
-        "Hoàn thành chương trình đào tạo CPL được phê duyệt",
-        "Đạt các bài kiểm tra lý thuyết CPL",
-        "Đạt kiểm tra thực hành theo tiêu chuẩn",
-        "Có chứng chỉ sức khỏe loại 1 còn hiệu lực"
+        "Minimum 250 flight hours accumulated",
+        "Completion of approved CPL training program",
+        "Pass CPL theoretical examinations",
+        "Pass practical test according to standards",
+        "Valid Class 1 medical certificate"
       ],
-      validity: "24 tháng",
+      validity: "24 months",
       notes: [
-        "Cần hoàn thành đào tạo bổ sung để nâng cấp lên ATPL",
-        "Yêu cầu kiểm tra định kỳ mỗi 12 tháng"
+        "Additional training required for ATPL upgrade",
+        "Requires check every 12 months"
       ]
     },
     {
-      title: "Chứng chỉ Kỹ thuật Bay (Flight Engineer)",
+      title: "Flight Engineer Certificate",
       icon: <ToolOutlined className="text-purple-500" />,
       requirements: [
-        "Tốt nghiệp chương trình đào tạo kỹ thuật bay",
-        "Tối thiểu 100 giờ thực hành trên tàu bay",
-        "Đạt các bài kiểm tra lý thuyết chuyên ngành",
-        "Có chứng chỉ sức khỏe loại 2 trở lên"
+        "Graduate from flight engineering program",
+        "Minimum 100 hours practical aircraft experience",
+        "Pass specialized theoretical examinations",
+        "Valid Class 2 medical certificate or higher"
       ],
-      validity: "24 tháng",
+      validity: "24 months",
       notes: [
-        "Yêu cầu cập nhật kiến thức kỹ thuật định kỳ",
-        "Phải duy trì số giờ thực hành tối thiểu hàng năm"
+        "Regular technical knowledge updates required",
+        "Must maintain minimum annual practical hours"
       ]
     }
   ];
@@ -316,7 +316,7 @@ const RegulationsPage = () => {
     >
       <Space direction="vertical" className="w-full">
         <div>
-          <Title level={5}>Yêu cầu:</Title>
+          <Title level={5}>Requirements:</Title>
           <List
             dataSource={certificate.requirements}
             renderItem={req => (
@@ -333,7 +333,7 @@ const RegulationsPage = () => {
         <Divider />
         
         <div>
-          <Title level={5}>Lưu ý quan trọng:</Title>
+          <Title level={5}>Important Notes:</Title>
           <List
             dataSource={certificate.notes}
             renderItem={note => (
@@ -399,7 +399,7 @@ const RegulationsPage = () => {
             onClick={() => showPdfModal(specialization.code)}
             className={`border-${specialization.color}-500 text-${specialization.color}-500`}
           >
-            Xem chi tiết
+            View Details
           </Button>
           <Button 
             type="primary"
@@ -409,12 +409,12 @@ const RegulationsPage = () => {
               try {
                 handleDownloadWord(specialization.code);
               } catch (error) {
-                console.error('Lỗi khi tải Word:', error);
-                message.error('Có lỗi xảy ra khi tải tài liệu. Vui lòng thử lại sau.');
+                console.error('Error downloading document:', error);
+                message.error('An error occurred while downloading the document. Please try again later.');
               }
             }}
           >
-            Tải về Word
+            Download PDF
           </Button>
         </div>
       </Space>
@@ -427,15 +427,21 @@ const RegulationsPage = () => {
       label: (
         <span className="text-base">
           <SafetyOutlined className="mr-2" />
-          Quy định An toàn
+          Safety Regulations
         </span>
       ),
       children: (
         <Space direction="vertical" className="w-full">
           <Alert
-            message="Lưu ý Quan trọng"
-            description="Các quy định này được cập nhật theo tiêu chuẩn hàng không mới nhất của ICAO và Cục Hàng không Việt Nam. Việc tuân thủ nghiêm ngặt là bắt buộc để đảm bảo an toàn."
-            type="warning"
+            message="Important Notice"
+            description={
+              <Space direction="vertical">
+                <Text>• Latest update: January 2025</Text>
+                <Text>• Applicable to all students and trainees</Text>
+                <Text>• Compliant with latest IATA and ICAO standards</Text>
+              </Space>
+            }
+            type="info"
             showIcon
             className="mb-6"
           />
@@ -451,14 +457,14 @@ const RegulationsPage = () => {
       label: (
         <span className="text-base">
           <SafetyCertificateOutlined className="mr-2" />
-          Chứng chỉ Hàng không
+          Aviation Certificates
         </span>
       ),
       children: (
         <Space direction="vertical" className="w-full">
           <Alert
-            message="Hệ thống Chứng chỉ Số"
-            description="Tất cả chứng chỉ được cấp dưới dạng số và được xác thực bằng chữ ký số của Cục Hàng không Việt Nam."
+            message="Digital Certificate System"
+            description="All certificates are issued digitally and authenticated with digital signatures from the Civil Aviation Authority of Vietnam."
             type="info"
             showIcon
             className="mb-6"
@@ -474,244 +480,244 @@ const RegulationsPage = () => {
 
   const specializationDetails = {
     "SPEC-001-GO-001-FD-001": {
-      fullTitle: "Flight Dispatch - Điều phái bay",
-      description: "Chương trình đào tạo chuyên sâu về điều phái và quản lý bay, đáp ứng tiêu chuẩn IATA và ICAO.",
-      duration: "2 năm",
+      fullTitle: "Flight Dispatch",
+      description: "Advanced training program in flight dispatch and management, meeting IATA and ICAO standards.",
+      duration: "2 years",
       credits: 120,
-      certification: "Chứng chỉ Điều phái bay quốc tế",
+      certification: "International Flight Dispatch Certificate",
       subjects: [
         {
-          name: "Cơ sở Điều phái bay",
+          name: "Flight Dispatch Fundamentals",
           credits: 4,
-          description: "Các nguyên tắc cơ bản về điều phái bay"
+          description: "Basic principles of flight dispatch"
         },
         {
-          name: "Khí tượng Hàng không",
+          name: "Aviation Meteorology",
           credits: 3,
-          description: "Phân tích và dự báo thời tiết hàng không"
+          description: "Aviation weather analysis and forecasting"
         },
         {
-          name: "Kế hoạch bay",
+          name: "Flight Planning",
           credits: 4,
-          description: "Lập và quản lý kế hoạch bay"
+          description: "Flight plan creation and management"
         },
         {
-          name: "An toàn bay",
+          name: "Flight Safety",
           credits: 3,
-          description: "Quy trình và quy định an toàn bay"
+          description: "Flight safety procedures and regulations"
         }
       ],
       requirements: [
-        "Tốt nghiệp THPT hoặc tương đương",
-        "Đạt yêu cầu về sức khỏe",
-        "Tiếng Anh IELTS 5.5 hoặc tương đương",
-        "Pass phỏng vấn đầu vào"
+        "High school diploma or equivalent",
+        "Meet health requirements",
+        "English proficiency IELTS 5.5 or equivalent",
+        "Pass entrance interview"
       ],
       careerOpportunities: [
-        "Nhân viên điều phái bay tại các hãng hàng không",
-        "Chuyên viên kế hoạch bay",
-        "Điều phối viên trung tâm điều hành bay",
-        "Chuyên viên quản lý hoạt động bay"
+        "Flight Dispatcher at airlines",
+        "Flight Planning Specialist",
+        "Flight Operations Center Coordinator",
+        "Flight Operations Manager"
       ]
     },
     "SPEC-001-GO-001-BAC-002": {
-      fullTitle: "Baggage and Cargo Services - Dịch vụ Hành lý và Hàng hóa",
-      description: "Chương trình đào tạo về quản lý và xử lý hành lý, hàng hóa trong ngành hàng không.",
-      duration: "2 năm",
+      fullTitle: "Baggage and Cargo Services",
+      description: "Training program in baggage and cargo management in aviation industry.",
+      duration: "2 years",
       credits: 90,
-      certification: "Chứng chỉ Quản lý Hàng hóa Hàng không",
+      certification: "Aviation Cargo Management Certificate",
       subjects: [
         {
-          name: "Quy trình Xử lý Hành lý",
+          name: "Baggage Handling Procedures",
           credits: 3,
-          description: "Quy trình và tiêu chuẩn xử lý hành lý"
+          description: "Baggage handling processes and standards"
         },
         {
-          name: "Quản lý Hàng hóa Nguy hiểm",
+          name: "Dangerous Goods Management",
           credits: 4,
-          description: "Quy định và xử lý hàng hóa nguy hiểm"
+          description: "Regulations and handling of dangerous goods"
         },
         {
-          name: "Hệ thống Quản lý Hành lý",
+          name: "Baggage Management Systems",
           credits: 3,
-          description: "Sử dụng phần mềm và hệ thống quản lý"
+          description: "Software and management systems usage"
         },
         {
-          name: "Logistics Hàng không",
+          name: "Aviation Logistics",
           credits: 3,
-          description: "Quản lý chuỗi cung ứng trong vận tải hàng không"
+          description: "Supply chain management in air transport"
         },
         {
-          name: "An toàn Kho bãi",
+          name: "Warehouse Safety",
           credits: 3,
-          description: "Quy trình đảm bảo an toàn trong kho bãi hàng hóa"
+          description: "Cargo warehouse safety procedures"
         }
       ],
       requirements: [
-        "Tốt nghiệp THPT hoặc tương đương",
-        "Sức khỏe tốt, có khả năng làm việc ca",
-        "Kỹ năng tổ chức và quản lý tốt",
-        "Tiếng Anh giao tiếp cơ bản"
+        "High school diploma or equivalent",
+        "Good health, ability to work shifts",
+        "Strong organizational and management skills",
+        "Basic English communication skills"
       ],
       careerOpportunities: [
-        "Nhân viên điều phối hành lý",
-        "Chuyên viên quản lý kho hàng hóa",
-        "Giám sát viên dịch vụ mặt đất",
-        "Chuyên viên logistics hàng không",
-        "Quản lý dịch vụ hành khách"
+        "Baggage Coordination Officer",
+        "Cargo Warehouse Manager",
+        "Ground Service Supervisor",
+        "Aviation Logistics Specialist",
+        "Passenger Service Manager"
       ]
     },
     "SPEC-001-HRI-001": {
-      fullTitle: "Human Resources in Aviation - Quản trị Nhân lực Hàng không",
-      description: "Chương trình đào tạo chuyên sâu về quản lý nguồn nhân lực trong ngành hàng không, tập trung vào các kỹ năng quản lý, tuyển dụng và phát triển nhân tài.",
-      duration: "2 năm",
+      fullTitle: "Human Resources in Aviation",
+      description: "Advanced training program in aviation human resource management, focusing on management skills, recruitment, and talent development.",
+      duration: "2 years",
       credits: 95,
-      certification: "Chứng chỉ Quản trị Nhân lực Hàng không",
+      certification: "Aviation Human Resources Management Certificate",
       subjects: [
         {
-          name: "Quản trị Nhân lực Hàng không",
+          name: "Aviation Human Resource Management",
           credits: 4,
-          description: "Các nguyên tắc và phương pháp quản lý nhân sự trong môi trường hàng không"
+          description: "Principles and methods of personnel management in aviation environment"
         },
         {
-          name: "Tuyển dụng và Đào tạo",
+          name: "Recruitment and Training",
           credits: 3,
-          description: "Quy trình tuyển dụng và đào tạo nhân viên hàng không"
+          description: "Aviation personnel recruitment and training processes"
         },
         {
-          name: "Luật Lao động Hàng không",
+          name: "Aviation Labor Law",
           credits: 3,
-          description: "Các quy định pháp lý về lao động trong ngành hàng không"
+          description: "Legal regulations on labor in aviation industry"
         },
         {
-          name: "Phát triển Tổ chức",
+          name: "Organizational Development",
           credits: 3,
-          description: "Chiến lược phát triển và quản lý thay đổi trong tổ chức"
+          description: "Development strategy and change management in organizations"
         },
         {
-          name: "Quản lý Hiệu suất",
+          name: "Performance Management",
           credits: 3,
-          description: "Đánh giá và nâng cao hiệu suất làm việc"
+          description: "Performance evaluation and improvement"
         }
       ],
       requirements: [
-        "Tốt nghiệp THPT hoặc tương đương",
-        "Điểm trung bình học tập ≥ 7.0",
-        "Tiếng Anh IELTS 5.5 hoặc tương đương",
-        "Kỹ năng giao tiếp tốt"
+        "High school diploma or equivalent",
+        "GPA ≥ 7.0",
+        "English proficiency IELTS 5.5 or equivalent",
+        "Good communication skills"
       ],
       careerOpportunities: [
-        "Chuyên viên nhân sự tại các hãng hàng không",
-        "Quản lý đào tạo và phát triển",
-        "Chuyên viên tuyển dụng hàng không",
-        "Quản lý nhân sự cấp cao",
-        "Tư vấn nhân sự hàng không"
+        "HR Specialist in airlines",
+        "Training and Development Manager",
+        "Aviation Recruitment Specialist",
+        "Senior HR Manager",
+        "Aviation HR Consultant"
       ]
     },
     "SPEC-001-AMA-002": {
-      fullTitle: "Airline Marketing and Sales - Marketing và Kinh doanh Hàng không",
-      description: "Chương trình đào tạo về marketing và bán hàng trong ngành hàng không, tập trung vào chiến lược kinh doanh và phát triển thị trường.",
-      duration: "2 năm",
+      fullTitle: "Airline Marketing and Sales",
+      description: "Training program in aviation marketing and sales, focusing on business strategy and market development.",
+      duration: "2 years",
       credits: 100,
-      certification: "Chứng chỉ Marketing và Kinh doanh Hàng không",
+      certification: "Aviation Marketing and Business Certificate",
       subjects: [
         {
-          name: "Marketing Hàng không",
+          name: "Aviation Marketing",
           credits: 4,
-          description: "Chiến lược và kỹ thuật marketing trong ngành hàng không"
+          description: "Marketing strategies and techniques in aviation industry"
         },
         {
-          name: "Quản lý Doanh thu",
+          name: "Revenue Management",
           credits: 3,
-          description: "Tối ưu hóa doanh thu và định giá vé máy bay"
+          description: "Revenue optimization and airline ticket pricing"
         },
         {
           name: "Digital Marketing",
           credits: 3,
-          description: "Marketing số và thương mại điện tử trong hàng không"
+          description: "Digital marketing and e-commerce in aviation"
         },
         {
-          name: "Quản lý Quan hệ Khách hàng",
+          name: "Customer Relationship Management",
           credits: 3,
-          description: "Xây dựng và duy trì quan hệ khách hàng"
+          description: "Building and maintaining customer relationships"
         },
         {
-          name: "Phân tích Thị trường",
+          name: "Market Analysis",
           credits: 3,
-          description: "Nghiên cứu và phân tích thị trường hàng không"
+          description: "Aviation market research and analysis"
         }
       ],
       requirements: [
-        "Tốt nghiệp THPT hoặc tương đương",
-        "Điểm trung bình học tập ≥ 7.0",
-        "Tiếng Anh IELTS 6.0 hoặc tương đương",
-        "Kỹ năng phân tích và sáng tạo tốt"
+        "High school diploma or equivalent",
+        "GPA ≥ 7.0",
+        "English proficiency IELTS 6.0 or equivalent",
+        "Strong analytical and creative skills"
       ],
       careerOpportunities: [
-        "Chuyên viên marketing hàng không",
-        "Quản lý bán hàng và doanh thu",
-        "Chuyên viên phát triển sản phẩm",
-        "Quản lý thương hiệu hàng không",
-        "Chuyên viên quan hệ khách hàng",
-        "Quản lý chiến lược kinh doanh"
+        "Aviation Marketing Specialist",
+        "Sales and Revenue Manager",
+        "Product Development Specialist",
+        "Aviation Brand Manager",
+        "Customer Relations Specialist",
+        "Business Strategy Manager"
       ]
     },
     "CC-SAE-001": {
-      fullTitle: "Safety and Emergency Procedures - Quy trình An toàn và Khẩn cấp",
-      description: "Chương trình đào tạo chuyên sâu về quy trình an toàn và xử lý tình huống khẩn cấp trong ngành hàng không, đáp ứng các tiêu chuẩn quốc tế về an toàn hàng không.",
-      duration: "1.5 năm",
+      fullTitle: "Safety and Emergency Procedures",
+      description: "Advanced training program in safety procedures and emergency handling in aviation, meeting international aviation safety standards.",
+      duration: "1.5 years",
       credits: 85,
-      certification: "Chứng chỉ An toàn và Khẩn cấp Hàng không",
+      certification: "Aviation Safety and Emergency Certificate",
       subjects: [
         {
-          name: "An toàn Hàng không Cơ bản",
+          name: "Basic Aviation Safety",
           credits: 4,
-          description: "Nguyên tắc và quy định an toàn hàng không cơ bản"
+          description: "Basic aviation safety principles and regulations"
         },
         {
-          name: "Quy trình Khẩn cấp",
+          name: "Emergency Procedures",
           credits: 4,
-          description: "Các quy trình xử lý tình huống khẩn cấp trên không và mặt đất"
+          description: "Handling emergency situations in air and on ground"
         },
         {
-          name: "An ninh Hàng không",
+          name: "Aviation Security",
           credits: 3,
-          description: "Biện pháp đảm bảo an ninh trong hoạt động hàng không"
+          description: "Security measures in aviation operations"
         },
         {
-          name: "Quản lý Khủng hoảng",
+          name: "Crisis Management",
           credits: 3,
-          description: "Kỹ năng quản lý và xử lý các tình huống khủng hoảng"
+          description: "Skills for managing and handling crisis situations"
         },
         {
-          name: "Điều tra Sự cố",
+          name: "Incident Investigation",
           credits: 3,
-          description: "Phương pháp điều tra và phân tích sự cố hàng không"
+          description: "Methods for investigating and analyzing aviation incidents"
         }
       ],
       requirements: [
-        "Tốt nghiệp THPT hoặc tương đương",
-        "Sức khỏe tốt, không mắc các bệnh về tim mạch",
-        "Khả năng làm việc dưới áp lực cao",
-        "Tiếng Anh IELTS 5.5 hoặc tương đương"
+        "High school diploma or equivalent",
+        "Good health, no cardiovascular conditions",
+        "Ability to work under high pressure",
+        "English proficiency IELTS 5.5 or equivalent"
       ],
       careerOpportunities: [
-        "Chuyên viên an toàn hàng không",
-        "Điều phối viên khẩn cấp",
-        "Giám sát viên an toàn sân bay",
-        "Chuyên gia đánh giá rủi ro an toàn",
-        "Huấn luyện viên an toàn hàng không"
+        "Aviation Safety Specialist",
+        "Emergency Coordinator",
+        "Airport Safety Supervisor",
+        "Safety Risk Assessment Expert",
+        "Aviation Safety Trainer"
       ],
       additionalInfo: {
         facilities: [
-          "Phòng mô phỏng tình huống khẩn cấp",
-          "Thiết bị huấn luyện an toàn tiên tiến",
-          "Trung tâm đào tạo thực hành"
+          "Emergency simulation room",
+          "Advanced safety training equipment",
+          "Practical training center"
         ],
         partnerships: [
-          "Hợp tác với các hãng hàng không lớn",
-          "Liên kết đào tạo quốc tế",
-          "Thực tập tại các sân bay quốc tế"
+          "Cooperation with major airlines",
+          "International training partnerships",
+          "Internships at international airports"
         ]
       }
     }
@@ -735,43 +741,43 @@ const RegulationsPage = () => {
       <div className="pdf-content p-6">
         <div className="text-center mb-8">
           <Title level={2}>{data.fullTitle}</Title>
-          <Text type="secondary" className="text-lg">Mã ngành: {data.code}</Text>
+          <Text type="secondary" className="text-lg">Program Code: {data.code}</Text>
         </div>
 
         <Row gutter={[24, 24]}>
           <Col span={24}>
             <Card className="info-card">
-              <Title level={4}>Tổng quan</Title>
+              <Title level={4}>Overview</Title>
               <Paragraph>{data.description}</Paragraph>
               <Row gutter={16}>
                 <Col span={12}>
-                  <Statistic title="Thời gian đào tạo" value={data.duration} />
+                  <Statistic title="Duration" value={data.duration} />
                 </Col>
                 <Col span={12}>
-                  <Statistic title="Tín chỉ" value={data.credits} />
+                  <Statistic title="Credits" value={data.credits} />
                 </Col>
               </Row>
             </Card>
           </Col>
 
           <Col span={24}>
-            <Card title="Chương trình học" className="course-card">
+            <Card title="Curriculum" className="course-card">
               <Table
                 dataSource={data.subjects}
                 columns={[
                   {
-                    title: 'Môn học',
+                    title: 'Subject',
                     dataIndex: 'name',
                     key: 'name',
                   },
                   {
-                    title: 'Tín chỉ',
+                    title: 'Credits',
                     dataIndex: 'credits',
                     key: 'credits',
                     width: 100,
                   },
                   {
-                    title: 'Mô tả',
+                    title: 'Description',
                     dataIndex: 'description',
                     key: 'description',
                   }
@@ -783,7 +789,7 @@ const RegulationsPage = () => {
 
           {data.requirements && (
             <Col span={12}>
-              <Card title="Yêu cầu đầu vào" className="requirements-card">
+              <Card title="Entry Requirements" className="requirements-card">
                 <List
                   dataSource={data.requirements}
                   renderItem={item => (
@@ -799,7 +805,7 @@ const RegulationsPage = () => {
 
           {data.careerOpportunities && (
             <Col span={12}>
-              <Card title="Cơ hội nghề nghiệp" className="career-card">
+              <Card title="Career Opportunities" className="career-card">
                 <List
                   dataSource={data.careerOpportunities}
                   renderItem={item => (
@@ -817,263 +823,166 @@ const RegulationsPage = () => {
     );
   };
 
-  const handleDownloadWord = async (specializationCode) => {
+  const handleDownloadWord = (specializationCode) => {
     try {
       const data = specializationDetails[specializationCode];
       if (!data) {
-        message.error('Không tìm thấy thông tin ngành học');
+        message.error('Program information not found');
         return;
       }
 
-      const doc = new Document({
-        sections: [{
-          properties: {},
-          children: [
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'HỌC VIỆN HÀNG KHÔNG VIỆT NAM',
-                  bold: true,
-                  size: 32,
-                }),
-              ],
-              alignment: AlignmentType.CENTER,
-            }),
-            
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: data.fullTitle,
-                  bold: true,
-                  size: 28,
-                }),
-              ],
-              alignment: AlignmentType.CENTER,
-            }),
-
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Mã ngành: ${specializationCode}`,
-                  size: 24,
-                }),
-              ],
-              alignment: AlignmentType.CENTER,
-            }),
-
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'THÔNG TIN CHƯƠNG TRÌNH',
-                  bold: true,
-                  size: 28,
-                }),
-              ],
-              spacing: {
-                before: 400,
-                after: 200,
-              },
-            }),
-
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'Thời gian đào tạo: ',
-                  bold: true,
-                }),
-                new TextRun(data.duration),
-              ],
-            }),
-
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'Số tín chỉ: ',
-                  bold: true,
-                }),
-                new TextRun(data.credits.toString()),
-              ],
-            }),
-
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'Chứng chỉ: ',
-                  bold: true,
-                }),
-                new TextRun(data.certification),
-              ],
-            }),
-
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'MÔ TẢ CHƯƠNG TRÌNH',
-                  bold: true,
-                  size: 28,
-                }),
-              ],
-              spacing: {
-                before: 400,
-                after: 200,
-              },
-            }),
-
-            new Paragraph({
-              children: [
-                new TextRun(data.description),
-              ],
-            }),
-
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'CHƯƠNG TRÌNH HỌC',
-                  bold: true,
-                  size: 28,
-                }),
-              ],
-              spacing: {
-                before: 400,
-                after: 200,
-              },
-            }),
-
-            new Table({
-              width: {
-                size: 100,
-                type: WidthType.PERCENTAGE,
-              },
-              rows: [
-                new TableRow({
-                  children: [
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: 'Môn học', bold: true })],
-                      })],
-                      width: {
-                        size: 30,
-                        type: WidthType.PERCENTAGE,
-                      },
-                    }),
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: 'Tín chỉ', bold: true })],
-                      })],
-                      width: {
-                        size: 15,
-                        type: WidthType.PERCENTAGE,
-                      },
-                    }),
-                    new TableCell({
-                      children: [new Paragraph({
-                        children: [new TextRun({ text: 'Mô tả', bold: true })],
-                      })],
-                      width: {
-                        size: 55,
-                        type: WidthType.PERCENTAGE,
-                      },
-                    }),
-                  ],
-                }),
-                ...data.subjects.map(subject =>
-                  new TableRow({
-                    children: [
-                      new TableCell({
-                        children: [new Paragraph(subject.name)],
-                      }),
-                      new TableCell({
-                        children: [new Paragraph(subject.credits.toString())],
-                      }),
-                      new TableCell({
-                        children: [new Paragraph(subject.description)],
-                      }),
-                    ],
-                  }),
-                ),
-              ],
-            }),
-
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'YÊU CẦU ĐẦU VÀO',
-                  bold: true,
-                  size: 28,
-                }),
-              ],
-              spacing: {
-                before: 400,
-                after: 200,
-              },
-            }),
-
-            ...data.requirements.map(req =>
-              new Paragraph({
-                children: [
-                  new TextRun(`• ${req}`),
-                ],
-                spacing: {
-                  before: 100,
-                },
-              }),
-            ),
-
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'CƠ HỘI NGHỀ NGHIỆP',
-                  bold: true,
-                  size: 28,
-                }),
-              ],
-              spacing: {
-                before: 400,
-                after: 200,
-              },
-            }),
-
-            ...data.careerOpportunities.map(opp =>
-              new Paragraph({
-                children: [
-                  new TextRun(`• ${opp}`),
-                ],
-                spacing: {
-                  before: 100,
-                },
-              }),
-            ),
-
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Ngày tạo: ${new Date().toLocaleDateString('vi-VN')}`,
-                  size: 20,
-                }),
-              ],
-              spacing: {
-                before: 400,
-              },
-            }),
-          ],
-        }],
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      
+      // Header
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('VIETNAM AVIATION ACADEMY', pageWidth / 2, 20, { align: 'center' });
+      
+      doc.setFontSize(14);
+      doc.text(data.fullTitle, pageWidth / 2, 30, { align: 'center' });
+      
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Mã ngành: ${specializationCode}`, pageWidth / 2, 40, { align: 'center' });
+      
+      // Add program info
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('PROGRAM INFORMATION', 14, 55);
+      
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Duration:', 14, 65);
+      doc.setFont('helvetica', 'normal');
+      doc.text(data.duration, 70, 65);
+      
+      doc.setFont('helvetica', 'bold');
+      doc.text('Credits:', 14, 72);
+      doc.setFont('helvetica', 'normal');
+      doc.text(data.credits.toString(), 70, 72);
+      
+      doc.setFont('helvetica', 'bold');
+      doc.text('Certificate:', 14, 79);
+      doc.setFont('helvetica', 'normal');
+      doc.text(data.certification, 70, 79);
+      
+      // Add description
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('PROGRAM DESCRIPTION', 14, 90);
+      
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      const descLines = doc.splitTextToSize(data.description, pageWidth - 30);
+      doc.text(descLines, 14, 100);
+      
+      // Add subjects section without autoTable
+      let yPosition = 100 + (descLines.length * 7);
+      
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CURRICULUM', 14, yPosition);
+      
+      // Manual table creation
+      yPosition += 10;
+      
+      // Header for courses
+      doc.setFillColor(66, 139, 202);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.rect(14, yPosition, pageWidth - 28, 10, 'F');
+      doc.text('Subject', 20, yPosition + 7);
+      doc.text('Credits', 110, yPosition + 7);
+      doc.text('Description', 140, yPosition + 7);
+      
+      yPosition += 15;
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+      
+      // Loop through subjects to create manual table
+      data.subjects.forEach((subject, index) => {
+        const isEven = index % 2 === 0;
+        if (isEven) {
+          doc.setFillColor(240, 240, 240);
+          doc.rect(14, yPosition - 5, pageWidth - 28, 10, 'F');
+        }
+        
+        // Check if we need to add a new page
+        if (yPosition > 270) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        doc.text(subject.name, 20, yPosition);
+        doc.text(subject.credits.toString(), 110, yPosition);
+        
+        // Handle long descriptions
+        const descText = doc.splitTextToSize(subject.description, 60);
+        doc.text(descText, 140, yPosition);
+        
+        yPosition += (descText.length > 1) ? descText.length * 7 + 5 : 12;
       });
-
-      // Tạo và tải xuống file
-      const blob = await Packer.toBlob(doc);
-      saveAs(blob, `${specializationCode}-ThongTinNganh.docx`);
-      message.success('Tải tài liệu thành công!');
+      
+      // Check if we need a new page for requirements
+      if (yPosition > 250) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      
+      // Add requirements
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('ENTRY REQUIREMENTS', 14, yPosition);
+      
+      yPosition += 10;
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      
+      data.requirements.forEach((req) => {
+        doc.text(`• ${req}`, 14, yPosition);
+        yPosition += 7;
+      });
+      
+      // Check if we need a new page for career opportunities
+      yPosition += 10;
+      if (yPosition > 250) {
+        doc.addPage();
+        yPosition = 20;
+      }
+      
+      // Add career opportunities
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CAREER OPPORTUNITIES', 14, yPosition);
+      
+      yPosition += 10;
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      
+      data.careerOpportunities.forEach((opp) => {
+        doc.text(`• ${opp}`, 14, yPosition);
+        yPosition += 7;
+      });
+      
+      // Add footer with current date
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'italic');
+      doc.text(`Created on: ${new Date().toLocaleDateString('en-US')}`, 14, 280);
+      
+      // Save the document
+      doc.save(`${specializationCode}-ProgramInfo.pdf`);
+      message.success('Document downloaded successfully!');
 
     } catch (error) {
-      console.error('Lỗi khi tạo Word:', error);
-      message.error('Có lỗi xảy ra khi tạo tài liệu. Vui lòng thử lại sau.');
+      console.error('Error creating PDF:', error);
+      message.error('An error occurred while creating the document. Please try again later.');
     }
   };
 
   return (
     <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Hero Section */}
         <Card className="mb-6 shadow-lg border-none">
           <Space direction="vertical" className="w-full">
             <div className="flex items-center gap-6">
@@ -1081,9 +990,9 @@ const RegulationsPage = () => {
                 <SafetyCertificateOutlined className="text-4xl text-blue-500" />
               </div>
               <div>
-                <Title level={2} className="!mb-0">Quy định Chuyên ngành Hàng không</Title>
+                <Title level={2} className="!mb-0">Aviation Specialization Regulations</Title>
                 <Text className="text-gray-500">
-                  Hệ thống quản lý quy định và tiêu chuẩn đào tạo của Học viện Hàng không Việt Nam
+                  Regulations and training standards management system of Vietnam Aviation Academy
                 </Text>
               </div>
             </div>
@@ -1091,12 +1000,12 @@ const RegulationsPage = () => {
             <Divider />
             
             <Alert
-              message="Thông báo Quan trọng"
+              message="Important Notice"
               description={
                 <Space direction="vertical">
-                  <Text>• Cập nhật mới nhất: Tháng 1/2025</Text>
-                  <Text>• Áp dụng cho tất cả sinh viên và học viên</Text>
-                  <Text>• Tuân thủ tiêu chuẩn IATA và ICAO mới nhất</Text>
+                  <Text>• Latest update: January 2025</Text>
+                  <Text>• Applicable to all students and trainees</Text>
+                  <Text>• Compliant with latest IATA and ICAO standards</Text>
                 </Space>
               }
               type="info"
@@ -1106,7 +1015,6 @@ const RegulationsPage = () => {
           </Space>
         </Card>
 
-        {/* Main Content */}
         <Card className="shadow-lg border-none">
           <Tabs 
             activeKey={activeTab} 
@@ -1122,7 +1030,7 @@ const RegulationsPage = () => {
         title={
           <div className="flex items-center gap-2">
             <FilePdfOutlined className="text-red-500" />
-            <span>Chi tiết Chương trình Đào tạo</span>
+            <span>Training Program Details</span>
           </div>
         }
         visible={isModalVisible}
@@ -1130,7 +1038,7 @@ const RegulationsPage = () => {
         width={1000}
         footer={[
           <Button key="print" icon={<PrinterOutlined />} onClick={() => window.print()}>
-            In tài liệu
+            Print Document
           </Button>,
           <Button 
             key="download" 
@@ -1140,11 +1048,11 @@ const RegulationsPage = () => {
               if (selectedSpecialization?.code) {
                 handleDownloadWord(selectedSpecialization.code);
               } else {
-                message.error('Không có thông tin ngành học để tải');
+                message.error('No program information available for download');
               }
             }}
           >
-            Tải về Word
+            Download PDF
           </Button>
         ]}
       >
@@ -1155,4 +1063,4 @@ const RegulationsPage = () => {
 };
 
 export default RegulationsPage;
-  
+    
