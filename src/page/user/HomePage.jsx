@@ -31,17 +31,21 @@ import {
   UserOutlined,
   RiseOutlined,
   BarChartOutlined,
-  AimOutlined
+  AimOutlined,
+  SolutionOutlined,
+  FileProtectOutlined,
+  DeploymentUnitOutlined
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { getAllAssignedTrainee } from "../../services/traineeService";
 import { courseService } from "../../services/courseService";
-
+import { getUserProfile } from "../../services/userService";
+import navItems from "../../data/NavItem";
 const { Title, Text, Paragraph } = Typography;
 
 const HomePage = () => {
-  const [role, setRole] = useState("user");
+  const [role, setRole] = useState("");
   const [roleName, setRoleName] = useState("");
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -52,36 +56,59 @@ const HomePage = () => {
     pendingRequests: 0,
     completedCourses: 0
   });
+  const [userData, setUserData] = useState(null);
+  const [allowedNavs, setAllowedNavs] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
     const storedRoleName = sessionStorage.getItem("roleName");
+    
     if (storedRole) setRole(storedRole);
     if (storedRoleName) setRoleName(storedRoleName);
     
+    // Get allowed navigation items for this role
+    const allowed = navItems.filter(item => 
+      item.roles?.includes(storedRole)
+    );
+    setAllowedNavs(allowed);
+    
+    getUserProfile()
+      .then((data) => {
+        setUserData(data);
+      })
+      .catch(err => console.error("Error getting user profile:", err));
+      
     // Fetch real data
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // Fetch courses data
-        const coursesResponse = await courseService.getAllCourses();
-        const totalCourses = coursesResponse.data?.length || 0;
-        
-        // Fetch assigned trainees data
-        const assignedTraineesResponse = await getAllAssignedTrainee();
-        const activeTrainees = assignedTraineesResponse?.length || 0;
-        
-        // Update stats with real data
-        setStats({
-          totalCourses: totalCourses, // Actual number of courses
-          activeTrainees: activeTrainees, // Actual number of assigned trainees
-          ongoingSchedules: 18,
-          certificatesIssued: 5, // Actual number of certificates
-          pendingRequests: 12,
-          completedCourses: 45
-        });
+        // Fetch data based on role permissions
+        if (["Admin", "Training staff", "HeadMaster"].includes(storedRole)) {
+          const coursesResponse = await courseService.getAllCourses();
+          const totalCourses = coursesResponse.data?.length || 0;
+          
+          const assignedTraineesResponse = await getAllAssignedTrainee();
+          const activeTrainees = assignedTraineesResponse?.length || 0;
+          
+          setStats({
+            totalCourses,
+            activeTrainees,
+            ongoingSchedules: 18,
+            certificatesIssued: 5,
+            pendingRequests: 12,
+            completedCourses: 45
+          });
+        } else if (storedRole === "Trainee") {
+          // Get trainee-specific stats
+          setStats({
+            completedCourses: 3,
+            ongoingSchedules: 2,
+            pendingRequests: 0,
+            certificatesIssued: 1
+          });
+        }
       } catch (error) {
         console.error("Error fetching statistics:", error);
         message.error("Failed to load statistics");
@@ -92,6 +119,7 @@ const HomePage = () => {
 
     fetchData();
   }, []);
+  
 
   const StatisticCard = ({ icon, title, value, color, onClick }) => (
     <motion.div
@@ -153,180 +181,191 @@ const HomePage = () => {
     </motion.div>
   );
 
-  const AdminHome = () => (
-    <div className="space-y-8">
-      {/* Hero Section with Welcome Message */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-8 text-white mb-8"
-      >
-        <Row gutter={[24, 24]} align="middle">
-          <Col xs={24} md={16}>
-            <Title level={2} className="!text-white !mb-2">
-              Welcome back, Administrator
-            </Title>
-            <Text className="text-blue-100 text-lg">
-              Here's what's happening in your training system today
-            </Text>
-          </Col>
-        </Row>
-      </motion.div>
+  // Render quick access cards based on allowed nav items
+  const renderQuickAccessCards = () => {
+    const cards = [];
+    
+    allowedNavs.forEach(nav => {
+      // Map nav items to cards
+      switch (nav.key) {
+        case "2": // Plan
+          cards.push({
+            icon: <CalendarOutlined className="text-2xl text-white" />,
+            title: "Training Plans",
+            description: "View and manage training plans in your organization",
+            path: "/plan",
+            color: "bg-blue-500"
+          });
+          break;
+        case "6": // Accounts
+          if (role === "Admin") {
+            cards.push({
+              icon: <TeamOutlined className="text-2xl text-white" />,
+              title: "User Accounts",
+              description: "Manage user accounts and permissions",
+              path: "/accounts",
+              color: "bg-purple-500"
+            });
+          }
+          break;
+        case "7": // Candidates
+          cards.push({
+            icon: <SolutionOutlined className="text-2xl text-white" />,
+            title: "Candidates",
+            description: "Review candidate applications and track progress",
+            path: "/candidates-view",
+            color: "bg-green-500",
+            badge: stats.pendingRequests
+          });
+          break;
+        case "13": // Course
+          cards.push({
+            icon: <BookOutlined className="text-2xl text-white" />,
+            title: role === "Trainee" ? "My Courses" : "Courses",
+            description: "Access training courses and learning materials",
+            path: role === "Trainee" ? "/assigned-trainee-courses" : "/all-courses",
+            color: "bg-indigo-500"
+          });
+          break;
+        case "14": // Certificate
+          cards.push({
+            icon: <FileProtectOutlined className="text-2xl text-white" />,
+            title: "Certificates",
+            description: "View and manage training certificates",
+            path: "/certificate",
+            color: "bg-yellow-500"
+          });
+          break;
+        case "11": // Assign Trainee
+          cards.push({
+            icon: <DeploymentUnitOutlined className="text-2xl text-white" />,
+            title: "Trainee Assignment",
+            description: "Assign trainees to courses and track progress",
+            path: "/assigned-trainee",
+            color: "bg-cyan-500"
+          });
+          break;
+      }
+    });
+    
+    // Return at most 3 cards
+    return cards.slice(0, 3).map((card, index) => (
+      <QuickAccessCard key={index} {...card} />
+    ));
+  };
 
-      {/* Statistics Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatisticCard
-          icon={<BookOutlined className="text-2xl text-white" />}
-          title="Total Courses"
-          value={stats.totalCourses}
-          color="bg-blue-500"
-          onClick={() => navigate('/all-courses')}
-        />
-        <StatisticCard
-          icon={<TeamOutlined className="text-2xl text-white" />}
-          title="Active Trainees"
-          value={stats.activeTrainees}
-          color="bg-green-500"
-          onClick={() => navigate('/assigned-trainee')}
-        />
-        <StatisticCard
-          icon={<SafetyCertificateOutlined className="text-2xl text-white" />}
-          title="Certificates Issued"
-          value={stats.certificatesIssued}
-          color="bg-purple-500"
-          onClick={() => navigate('/certificate')}
-        />
-      </div>
+  const renderDashboard = () => {
+    return (
+      <div className="space-y-8">
+        {/* Hero Section with Welcome Message */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-8 text-white mb-8"
+        >
+          <Row gutter={[24, 24]} align="middle">
+            <Col xs={24} md={16}>
+              <Title level={2} className="!text-white !mb-2">
+                Welcome back, {userData?.fullName || roleName}
+              </Title>
+              <Text className="text-blue-100 text-lg">
+                Here's what's happening in your training system today
+              </Text>
+            </Col>
+          </Row>
+        </motion.div>
 
-      {/* Quick Access Section */}
-      <div>
-        <Title level={3} className="mb-6">Quick Access</Title>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <QuickAccessCard
-            icon={<UserOutlined className="text-2xl text-white" />}
-            title="Candidate Management"
-            description="Review and manage candidate applications, track recruitment progress."
-            path="/candidates"
-            color="bg-cyan-500"
-            badge={stats.pendingRequests}
-          />
-          <QuickAccessCard
-            icon={<BellOutlined className="text-2xl text-white" />}
-            title="Notifications"
-            description="View system notifications, announcements, and updates."
-            path="/notifications"
-            color="bg-yellow-500"
-            badge={5}
-          />
-          <QuickAccessCard
-           icon={<BookOutlined className="text-2xl text-white" />}
-           title="subject"
-           description="View subject subject, announcements, and updates."
-           path="/subject"
-           color="bg-yellow-500"
-           
-          />
-        </div>
-      </div>
-    </div>
-  );
-
-  const NormalHome = () => (
-    <div className="space-y-8">
-      {/* Personal Overview */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-8 text-white"
-      >
-        <Row gutter={[24, 24]} align="middle">
-          <Col xs={24} md={12}>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                <UserOutlined className="text-3xl text-white" />
-              </div>
-              <div>
-                <Text className="text-indigo-100">Welcome back,</Text>
-                <Title level={3} className="!text-white !mb-0">
-                  {sessionStorage.getItem("username") || "User"}
-                </Title>
-                <Tag color="blue">{roleName}</Tag>
-              </div>
-            </div>
-          </Col>
-          <Col xs={24} md={12}>
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Statistic 
-                  title={<span className="text-indigo-100">Completed Courses</span>}
-                  value={stats.completedCourses}
-                  prefix={<TrophyOutlined className="text-yellow-400" />}
-                  className="text-white"
-                />
-              </Col>
-              <Col span={12}>
-                <Statistic
-                  title={<span className="text-indigo-100">Active Courses</span>}
-                  value={stats.ongoingSchedules}
-                  prefix={<ClockCircleOutlined className="text-green-400" />}
-                  className="text-white"
-                />
-              </Col>
-            </Row>
-          </Col>
-        </Row>
-      </motion.div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <QuickAccessCard
-          icon={<CalendarOutlined className="text-2xl text-white" />}
-          title="My Schedule"
-          description="View your upcoming training sessions and manage your calendar."
-          path="/schedule"
-          color="bg-blue-500"
-        />
-        <QuickAccessCard
-          icon={<FileTextOutlined className="text-2xl text-white" />}
-          title="My Progress"
-          description="Track your learning progress and view assessment results."
-          path="/progress"
-          color="bg-green-500"
-        />
-        <QuickAccessCard
-          icon={<AimOutlined className="text-2xl text-white" />}
-          title="Learning Path"
-          description="Explore recommended courses and plan your learning journey."
-          path="/learning-path"
-          color="bg-purple-500"
-        />
-      </div>
-
-      {/* Recent Activities */}
-      <Card className="shadow-md">
-        <Title level={4} className="mb-4">Recent Activities</Title>
-        {loading ? (
-          <div className="text-center py-8">
-            <Spin size="large" />
+        {/* Statistics based on role */}
+        {role === "Trainee" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <StatisticCard
+              icon={<BookOutlined className="text-2xl text-white" />}
+              title="My Courses"
+              value={stats.ongoingSchedules}
+              color="bg-blue-500"
+              onClick={() => navigate('/assigned-trainee-courses')}
+            />
+            <StatisticCard
+              icon={<TrophyOutlined className="text-2xl text-white" />}
+              title="Completed Courses"
+              value={stats.completedCourses}
+              color="bg-green-500"
+              onClick={() => navigate('/trainee-grade')}
+            />
           </div>
         ) : (
-          <Timeline>
-            <Timeline.Item color="green">Completed "Introduction to Medical Ethics" course</Timeline.Item>
-            <Timeline.Item color="blue">Enrolled in "Advanced Patient Care" course</Timeline.Item>
-            <Timeline.Item color="orange">Upcoming assessment on Friday</Timeline.Item>
-          </Timeline>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {role === "Admin" && (
+              <StatisticCard
+                icon={<TeamOutlined className="text-2xl text-white" />}
+                title="Active Trainees"
+                value={stats.activeTrainees}
+                color="bg-green-500"
+                onClick={() => navigate('/assigned-trainee')}
+              />
+            )}
+            {["Admin", "Training staff"].includes(role) && (
+              <StatisticCard
+                icon={<BookOutlined className="text-2xl text-white" />}
+                title="Total Courses"
+                value={stats.totalCourses}
+                color="bg-blue-500"
+                onClick={() => navigate('/all-courses')}
+              />
+            )}
+            {["Admin", "HR", "AOC Manager"].includes(role) && (
+              <StatisticCard
+                icon={<SafetyCertificateOutlined className="text-2xl text-white" />}
+                title="Certificates Issued"
+                value={stats.certificatesIssued}
+                color="bg-purple-500"
+                onClick={() => navigate('/certificate')}
+              />
+            )}
+          </div>
         )}
-      </Card>
-    </div>
-  );
+
+        {/* Quick Access Section */}
+        <div>
+          <Title level={3} className="mb-6">Quick Access</Title>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {renderQuickAccessCards()}
+          </div>
+        </div>
+        
+        {/* Recent Activities for Trainee */}
+        {role === "Trainee" && (
+          <Card className="shadow-md">
+            <Title level={4} className="mb-4">Recent Activities</Title>
+            {loading ? (
+              <div className="text-center py-8">
+                <Spin size="large" />
+              </div>
+            ) : (
+              <Timeline>
+                <Timeline.Item color="green">Completed "Introduction to Medical Ethics" course</Timeline.Item>
+                <Timeline.Item color="blue">Enrolled in "Advanced Patient Care" course</Timeline.Item>
+                <Timeline.Item color="orange">Upcoming assessment on Friday</Timeline.Item>
+              </Timeline>
+            )}
+          </Card>
+        )}
+      </div>
+    );
+  };
 
   return (
     <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <Layout.Content className="p-8">
         <div className="max-w-7xl mx-auto">
-          {role === "Admin" ? <AdminHome /> : <NormalHome />}
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <Spin size="large" />
+            </div>
+          ) : (
+            renderDashboard()
+          )}
         </div>
       </Layout.Content>
     </Layout>

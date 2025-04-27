@@ -18,6 +18,7 @@ const CreateCoursePage = () => {
   const [loading, setLoading] = useState(false);
   const [trainingPlans, setTrainingPlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
+  const [courseLevel, setCourseLevel] = useState(0);
 
   // Fetch training plans
   useEffect(() => {
@@ -46,7 +47,8 @@ const CreateCoursePage = () => {
         courseId: values.courseId,
         trainingPlanId: values.trainingPlanId,
         courseName: values.courseName,
-        courseLevel: parseInt(values.courseLevel)
+        description: values.description,
+        courseRelatedId: values.courseRelatedId || "",
       };
 
       console.log("Sending course data:", formattedData);
@@ -54,12 +56,21 @@ const CreateCoursePage = () => {
       await courseService.createCourse(formattedData);
       message.success("Course created successfully!");
       form.resetFields();
-      navigate("/course", { state: { refresh: true } });
+      navigate("/all-courses", { state: { refresh: true } });
     } catch (error) {
       console.error("Failed to create course:", error);
       message.error(`Failed to create course: ${error.response?.data?.message || error.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Thêm hàm xử lý khi thay đổi course level
+  const handleCourseLevelChange = (value) => {
+    setCourseLevel(value);
+    // Reset courseRelatedId khi chuyển sang Initial
+    if (value === 0) {
+      form.setFieldValue('courseRelatedId', '');
     }
   };
 
@@ -111,7 +122,36 @@ const CreateCoursePage = () => {
                 rules={[{ required: true, message: "Course name is required" }]}
               >
                 <Input 
-                  placeholder="e.g., Pilot: the first step" 
+                  placeholder="Enter course name" 
+                  className="rounded-lg py-3 px-4 text-lg" 
+                  size="large"
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="courseRelatedId"
+                label={<Text strong className="text-lg">Course Related ID</Text>}
+                rules={[
+                  {
+                    required: courseLevel > 0,
+                    message: "Course Related ID is required for Recurrent/Relearn courses"
+                  }
+                ]}
+              >
+                <Input 
+                  placeholder="Enter Course Related ID" 
+                  className="rounded-lg py-3 px-4 text-lg" 
+                  size="large"
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="description"
+                label={<Text strong className="text-lg">Description</Text>}
+                rules={[{ required: true, message: "Description is required" }]}
+              >
+                <Input.TextArea 
+                  placeholder="Enter course description" 
                   className="rounded-lg py-3 px-4 text-lg" 
                   size="large"
                 />
@@ -129,7 +169,7 @@ const CreateCoursePage = () => {
                   showSearch
                   optionFilterProp="children"
                   className="rounded-lg text-lg"
-                  dropdownStyle={{ borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  dropdownStyle={{ borderRadius: '8px' }}
                   notFoundContent={loadingPlans ? <Spin size="small" /> : "No training plans found"}
                   size="large"
                 >
@@ -138,24 +178,6 @@ const CreateCoursePage = () => {
                       {plan.planName} ({plan.planId})
                     </Option>
                   ))}
-                </Select>
-              </Form.Item>
-
-              <Form.Item
-                name="courseLevel"
-                label={<Text strong className="text-lg">Course Level</Text>}
-                rules={[{ required: true, message: "Course level is required" }]}
-                className="col-span-2"
-              >
-                <Select 
-                  placeholder="Select level"
-                  className="rounded-lg text-lg"
-                  dropdownStyle={{ borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  size="large"
-                >
-                  <Option value={0} className="py-2">Initial</Option>
-                  <Option value={1} className="py-2">Recurrent</Option>
-                  <Option value={2} className="py-2">Relearn</Option>
                 </Select>
               </Form.Item>
             </div>

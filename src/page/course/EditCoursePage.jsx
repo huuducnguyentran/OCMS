@@ -15,7 +15,7 @@ const EditCoursePage = () => {
   // State management
   const [form] = Form.useForm();
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id } = useParams(); 
   const [loading, setLoading] = useState(false);
   const [loadingCourse, setLoadingCourse] = useState(true);
   const [trainingPlans, setTrainingPlans] = useState([]);
@@ -34,12 +34,11 @@ const EditCoursePage = () => {
       console.log("Course data:", response);
       
       if (response && response.success && response.data) {
-        // Set form values with the course data
+        // Set form values với đầy đủ các trường
         form.setFieldsValue({
-          courseId: response.data.courseId,
-          trainingPlanId: response.data.trainingPlanId,
+          description: response.data.description,
           courseName: response.data.courseName,
-          courseLevel: response.data.courseLevel
+          courseRelatedId: response.data.courseRelatedId || "" // Đảm bảo có giá trị mặc định
         });
       } else {
         message.error("Failed to load course data");
@@ -70,16 +69,16 @@ const EditCoursePage = () => {
     try {
       setLoading(true);
 
+      // Đảm bảo gửi đúng format data theo API
       const formattedData = {
-        courseId: values.courseId,
-        trainingPlanId: values.trainingPlanId,
-        courseName: values.courseName,
-        courseLevel: parseInt(values.courseLevel)
+        description: values.description?.trim() || "",
+        courseName: values.courseName?.trim() || "",
+        courseRelatedId: values.courseRelatedId?.trim() || ""
       };
 
       console.log("Sending update data:", formattedData);
       
-      // Call the update API with the course ID
+      // Đảm bảo gọi đúng endpoint với đúng format
       await courseService.updateCourse(id, formattedData);
       message.success("Course updated successfully!");
       navigate("/all-courses", { state: { refresh: true } });
@@ -123,70 +122,42 @@ const EditCoursePage = () => {
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
               <Form.Item
-                name="courseId"
-                label={<Text strong className="text-lg">Course ID</Text>}
-                rules={[{ required: true, message: "Course ID is required" }]}
-              >
-                <Input 
-                  placeholder="e.g., C-0001" 
-                  className="rounded-lg py-3 px-4 text-lg" 
-                  size="large"
-                  disabled
-                />
-              </Form.Item>
-
-              <Form.Item
                 name="courseName"
                 label={<Text strong className="text-lg">Course Name</Text>}
                 rules={[{ required: true, message: "Course name is required" }]}
+                className="col-span-2"
               >
                 <Input 
-                  placeholder="e.g., Pilot: the first step" 
+                  placeholder="Enter course name" 
                   className="rounded-lg py-3 px-4 text-lg" 
                   size="large"
                 />
               </Form.Item>
 
               <Form.Item
-                name="trainingPlanId"
-                label={<Text strong className="text-lg">Training Plan</Text>}
-                rules={[{ required: true, message: "Training plan is required" }]}
+                name="description"
+                label={<Text strong className="text-lg">Description</Text>}
+                rules={[{ required: true, message: "Description is required" }]}
                 className="col-span-2"
               >
-                <Select
-                  placeholder="Select training plan"
-                  loading={loadingPlans}
-                  showSearch
-                  optionFilterProp="children"
-                  className="rounded-lg text-lg"
-                  dropdownStyle={{ borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  notFoundContent={loadingPlans ? <Spin size="small" /> : "No training plans found"}
+                <Input.TextArea 
+                  placeholder="Enter course description" 
+                  className="rounded-lg py-3 px-4 text-lg" 
                   size="large"
-                >
-                  {trainingPlans.map(plan => (
-                    <Option key={plan.planId} value={plan.planId} className="py-2">
-                      {plan.planName} ({plan.planId})
-                    </Option>
-                  ))}
-                </Select>
+                  rows={4}
+                />
               </Form.Item>
 
               <Form.Item
-                name="courseLevel"
-                label={<Text strong className="text-lg">Course Level</Text>}
-                rules={[{ required: true, message: "Course level is required" }]}
+                name="courseRelatedId"
+                label={<Text strong className="text-lg">Course Related ID</Text>}
                 className="col-span-2"
               >
-                <Select 
-                  placeholder="Select level"
-                  className="rounded-lg text-lg"
-                  dropdownStyle={{ borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                <Input 
+                  placeholder="Enter course related ID" 
+                  className="rounded-lg py-3 px-4 text-lg" 
                   size="large"
-                >
-                  <Option value={0} className="py-2">Initial</Option>
-                  <Option value={1} className="py-2">Recurrent</Option>
-                  <Option value={2} className="py-2">Relearn</Option>
-                </Select>
+                />
               </Form.Item>
             </div>
 

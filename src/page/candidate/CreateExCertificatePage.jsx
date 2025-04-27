@@ -7,6 +7,7 @@ import { API } from "../../../api/apiUrl";
 import axios from "axios";
 import dayjs from "dayjs";
 import { AZURE_COMPUTER_VISION_ENDPOINT, AZURE_COMPUTER_VISION_API_KEY } from "../../utils/apiConfig";
+import moment from "moment";
 
 const { Title, Text } = Typography;
 
@@ -53,6 +54,13 @@ const CreateExCertificatePage = () => {
     for (const line of textLines) {
       if (/toefl|test of english as a foreign language/i.test(line)) {
         return "TOEFL Certificate";
+      }
+    }
+    
+    // Check if it's a high school diploma (GIAY CHUNG NHAN TOT NGHIEP THPT)
+    for (const line of textLines) {
+      if (/giấy chứng nhận tốt nghiệp thpt|giay chung nhan tot nghiep thpt/i.test(line)) {
+        return "High School Diploma";
       }
     }
     
@@ -172,6 +180,43 @@ const CreateExCertificatePage = () => {
       }
     }
     
+    // Special handling for High School Diploma
+    if (certificateName === "High School Diploma") {
+      // Look for "So bao danh:" pattern specifically
+      for (const line of textLines) {
+        const soBaoDanhMatch = line.match(/s[oố]\s*b[aá]o\s*danh\s*:?\s*(\d+)/i);
+        if (soBaoDanhMatch && soBaoDanhMatch[1]) {
+          return soBaoDanhMatch[1]; // Extract the number after "So bao danh:"
+        }
+      }
+      
+      // Look for "SBD:" pattern (common abbreviation)
+      for (const line of textLines) {
+        const sbdMatch = line.match(/sbd\s*:?\s*(\d+)/i);
+        if (sbdMatch && sbdMatch[1]) {
+          return sbdMatch[1];
+        }
+      }
+      
+      // Look for any 8 digit number in text (typical format for "So bao danh")
+      for (const line of textLines) {
+        const match = line.match(/\b(\d{8})\b/);
+        if (match) return match[1]; // Already numeric
+      }
+      
+      // Extract any numeric code with at least 5 digits
+      for (const line of textLines) {
+        // Match any sequence of digits
+        const match = line.match(/\b(\d{5,})\b/);
+        if (match) {
+          return match[1];
+        }
+      }
+      
+      // If a code was found but it's not numeric, return null
+      return null;
+    }
+    
     return null;
   };
 
@@ -240,6 +285,16 @@ const CreateExCertificatePage = () => {
       if (/department of transport/i.test(line)) {
         return "SỞ GTVT";
       }
+    }
+    
+    // Special handling for High School Diploma
+    if (certificateName === "High School Diploma") {
+      for (const line of textLines) {
+        if (/bộ giáo dục và đào tạo|bo giao duc va dao tao/i.test(line)) {
+          return "Bộ Giáo dục và Đào tạo";
+        }
+      }
+      return "Bộ Giáo dục và Đào tạo"; // Default issuer for high school diploma
     }
     
     // Các mẫu chung
@@ -926,7 +981,7 @@ const CreateExCertificatePage = () => {
               type: 'expiryDate',
               date: `${day2}/${month2}/${year2}`,
               priority: 9,
-              calculated: true // Đánh dấu đây là ngày được tính tự động
+              calculated: true 
             });
           } catch (e) {
             console.error("Error calculating expiry date:", e);
@@ -1232,7 +1287,140 @@ const CreateExCertificatePage = () => {
       }
     }
     
+    // Special handling for High School Diploma
+    if (certificateName === "High School Diploma") {
+      // Look for issue date in format "ngay DD thang MM nam YYYY"
+      for (const line of textLines) {
+        // Check for special Vietnamese date format
+        const dateMatch = line.match(/ngay\s+(\d{1,2})\s+th[aáà]ng\s+(\d{1,2})\s+n[aăâ]m\s+(\d{4})/i);
+        if (dateMatch) {
+          const day = parseInt(dateMatch[1], 10);
+          const month = parseInt(dateMatch[2], 10);
+          const year = parseInt(dateMatch[3], 10);
+          
+          dates.push({
+            type: 'issueDate',
+            date: `${day}/${month}/${year}`,
+            priority: 100
+          }); 
+          
+          // High school diploma doesn't have expiration date
+          break;
+        }
+      }
+      
+      // Look for year-only dates (like "nam 2018")
+      if (dates.length === 0) {
+        for (const line of textLines) {
+          const yearMatch = line.match(/n[aăâ]m\s+(\d{4})/i);
+          if (yearMatch) {
+            const year = parseInt(yearMatch[1], 10);
+            // Assume issue date is July 15th of the graduation year
+            dates.push({
+              type: 'issueDate',
+              date: `15/7/${year}`,
+              priority: 50,
+              estimated: true
+            });
+            break;
+          }
+        }
+      }
+      
+      return dates;
+    }
+    
     return dates;
+  };
+
+  // Thêm hàm xử lý thông tin từ bằng THPT
+  const extractHighSchoolDiplomaInfo = (textLines) => {
+    const info = {
+      certificateName: '',
+      studentName: '',
+      dateOfBirth: '',
+      placeOfBirth: '',
+      ethnicity: '',
+      graduationYear: '',
+      classification: '',
+      registerCode: '',
+      issueDate: '',
+      issuePlace: '',
+    };
+
+    // Hàm hỗ trợ tìm kiếm thông tin
+    const findLineContaining = (keyword, lines) => {
+      return lines.find(line => line.toLowerCase().includes(keyword.toLowerCase()));
+    };
+
+    const findValueAfter = (keyword, line) => {
+      if (!line) return '';
+      const index = line.toLowerCase().indexOf(keyword.toLowerCase());
+      if (index === -1) return '';
+      return line.substring(index + keyword.length).trim();
+    };
+
+    // Xử lý từng dòng text
+    textLines.forEach((line, index) => {
+      const lowerLine = line.toLowerCase();
+
+      // Tên bằng
+      if (lowerLine.includes('bằng tốt nghiệp')) {
+        info.certificateName = 'Bằng Tốt nghiệp Trung học Phổ thông';
+      }
+
+      // Họ và tên
+      if (lowerLine.includes('học sinh:') || lowerLine.includes('họ và tên:')) {
+        info.studentName = findValueAfter('học sinh:', line) || findValueAfter('họ và tên:', line);
+      }
+
+      // Ngày sinh
+      if (lowerLine.includes('ngày sinh:')) {
+        const dateStr = findValueAfter('ngày sinh:', line);
+        // Chuyển đổi định dạng ngày nếu cần
+        info.dateOfBirth = dateStr;
+      }
+
+      // Nơi sinh
+      if (lowerLine.includes('nơi sinh:')) {
+        info.placeOfBirth = findValueAfter('nơi sinh:', line);
+      }
+
+      // Dân tộc
+      if (lowerLine.includes('dân tộc:')) {
+        info.ethnicity = findValueAfter('dân tộc:', line);
+      }
+
+      // Năm tốt nghiệp
+      if (lowerLine.includes('năm tốt nghiệp:')) {
+        info.graduationYear = findValueAfter('năm tốt nghiệp:', line);
+      }
+
+      // Xếp loại
+      if (lowerLine.includes('xếp loại:')) {
+        info.classification = findValueAfter('xếp loại:', line);
+      }
+
+      // Số hiệu/Mã đăng ký
+      if (lowerLine.includes('số hiệu:') || lowerLine.includes('số đăng ký:')) {
+        info.registerCode = findValueAfter('số hiệu:', line) || findValueAfter('số đăng ký:', line);
+      }
+
+      // Ngày cấp
+      if (lowerLine.includes('ngày') && lowerLine.includes('tháng') && lowerLine.includes('năm')) {
+        const dateMatch = line.match(/ngày\s+(\d+)\s+tháng\s+(\d+)\s+năm\s+(\d+)/i);
+        if (dateMatch) {
+          info.issueDate = `${dateMatch[1]}/${dateMatch[2]}/${dateMatch[3]}`;
+        }
+      }
+
+      // Nơi cấp
+      if (lowerLine.includes('tại')) {
+        info.issuePlace = findValueAfter('tại', line);
+      }
+    });
+
+    return info;
   };
 
   // Hàm phân tích ảnh chứng chỉ trực tiếp bằng Azure Computer Vision
@@ -1381,7 +1569,20 @@ const CreateExCertificatePage = () => {
         
         // Tự động điền thông tin
         if (certificateInfo.possibleCode) {
-          form.setFieldsValue({ certificateCode: certificateInfo.possibleCode });
+          // For High School Diploma, ensure code is numeric
+          if (certificateInfo.possibleCertName === "High School Diploma") {
+            // If code isn't all digits, try to extract only digits
+            if (!/^\d+$/.test(certificateInfo.possibleCode)) {
+              const numericCode = certificateInfo.possibleCode.replace(/\D/g, '');
+              if (numericCode.length > 0) {
+                form.setFieldsValue({ certificateCode: numericCode });
+              }
+            } else {
+              form.setFieldsValue({ certificateCode: certificateInfo.possibleCode });
+            }
+          } else {
+            form.setFieldsValue({ certificateCode: certificateInfo.possibleCode });
+          }
         }
         
         if (certificateInfo.possibleCertName) {
@@ -1465,7 +1666,6 @@ const CreateExCertificatePage = () => {
         
         return certificateInfo;
       } catch (error) {
-        console.error("Error analyzing image with Azure:", error);
         message.error("Analyze failed: " + (error.message || "Unknown error"));
         
         // Reset trạng thái phân tích và kết quả
@@ -1648,7 +1848,21 @@ const CreateExCertificatePage = () => {
           <Form.Item
             name="certificateCode"
             label="Certificate Code"
-            rules={[{ required: true, message: "Please enter certificate code" }]}
+            rules={[
+              { required: true, message: "Please enter certificate code" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  const certName = getFieldValue('certificateName');
+                  if (certName === "High School Diploma" && value) {
+                    // Check if value is numeric for High School Diploma
+                    if (!/^\d+$/.test(value)) {
+                      return Promise.reject('Certificate code must be a number for High School Diploma');
+                    }
+                  }
+                  return Promise.resolve();
+                },
+              }),
+            ]}
           >
             <Input placeholder="Enter certificate code" />
           </Form.Item>
