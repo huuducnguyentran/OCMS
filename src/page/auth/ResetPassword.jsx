@@ -1,10 +1,8 @@
 // src/pages/ResetPassword.jsx
 import { Input, Button, message, Form } from "antd";
 import { useState, useEffect } from "react";
-import { useFormik } from "formik"; // <-- NEW
-import { ResetPasswordSchema } from "../../validations/resetPasswordValidation"; // <-- NEW
 import { resetPassword } from "../../services/authServices";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   ArrowLeftOutlined,
   LockOutlined,
@@ -14,53 +12,18 @@ import {
 // import * as THREE from 'three'; // Tạm thời vô hiệu hóa Three.js
 
 const ResetPassword = () => {
+  // Get token from URL path params instead of query params
   const { token } = useParams();
+  const location = useLocation();
+
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordMatch, setPasswordMatch] = useState(null);
   const [loading, setLoading] = useState(false);
   const [tokenError, setTokenError] = useState(false);
   const navigate = useNavigate();
 
-  // Formik Setup
-  const formik = useFormik({
-    initialValues: {
-      newPassword: "",
-      confirmPassword: "",
-    },
-    validationSchema: ResetPasswordSchema,
-    onSubmit: async (values) => {
-      if (tokenError || !token) {
-        message.error(
-          "No valid reset token found. Please request a new password reset."
-        );
-        return;
-      }
-
-      if (values.newPassword !== values.confirmPassword) {
-        message.error("Passwords do not match. Please try again.");
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const responseMessage = await resetPassword(token, values.newPassword);
-
-        message.success(
-          responseMessage || "Password has been reset successfully!"
-        );
-        navigate("/login");
-      } catch (error) {
-        console.error("Reset password error:", error);
-        message.error(
-          typeof error === "string"
-            ? error
-            : "Failed to reset password. Please try again with a valid token."
-        );
-      } finally {
-        setLoading(false);
-      }
-    },
-  });
-
+  // Check for token
   useEffect(() => {
     if (!token) {
       setTokenError(true);
@@ -70,22 +33,65 @@ const ResetPassword = () => {
     }
   }, [token]);
 
-  // Check password confirmation live
+  // Check password confirmation
   useEffect(() => {
-    if (formik.values.confirmPassword === "") {
+    if (confirmPassword === "") {
       setPasswordMatch(null);
-    } else if (formik.values.newPassword === formik.values.confirmPassword) {
+    } else if (newPassword === confirmPassword) {
       setPasswordMatch(true);
     } else {
       setPasswordMatch(false);
     }
-  }, [formik.values.newPassword, formik.values.confirmPassword]);
+  }, [newPassword, confirmPassword]);
+
+  const handleReset = async () => {
+    if (tokenError || !token) {
+      message.error(
+        "No valid reset token found. Please request a new password reset."
+      );
+      return;
+    }
+
+    if (!newPassword) {
+      message.error("Please enter a new password.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      message.error("Passwords do not match. Please try again.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Use token from URL path
+      const responseMessage = await resetPassword(token, newPassword);
+
+      message.success(
+        responseMessage || "Password has been reset successfully!"
+      );
+      navigate("/login");
+    } catch (error) {
+      console.error("Reset password error:", error);
+      message.error(
+        typeof error === "string"
+          ? error
+          : "Failed to reset password. Please try again with a valid token."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
+      {/* Static gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900" />
+
+      {/* 3D Animation Container */}
       <div id="animation-container" className="absolute inset-0" />
 
+      {/* Back Button */}
       <Button
         type="link"
         icon={<ArrowLeftOutlined />}
@@ -95,10 +101,12 @@ const ResetPassword = () => {
         Back to Login
       </Button>
 
+      {/* Main Content */}
       <div className="relative z-10 w-full h-full flex items-center justify-center px-4">
         <div className="w-full max-w-4xl">
           <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden">
             <div className="flex flex-col md:flex-row">
+              {/* Left Side - Reset Password Form */}
               <div className="w-full md:w-1/2 p-8 bg-white/5">
                 <div className="text-white mb-8">
                   <h2 className="text-3xl font-bold mb-2">Reset Password</h2>
@@ -120,49 +128,25 @@ const ResetPassword = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Form className="space-y-6" onFinish={formik.handleSubmit}>
-                    <Form.Item
-                      validateStatus={
-                        formik.errors.newPassword && formik.touched.newPassword
-                          ? "error"
-                          : ""
-                      }
-                      help={
-                        formik.touched.newPassword && formik.errors.newPassword
-                      }
-                    >
+                  <Form className="space-y-6">
+                    <Form.Item>
                       <Input.Password
                         prefix={<LockOutlined className="text-gray-400" />}
                         placeholder="Enter new password"
-                        name="newPassword"
-                        value={formik.values.newPassword}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
                         className="h-12 bg-white/10 border-gray-500/30 text-white rounded-lg"
                         autoComplete="new-password"
                       />
                     </Form.Item>
 
-                    <Form.Item
-                      validateStatus={
-                        formik.errors.confirmPassword &&
-                        formik.touched.confirmPassword
-                          ? "error"
-                          : ""
-                      }
-                      help={
-                        formik.touched.confirmPassword &&
-                        formik.errors.confirmPassword
-                      }
-                    >
+                    <Form.Item>
                       <div className="relative">
                         <Input.Password
                           prefix={<LockOutlined className="text-gray-400" />}
                           placeholder="Confirm new password"
-                          name="confirmPassword"
-                          value={formik.values.confirmPassword}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
                           className={`h-12 bg-white/10 text-white rounded-lg ${
                             passwordMatch === false
                               ? "border-red-500"
@@ -192,12 +176,8 @@ const ResetPassword = () => {
                     <Button
                       type="primary"
                       loading={loading}
-                      htmlType="submit"
-                      disabled={
-                        !formik.isValid ||
-                        !formik.dirty ||
-                        passwordMatch !== true
-                      }
+                      onClick={handleReset}
+                      disabled={!newPassword || passwordMatch !== true}
                       className="w-full h-12 text-lg font-medium bg-gradient-to-r from-blue-600 to-indigo-600 border-0 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300"
                     >
                       Reset Password
@@ -206,7 +186,7 @@ const ResetPassword = () => {
                 )}
               </div>
 
-              {/* Right side remains unchanged */}
+              {/* Right Side - Branding */}
               <div className="w-full md:w-1/2 p-8 bg-gradient-to-br from-blue-900/30 to-indigo-900/30 backdrop-blur-lg">
                 <div className="text-center">
                   <h1 className="text-4xl font-bold mb-4">
