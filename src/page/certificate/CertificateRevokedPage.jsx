@@ -8,13 +8,20 @@ import {
   Row,
   Col,
   Typography,
+  Tooltip,
+  Button,
+  Modal,
+  message,
 } from "antd";
-import { getRevokedCertificate } from "../../services/certificateService";
+import {
+  getRevokedCertificate,
+  manuallyCreateCertificate,
+} from "../../services/certificateService";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
-import { SearchOutlined } from "@ant-design/icons";
+import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 
-const { Title } = Typography;
+const { Title, Paragraph } = Typography;
 const { RangePicker } = DatePicker;
 
 const CertificateRevokedPage = () => {
@@ -22,6 +29,10 @@ const CertificateRevokedPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchCode, setSearchCode] = useState("");
   const [filterDate, setFilterDate] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedCourseId, setSelectedCourseId] = useState(null);
+  const [selectedTraineeId, setSelectedTraineeId] = useState(null);
+  const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,6 +67,27 @@ const CertificateRevokedPage = () => {
     });
   }, [certificates, searchCode, filterDate]);
 
+  const openManualModal = (courseId, traineeId) => {
+    setSelectedCourseId(courseId);
+    setSelectedTraineeId(traineeId);
+    setModalOpen(true);
+  };
+
+  const handleCreateCertificate = async () => {
+    setCreating(true);
+    try {
+      await manuallyCreateCertificate(selectedCourseId, selectedTraineeId);
+      message.success("Certificate created successfully!");
+      setModalOpen(false);
+      navigate("/certificate-pending");
+    } catch (error) {
+      console.error("Manual creation failed:", error);
+      message.error("Failed to create certificate manually.");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-[80vh]">
@@ -67,6 +99,7 @@ const CertificateRevokedPage = () => {
   return (
     <div className="p-4">
       <Title level={3}>Revoked Certificates List</Title>
+
       {/* Filters */}
       <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
         <Row gutter={[16, 16]} className="mb-4">
@@ -103,7 +136,7 @@ const CertificateRevokedPage = () => {
             <div
               key={cert.certificateId}
               onClick={() => navigate(`/certificate/${cert.certificateId}`)}
-              className="cursor-pointer"
+              className="relative cursor-pointer"
             >
               <Card
                 title={cert.certificateCode}
@@ -140,10 +173,48 @@ const CertificateRevokedPage = () => {
                   {new Date(cert.issueDate).toLocaleDateString()}
                 </p>
               </Card>
+
+              <Tooltip title="Manually Create Certificate">
+                <Button
+                  type="primary"
+                  shape="circle"
+                  icon={<PlusOutlined />}
+                  size="small"
+                  className="absolute bottom-3 right-3 z-10"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Stop triggering card click
+                    openManualModal(cert.courseId, cert.userId);
+                  }}
+                />
+              </Tooltip>
             </div>
           ))}
         </div>
       )}
+
+      {/* Manual Create Modal */}
+      <Modal
+        open={modalOpen}
+        onCancel={() => setModalOpen(false)}
+        onOk={handleCreateCertificate}
+        okText="Create Certificate"
+        cancelText="Cancel"
+        confirmLoading={creating}
+        centered
+        title="Manually Create Certificate"
+      >
+        <Paragraph>
+          You are about to manually create a certificate for:
+        </Paragraph>
+        <ul className="list-disc ml-6">
+          <li>
+            <strong>Course ID:</strong> {selectedCourseId}
+          </li>
+          <li>
+            <strong>Trainee ID:</strong> {selectedTraineeId}
+          </li>
+        </ul>
+      </Modal>
     </div>
   );
 };
