@@ -122,7 +122,8 @@ const CreateSchedulePage = () => {
           instructorData.map((instructor) => ({
             id: instructor.userId || instructor.id,
             name: instructor.fullName || instructor.name || instructor.userName,
-            roleName: instructor.roleName
+            roleName: instructor.roleName,
+            specialtyId: instructor.specialtyId
           }))
         );
       } else if (response.data && Array.isArray(response.data)) {
@@ -131,7 +132,8 @@ const CreateSchedulePage = () => {
           filteredInstructors.map((instructor) => ({
             id: instructor.userId || instructor.id,
             name: instructor.fullName || instructor.name || instructor.userName,
-            roleName: instructor.roleName
+            roleName: instructor.roleName,
+            specialtyId: instructor.specialtyId
           }))
         );
       } else {
@@ -300,7 +302,7 @@ const CreateSchedulePage = () => {
                     >
                       {instructors.map((instructor) => (
                         <Option key={instructor.id} value={instructor.id}>
-                          {instructor.name}
+                          {instructor.name} {instructor.specialtyId ? `(${instructor.specialtyId})` : ''}
                         </Option>
                       ))}
                     </Select>
