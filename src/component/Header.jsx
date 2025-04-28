@@ -71,14 +71,14 @@ const Header = () => {
         {isLoggedIn ? (
           <>
             {userData && (
-              <span className="text-gray-700 font-medium">
+              <span className="text-white font-medium">
                 Welcome, {userData.fullName}
               </span>
             )}
 
             <Badge count={unreadCount} overflowCount={99}>
               <div
-                className="cursor-pointer text-xl text-gray-600 hover:text-blue-500 transition-colors"
+                className="cursor-pointer text-xl text-white hover:text-blue-500 transition-colors"
                 onClick={() => navigate("/notifications")}
               >
                 <BellOutlined style={{ fontSize: '20px' }} />

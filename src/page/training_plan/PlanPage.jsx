@@ -710,9 +710,10 @@ const PlanPage = () => {
                 {!isTrainee && (
                   <button
                     onClick={() => navigate("/plan/create")}
-                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    style={{ background: "#000", color: "#fff" }}
+                    className="fixed bottom-8 right-8 w-14 h-14 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 animate__animated animate__bounceIn"
                   >
-                    Create your first plan
+                    <PlusOutlined className="text-xl" />
                   </button>
                 )}
               </div>
@@ -783,13 +784,13 @@ const PlanPage = () => {
             ))}
           </div>
         )}
-
-        {/* Floating Action Button - Only show for non-trainees */}
+        
         {!isTrainee && (
           <Tooltip title="Create New Plan" placement="left">
             <button
               onClick={() => navigate("/plan/create")}
-              className="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 animate__animated animate__bounceIn"
+              style={{ background: "#000", color: "#fff" }}
+              className="fixed bottom-8 right-8 w-14 h-14 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 animate__animated animate__bounceIn"
             >
               <PlusOutlined className="text-xl" />
             </button>
@@ -797,7 +798,6 @@ const PlanPage = () => {
         )}
       </div>
 
-      {/* Request Modal - Only for non-trainees */}
       {!isTrainee && renderRequestModal()}
     </div>
   );
