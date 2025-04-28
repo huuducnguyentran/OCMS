@@ -200,7 +200,7 @@ const LoginPage = () => {
       const accountStatus = await checkUserAccountStatus(token);
       
       if (accountStatus === "Deactivated") {
-        setErrorMessage("Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ với quản trị viên để biết thêm thông tin.");
+        setErrorMessage("Your account has been deactivated. Please contact the administrator for more information.");
         return;
       }
 
@@ -212,13 +212,13 @@ const LoginPage = () => {
 
       // Bước 4: Cập nhật trạng thái xác thực và chuyển hướng
       setIsAuthenticated(true);
-      message.success("Đăng nhập thành công!");
+      message.success("Login successful!");
       navigate("/home");
     } catch (error) {
       if (error.response?.data?.message === "Account has been deactivated") {
-        setErrorMessage("Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ với quản trị viên để biết thêm thông tin.");
+        setErrorMessage("Your account has been deactivated. Please contact the administrator for more information.");
       } else {
-        setErrorMessage("Tên đăng nhập hoặc mật khẩu không hợp lệ.");
+        setErrorMessage("Invalid username or password.");
       }
     } finally {
       setSubmitting(false);
