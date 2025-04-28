@@ -108,6 +108,16 @@ const HomePage = () => {
             pendingRequests: 0,
             certificatesIssued: 1
           });
+        } else if (storedRole === "Instructor") {
+          // Get instructor-specific stats
+          setStats({
+            totalCourses: 0, // Số khóa học đang dạy
+            activeTrainees: 0, // Số học viên đang dạy
+            ongoingSchedules: 0, // Số lịch dạy hiện tại
+            completedCourses: 0, // Số khóa học đã hoàn thành
+            upcomingSchedules: 0, // Số lịch dạy sắp tới
+            pendingGrades: 0 // Số bài cần chấm điểm
+          });
         }
       } catch (error) {
         console.error("Error fetching statistics:", error);
@@ -294,6 +304,30 @@ const HomePage = () => {
               onClick={() => navigate('/trainee-grade')}
             />
           </div>
+        ) : role === "Instructor" ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <StatisticCard
+              icon={<CalendarOutlined className="text-2xl text-white" />}
+              title="Current Schedules"
+              value={stats.ongoingSchedules}
+              color="bg-blue-500"
+              onClick={() => navigate('/schedule')}
+            />
+            <StatisticCard
+              icon={<TeamOutlined className="text-2xl text-white" />}
+              title="Active Trainees"
+              value={stats.activeTrainees}
+              color="bg-green-500"
+              onClick={() => navigate('/grade')}
+            />
+            <StatisticCard
+              icon={<FileTextOutlined className="text-2xl text-white" />}
+              title="Pending Grades"
+              value={stats.pendingGrades}
+              color="bg-orange-500"
+              onClick={() => navigate('/grade')}
+            />
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {role === "Admin" && (
@@ -330,12 +364,39 @@ const HomePage = () => {
         <div>
           <Title level={3} className="mb-6">Quick Access</Title>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {renderQuickAccessCards()}
+            {role === "Instructor" ? (
+              <>
+                <QuickAccessCard
+                  icon={<CalendarOutlined className="text-2xl text-white" />}
+                  title="Teaching Schedule"
+                  description="View and manage your teaching schedules"
+                  path="/schedule"
+                  color="bg-blue-500"
+                />
+                <QuickAccessCard
+                  icon={<FileTextOutlined className="text-2xl text-white" />}
+                  title="Grade Management"
+                  description="Manage and submit grades for your trainees"
+                  path="/grade"
+                  color="bg-orange-500"
+                  badge={stats.pendingGrades}
+                />
+                <QuickAccessCard
+                  icon={<TeamOutlined className="text-2xl text-white" />}
+                  title="My Trainees"
+                  description="View and manage your assigned trainees"
+                  path="/grade"
+                  color="bg-green-500"
+                />
+              </>
+            ) : (
+              renderQuickAccessCards()
+            )}
           </div>
         </div>
         
-        {/* Recent Activities for Trainee */}
-        {role === "Trainee" && (
+        {/* Recent Activities for Instructor */}
+        {role === "Instructor" && (
           <Card className="shadow-md">
             <Title level={4} className="mb-4">Recent Activities</Title>
             {loading ? (
@@ -344,9 +405,15 @@ const HomePage = () => {
               </div>
             ) : (
               <Timeline>
-                <Timeline.Item color="green">Completed "Introduction to Medical Ethics" course</Timeline.Item>
-                <Timeline.Item color="blue">Enrolled in "Advanced Patient Care" course</Timeline.Item>
-                <Timeline.Item color="orange">Upcoming assessment on Friday</Timeline.Item>
+                <Timeline.Item color="blue">
+                  Upcoming class: Advanced Training (Tomorrow, 9:00 AM)
+                </Timeline.Item>
+                <Timeline.Item color="orange">
+                  5 pending grades need review
+                </Timeline.Item>
+                <Timeline.Item color="green">
+                  Completed teaching schedule for Basic Training
+                </Timeline.Item>
               </Timeline>
             )}
           </Card>

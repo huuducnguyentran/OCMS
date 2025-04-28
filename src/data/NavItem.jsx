@@ -23,6 +23,34 @@ const navItems = [
     roles: ["Training staff", "Trainee", "Reviewer", "HR"],
   },
   {
+    key: "13",
+    label: "Course",
+    icon: "BookOutlined",
+    path: "/course",
+    roles: ["Training staff", "Trainee"],
+    children: [
+      {
+        key: "13-1",
+        label: "All Courses",
+        path: "/all-courses",
+        roles: ["Training staff"],
+      },
+      {
+        key: "13-2",
+        label: "Trainee Courses",
+        path: "/assigned-trainee-courses",
+        roles: ["Trainee"],
+      },
+    ],
+  },
+  {
+    key: "12",
+    label: "Subject",
+    icon: "ReadOutlined",
+    path: "/subject",
+    roles: ["Admin", "Training staff", "user"],
+  },
+  {
     key: "3",
     label: "Schedule",
     icon: "ScheduleOutlined",
@@ -37,6 +65,7 @@ const navItems = [
       },
     ],
   },
+  
   {
     key: "4",
     label: "Notifications",
@@ -164,34 +193,8 @@ const navItems = [
       },
     ],
   },
-  {
-    key: "12",
-    label: "Subject",
-    icon: "ReadOutlined",
-    path: "/subject",
-    roles: ["Admin", "Training staff", "user"],
-  },
-  {
-    key: "13",
-    label: "Course",
-    icon: "BookOutlined",
-    path: "/course",
-    roles: ["Training staff", "Trainee"],
-    children: [
-      {
-        key: "13-1",
-        label: "All Courses",
-        path: "/all-courses",
-        roles: ["Training staff"],
-      },
-      {
-        key: "13-2",
-        label: "Trainee Courses",
-        path: "/assigned-trainee-courses",
-        roles: ["Trainee"],
-      },
-    ],
-  },
+  
+
   {
     key: "14",
     label: "Certificate",

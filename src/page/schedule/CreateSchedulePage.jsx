@@ -72,6 +72,7 @@ const CreateSchedulePage = () => {
             name: subject.subjectName,
             description: subject.description,
             courseId: subject.courseId,
+            specialtyId: subject.specialtyId
           }))
         );
 
@@ -82,6 +83,7 @@ const CreateSchedulePage = () => {
           response.data.map((subject) => ({
             id: subject.subjectId || subject.id,
             name: subject.subjectName || subject.name,
+            specialtyId: subject.specialtyId
           }))
         );
       } else {
@@ -94,10 +96,10 @@ const CreateSchedulePage = () => {
 
       // Sample data based on actual API
       setSubjects([
-        { id: "S-0002", name: "Air plane daily journey" },
-        { id: "S-0003", name: "Air plane basic rule" },
-        { id: "S-0004", name: "Air plane daily journey 2" },
-        { id: "Sb-00001", name: "basic step fr dummy" },
+        { id: "S-0002", name: "Air plane daily journey", specialtyId: "Airplane" },
+        { id: "S-0003", name: "Air plane basic rule", specialtyId: "Airplane" },
+        { id: "S-0004", name: "Air plane daily journey 2", specialtyId: "Airplane" },
+        { id: "Sb-00001", name: "basic step fr dummy", specialtyId: "Basic" },
       ]);
     } finally {
       setLoading(false);
@@ -278,10 +280,10 @@ const CreateSchedulePage = () => {
                     >
                       {subjects.map((subject) => (
                         <Option key={subject.id} value={subject.id}>
-                          {subject.name}
+                          {subject.name} {subject.specialtyId ? `(${subject.specialtyId})` : ''}
                         </Option>
                       ))}
-                    </Select>
+                    </Select>     
                   </Form.Item>
 
                   <Form.Item
