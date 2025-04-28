@@ -309,6 +309,21 @@ const SchedulePage = () => {
         } else if (Array.isArray(response)) {
           setScheduleData(response);
         } else if (response && response.data) {
+          const schedulesWithSpecialty = await Promise.all(
+            response.data.map(async (schedule) => {
+              try {
+                const instructorDetails = await trainingScheduleService.getInstructorDetails(schedule.instructorID);
+                return {
+                  ...schedule,
+                  instructorSpecialtyId: instructorDetails?.specialtyId
+                };
+              } catch (error) {
+                console.error("Error fetching instructor details:", error);
+                return schedule;
+              }
+            })
+          );
+          response.data = schedulesWithSpecialty;
           setScheduleData(response.data);
         } else {
           console.warn("Unexpected response format:", response);
@@ -568,22 +583,14 @@ const SchedulePage = () => {
                 <div>{schedule.location || "N/A"}</div>
                 {schedule.courseId && <div>Course: {schedule.courseId}</div>}
                 {userRole === "TrainingStaff" && (
-  <>
-    <div>Instructor: {schedule.instructorID}</div>
-    <div>
-      Status:
-      {schedule.status === "Incoming" && (
-        <Tag color="green">Incoming</Tag>
-      )}
-      {schedule.status === "Pending" && (
-        <Tag color="orange">Pending</Tag>
-      )}
-      {schedule.status !== "Incoming" && schedule.status !== "Pending" && (
-        <Tag>{schedule.status}</Tag>
-      )}
-    </div>
-  </>
-)}
+                  <div className="flex items-center gap-2">
+                    <UserSwitchOutlined className="text-gray-400" />
+                    <span>
+                      Instructor: {schedule.instructorID}
+                      {schedule.instructorSpecialtyId && ` (${schedule.instructorSpecialtyId})`}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           );

@@ -1,7 +1,6 @@
 // src/components/Header.jsx
 import { Layout, Avatar, Badge } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import SearchBar from "./SearchBar";
 import { useAvatar } from "../context/AvatarContext";
 import { useEffect, useState } from "react";
 import { getUserProfile } from "../services/userService";
@@ -64,18 +63,31 @@ const Header = () => {
 
   return (
     <Layout.Header className="bg-white shadow-md px-6 py-4 flex items-center justify-between w-full">
-      <SearchBar />
-      <div className="flex items-center gap-4 ml-4">
-        {userData && (
-          <span className="text-white font-medium text-sm">
-            Welcome, {userData.fullName}
-          </span>
-        )}
+      <div className="flex-1">
+        {/* Có thể thêm logo hoặc tên ứng dụng ở đây */}
+      </div>
+
+      <div className="flex items-center gap-6">
         {isLoggedIn ? (
           <>
+            {userData && (
+              <span className="text-gray-700 font-medium">
+                Welcome, {userData.fullName}
+              </span>
+            )}
+
+            <Badge count={unreadCount} overflowCount={99}>
+              <div
+                className="cursor-pointer text-xl text-gray-600 hover:text-blue-500 transition-colors"
+                onClick={() => navigate("/notifications")}
+              >
+                <BellOutlined style={{ fontSize: '20px' }} />
+              </div>
+            </Badge>
+
             <div
               onClick={() => navigate(`/profile/${userData?.userId}`)}
-              className="flex items-center gap-2 cursor-pointer"
+              className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
             >
               <Avatar
                 src={
@@ -83,30 +95,19 @@ const Header = () => {
                   userData?.avatarUrlWithSas ||
                   "https://via.placeholder.com/40"
                 }
-                size="large"
-                icon={
-                  !avatar && !userData?.avatarUrlWithSas && <UserOutlined />
-                }
+                size={40}
+                icon={!avatar && !userData?.avatarUrlWithSas && <UserOutlined />}
+                className="border-2 border-gray-200"
               />
             </div>
           </>
         ) : (
           <Link
             to="/login"
-            className="text-blue-500 font-medium hover:underline"
+            className="text-blue-500 font-medium hover:text-blue-600 hover:underline"
           >
             Login
           </Link>
-        )}
-        {isLoggedIn && (
-          <Badge count={unreadCount} overflowCount={99}>
-            <div
-              className="cursor-pointer text-xl text-white"
-              onClick={() => navigate("/notifications")}
-            >
-              <BellOutlined />
-            </div>
-          </Badge>
         )}
       </div>
     </Layout.Header>
