@@ -96,7 +96,7 @@ export const getPendingDecision = async () => {
 
 export const signDecision = async (decisionId) => {
   const response = await axiosInstance.post(
-    `${API.SIGN_DIGITAL_SIGNATURE}/${decisionId}`
+    `${API.SIGN_DIGITAL_SIGNATURE_DECISION}/${decisionId}/sign`
   );
   return response.data;
 };

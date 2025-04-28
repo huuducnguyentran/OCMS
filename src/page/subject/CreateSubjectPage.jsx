@@ -123,6 +123,9 @@ const CreateSubjectPage = () => {
                     loading={loadingCourses}
                     className="rounded-lg"
                     size="large"
+                    showSearch
+                    allowClear
+                    optionFilterProp="children"
                     notFoundContent={
                       loadingCourses ? (
                         <div className="text-center py-4">

@@ -216,7 +216,7 @@ const LoginPage = () => {
       navigate("/home");
     } catch (error) {
       if (error.response?.data?.message === "Account has been deactivated") {
-        setErrorMessage("Your account has been deactivated. Please contact the administrator for more information.");
+        setErrorMessage("Your account has been deac ivated. Please contact the administrator for more information.");
       } else {
         setErrorMessage("Invalid username or password.");
       }
