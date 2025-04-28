@@ -12,6 +12,7 @@ import {
   Empty,
   Typography,
   Modal,
+  Select,
 } from "antd";
 import {
   createCandidateAccount,
@@ -31,7 +32,7 @@ import {
   getExternalCertificatesByCandidateId,
   updateExternalCertificate,
 } from "../../services/externalCertifcateService";
-import { DatePicker, Select } from "antd";
+import { DatePicker } from "antd";
 import dayjs from "dayjs";
 import { CandidateDetailSchema } from "../../../utils/validationSchemas";
 
@@ -55,6 +56,7 @@ const CandidateDetailPage = () => {
     certificateCode: "",
     certificateProvider: "",
   });
+  const [certificateFilter, setCertificateFilter] = useState('all');
 
   // Lấy role của người dùng từ session storage
   const userRole = sessionStorage.getItem("role");
@@ -132,20 +134,6 @@ const CandidateDetailPage = () => {
     );
   }
 
-  // const handleCreateCertificate = () => {
-  //   navigate(`/external-certificate/create/${id}`);
-  // };
-
-  // const handleEdit = (cert) => {
-  //   setEditingCertificate(cert);
-  //   setEditForm({
-  //     certificateName: cert.certificateName,
-  //     certificateCode: cert.certificateCode,
-  //     certificateProvider: cert.certificateProvider || "",
-  //   });
-  //   setEditModalVisible(true);
-  // };
-
   const handleUpdateCertificate = async () => {
     try {
       // Validate form data
@@ -202,31 +190,6 @@ const CandidateDetailPage = () => {
       }
     }
   };
-
-  // const handleDelete = (cert) => {
-  //   Modal.confirm({
-  //     title: "Delete Certificate",
-  //     content: "Are you sure you want to delete this certificate? This action cannot be undone.",
-  //     okText: "Yes, Delete",
-  //     okType: "danger",
-  //     cancelText: "No",
-  //     okButtonProps: {
-  //       className: "bg-red-500 hover:bg-red-600",
-  //     },
-  //     onOk: async () => {
-  //       try {
-  //         await deleteExternalCertificate(cert.certificateId);
-  //         message.success("Certificate deleted successfully");
-  //         // Refresh certificates list
-  //         const updatedCerts = await getExternalCertificatesByCandidateId(id);
-  //         setCertificates(updatedCerts);
-  //       } catch (error) {
-  //         console.error("Error deleting certificate:", error);
-  //         message.error("Failed to delete certificate");
-  //       }
-  //     },
-  //   });
-  // };
 
   const handleSaveEdit = async () => {
     if (!editingField) return;
@@ -394,6 +357,61 @@ const CandidateDetailPage = () => {
     </Modal>
   );
 
+  const sortCertificates = (certificates) => {
+    const certOrder = {
+      'IELTS': 1,
+      'Bằng IELTS': 1,
+      'Bằng IELTSSSS': 1,
+      'Driver': 2,
+      'Bằng lái xe': 2,
+      'Bằng lái': 2,
+      'TOEIC': 3,
+      'Test TOEIC': 3,
+      'TOEFL': 4,
+      'Test TOEFL': 4,
+      'Other': 5
+    };
+
+    return [...certificates].sort((a, b) => {
+      const getType = (name) => {
+        const lowerName = name.toLowerCase();
+        if (lowerName.includes('ielts')) return 1;
+        if (lowerName.includes('lái xe') || lowerName.includes('driver')) return 2;
+        if (lowerName.includes('toeic')) return 3;
+        if (lowerName.includes('toefl')) return 4;
+        return 5; // Other certificates
+      };
+
+      return getType(a.certificateName) - getType(b.certificateName);
+    });
+  };
+
+  const filterCertificates = (certificates) => {
+    if (certificateFilter === 'all') return sortCertificates(certificates);
+    
+    return sortCertificates(certificates).filter(cert => {
+      const lowerName = cert.certificateName.toLowerCase();
+      switch (certificateFilter) {
+        case 'ielts':
+          return lowerName.includes('ielts');
+        case 'driver':
+          return lowerName.includes('lái xe') || lowerName.includes('driver');
+        case 'toeic':
+          return lowerName.includes('toeic');
+        case 'toefl':
+          return lowerName.includes('toefl');
+        case 'other':
+          return !lowerName.includes('ielts') && 
+                 !lowerName.includes('lái xe') && 
+                 !lowerName.includes('driver') &&
+                 !lowerName.includes('toeic') && 
+                 !lowerName.includes('toefl');
+        default:
+          return true;
+      }
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -529,27 +547,42 @@ const CandidateDetailPage = () => {
                   External Certificates
                 </span>
               </div>
-              {!isHeadMaster && (
-                <Space>
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() =>
-                      navigate(`/external-certificate/create/${id}`)
-                    }
-                    className="bg-blue-500 hover:bg-blue-600"
-                  >
-                    Add Certificate
-                  </Button>
-                  <Button
-                    onClick={() => navigate(`/external-certificate/edit/${id}`)}
-                    icon={<EditOutlined />}
-                    className="border-blue-500 text-blue-500 hover:text-blue-600 hover:border-blue-600"
-                  >
-                    Manage Certificates
-                  </Button>
-                </Space>
-              )}
+              <div className="flex items-center gap-4">
+                <Select
+                  defaultValue="all"
+                  style={{ width: 200 }}
+                  onChange={value => setCertificateFilter(value)}
+                  options={[
+                    { value: 'all', label: 'All Certificates' },
+                    { value: 'ielts', label: 'IELTS Certificates' },
+                    { value: 'driver', label: 'Driver Licenses' },
+                    { value: 'toeic', label: 'TOEIC Certificates' },
+                    { value: 'toefl', label: 'TOEFL Certificates' },
+                    { value: 'other', label: 'Other Certificates' }
+                  ]}
+                />
+                {!isHeadMaster && (
+                  <Space>
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() =>
+                        navigate(`/external-certificate/create/${id}`)
+                      }
+                      className="bg-blue-500 hover:bg-blue-600"
+                    >
+                      Add Certificate
+                    </Button>
+                    <Button
+                      onClick={() => navigate(`/external-certificate/edit/${id}`)}
+                      icon={<EditOutlined />}
+                      className="border-blue-500 text-blue-500 hover:text-blue-600 hover:border-blue-600"
+                    >
+                      Manage Certificates
+                    </Button>
+                  </Space>
+                )}
+              </div>
             </div>
           }
         >
@@ -560,53 +593,60 @@ const CandidateDetailPage = () => {
           ) : certificates.length === 0 ? (
             <Empty description="No certificates found" className="py-8" />
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {certificates.map((cert, index) => (
-                <Card
-                  key={index}
-                  className="hover:shadow-md transition border border-gray-200"
-                >
-                  <Card.Meta
-                    title={
-                      <div className="font-semibold text-lg text-blue-600">
-                        {cert.certificateName}
+            <>
+              <div className="mb-4">
+                <Text type="secondary">
+                  Showing {filterCertificates(certificates).length} of {certificates.length} certificates
+                </Text>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filterCertificates(certificates).map((cert, index) => (
+                  <Card
+                    key={index}
+                    className="hover:shadow-md transition border border-gray-200"
+                  >
+                    <Card.Meta
+                      title={
+                        <div className="font-semibold text-lg text-blue-600">
+                          {cert.certificateName}
+                        </div>
+                      }
+                      description={
+                        <div className="space-y-2">
+                          <p>
+                            <strong>Code:</strong> {cert.certificateCode}
+                          </p>
+                          <p>
+                            <strong>Provider:</strong>{" "}
+                            {cert.certificateProvider || "-"}
+                          </p>
+                        </div>
+                      }
+                    />
+                    {cert.certificateFileURLWithSas && (
+                      <div className="mt-4">
+                        <img
+                          src={cert.certificateFileURLWithSas}
+                          alt="Certificate"
+                          className="w-full h-48 object-cover rounded-lg border border-gray-200 hover:opacity-90 transition cursor-pointer"
+                          onClick={() =>
+                            window.open(cert.certificateFileURLWithSas, "_blank")
+                          }
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                            const errorText = document.createElement("p");
+                            errorText.className = "text-red-500 text-sm mt-2";
+                            errorText.innerText =
+                              "Certificate image not available";
+                            e.target.parentNode.appendChild(errorText);
+                          }}
+                        />
                       </div>
-                    }
-                    description={
-                      <div className="space-y-2">
-                        <p>
-                          <strong>Code:</strong> {cert.certificateCode}
-                        </p>
-                        <p>
-                          <strong>Provider:</strong>{" "}
-                          {cert.certificateProvider || "-"}
-                        </p>
-                      </div>
-                    }
-                  />
-                  {cert.certificateFileURLWithSas && (
-                    <div className="mt-4">
-                      <img
-                        src={cert.certificateFileURLWithSas}
-                        alt="Certificate"
-                        className="w-full h-48 object-cover rounded-lg border border-gray-200 hover:opacity-90 transition cursor-pointer"
-                        onClick={() =>
-                          window.open(cert.certificateFileURLWithSas, "_blank")
-                        }
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                          const errorText = document.createElement("p");
-                          errorText.className = "text-red-500 text-sm mt-2";
-                          errorText.innerText =
-                            "Certificate image not available";
-                          e.target.parentNode.appendChild(errorText);
-                        }}
-                      />
-                    </div>
-                  )}
-                </Card>
-              ))}
-            </div>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            </>
           )}
         </Card>
       </div>
