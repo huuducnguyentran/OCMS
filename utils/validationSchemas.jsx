@@ -3,8 +3,8 @@ import * as Yup from "yup";
 import dayjs from "dayjs";
 
 // Regex patterns
-const usernameRegex = /^[a-zA-Z0-9_]{4,16}$/;
-const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/;
+// const usernameRegex = /^[a-zA-Z0-9_]{4,16}$/;
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$/;
 const tokenRegex = /^[A-Za-z0-9-_]{6,}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -18,10 +18,11 @@ export const ResetPasswordSchema = Yup.object({
   token: Yup.string()
     .matches(tokenRegex, "Invalid token format.")
     .required("Token is required"),
+
   newPassword: Yup.string()
     .matches(
       passwordRegex,
-      "Password must be at least 6 characters with letters and numbers."
+      "Password must be at least 6 characters long, contain letters and numbers, and can include special characters."
     )
     .required("New password is required"),
 });
@@ -386,11 +387,19 @@ export const SchedulePageValidationSchema = {
   // Validate định dạng ngày trong tuần
   validateDaysOfWeek: (daysOfWeekString) => {
     if (!daysOfWeekString) return [];
-    const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const validDays = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
     const days = daysOfWeekString
       .split(",")
-      .map(day => day.trim())
-      .filter(day => validDays.includes(day));
+      .map((day) => day.trim())
+      .filter((day) => validDays.includes(day));
     return days;
   },
 
@@ -405,7 +414,11 @@ export const SchedulePageValidationSchema = {
   formatDateFull: (dateString) => {
     try {
       const date = new Date(dateString);
-      return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+      return `${date.getDate().toString().padStart(2, "0")}/${(
+        date.getMonth() + 1
+      )
+        .toString()
+        .padStart(2, "0")}/${date.getFullYear()}`;
     } catch (error) {
       console.error("Error formatting date:", error);
       return dateString;
@@ -414,8 +427,12 @@ export const SchedulePageValidationSchema = {
 
   // Format date DD/MM
   formatDateShort: (date) => {
-    if (!date) return '';
-    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+    if (!date) return "";
+    return `${date.getDate().toString().padStart(2, "0")}/${(
+      date.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}`;
   },
 
   // Validate và format thời gian
@@ -428,7 +445,7 @@ export const SchedulePageValidationSchema = {
       }
     }
     return timeString;
-  }
+  },
 };
 
 // Add these helper functions at the top of validationSchemas.jsx
@@ -437,7 +454,7 @@ const calculateAge = (birthDate) => {
   const birth = new Date(birthDate);
   let age = today.getFullYear() - birth.getFullYear();
   const monthDiff = today.getMonth() - birth.getMonth();
-  
+
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
     age--;
   }
@@ -458,7 +475,7 @@ export const CreateAccountSchema = Yup.object({
 
   email: Yup.string()
     .required("Email is required")
-    .email("Invalid email format")    
+    .email("Invalid email format")
     .max(100, "Email must not exceed 100 characters")
     .trim(),
 
@@ -475,8 +492,11 @@ export const CreateAccountSchema = Yup.object({
       const birthDate = new Date(value);
       let age = today.getFullYear() - birthDate.getFullYear();
       const monthDiff = today.getMonth() - birthDate.getMonth();
-      
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birthDate.getDate())
+      ) {
         age--;
       }
       return age >= 18;
@@ -504,24 +524,20 @@ export const CreateAccountSchema = Yup.object({
       return validRoles.includes(value);
     }),
 
-  specialtyId: Yup.string()
-    .required("Specialty is required")
-    .trim(),
+  specialtyId: Yup.string().required("Specialty is required").trim(),
 
-  departmentId: Yup.string()
-    .nullable()
-    .trim(),
+  departmentId: Yup.string().nullable().trim(),
 
-  status: Yup.number()
-    .default(0)
-    .oneOf([0, 1], "Invalid status"),
+  status: Yup.number().default(0).oneOf([0, 1], "Invalid status"),
 
-  isAssign: Yup.boolean()
-    .required("Assignment status is required")
+  isAssign: Yup.boolean().required("Assignment status is required"),
 });
 
 // Update the validation function to support real-time validation
-export const applyCreateAccountValidation = async (values, validateField = null) => {
+export const applyCreateAccountValidation = async (
+  values,
+  validateField = null
+) => {
   try {
     if (validateField) {
       // Real-time validation for a single field
