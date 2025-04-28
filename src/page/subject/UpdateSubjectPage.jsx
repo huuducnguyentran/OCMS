@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
-import { Layout, Input, Button, message, Form, Breadcrumb, Tag, Typography, Row, Col, Card } from "antd";
+import { Layout, Input, Button, message, Form, Breadcrumb, Tag, Typography, Row, Col, Card, Select } from "antd";
 import { ArrowLeftOutlined, EditOutlined, BookOutlined, TrophyOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import { getSubjectById, updateSubject } from "../../services/subjectService";
 import { applySubjectValidation } from "../../../utils/validationSchemas";
-
+import { courseService } from "../../services/courseService";
 const { TextArea } = Input;
 const { Title, Paragraph, Text } = Typography;
-
+const { Option } = Select;
 const UpdateSubjectPage = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const { subjectId } = useParams();
   const navigate = useNavigate();
+  const [courses, setCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
 
   useEffect(() => {
     const fetchSubject = async () => {
@@ -23,7 +25,20 @@ const UpdateSubjectPage = () => {
         message.error("Failed to load subject data.");
       }
     };
+    const fetchCourses = async () => {
+      try {
+        setLoadingCourses(true);
+        const response = await courseService.getAllCourses();
+        setCourses(response?.data || []);
+      } catch {
+        setCourses([]);
+        message.error("Failed to load courses.");
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
     fetchSubject();
+    fetchCourses();
   }, [subjectId, form]);
 
   const handleSubmit = async (values) => {
@@ -38,6 +53,7 @@ const UpdateSubjectPage = () => {
         ...values,
         credits: Number(values.credits),
         passingScore: Number(values.passingScore),
+        courseId: values.courseId,
       });
       
       message.success("Subject updated successfully!");
@@ -84,6 +100,28 @@ const UpdateSubjectPage = () => {
             onFinish={handleSubmit}
             className="space-y-10 max-w-full"
           >
+            {/* Subject Name - Full width */}
+            <Form.Item
+              name="courseId"
+              label={<span className="text-gray-700 font-medium text-xl">Course</span>}
+              rules={[{ required: true, message: "Course is required" }]}
+            >
+              <Select
+                placeholder="Select a course"
+                loading={loadingCourses}
+                showSearch
+                optionFilterProp="children"
+                size="large"
+                className="rounded-xl"
+              >
+                {courses.map(course => (
+                  <Option key={course.courseId} value={course.courseId}>
+                    {course.courseName} ({course.courseId})
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+
             {/* Subject Name - Full width */}
             <Form.Item
               name="subjectName"

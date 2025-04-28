@@ -388,7 +388,8 @@ const SubjectPage = () => {
           <Tooltip title="Create New Subject" placement="left">
             <button
               onClick={() => navigate("/subject-create")}
-              className="fixed bottom-8 right-8 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 animate__animated animate__bounceIn"
+              style={{ background: "black", color: "#fff" }}
+              className="fixed bottom-8 right-8 w-14 h-14 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 animate__animated animate__bounceIn"
             >
               <PlusOutlined className="text-xl" />
             </button>

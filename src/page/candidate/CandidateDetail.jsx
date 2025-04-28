@@ -13,6 +13,7 @@ import {
   Typography,
   Modal,
   Select,
+  Tooltip,
 } from "antd";
 import {
   createCandidateAccount,
@@ -62,8 +63,9 @@ const CandidateDetailPage = () => {
   const userRole = sessionStorage.getItem("role");
   // Kiểm tra có phải HeadMaster không
   const isHeadMaster = userRole === "HeadMaster";
+  const isTrainingStaff = userRole === "Training staff";
   // Kiểm tra xem người dùng đến từ trang request hay không
-  const isFromRequest = location.state?.fromRequest || isHeadMaster;
+  const isFromRequest = location.state?.fromRequest || isHeadMaster || isTrainingStaff;
 
   useEffect(() => {
     const fetchCandidate = async () => {
@@ -251,7 +253,7 @@ const CandidateDetailPage = () => {
       label={
         <div className="flex items-center justify-between">
           <span>{label}</span>
-          {!isHeadMaster && editingField !== field && (
+          {!isHeadMaster||!isTrainingStaff && editingField !== field && (
             <EditOutlined
               className="text-blue-500 ml-2 cursor-pointer"
               onClick={() => handleEditClick(field)}
@@ -432,7 +434,7 @@ const CandidateDetailPage = () => {
               </Title>
               <Text type="secondary">ID: {candidate?.candidateId}</Text>
             </div>
-            {!isHeadMaster && (
+            {!isHeadMaster && !isTrainingStaff && (
               <Space>
                 <Button
                   onClick={handleCreateAccount}
@@ -448,7 +450,7 @@ const CandidateDetailPage = () => {
         </Card>
 
         {/* Candidate Information Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
           {/* Left Column - Personal Information */}
           <div className="lg:col-span-2 space-y-6">
             <Card
@@ -492,7 +494,7 @@ const CandidateDetailPage = () => {
             title={
               <div className="flex items-center space-x-2">
                 <CheckOutlined className="text-green-500" />
-                <span>Status Information</span>
+                <span>Status Information</span>   
               </div>
             }
           >
@@ -561,18 +563,19 @@ const CandidateDetailPage = () => {
                     { value: 'other', label: 'Other Certificates' }
                   ]}
                 />
-                {!isHeadMaster && (
+                {!isHeadMaster  &&  !isTrainingStaff && (
                   <Space>
-                    <Button
-                      type="primary"
-                      icon={<PlusOutlined />}
-                      onClick={() =>
-                        navigate(`/external-certificate/create/${id}`)
-                      }
-                      className="bg-blue-500 hover:bg-blue-600"
-                    >
-                      Add Certificate
-                    </Button>
+                    <Tooltip>
+                      <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        onClick={() => navigate(`/external-certificate/create/${id}`)}
+                        className="bg-blue-500 hover:bg-blue-600"
+                        disabled={userRole === "TrainingStaff"}
+                      >
+                        Add Certificate
+                      </Button>
+                    </Tooltip>
                     <Button
                       onClick={() => navigate(`/external-certificate/edit/${id}`)}
                       icon={<EditOutlined />}
