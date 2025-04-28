@@ -50,7 +50,8 @@ export const API = {
   GET_ASSIGNED_TRAINEE_BY_ID: "TraineeAssign",
   UPDATE_ASSIGNED_TRAINEE: "TraineeAssign",
   GET_ASSIGNED_TRAINEE_COURSE: "TraineeAssign/trainee",
-  GET_TRAINEES_BY_REQUEST_ID: "TraineeAssign/subject/{requestId}/traineesByRequestId",
+  GET_TRAINEES_BY_REQUEST_ID:
+    "TraineeAssign/subject/{requestId}/traineesByRequestId",
 
   // Training Plan
   GET_ALL_TRAINING_PLANS: "TrainingPlan",
@@ -115,6 +116,7 @@ export const API = {
   CREATE_CERTIFICATE: "Certificate",
   UPDATE_CERTIFICATE: "Certificate",
   REVOKE_CERTIFICATE: "Certificate/revoke",
+  MANUAL_CREATE_CERTIFICATE: "Certificate/manual-create",
 
   // Specialty APIs
   GET_ALL_SPECIALTY: "Specialty",
@@ -139,10 +141,10 @@ export const API = {
   GET_ALL_PENDING_DECISION: "Decision/GetAllDraftDecisions",
   SIGN_DIGITAL_SIGNATURE_DECISION: "PdfSign",
 
-// Department
+  // Department
   GET_ALL_DEPARTMENTS: "Department",
   GET_DEPARTMENT_BY_ID: "Department",
-  CREATE_DEPARTMENT: "Department", 
+  CREATE_DEPARTMENT: "Department",
   UPDATE_DEPARTMENT: "Department",
   DELETE_DEPARTMENT: "Department",
   ASSIGN_TO_DEPARTMENT: "Department/assign-to-department",
