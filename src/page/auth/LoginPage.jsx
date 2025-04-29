@@ -20,7 +20,7 @@ const LoginPage = () => {
   const location = useLocation();
   const { setIsAuthenticated } = useAuth();
   const [errorMessage, setErrorMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // Kiểm tra xem có thông báo lỗi từ location state không
