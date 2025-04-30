@@ -127,6 +127,10 @@ const CertificateDetailPage = () => {
           <strong>Issue Date:</strong>{" "}
           {new Date(certificate.issueDate).toLocaleString()}
         </p>
+        <p>
+          <strong>Expiration Date:</strong>{" "}
+          {new Date(certificate.expirationDate).toLocaleString()}
+        </p>
       </div>
       {certificate.status === "Pending" && (
         <div className="flex justify-end mt-8">

@@ -253,6 +253,10 @@ const CertificatePendingPage = () => {
                       <strong>Issue Date:</strong>{" "}
                       {new Date(cert.issueDate).toLocaleDateString()}
                     </p>
+                    <p>
+                      <strong>Expiration Date:</strong>{" "}
+                      {new Date(cert.expirationDate).toLocaleDateString()}
+                    </p>
                   </div>
                 </Card>
               </div>

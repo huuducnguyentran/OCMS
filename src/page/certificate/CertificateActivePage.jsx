@@ -213,6 +213,10 @@ const CertificateActivePage = () => {
                   <strong>Issue Date:</strong>{" "}
                   {new Date(cert.issueDate).toLocaleDateString()}
                 </p>
+                <p>
+                  <strong>Expiration Date:</strong>{" "}
+                  {new Date(cert.expirationDate).toLocaleDateString()}
+                </p>
               </Card>
             </div>
           ))}

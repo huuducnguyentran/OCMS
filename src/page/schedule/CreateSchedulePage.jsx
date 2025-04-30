@@ -459,23 +459,7 @@ const CreateSchedulePage = () => {
                       <Form.Item
                         name="subjectPeriod"
                         label="Duration"
-                        rules={[
-                          { required: true, message: "Please select a duration" },
-                          () => ({
-                            validator(_, value) {
-                              if (!value) return Promise.resolve();
-                              
-                              // Kiểm tra thời lượng hợp lý (ví dụ: từ 30 phút đến 4 tiếng)
-                              const minutes = value.hours() * 60 + value.minutes();
-                              if (minutes < 30 || minutes > 240) {
-                                return Promise.reject(
-                                  new Error('Duration should be between 30 minutes and 4 hours')
-                                );
-                              }
-                              return Promise.resolve();
-                            },
-                          }),
-                        ]}
+                      
                       >
                         <TimePicker
                           className="w-full"
