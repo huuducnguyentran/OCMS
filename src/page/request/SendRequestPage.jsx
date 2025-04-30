@@ -186,22 +186,22 @@ const SendRequestPage = () => {
                 size="large"
                 showSearch
                 optionFilterProp="children"
-                filterOption={(input, option) =>
-                  (option?.children?.toLowerCase() ?? '').includes(input.toLowerCase())
-                }
+                filterOption={(input, option) => {
+                  if (!option?.children) return false;
+                  // Chuyển cả input và text của option về lowercase để so sánh
+                  const subjectText = option.children.toString().toLowerCase();
+                  return subjectText.includes(input.toLowerCase());
+                }}
+                notFoundContent={subjects.length === 0 ? "No subjects available" : null}
               >
-                {subjects.length > 0 ? (
-                  subjects.map((subject) => (
-                    <Option 
-                      key={subject.subjectId} 
-                      value={subject.subjectId}
-                    >
-                      {subject.subjectName} ({subject.subjectId})
-                    </Option>
-                  ))
-                ) : (
-                  <Option disabled>No subjects available</Option>
-                )}
+                {subjects.map((subject) => (
+                  <Option 
+                    key={subject.subjectId} 
+                    value={subject.subjectId}
+                  >
+                    {`${subject.subjectName} (${subject.subjectId})`}
+                  </Option>
+                ))}
               </Select>
             )}
           </Form.Item>
