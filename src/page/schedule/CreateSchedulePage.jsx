@@ -162,9 +162,11 @@ const CreateSchedulePage = () => {
 
       // Format time to string
       const classTime = values.classTime.format("HH:mm:ss");
+      
+      // Format subjectPeriod để lưu chính xác thời gian học
       const subjectPeriod = values.subjectPeriod
         ? values.subjectPeriod.format("HH:mm:ss")
-        : "01:30:00";
+        : "01:30:00"; // Mặc định 1 tiếng 30 phút
 
       // Convert daysOfWeek to array of integers
       const daysOfWeek = values.daysOfWeek.map((day) => parseInt(day));
@@ -458,16 +460,29 @@ const CreateSchedulePage = () => {
                         name="subjectPeriod"
                         label="Duration"
                         rules={[
-                          {
-                            required: true,
-                            message: "Please select a duration",
-                          },
+                          { required: true, message: "Please select a duration" },
+                          () => ({
+                            validator(_, value) {
+                              if (!value) return Promise.resolve();
+                              
+                              // Kiểm tra thời lượng hợp lý (ví dụ: từ 30 phút đến 4 tiếng)
+                              const minutes = value.hours() * 60 + value.minutes();
+                              if (minutes < 30 || minutes > 240) {
+                                return Promise.reject(
+                                  new Error('Duration should be between 30 minutes and 4 hours')
+                                );
+                              }
+                              return Promise.resolve();
+                            },
+                          }),
                         ]}
                       >
                         <TimePicker
                           className="w-full"
                           format="HH:mm"
                           placeholder="Select duration"
+                          showNow={false}
+                          minuteStep={15}  // Cho phép chọn thời gian theo bước 15 phút
                         />
                       </Form.Item>
                     </Col>

@@ -481,14 +481,24 @@ const SchedulePage = () => {
       .sort()
       .map(timeSlot => {
         const schedule = filteredData.find(s => s.classTime === timeSlot);
-        const duration = schedule.subjectPeriod ? 
-          parseFloat(schedule.subjectPeriod.substring(0, 5)) : 0;
         
+        // Xử lý thời gian kết thúc dựa trên subjectPeriod
         const [startHour, startMinute] = timeSlot.split(':').map(Number);
-        const endHour = startHour + Math.floor(duration);
-        const endMinute = startMinute + Math.round((duration % 1) * 60);
         
-        const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+        // Chuyển đổi subjectPeriod từ "HH:mm:ss" sang số phút
+        let durationInMinutes = 0;
+        if (schedule.subjectPeriod) {
+          const [periodHour, periodMinute] = schedule.subjectPeriod.split(':').map(Number);
+          durationInMinutes = (periodHour * 60) + periodMinute;
+        }
+
+        // Tính toán thời gian kết thúc
+        let endMinutes = startMinute + durationInMinutes;
+        let endHour = startHour + Math.floor(endMinutes / 60);
+        endMinutes = endMinutes % 60;
+
+        // Định dạng thời gian kết thúc
+        const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
         
         return {
           start: timeSlot,
