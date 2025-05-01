@@ -105,7 +105,7 @@ const PlanPage = () => {
   const [filterVisible, setFilterVisible] = useState(false);
   const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
   const isTrainee = userRole === "Trainee";
-
+  const isReviewer = userRole === "Reviewer";
   // Hàm kiểm tra trạng thái "Approved"
   const isApprovedStatus = (status) => {
     // Kiểm tra cả trường hợp status là số (1) hoặc chuỗi ("Approved")
@@ -383,7 +383,7 @@ const PlanPage = () => {
       </Tooltip>,
     ];
 
-    if (!isTrainee) {
+    if (!isTrainee && !isReviewer) {
       actions.push(
         <Tooltip title="Edit Plan">
           <EditOutlined
@@ -554,17 +554,23 @@ const PlanPage = () => {
           <Form.Item
             name="description"
             label="Description"
-            rules={[{ required: true, message: "Please enter a description" }]}
+            rules={[
+              { required: true, message: "Please enter a description" },
+              { max: 100, message: "Description must not exceed 100 characters" }
+            ]}
           >
-            <Input.TextArea rows={4} placeholder="Enter request description" />
+            <Input.TextArea rows={4} placeholder="Enter request description" maxLength={100} />
           </Form.Item>
 
           <Form.Item
             name="notes"
             label="Notes"
-            rules={[{ required: true, message: "Please enter a Notes" }]}
+            rules={[
+              { required: true, message: "Please enter a Notes" },
+              { max: 100, message: "Notes must not exceed 100 characters" }
+            ]}
           >
-            <Input.TextArea rows={3} placeholder="Additional notes " />
+            <Input.TextArea rows={3} placeholder="Additional notes " maxLength={100} />
           </Form.Item>
         </Form>
       </Modal>
@@ -707,7 +713,7 @@ const PlanPage = () => {
                     ? "You don't have any training plans yet"
                     : "No plans available"}
                 </p>
-                {!isTrainee && (
+                {!isTrainee && !isReviewer && (
                   <button
                     onClick={() => navigate("/plan/create")}
                     style={{ background: "#000", color: "#fff" }}
@@ -785,7 +791,7 @@ const PlanPage = () => {
           </div>
         )}
         
-        {!isTrainee && (
+        {!isTrainee && !isReviewer && (
           <Tooltip title="Create New Plan" placement="left">
             <button
               onClick={() => navigate("/plan/create")}
@@ -798,7 +804,7 @@ const PlanPage = () => {
         )}
       </div>
 
-      {!isTrainee && renderRequestModal()}
+      {!isTrainee && !isReviewer && renderRequestModal()}
     </div>
   );
 };

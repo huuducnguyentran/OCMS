@@ -459,7 +459,6 @@ const CreateSchedulePage = () => {
                       <Form.Item
                         name="subjectPeriod"
                         label="Duration"
-                      
                       >
                         <TimePicker
                           className="w-full"

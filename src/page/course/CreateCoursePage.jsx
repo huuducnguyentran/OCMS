@@ -107,24 +107,32 @@ const CreateCoursePage = () => {
               <Form.Item
                 name="courseId"
                 label={<Text strong className="text-lg">Course ID</Text>}
-                rules={[{ required: true, message: "Course ID is required" }]}
+                rules={[
+                  { required: true, message: "Course ID is required" },
+                  { max: 100, message: "Course ID must not exceed 100 characters" }
+                ]}
               >
                 <Input 
                   placeholder="e.g., C-0001" 
                   className="rounded-lg py-3 px-4 text-lg" 
                   size="large"
+                  maxLength={100}
                 />
               </Form.Item>
 
               <Form.Item
                 name="courseName"
                 label={<Text strong className="text-lg">Course Name</Text>}
-                rules={[{ required: true, message: "Course name is required" }]}
+                rules={[
+                  { required: true, message: "Course name is required" },
+                  { max: 100, message: "Course name must not exceed 100 characters" }
+                ]}
               >
                 <Input 
                   placeholder="Enter course name" 
                   className="rounded-lg py-3 px-4 text-lg" 
                   size="large"
+                  maxLength={100}
                 />
               </Form.Item>
 
@@ -135,25 +143,31 @@ const CreateCoursePage = () => {
                   {
                     required: courseLevel > 0,
                     message: "Course Related ID is required for Recurrent/Relearn courses"
-                  }
+                  },
+                  { max: 100, message: "Course Related ID must not exceed 100 characters" }
                 ]}
               >
                 <Input 
                   placeholder="Enter Course Related ID" 
                   className="rounded-lg py-3 px-4 text-lg" 
                   size="large"
+                  maxLength={100}
                 />
               </Form.Item>
 
               <Form.Item
                 name="description"
                 label={<Text strong className="text-lg">Description</Text>}
-                rules={[{ required: true, message: "Description is required" }]}
+                rules={[
+                  { required: true, message: "Description is required" },
+                  { max: 100, message: "Description must not exceed 100 characters" }
+                ]}
               >
                 <Input.TextArea 
                   placeholder="Enter course description" 
                   className="rounded-lg py-3 px-4 text-lg" 
                   size="large"
+                  maxLength={100}
                 />
               </Form.Item>
 

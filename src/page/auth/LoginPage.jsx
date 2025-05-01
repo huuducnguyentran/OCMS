@@ -22,6 +22,7 @@ const LoginPage = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+
   useEffect(() => {
     // Kiểm tra xem có thông báo lỗi từ location state không
     if (location.state?.message) {
@@ -179,7 +180,7 @@ const LoginPage = () => {
           Authorization: `Bearer ${token}`
         }
       });
-      
+      sessionStorage.setItem("specialtyId", response.data.user.specialtyId);
       return response.data.user.accountStatus;
     } catch (error) {
       console.error("Error checking user status:", error);
@@ -286,7 +287,7 @@ const LoginPage = () => {
                           value={values.username}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          disabled={isSubmitting || isSubmitting}
+                          disabled={isSubmitting}
                         />
                       </Form.Item>
 
@@ -304,7 +305,7 @@ const LoginPage = () => {
                           value={values.password}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          disabled={isSubmitting || isSubmitting}
+                          disabled={isSubmitting}
                         />
                       </Form.Item>
 
@@ -313,7 +314,7 @@ const LoginPage = () => {
                           type="link"
                           onClick={() => navigate("/forgot-password")}
                           className="text-blue-300 hover:text-blue-100 p-0"
-                          disabled={isSubmitting || isSubmitting}
+                          disabled={isSubmitting}
                         >
                           Forgot Password?
                         </Button>
@@ -322,9 +323,9 @@ const LoginPage = () => {
                       <Button
                         type="primary"
                         htmlType="submit"
-                        loading={isSubmitting || isSubmitting}
+                        loading={isSubmitting}
                         className="w-full h-12 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-lg"
-                        disabled={isSubmitting || isSubmitting}
+                        disabled={isSubmitting}
                       >
                         Sign In
                       </Button>

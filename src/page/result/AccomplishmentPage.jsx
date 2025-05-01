@@ -14,8 +14,11 @@ const AccomplishmentsPage = () => {
   useEffect(() => {
     const fetchCertificates = async () => {
       try {
-        const data = await getTraineeCertificateById(); // pass userID to the service
-        setCertificates(data);
+        const data = await getTraineeCertificateById(); 
+        const activeCertificates = data.filter(
+          cert => cert.status?.toLowerCase() === "active"
+        );
+        setCertificates(activeCertificates);
       } catch (error) {
         console.error("Failed to fetch certificates:", error);
       }
@@ -74,56 +77,62 @@ const AccomplishmentsPage = () => {
 
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100">
           <div className="space-y-6">
-            {certificates.map((item) => {
-              const { badge, progress } = getStatusStyles(item.status);
+            {certificates.length > 0 ? (
+              certificates.map((item) => {
+                const { badge, progress } = getStatusStyles(item.status);
 
-              return (
-                <a
-                  key={item.certificateId}
-                  href={item.certificateURLwithSas}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block transform transition-all duration-300 hover:scale-[1.01] focus:outline-none"
-                >
-                  <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-lg p-6 transition-all duration-300 relative overflow-hidden">
-                    <div className="absolute inset-0 opacity-5 bg-gradient-to-r from-blue-500 to-indigo-500" />
+                return (
+                  <a
+                    key={item.certificateId}
+                    href={item.certificateURLwithSas}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block transform transition-all duration-300 hover:scale-[1.01] focus:outline-none"
+                  >
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-lg p-6 transition-all duration-300 relative overflow-hidden">
+                      <div className="absolute inset-0 opacity-5 bg-gradient-to-r from-blue-500 to-indigo-500" />
 
-                    <div className="relative">
-                      <div className="flex justify-between items-start sm:items-center flex-col sm:flex-row gap-4">
-                        <div className="space-y-3 flex-1">
-                          <h2 className="text-xl font-semibold text-gray-800 hover:text-blue-600 transition-colors duration-300">
-                            {item.courseName || item.courseId}
-                          </h2>
+                      <div className="relative">
+                        <div className="flex justify-between items-start sm:items-center flex-col sm:flex-row gap-4">
+                          <div className="space-y-3 flex-1">
+                            <h2 className="text-xl font-semibold text-gray-800 hover:text-blue-600 transition-colors duration-300">
+                              {item.courseName || item.courseId}
+                            </h2>
 
-                          <div className="flex items-center text-gray-500 gap-2">
-                            <CalendarOutlined className="text-blue-500" />
-                            <span className="text-sm">
-                              {dayjs(item.issueDate).format("MMMM D, YYYY")}
+                            <div className="flex items-center text-gray-500 gap-2">
+                              <CalendarOutlined className="text-blue-500" />
+                              <span className="text-sm">
+                                {dayjs(item.issueDate).format("MMMM D, YYYY")}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium shadow-sm transition-all duration-300 hover:shadow-md ${badge}`}
+                            >
+                              <CheckCircleOutlined />
+                              {item.status}
                             </span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium shadow-sm transition-all duration-300 hover:shadow-md ${badge}`}
-                          >
-                            <CheckCircleOutlined />
-                            {item.status}
-                          </span>
+                        {/* Progress Indicator */}
+                        <div className="mt-6 h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full w-full transition-all duration-500 ease-out ${progress}`}
+                          />
                         </div>
                       </div>
-
-                      {/* Progress Indicator */}
-                      <div className="mt-6 h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full w-full transition-all duration-500 ease-out ${progress}`}
-                        />
-                      </div>
                     </div>
-                  </div>
-                </a>
-              );
-            })}
+                  </a>
+                );
+              })
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-600">Không có chứng chỉ hoạt động nào.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -121,7 +121,6 @@ const HomePage = () => {
         }
       } catch (error) {
         console.error("Error fetching statistics:", error);
-        message.error("Failed to load statistics");
       } finally {
         setLoading(false);
       }

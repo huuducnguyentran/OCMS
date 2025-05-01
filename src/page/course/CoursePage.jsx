@@ -19,6 +19,7 @@ import {
   Form,
   Input,
   Select,
+  Space,
 } from "antd";
 import {
   PlusOutlined,
@@ -29,6 +30,7 @@ import {
   EditOutlined,
   EyeOutlined,
   SendOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { courseService } from "../../services/courseService";
@@ -50,6 +52,7 @@ const RequestTypeLabels = {
 const CoursePage = () => {
   // State management
   const [courses, setCourses] = useState([]);
+  const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const navigate = useNavigate();
@@ -59,6 +62,7 @@ const CoursePage = () => {
   const [requestForm] = Form.useForm();
   const [selectedCourseForRequest, setSelectedCourseForRequest] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   // Fetch data on mount and when refreshed
   useEffect(() => {
@@ -72,16 +76,34 @@ const CoursePage = () => {
     }
   }, [location.state, navigate, location.pathname]);
 
+  // Effect để lọc khóa học khi có thay đổi về dữ liệu hoặc từ khóa tìm kiếm
+  useEffect(() => {
+    if (!searchText) {
+      setFilteredCourses(courses);
+    } else {
+      const searchLower = searchText.toLowerCase();
+      const filtered = courses.filter(
+        course => 
+          course.courseName.toLowerCase().includes(searchLower) ||
+          course.courseId.toLowerCase().includes(searchLower) ||
+          (course.status && course.status.toLowerCase().includes(searchLower))
+      );
+      setFilteredCourses(filtered);
+    }
+  }, [courses, searchText]);
+
   // API calls
   const fetchCourses = async () => {
     try {
       setLoading(true);
       const response = await courseService.getAllCourses();
       console.log("Courses data:", response);
-      setCourses(response.data || []);
+      const coursesData = response.data || [];
+      setCourses(coursesData);
+      setFilteredCourses(coursesData);
 
-      if (response.data && response.data.length > 0) {
-        setSelectedCourse(response.data[0]);
+      if (coursesData.length > 0) {
+        setSelectedCourse(coursesData[0]);
       }
     } catch (error) {
       console.error("Failed to fetch courses:", error);
@@ -116,6 +138,16 @@ const CoursePage = () => {
       default:
         return "default";
     }
+  };
+
+  // Handler cho ô tìm kiếm
+  const handleSearch = (e) => {
+    setSearchText(e.target.value);
+  };
+
+  // Hàm xử lý xóa từ khóa tìm kiếm
+  const handleClearSearch = () => {
+    setSearchText("");
   };
 
   // Thêm hàm xử lý thay đổi sorting
@@ -524,7 +556,7 @@ const CoursePage = () => {
             label="Description"
             rules={[{ required: true, message: "Please enter a description" }]}
           >
-            <Input.TextArea rows={4} placeholder="Enter request description" />
+            <Input.TextArea rows={4} placeholder="Enter request description" maxLength={100} />
           </Form.Item>
 
           <Form.Item
@@ -532,12 +564,39 @@ const CoursePage = () => {
             label="Notes"
             rules={[{ required: true, message: "Please enter notes" }]}
           >
-            <Input.TextArea rows={3} placeholder="Additional notes" />
+            <Input.TextArea rows={3} placeholder="Additional notes" maxLength={100} />
           </Form.Item>
         </Form>
       </Modal>
     );
   };
+
+  // Thêm component tìm kiếm
+  const renderSearchBox = () => (
+    <div className="mb-4">
+      <Input
+        placeholder="Search by course name, ID, or status..."
+        value={searchText}
+        onChange={handleSearch}
+        allowClear
+        style={{ width: "100%" }}
+        suffix={
+          <Space>
+            {searchText && (
+              <Button
+                type="text"
+                icon={<SearchOutlined />}
+                size="small"
+                onClick={handleClearSearch}
+              />
+            )}
+          </Space>
+        }
+        prefix={<SearchOutlined className="text-gray-400" />}
+        className="rounded-lg"
+      />
+    </div>
+  );
 
   return (
     <Layout className="min-h-screen bg-gray-50 p-6 sm:p-8">
@@ -583,12 +642,14 @@ const CoursePage = () => {
                 }
                 className="h-full shadow-md rounded-lg overflow-hidden"
                 extra={
-                  <Text className="text-gray-500">Total: {courses.length}</Text>
+                  <Text className="text-gray-500">Total: {filteredCourses.length}</Text>
                 }
               >
-                {courses.length === 0 ? (
+                {renderSearchBox()}
+                
+                {filteredCourses.length === 0 ? (
                   <Empty
-                    description="No courses available"
+                    description={searchText ? "No courses matching your search" : "No courses available"}
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                   />
                 ) : (
@@ -596,7 +657,7 @@ const CoursePage = () => {
                     columns={columns.filter((col) =>
                       ["courseId", "courseName", "status"].includes(col.key)
                     )}
-                    dataSource={courses}
+                    dataSource={filteredCourses}
                     rowKey="courseId"
                     pagination={{ pageSize: 5 }} // limit to 5 items per page
                     size="small"
@@ -681,7 +742,7 @@ const CoursePage = () => {
                 >
                   Clear Sorting
                 </Button>
-                <Text className="mr-2">Total: {courses.length}</Text>
+                <Text className="mr-2">Total: {filteredCourses.length}</Text>
                 <Button
                   icon={<ReloadOutlined />}
                   size="small"
@@ -692,9 +753,11 @@ const CoursePage = () => {
               </div>
             }
           >
+            {renderSearchBox()}
+            
             <Table
               columns={columns}
-              dataSource={courses}
+              dataSource={filteredCourses}
               rowKey="courseId"
               pagination={{ pageSize: 10 }}
               onChange={handleChange}
