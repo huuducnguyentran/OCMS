@@ -101,22 +101,22 @@ const SchedulePage = () => {
     const fetchInstructors = async () => {
       if (userRole === "TrainingStaff" || userRole === "Training staff") {
         try {
-          const token = sessionStorage.getItem("token");
-          const response = await trainingScheduleService.getAllInstructors(token);
-          if (response && Array.isArray(response)) {
-            setInstructorList(response);
-          } else if (response && response.data && Array.isArray(response.data)) {
-            setInstructorList(response.data);
-          } else {
-            setInstructorList([]);
-          } 
+          // Thay vì gọi getAllInstructors, lấy danh sách instructors từ scheduleData
+          const uniqueInstructors = Array.from(
+            new Set(scheduleData.map(item => item.instructorName))
+          ).filter(Boolean);
+          
+          if (uniqueInstructors.length > 0) {
+            setSelectedInstructor(uniqueInstructors[0]); // Set default instructor
+          }
         } catch (error) {
-          setInstructorList([]);
+          console.error("Error getting instructors:", error);
+          message.error("Failed to load instructor list");
         }
       }
     };
     fetchInstructors();
-  }, [userRole]);
+  }, [userRole, scheduleData]);
 
   // Fetch schedule data based on user role
   useEffect(() => {
@@ -241,6 +241,25 @@ const SchedulePage = () => {
       } else if (userRole === "Trainee") {
         try {
           const response = await trainingScheduleService.getTraineeSubjects();
+          console.log("Trainee schedule response:", response);
+          
+          if (response?.schedules && Array.isArray(response.schedules)) {
+            setScheduleData(response.schedules);
+          } else if (response?.data && Array.isArray(response.data)) {
+            setScheduleData(response.data);
+          } else {
+            console.log("No schedule data found for trainee");
+            setScheduleData([]);
+            message.info("No schedule found for your account");
+          }
+        } catch (error) {
+          console.error("Error fetching trainee schedule:", error);
+          handleError(error);
+        }
+        
+      }else if (userRole === "TrainingStaff" || userRole === "Training staff") {
+        try {
+          const response = await trainingScheduleService.getAllTrainingSchedules();
           console.log("Trainee schedule response:", response);
           
           if (response?.schedules && Array.isArray(response.schedules)) {
@@ -415,12 +434,13 @@ const SchedulePage = () => {
 
   // Process schedule data into time slots
   const processScheduleData = () => {
-    // Log để debug
     console.log("Processing schedule data. Total items:", scheduleData.length);
     
     let filteredData = scheduleData;
-    if ((userRole === "TrainingStaff" || userRole === "Training staff") && selectedInstructor && selectedInstructor !== 'all') {
-      filteredData = scheduleData.filter(sch => sch.instructorID === selectedInstructor);
+    
+    // Lọc theo instructor nếu là Training Staff và có chọn instructor
+    if ((userRole === "TrainingStaff" || userRole === "Training staff") && selectedInstructor) {
+      filteredData = scheduleData.filter(sch => sch.instructorName === selectedInstructor);
     }
     
     if (!Array.isArray(filteredData) || filteredData.length === 0) {
@@ -532,6 +552,10 @@ const SchedulePage = () => {
                 <div>{schedule.room || "N/A"}</div>
                 <div>{schedule.location || "N/A"}</div>
                 {schedule.courseId && <div>Course: {schedule.courseId}</div>}
+                <div className="flex items-center gap-2 mt-1">
+                  <UserSwitchOutlined className="text-gray-400" />
+                  <span>{schedule.instructorName} ({schedule.instructorID})</span>
+                </div>
               </div>
             </div>
           );
@@ -713,18 +737,34 @@ const SchedulePage = () => {
 
   const renderInstructorFilter = () => {
     if (userRole === "TrainingStaff" || userRole === "Training staff") {
-      const instructorOptions = getInstructorOptions();
+      // Lấy danh sách unique instructors với cả ID và Name
+      const instructorOptions = Array.from(
+        new Set(
+          scheduleData.map(item => ({
+            id: item.instructorID,
+            name: item.instructorName
+          }))
+        ),
+        instructor => JSON.stringify(instructor)
+      )
+      .map(str => JSON.parse(str))
+      .filter(instructor => instructor.id && instructor.name);
+
       return (
-        <div className="mb-4">
+        <div className="mb-4" style={{ maxWidth: 300 }}>
           <label className="mr-2 font-medium">Instructor:</label>
           <Select
-            style={{ width: 220 }}
+            style={{ width: '100%' }}
             value={selectedInstructor}
             onChange={setSelectedInstructor}
-            allowClear={false}
+            dropdownMatchSelectWidth={false}
+            showSearch
+            optionFilterProp="children"
           >
-            {instructorOptions.map(instId => (
-              <Option key={instId} value={instId}>{instId}</Option>
+            {instructorOptions.map(instructor => (
+              <Option key={instructor.id} value={instructor.id}>
+                {instructor.name} ({instructor.id})
+              </Option>
             ))}
           </Select>
         </div>
@@ -930,10 +970,10 @@ const SchedulePage = () => {
                   showSearch
                   optionFilterProp="children"
                 >
-                   {Array.from(new Set(scheduleData.map(item => item.instructorID)))
+                   {Array.from(new Set(scheduleData.map(item => item.instructorName)))
                     .filter(Boolean)
-                    .map(instId => (
-                      <Option key={instId} value={instId}>{instId}</Option>
+                    .map(instName => (
+                      <Option key={instName} value={instName}> {instName}</Option>
                     ))}
                 </Select>
               </div>
