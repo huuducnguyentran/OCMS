@@ -84,23 +84,16 @@ const SchedulePage = () => {
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     const role = sessionStorage.getItem("role");
+    const userId = sessionStorage.getItem("userId");
 
     if (!token) {
-      message.error("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại");
+      message.error("Session expired, please login again");
       navigate("/login");
       return;
     }
 
-    if (role) {
-      setUserRole(role);
-    } else {
-      const userId = sessionStorage.getItem("role");
-      if (userId && userId.startsWith("TS-")) {
-        setUserRole("TrainingStaff");
-      } else {
-        setUserRole("Trainee");
-      }
-    }
+    console.log("Current user info:", { role, userId }); // Thêm log để debug
+    setUserRole(role);
   }, [navigate]);
 
   // Fetch instructor list nếu là TrainingStaff
@@ -116,7 +109,7 @@ const SchedulePage = () => {
             setInstructorList(response.data);
           } else {
             setInstructorList([]);
-          }
+          } 
         } catch (error) {
           setInstructorList([]);
         }
@@ -132,60 +125,6 @@ const SchedulePage = () => {
     }
   }, [userRole, viewMode]);
 
-  // Fetch subjects list
-  // useEffect(() => {
-  //   const fetchSubjects = async () => {
-  //     try {
-  //       setLoading(true);
-  //       console.log("Fetching subjects from API...");
-
-  //       let response;
-  //       if (userRole === "Instructor") {
-  //         response = await trainingScheduleService.getInstructorSubjects();
-  //         console.log("Instructor subjects response:", response);
-          
-  //         if (response && response.data) {
-  //           const subjects = response.data.map(subject => ({
-  //             subjectId: subject.subjectId,
-  //             subjectName: subject.subjectName,
-  //             courseId: subject.courseId,
-  //             schedules: subject.schedules || []
-  //           }));
-            
-  //         setSubjects(subjects);
-  //         setSubjectOptions(subjects);
-            
-  //           // Process schedules
-  //           if (response.schedules && Array.isArray(response.schedules)) {
-  //             setScheduleData(response.schedules);
-  //           }
-  //         }
-  //       } else if (userRole === "Trainee") {
-  //         response = await trainingScheduleService.getTraineeSubjects();
-  //         // Process trainee data...
-  //       } else if (userRole === "TrainingStaff") {
-  //         response = await trainingScheduleService.getAllSubjects();
-  //       }
-
-  //       if (!response || (!response.data && !response.schedules)) {
-  //         console.warn("No subjects returned or invalid format");
-  //         setSubjects([]);
-  //         setScheduleData([]);
-  //       }
-  //     } catch (error) {
-  //       console.error("Failed to fetch subjects:", error);
-  //         message.error("Không thể tải danh sách môn học");
-  //       setSubjects([]);
-  //       setScheduleData([]);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   if (userRole) {
-  //   fetchSubjects();
-  //   }
-  // }, [userRole]);
 
   const fetchScheduleData = async () => {
     try {
@@ -193,146 +132,134 @@ const SchedulePage = () => {
 
       const token = sessionStorage.getItem("token");
       if (!token) {
-        message.error("Phiên đăng nhập hết hạn");
+        message.error("Session expired");
         navigate("/login");
         return;
       }
 
-      // If a subject is selected
-      if (selectedSubjectId) {
+      if (userRole === "Instructor") {
         try {
-          console.log("Fetching data for subject:", selectedSubjectId);
-
-          const data = await trainingScheduleService.getScheduleBySubjectId(
-            selectedSubjectId
-          );
-          console.log("Received data:", data);
-
-          if (data && data.subjectDetails) {
-            setSelectedSubjectDetails(data.subjectDetails);
-            const schedules = Array.isArray(data.schedules) ? data.schedules : [];
-            console.log("Processed schedules:", schedules);
-
-            setScheduleData(schedules);
-
-            if (schedules.length === 0) {
-              message.info("Không có lịch học cho môn này");
-            }
-          } else {
-            console.log("No subject details found");
-            setScheduleData([]);
-            setSelectedSubjectDetails(null);
-            message.warning("Không tìm thấy thông tin môn học");
-          }
-        } catch (error) {
-          console.error("Error in subject fetch:", error);
-          handleError(error);
-        }
-        return;
-      }
-
-      // Handle the case when no subject is selected
-      let response;
-      try {
-        if (userRole === "Training staff" || userRole === "TrainingStaff") {
-          switch (viewMode) {
-            case "instructor":
-              response = await trainingScheduleService.getInstructorSubjects();
-              break;
-            case "trainee":
-              response = await trainingScheduleService.getTraineeSubjects();
-              break;
-            case "created":
-              const userId = sessionStorage.getItem("userId");
-              response = await trainingScheduleService.getCreatedSchedules(
-                userId
-              );
-              break;
-            default:
-              response =
-                await trainingScheduleService.getAllTrainingSchedules();
-          }
-        } else if (userRole === "Instructor") {
-          response = await trainingScheduleService.getInstructorSubjects();
-          console.log("Instructor schedule response:", response);
+          const response = await trainingScheduleService.getInstructorSubjects();
+          console.log("Raw instructor response:", response);
           
-          // Xử lý dữ liệu cho instructor
-          if (response && response.data && Array.isArray(response.data)) {
-            const allSchedules = [];
-            response.data.forEach(subject => {
+          // In ra đầy đủ cấu trúc để debug
+          console.log("Response type:", typeof response);
+          console.log("Has message:", Boolean(response?.message));
+          console.log("Has subscheldule:", Boolean(response?.subscheldule));
+          
+          // Kiểm tra thông báo không có khóa học được gán
+          if (response?.message === "No subject assignments found for this instructor.") {
+            console.log("Instructor has no assignments");
+            setScheduleData([]);
+            message.info("You have no assigned courses");
+            return;
+          }
+          
+          // Kiểm tra nếu data là subscheldule array
+          if (response?.subscheldule && Array.isArray(response.subscheldule)) {
+            console.log("Found subscheldule array with length:", response.subscheldule.length);
+            
+            // Xử lý dữ liệu
+            const processedData = [];
+            response.subscheldule.forEach(subject => {
+              console.log(`Processing subject: ${subject.subjectId} - ${subject.subjectName}`, subject);
+              
               if (subject.schedules && Array.isArray(subject.schedules)) {
-                const schedulesWithSubjectInfo = subject.schedules.map(schedule => ({
-                  ...schedule,
-                  subjectId: subject.subjectId,
-                  subjectName: subject.subjectName,
-                  courseId: subject.courseId
-                }));
-                allSchedules.push(...schedulesWithSubjectInfo);
+                console.log(`Subject has ${subject.schedules.length} schedules`);
+                
+                subject.schedules.forEach(schedule => {
+                  console.log("Schedule item:", schedule);
+                  
+                  // Đảm bảo kết quả cuối cùng có định dạng đúng
+                  processedData.push({
+                    ...schedule,
+                    subjectId: subject.subjectId,
+                    subjectName: subject.subjectName || "Unknown Subject",
+                    instructorID: sessionStorage.getItem("userId"),
+                    // Đảm bảo các trường quan trọng có giá trị
+                    daysOfWeek: schedule.daysOfWeek || "",
+                    classTime: schedule.classTime || "17:00:00",
+                    room: schedule.room || "N/A",
+                    location: schedule.location || "N/A"
+                  });
+                });
+              } else {
+                console.log("Subject has no schedules array");
               }
             });
-            console.log("Processed instructor schedules:", allSchedules);
-            setScheduleData(allSchedules);
-            return;
-          }
-        } else if (userRole === "Trainee") {
-          response = await trainingScheduleService.getTraineeSubjects();
-          // Lọc dữ liệu chỉ lấy subject có schedules status 'Incoming' và không rỗng
-          if (response && response.data && Array.isArray(response.data)) {
-            const filteredSubjects = response.data
-              .map(subject => ({
-                ...subject,
-                schedules: (subject.schedules || []).filter(sch => sch.status === "Incoming")
-              }))
-              .filter(subject => subject.schedules.length > 0);
-            setSubjects(filteredSubjects);
-            // Gộp tất cả schedules lại để hiển thị
-            setScheduleData(filteredSubjects.flatMap(subject =>
-              subject.schedules
-                .filter(schedule => schedule.status === "Incoming")
-                .map(schedule => ({
-                  ...schedule,
-                  subjectID: subject.subjectId,
-                  subjectName: subject.subjectName
-                }))
-            ));
-            return;
-          }
-        } else {
-          response = await trainingScheduleService.getTraineeSubjects();
-        }
-
-        console.log("Response from service:", response);
-
-        // Process the response
-        if (response && response.schedules) {
-          setScheduleData(response.schedules);
-        } else if (Array.isArray(response)) {
-          setScheduleData(response);
-        } else if (response && response.data) {
-          const schedulesWithSpecialty = await Promise.all(
-            response.data.map(async (schedule) => {
-              try {
-                const instructorDetails = await trainingScheduleService.getInstructorDetails(schedule.instructorID);
-                return {
-                  ...schedule,
-                  instructorSpecialtyId: instructorDetails?.specialtyId
-                };
-              } catch (error) {
-                console.error("Error fetching instructor details:", error);
-                return schedule;
+            
+            console.log("Final processed data:", processedData);
+            setScheduleData(processedData);
+          } else {
+            // Kiểm tra xem có cấu trúc khác không
+            console.log("No valid subscheldule array found, checking alternative structures");
+            
+            // Kiểm tra cấu trúc schedules nếu có
+            if (response?.schedules && Array.isArray(response.schedules)) {
+              console.log("Found schedules array directly in response");
+              setScheduleData(response.schedules);
+              return;
+            }
+            
+            // Kiểm tra cấu trúc data nếu có
+            if (response?.data) {
+              console.log("Found data property:", response.data);
+              
+              if (Array.isArray(response.data)) {
+                console.log("Data is an array with length:", response.data.length);
+                setScheduleData(response.data);
+                return;
               }
-            })
-          );
-          response.data = schedulesWithSpecialty;
-          setScheduleData(response.data);
-        } else {
-          console.warn("Unexpected response format:", response);
-          setScheduleData([]);
+              
+              if (response.data.schedules && Array.isArray(response.data.schedules)) {
+                console.log("Found schedules array in data property");
+                setScheduleData(response.data.schedules);
+                return;
+              }
+            }
+            
+            console.log("No recognizable data structure found");
+            setScheduleData([]);
+          }
+        } catch (error) {
+          console.error("Error fetching instructor schedule:", error);
+          
+          if (error.response?.status === 401) {
+            message.error("Session expired");
+            navigate("/login");
+          } else if (error.response?.status === 404) {
+            console.log("404 error - no data found");
+            setScheduleData([]);
+          } else {
+            message.error("Error loading schedule: " + (error.message || "Unknown error"));
+            setScheduleData([]);
+          }
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error("Error in general fetch:", error);
-        handleError(error);
+        return; // Quan trọng: dừng xử lý ngay tại đây cho Instructor
+      } else if (userRole === "Trainee") {
+        try {
+          const response = await trainingScheduleService.getTraineeSubjects();
+          console.log("Trainee schedule response:", response);
+          
+          if (response?.schedules && Array.isArray(response.schedules)) {
+            setScheduleData(response.schedules);
+          } else if (response?.data && Array.isArray(response.data)) {
+            setScheduleData(response.data);
+          } else {
+            console.log("No schedule data found for trainee");
+            setScheduleData([]);
+            message.info("No schedule found for your account");
+          }
+        } catch (error) {
+          console.error("Error fetching trainee schedule:", error);
+          handleError(error);
+        }
       }
+      
+      // Các phần code cho các role khác không thay đổi
+      
     } finally {
       setLoading(false);
     }
@@ -342,20 +269,20 @@ const SchedulePage = () => {
     if (error.response) {
       switch (error.response.status) {
         case 404:
-          message.error("Không tìm thấy dữ liệu");
+          message.error("Data not found");
           break;
         case 403:
-          message.error("Bạn không có quyền truy cập");
+          message.error("You do not have access");
           break;
         case 401:
-          message.error("Phiên đăng nhập hết hạn");
+          message.error("Session expired");
           navigate("/login");
           break;
         default:
-          message.error("Có lỗi xảy ra khi tải dữ liệu");
+          message.error("An error occurred while loading data");
       }
     } else {
-      message.error("Không thể kết nối đến server");
+      message.error("Cannot connect to server");
     }
     setScheduleData([]);
   };
@@ -375,13 +302,22 @@ const SchedulePage = () => {
   // Parse days of week string into an array of days
   const parseDaysOfWeek = (daysOfWeekString) => {
     if (!daysOfWeekString) return [];
-    console.log("Parsing days:", daysOfWeekString);
-    const days = daysOfWeekString
-      .split(",")
-      .map((day) => day.trim())
+    
+    console.log("Original days string:", daysOfWeekString);
+    
+    // Standardize format
+    const normalized = daysOfWeekString
+      .replace(/\s+/g, '')
+      .split(',')
+      .map(day => {
+        // Ensure first letter is capitalized and rest is lowercase
+        day = day.trim();
+        return day.charAt(0).toUpperCase() + day.slice(1).toLowerCase();
+      })
       .filter(Boolean);
-    console.log("Parsed days:", days);
-    return days;
+    
+    console.log("Parsed days:", normalized);
+    return normalized;
   };
 
   // Format time from string to display format
@@ -389,32 +325,33 @@ const SchedulePage = () => {
 
   // Generate dates for current week based on selected week
   const generateWeekDates = (weekString) => {
-    // If week string is not set, use current date
     if (!weekString) {
       const today = new Date();
-      const dayOfWeek = today.getDay(); // Sẽ trả về 0 cho Sunday, 1 cho Monday,...
-      const startDate = new Date(today);
-      startDate.setDate(today.getDate() - dayOfWeek); // Lùi về Sunday
+      const monday = new Date(today);
+      const day = today.getDay();
+      // Adjust to get Monday (adjust 0 (Sunday) to be 6, otherwise subtract 1)
+      const daysFromMonday = day === 0 ? 6 : day - 1;
+      monday.setDate(today.getDate() - daysFromMonday);
       
       const dates = [];
       for (let i = 0; i < 7; i++) {
-        const date = new Date(startDate);
-        date.setDate(startDate.getDate() + i);
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + i);
         dates.push(date);
       }
+      console.log("Generated current week dates:", dates.map(d => d.toDateString()));
       return dates;
     }
+
+    // Parse week string (format: "DD/MM To DD/MM")
+    const [startStr] = weekString.split(" To ");
+    const [startDay, startMonth] = startStr.split("/").map(Number);
     
-    // Parse selected week string (format: "DD/MM To DD/MM")
-    const [startDateStr, endDateStr] = weekString.split(" To ");
-    const [startDay, startMonth] = startDateStr.split("/").map(Number);
-    
-    // Create date for Sunday of selected week
+    // Create date for Monday
     const startDate = new Date(currentYear, startMonth - 1, startDay);
-    const dayOfWeek = startDate.getDay();
-    startDate.setDate(startDate.getDate() - dayOfWeek); // Điều chỉnh về Sunday
+    console.log("Start date from string:", startDate.toDateString());
     
-    // Generate dates for the entire week
+    // Generate dates for the week
     const dates = [];
     for (let i = 0; i < 7; i++) {
       const date = new Date(startDate);
@@ -422,6 +359,7 @@ const SchedulePage = () => {
       dates.push(date);
     }
     
+    console.log("Generated week dates from string:", dates.map(d => d.toDateString()));
     return dates;
   };
 
@@ -432,15 +370,25 @@ const SchedulePage = () => {
 
   // Check if a course is active on a specific date
   const isCourseActiveOnDate = (schedule, date) => {
+    if (!schedule.startDateTime || !schedule.endDateTime) {
+      console.log("Schedule missing date range:", schedule);
+      return false;
+    }
+    
+    // Format dates consistently
     const startDate = new Date(schedule.startDateTime);
     const endDate = new Date(schedule.endDateTime);
+    const checkDate = new Date(date);
     
-    // Reset time components for accurate date comparison
+    // Reset time components
     startDate.setHours(0, 0, 0, 0);
     endDate.setHours(23, 59, 59, 999);
-    date.setHours(12, 0, 0, 0);
+    checkDate.setHours(12, 0, 0, 0);
     
-    return date >= startDate && date <= endDate;
+    const isActive = checkDate >= startDate && checkDate <= endDate;
+    console.log(`Date check: ${checkDate.toDateString()} is ${isActive ? 'within' : 'outside'} range ${startDate.toDateString()} - ${endDate.toDateString()}`);
+    
+    return isActive;
   };
 
   const checkScheduleConflict = (schedule1, schedule2) => {
@@ -467,38 +415,40 @@ const SchedulePage = () => {
 
   // Process schedule data into time slots
   const processScheduleData = () => {
-    // Lọc lịch theo instructor nếu chọn
+    // Log để debug
+    console.log("Processing schedule data. Total items:", scheduleData.length);
+    
     let filteredData = scheduleData;
     if ((userRole === "TrainingStaff" || userRole === "Training staff") && selectedInstructor && selectedInstructor !== 'all') {
       filteredData = scheduleData.filter(sch => sch.instructorID === selectedInstructor);
     }
+    
     if (!Array.isArray(filteredData) || filteredData.length === 0) {
+      console.log("No schedule data to process");
       return [];
     }
 
+    console.log("Filtered schedule data:", filteredData);
+
     // Get all unique time slots and format them
     const uniqueTimeSlots = [...new Set(filteredData.map((item) => item.classTime))]
+      .filter(Boolean) // Filter out null/undefined
+      .map(time => time.substring(0, 5)) // Normalize time format (remove seconds)
       .sort()
       .map(timeSlot => {
-        const schedule = filteredData.find(s => s.classTime === timeSlot);
+        // Find any schedule with this time to get duration info
+        const schedule = filteredData.find(s => s.classTime && s.classTime.startsWith(timeSlot));
+        const duration = schedule?.subjectPeriod || "01:30:00";
         
-        // Xử lý thời gian kết thúc dựa trên subjectPeriod
+        // Calculate end time based on duration
         const [startHour, startMinute] = timeSlot.split(':').map(Number);
+        const [durationHour, durationMinute] = duration.split(':').map(Number);
         
-        // Chuyển đổi subjectPeriod từ "HH:mm:ss" sang số phút
-        let durationInMinutes = 0;
-        if (schedule.subjectPeriod) {
-          const [periodHour, periodMinute] = schedule.subjectPeriod.split(':').map(Number);
-          durationInMinutes = (periodHour * 60) + periodMinute;
-        }
-
-        // Tính toán thời gian kết thúc
-        let endMinutes = startMinute + durationInMinutes;
-        let endHour = startHour + Math.floor(endMinutes / 60);
-        endMinutes = endMinutes % 60;
-
-        // Định dạng thời gian kết thúc
-        const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+        const totalMinutes = startMinute + durationMinute;
+        const endHour = startHour + durationHour + Math.floor(totalMinutes / 60);
+        const endMinute = totalMinutes % 60;
+        
+        const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
         
         return {
           start: timeSlot,
@@ -506,25 +456,20 @@ const SchedulePage = () => {
           display: `${timeSlot} - ${endTime}`
         };
       });
+
+    console.log("Unique time slots:", uniqueTimeSlots);
     
     // Generate dates for the current/selected week
     const weekDates = generateWeekDates(currentWeek);
+    console.log("Week dates:", weekDates.map(d => d.toDateString()));
 
     return uniqueTimeSlots.map((timeSlot, timeIndex) => {
       const row = {
-        key: `timeslot-${timeIndex}-${timeSlot.start}`,
+        key: `timeslot-${timeIndex}`,
         timeFrame: timeSlot.display,
       };
 
-      const daysOfWeek = [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday"
-      ];
+      const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
       // For each day of the week
       daysOfWeek.forEach((day, dayIndex) => {
@@ -532,37 +477,32 @@ const SchedulePage = () => {
         
         // Find schedules for this time slot and day
         const matchingSchedules = filteredData.filter((schedule) => {
-          const scheduleDays = parseDaysOfWeek(schedule.daysOfWeek);
-          return (
-            schedule.classTime === timeSlot.start &&
-            scheduleDays.includes(day) &&
-            isCourseActiveOnDate(schedule, currentDate) &&
-            ((userRole !== "Trainee" && userRole !== "Instructor") || schedule.status === "Incoming")
-          );
+          // Normalize time to remove seconds
+          const scheduleTime = schedule.classTime ? schedule.classTime.substring(0, 5) : "";
+          
+          // Parse days of week
+          const scheduleDays = schedule.daysOfWeek ? 
+            schedule.daysOfWeek.split(',').map(d => d.trim()) : [];
+          
+          const matchesDay = scheduleDays.includes(day);
+          const matchesTime = scheduleTime === timeSlot.start;
+          const isActive = isCourseActiveOnDate(schedule, currentDate);
+          
+          console.log(`Checking schedule: ${schedule.scheduleID}, day: ${day}, time: ${timeSlot.start}`, {
+            matchesDay,
+            matchesTime,
+            isActive,
+            scheduleDays,
+            scheduleTime
+          });
+          
+          return matchesDay && matchesTime && isActive;
         });
 
-        if (matchingSchedules.length > 1) {
-          console.warn(`Warning: Multiple schedules found for ${day} at ${timeSlot.display}`);
-          message.warning(`Phát hiện lịch học trùng vào ${day} lúc ${timeSlot.display}`);
-          
-          row[day] = (
-            <div className="conflict-warning">
-              <Alert
-                type="warning"
-                message="Lịch học trùng"
-                description={
-                  <div>
-                    {matchingSchedules.map(schedule => (
-                      <div key={schedule.scheduleID}>
-                        {schedule.subjectName} - Room: {schedule.room}
-                      </div>
-                    ))}
-                  </div>
-                }
-              />
-            </div>
-          );
-        } else if (matchingSchedules.length === 1) {
+        console.log(`${day} at ${timeSlot.start} has ${matchingSchedules.length} matches`);
+
+        if (matchingSchedules.length > 0) {
+          // Tiếp tục phần code hiển thị lịch như cũ
           const schedule = matchingSchedules[0];
           row[day] = (
             <div
@@ -592,15 +532,6 @@ const SchedulePage = () => {
                 <div>{schedule.room || "N/A"}</div>
                 <div>{schedule.location || "N/A"}</div>
                 {schedule.courseId && <div>Course: {schedule.courseId}</div>}
-                {userRole === "TrainingStaff" && (
-                  <div className="flex items-center gap-2">
-                    <UserSwitchOutlined className="text-gray-400" />
-                    <span>
-                      Instructor: {schedule.instructorID}
-                      {schedule.instructorSpecialtyId && ` (${schedule.instructorSpecialtyId})`}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           );
@@ -767,7 +698,7 @@ const SchedulePage = () => {
               style={{ width: 200 }}
             >
               <Option value="all">All Schedules</Option>
-              <Option value="created">Lịch đã tạo</Option>
+              <Option value="created">Created Schedule</Option>
               <Option value="instructor">Instructor View</Option>
               <Option value="trainee">Trainee View</Option>
             </Select>
@@ -945,7 +876,7 @@ const SchedulePage = () => {
       });
       
       if (response.hasConflict) {
-        throw new Error('Thời gian này đã có lịch học khác!');
+        throw new Error('This time is already scheduled!');
       }
     } catch (error) {
       message.error(error.message);
@@ -1031,9 +962,15 @@ const SchedulePage = () => {
               <Empty 
                 description={
                   <div className="space-y-3">
-                    <p className="text-gray-700 font-semibold text-lg">No Schedule Found</p>
+                    <p className="text-gray-700 font-semibold text-lg">
+                      {userRole === "Instructor" 
+                        ? "You have no assigned courses"
+                        : "No schedule found"}
+                    </p>
                     <p className="text-gray-500 text-sm max-w-md text-center">
-                      Select a subject or time period to view your training schedule
+                      {userRole === "Instructor"
+                        ? "Please contact Training Staff to be assigned a course"
+                        : "Please select a different time period to view your schedule"}
                     </p>
                   </div>
                 }

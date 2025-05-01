@@ -226,6 +226,25 @@ const SendRequestPage = () => {
                 <Option value={6}>Create New</Option>
                 <Option value={7}>Create Recurrent</Option>
                 <Option value={8}>Create Relearn</Option>
+
+                showSearch
+                optionFilterProp="children"
+                filterOption={(input, option) => {
+                  if (!option?.children) return false;
+                  // Chuyển cả input và text của option về lowercase để so sánh
+                  const subjectText = option.children.toString().toLowerCase();
+                  return subjectText.includes(input.toLowerCase());
+                }}
+                notFoundContent={subjects.length === 0 ? "No subjects available" : null}
+              >
+                {subjects.map((subject) => (
+                  <Option 
+                    key={subject.subjectId} 
+                    value={subject.subjectId}
+                  >
+                    {`${subject.subjectName} (${subject.subjectId})`}
+                  </Option>
+                ))}
               </Select>
             </Form.Item>
           )}

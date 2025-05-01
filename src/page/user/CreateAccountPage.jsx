@@ -447,7 +447,7 @@ const CreateAccountPage = () => {
                   >
                     {specialties.map(specialty => (
                       <Option key={specialty.specialtyId} value={specialty.specialtyId}>
-                        {specialty.specialtyName} ({specialty.specialtyId}) 
+                        {specialty.specialtyName}   ({specialty.specialtyId}) 
                       </Option>
                     ))}
                   </Select>
