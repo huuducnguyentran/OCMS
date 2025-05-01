@@ -102,13 +102,17 @@ const CreateSubjectPage = () => {
                 <Form.Item
                   name="subjectId"
                   label={<span className="text-gray-700 font-medium">Subject ID</span>}
-                  rules={[{ required: true, message: "Subject ID is required" }]}
+                  rules={[
+                    { required: true, message: "Subject ID is required" },
+                    { max: 100, message: "Subject ID must not exceed 100 characters" }
+                  ]}
                 >
                   <Input
                     prefix={<BookOutlined className="text-gray-400" />}
                     placeholder="Enter subject ID"
                     className="rounded-lg"
                     size="large"
+                    maxLength={100}
                   />
                 </Form.Item>
               </Col>
@@ -155,12 +159,16 @@ const CreateSubjectPage = () => {
                 <Form.Item
                   name="subjectName"
                   label={<span className="text-gray-700 font-medium">Subject Name</span>}
-                  rules={[{ required: true, message: "Subject name is required" }]}
+                  rules={[
+                    { required: true, message: "Subject name is required" },
+                    { max: 100, message: "Subject name must not exceed 100 characters" }
+                  ]}
                 >
                   <Input
                     placeholder="Enter subject name"
                     className="rounded-lg"
                     size="large"
+                    maxLength={100}
                   />
                 </Form.Item>
               </Col>
@@ -169,13 +177,17 @@ const CreateSubjectPage = () => {
                 <Form.Item
                   name="description"
                   label={<span className="text-gray-700 font-medium">Description</span>}
-                  rules={[{ required: true, message: "Description is required" }]}
+                  rules={[
+                    { required: true, message: "Description is required" },
+                    { max: 100, message: "Description must not exceed 100 characters" }
+                  ]}
                 >
                   <TextArea
                     rows={6}
                     placeholder="Enter subject description"
                     className="rounded-lg"
                     size="large"
+                    maxLength={100}
                   />
                 </Form.Item>
               </Col>

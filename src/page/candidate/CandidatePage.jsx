@@ -36,6 +36,8 @@ const CandidatePage = () => {
   const [searchText, setSearchText] = useState("");
   const [userRole, setUserRole] = useState("");
   const navigate = useNavigate();
+  const [sortField, setSortField] = useState('candidateId');
+  const [sortOrder, setSortOrder] = useState('ascend');
 
   useEffect(() => {
     const role = sessionStorage.getItem("role");
@@ -175,6 +177,45 @@ const CandidatePage = () => {
     ],
   });
 
+  const handleTableChange = (pagination, filters, sorter) => {
+    if (sorter) {
+      setSortField(sorter.field);
+      setSortOrder(sorter.order || 'ascend');
+    }
+  };
+
+  const getSortedData = (data) => {
+    if (!sortField || !sortOrder) {
+      return data;
+    }
+
+    return [...data].sort((a, b) => {
+      let compareResult = 0;
+
+      switch (sortField) {
+        case 'candidateId':
+          compareResult = a.candidateId.localeCompare(b.candidateId);
+          break;
+        case 'fullName':
+          compareResult = a.fullName.localeCompare(b.fullName);
+          break;
+        case 'candidateStatus':
+          compareResult = a.candidateStatus - b.candidateStatus;
+          break;
+        case 'gender':
+          compareResult = (a.gender || '').localeCompare(b.gender || '');
+          break;
+        case 'dateOfBirth':
+          compareResult = new Date(a.dateOfBirth || '') - new Date(b.dateOfBirth || '');
+          break;
+        default:
+          return 0;
+      }
+
+      return sortOrder === 'ascend' ? compareResult : -compareResult;
+    });
+  };
+
   const columns = [
     {
       title: "ID",
@@ -182,6 +223,8 @@ const CandidatePage = () => {
       key: "candidateId",
       width: 100,
       fixed: "left",
+      sorter: true,
+      sortOrder: sortField === 'candidateId' ? sortOrder : null,
       render: (text) => <span className="font-medium">{text}</span>,
     },
     {
@@ -190,6 +233,8 @@ const CandidatePage = () => {
       key: "fullName",
       fixed: "left",
       width: 200,
+      sorter: true,
+      sortOrder: sortField === 'fullName' ? sortOrder : null,
       render: (text, record) => (
         <a
           className="text-blue-600 hover:text-blue-800 font-medium"
@@ -204,6 +249,8 @@ const CandidatePage = () => {
       dataIndex: "candidateStatus",
       key: "status",
       width: 120,
+      sorter: true,
+      sortOrder: sortField === 'candidateStatus' ? sortOrder : null,
       render: getStatusTag,
     },
     {
@@ -211,13 +258,17 @@ const CandidatePage = () => {
       dataIndex: "gender",
       key: "gender",
       width: 100,
+      sorter: true,
+      sortOrder: sortField === 'gender' ? sortOrder : null,
     },
     {
       title: "Date of Birth",
       dataIndex: "dateOfBirth",
       key: "dateOfBirth",
       width: 150,
-      render: (date) => new Date(date).toLocaleDateString(),
+      sorter: true,
+      sortOrder: sortField === 'dateOfBirth' ? sortOrder : null,
+      render: (date) => date ? new Date(date).toLocaleDateString() : '-',
     },
     {
       title: "Contact",
@@ -300,10 +351,11 @@ const CandidatePage = () => {
 
         <Table
           columns={columns}
-          dataSource={filteredCandidates.map((item) => ({
+          dataSource={getSortedData(filteredCandidates).map((item) => ({
             ...item,
             key: item.candidateId,
           }))}
+          onChange={handleTableChange}
           bordered
           loading={loading}
           scroll={{ x: 1500, y: "calc(100vh - 300px)" }}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   Empty,
@@ -19,7 +19,8 @@ import {
   Space,
   Collapse,
   Avatar,
-  Tooltip
+  Tooltip,
+  Alert
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import { courseService } from "../../services/courseService";
@@ -64,7 +65,12 @@ const AssignedTraineeCoursePage = () => {
   const [detailsLoading, setDetailsLoading] = useState({});
   const [expandedCourseId, setExpandedCourseId] = useState(null);
   const [expandedSchedules, setExpandedSchedules] = useState({});
+  const [errorMessageShown, setErrorMessageShown] = useState(false);
   const pageSize = 3;
+  const [errorState, setErrorState] = useState({});
+  const [retryCount, setRetryCount] = useState({});
+  const MAX_RETRIES = 2;
+  const [errorShown, setErrorShown] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -74,6 +80,7 @@ const AssignedTraineeCoursePage = () => {
     const storedUserID = sessionStorage.getItem("userID");
     try {
       setLoading(true);
+      setErrorState({}); // Clear previous errors
       const data = await courseService.getAssignedTraineeCourse(storedUserID);
       
       // Only show approved courses
@@ -86,32 +93,98 @@ const AssignedTraineeCoursePage = () => {
       // If there are courses, automatically load the details for courses on the first page
       if (approvedCourses.length > 0) {
         const initialCourses = approvedCourses.slice(0, pageSize);
-        await Promise.all(initialCourses.map(course => fetchCourseDetails(course.courseId)));
+        await Promise.all(initialCourses.map(course => fetchCourseDetails(course.courseId, 0)));
       }
     } catch (error) {
       console.error("Error fetching courses:", error);
-      message.error("Failed to fetch assigned courses.");
+      message.error("Failed to fetch assigned courses. Please try refreshing the page.");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchCourseDetails = async (courseId) => {
+  const fetchCourseDetails = useCallback(async (courseId, currentRetry = 0) => {
+    // Skip if max retries reached for this course
+    if ((retryCount[courseId] || 0) >= MAX_RETRIES) {
+      return;
+    }
+
     try {
       setDetailsLoading(prev => ({ ...prev, [courseId]: true }));
+      
+      // Set an error timeout to prevent indefinite loading
+      const timeoutId = setTimeout(() => {
+        setDetailsLoading(prev => ({ ...prev, [courseId]: false }));
+        setErrorState(prev => ({ 
+          ...prev, 
+          [courseId]: "Request timed out. Network may be slow or server is busy." 
+        }));
+      }, 15000); // 15 second timeout
+      
       const response = await courseService.getCourseById(courseId);
+      clearTimeout(timeoutId); // Clear timeout if request succeeds
+      
       const data = response.data || response;
+      
+      // Kiểm tra xem dữ liệu có hợp lệ không
+      if (!data) {
+        console.error(`Invalid data returned for course ${courseId}`);
+        setErrorState(prev => ({ 
+          ...prev, 
+          [courseId]: "No data returned from server" 
+        }));
+        return;
+      }
+      
+      // Đảm bảo rằng subjects là một mảng (nếu không có, gán mảng rỗng)
+      const safeData = {
+        ...data,
+        subjects: Array.isArray(data.subjects) ? data.subjects : []
+      };
       
       setCourseDetails(prev => ({
         ...prev,
-        [courseId]: data
+        [courseId]: safeData
       }));
+      
+      // Clear error state if successful
+      setErrorState(prev => {
+        const newState = {...prev};
+        delete newState[courseId];
+        return newState;
+      });
+      
+      // Reset retry count on success
+      setRetryCount(prev => {
+        const newState = {...prev};
+        delete newState[courseId];
+        return newState;
+      });
+      
     } catch (error) {
       console.error(`Error fetching details for course ${courseId}:`, error);
+      
+      
+      if (currentRetry < MAX_RETRIES) {
+        const nextRetry = currentRetry + 1;
+        const delay = 3000; // Cố định delay để đơn giản
+        
+        setRetryCount(prev => ({
+          ...prev,
+          [courseId]: nextRetry
+        }));
+        
+        // Retry sau một khoảng thời gian
+        setTimeout(() => {
+          if (!courseDetails[courseId]) {
+            fetchCourseDetails(courseId, nextRetry);
+          }
+        }, delay);
+      }
     } finally {
       setDetailsLoading(prev => ({ ...prev, [courseId]: false }));
     }
-  };
+  }, [courseDetails, retryCount, errorMessageShown]);
 
   // Get courses for current page
   const currentCourses = courses.slice(
@@ -125,18 +198,26 @@ const AssignedTraineeCoursePage = () => {
       await Promise.all(
         currentCourses
           .filter(course => !courseDetails[course.courseId])
-          .map(course => fetchCourseDetails(course.courseId))
+          .map(course => fetchCourseDetails(course.courseId, 0))
       );
     };
 
     if (currentCourses.length > 0) {
       loadDetailsForPage();
     }
-  }, [currentPage, currentCourses]);
+  }, [currentPage, currentCourses, fetchCourseDetails]);
 
   // Toggle expand/collapse course details
   const toggleCourseExpand = (courseId) => {
-    setExpandedCourseId(expandedCourseId === courseId ? null : courseId);
+    if (expandedCourseId === courseId) {
+      setExpandedCourseId(null);
+    } else {
+      // Nếu chưa có dữ liệu chi tiết cho khóa học này, thì fetch
+      if (!courseDetails[courseId]) {
+        fetchCourseDetails(courseId, 0);
+      }
+      setExpandedCourseId(courseId);
+    }
   };
 
   // Toggle schedule expand/collapse
@@ -177,10 +258,13 @@ const AssignedTraineeCoursePage = () => {
 
   // Get color based on progress
   const getProgressColor = (progress) => {
-    switch (progress?.toLowerCase()) {
+    if (!progress) return "#bfbfbf";
+    
+    switch (progress.toLowerCase()) {
       case "completed":
         return "#52c41a";
       case "ongoing":
+      case "approved":
         return "#1890ff";
       case "not started":
       case "notyet":
@@ -195,8 +279,9 @@ const AssignedTraineeCoursePage = () => {
     switch (progress?.toLowerCase()) {
       case "completed":
         return 100;
-      case "ongoing":
-        return 50;
+      case "approved":
+      case "ongoing": 
+        return "Ongoing";
       case "not started":
       case "notyet":
         return 0;
@@ -226,8 +311,27 @@ const AssignedTraineeCoursePage = () => {
       );
     }
     
+    if (percent === "Ongoing") {
+      return (
+        <Tooltip title="Ongoing">
+          <div style={{ 
+            backgroundColor: '#1890ff', 
+            borderRadius: '50%',
+            width: '60px',
+            height: '60px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white'
+          }}>
+            <ClockCircleOutlined style={{ fontSize: '24px' }} />
+          </div>
+        </Tooltip>
+      );
+    }
+    
     return (
-      <Tooltip title={progress}>
+      <Tooltip title={progress || "Not Started"}>
         <span style={{ color: getProgressColor(progress) }}>
           {percent}%
         </span>
@@ -296,18 +400,7 @@ const AssignedTraineeCoursePage = () => {
         <span>{formatDate(record.endDateTime)}</span>
       )
     },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      width: 100,
-      render: (status) => (
-        <Badge 
-          status={status === 'Incoming' ? 'processing' : status === 'Ongoing' ? 'success' : 'default'} 
-          text={status} 
-        />
-      ),
-    },
+    
   ];
 
   // Get step color for status
@@ -363,6 +456,31 @@ const AssignedTraineeCoursePage = () => {
             />
           )}
         </div>
+      </div>
+    );
+  };
+
+  // Render a custom error component for course details
+  const renderErrorState = (courseId) => {
+    return (
+      <div className="p-6 text-center">
+        <div className="mb-4">
+          <Alert
+            message="Can't load course data"
+            description="Server is temporarily unavailable. Please try again later."
+            type="error"
+            showIcon
+          />
+        </div>
+        <Button 
+          type="primary" 
+          onClick={() => {
+            setRetryCount(prev => ({...prev, [courseId]: 0}));
+            fetchCourseDetails(courseId, 0);
+          }}
+        >
+          Thử lại
+        </Button>
       </div>
     );
   };
@@ -426,6 +544,21 @@ const AssignedTraineeCoursePage = () => {
               </Col>
             </Row>
 
+            {/* Thông báo lỗi chung nếu có */}
+            {Object.keys(errorState).length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+                <div className="flex items-center mb-2">
+                  <span className="text-red-500 mr-2">⚠️</span>
+                  <Text strong className="text-red-600">
+                    Some courses can't be loaded
+                  </Text>
+                </div>
+                <Text className="text-red-500">
+                  There is an issue loading course details. This may be due to network issues or the server being busy. Please try again later.
+                </Text>
+              </div>
+            )}
+
             {/* Courses Section */}
             <div className="space-y-10 mb-10">
               {currentCourses.map((course) => {
@@ -482,7 +615,9 @@ const AssignedTraineeCoursePage = () => {
                         borderRadius: '0.5rem'
                       }}
                     >
-                      {isExpanded && (
+                      {isExpanded && errorState[course.courseId] ? (
+                        renderErrorState(course.courseId)
+                      ) : isExpanded && details ? (
                         <>
                           {/* Stats Cards */}
                           <Row gutter={[16, 16]} className="mb-8">
@@ -500,7 +635,7 @@ const AssignedTraineeCoursePage = () => {
                               <Card className="bg-white border border-gray-200 shadow-sm">
                                 <Statistic 
                                   title={<span className="text-gray-500">Total Credits</span>} 
-                                  value={getTotalCredits(details.subjects)} 
+                                  value={getTotalCredits(details?.subjects || [])} 
                                   prefix={<FileTextOutlined className="text-green-500" />} 
                                   valueStyle={{ color: '#52c41a' }}
                                 />
@@ -510,7 +645,7 @@ const AssignedTraineeCoursePage = () => {
                               <Card className="bg-white border border-gray-200 shadow-sm">
                                 <Statistic 
                                   title={<span className="text-gray-500">Plan ID</span>} 
-                                  value={details.trainingPlanId || "N/A"} 
+                                  value={details?.trainingPlanId || "N/A"} 
                                   prefix={<InfoCircleOutlined className="text-purple-500" />}
                                   valueStyle={{ color: '#722ed1', fontSize: '16px' }}
                                 />
@@ -532,9 +667,9 @@ const AssignedTraineeCoursePage = () => {
                               } 
                               key="subjects"
                             >
-                              {details.subjects && details.subjects.length > 0 ? (
+                              {details?.subjects && details.subjects.length > 0 ? (
                                 <div>
-                                  {details.subjects.map(subject => (
+                                  {details?.subjects?.map(subject => (
                                     <Card 
                                       key={subject.subjectId} 
                                       size="small" 
@@ -563,15 +698,15 @@ const AssignedTraineeCoursePage = () => {
                                             <span className="text-gray-600">Instructors: {subject.instructors.map(inst => inst.instructorId).join(', ')}</span>
                                           </div>
                                         )}
-                  </div>
+                                      </div>
 
                                       {/* Display schedules - with animated transition */}
                                       {subject.trainingSchedules && subject.trainingSchedules.length > 0 && 
                                         renderScheduleSection(subject)
                                       }
-              </Card>
-            ))}
-          </div>
+                                    </Card>
+                                  ))}
+                                </div>
                               ) : (
                                 <Empty 
                                   description={<span className="text-gray-500">No subjects found</span>} 
@@ -582,7 +717,13 @@ const AssignedTraineeCoursePage = () => {
                             <br></br>
                           </Collapse>
                         </>
-                      )}
+                      ) : isExpanded ? (
+                        <div className="p-6 text-center">
+                          <Spin tip="Loading course details..." />
+                          <p className="mt-4 text-gray-500">Please wait while we load the course information...</p>
+                          <p className="mt-2 text-xs text-gray-400">If this takes too long, try closing and reopening the details.</p>
+                        </div>
+                      ) : null}
                     </div>
                   </Card>
                 );

@@ -12,7 +12,7 @@ const { Title } = Typography;
 
 const SendRequestPage = () => {
   const [requestData, setRequestData] = useState({
-    requestType: 3, // Default to 3 (Complaint)
+    requestType: 3,
     requestEntityId: "",
     description: "",
     notes: "",
@@ -29,6 +29,11 @@ const SendRequestPage = () => {
     const role = sessionStorage.getItem("role");
     console.log("Current user role:", role);
     setUserRole(role);
+    
+    // Nếu là AOC Manager, cập nhật requestType mặc định thành 6 (CreateNew)
+    if (role === "AOC Manager") {
+      setRequestData(prev => ({...prev, requestType: 6}));
+    }
     
     console.log("Component mounted, fetching subjects...");
     // Fetch subjects when component mounts
@@ -113,49 +118,86 @@ const SendRequestPage = () => {
     console.log("Selected subject ID:", value);
     setRequestData({ ...requestData, requestEntityId: value });
   };
+  
+  const handleRequestTypeChange = (value) => {
+    setRequestData({ ...requestData, requestType: value });
+  };
 
   const handleSendRequest = async () => {
-    // Debug log
-    console.log("Current role:", userRole);
-    console.log("Current request data:", requestData);
-
-    // Validate all fields
-    if (
-      !requestData.requestEntityId ||
-      requestData.requestEntityId.trim() === "" ||
-      !requestData.description ||
-      requestData.description.trim() === "" ||
-      !requestData.notes ||
-      requestData.notes.trim() === ""
-    ) {
-      message.error("Please fill in all required fields!");
-      return;
+    // Validate fields based on role
+    if (userRole === "AOC Manager") {
+      if (
+        !requestData.description ||
+        requestData.description.trim() === "" ||
+        !requestData.notes ||
+        requestData.notes.trim() === ""
+      ) {
+        message.error("Please fill in all required fields!");
+        return;
+      }
+    } else {
+      if (
+        !requestData.requestEntityId ||
+        requestData.requestEntityId.trim() === "" ||
+        !requestData.description ||
+        requestData.description.trim() === "" ||
+        !requestData.notes ||
+        requestData.notes.trim() === ""
+      ) {
+        message.error("Please fill in all required fields!");
+        return;
+      }
     }
 
     setLoading(true);
     try {
-      // Create payload with complaint type (3)
-      const payload = {
-        requestType: 3, // Always use 3 (Complaint)
-        requestEntityId: requestData.requestEntityId,
-        description: requestData.description,
-        notes: requestData.notes,
-      };
+      let payload;
+      
+      if (userRole === "AOC Manager") {
+        // Create payload without requestEntityId for AOC Manager
+        payload = {
+          requestType: requestData.requestType, // 6, 7, or 8 based on selection
+          description: requestData.description,
+          notes: requestData.notes,
+        };
+      } else {
+        payload = {
+          requestType: 3,
+          requestEntityId: requestData.requestEntityId,
+          description: requestData.description,
+          notes: requestData.notes,
+        };
+      }
 
       console.log("Sending payload:", payload);
       await createRequest(payload);
-      message.success("Complaint sent successfully!");
+      
+      const successMessage = userRole === "AOC Manager" 
+        ? "Plan request sent successfully!" 
+        : "Complaint sent successfully!";
+      message.success(successMessage);
 
       // Reset form
-      setRequestData({
-        requestType: 3,
-        requestEntityId: "",
-        description: "",
-        notes: "",
-      });
+      if (userRole === "AOC Manager") {
+        setRequestData({
+          requestType: 6,
+          description: "",
+          notes: "",
+        });
+      } else {
+        setRequestData({
+          requestType: 3,
+          requestEntityId: "",
+          description: "",
+          notes: "",
+        });
+      }
     } catch (error) {
       console.error("Request error:", error);
-      message.error("Failed to send complaint. Please try again.");
+      const errorMessage = userRole === "AOC Manager"
+        ? "Failed to send plan request. Please try again."
+        : "Failed to send complaint. Please try again.";
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -165,46 +207,86 @@ const SendRequestPage = () => {
     <Layout className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
       <div className="bg-white p-10 shadow-xl rounded-lg w-full max-w-3xl space-y-6">
         <Title level={2} className="text-center text-gray-800 mb-6">
-          Send a Complaint
+          {userRole === "AOC Manager" ? "Request create plan" : "Send a Complaint"}
         </Title>
         
         <Form layout="vertical">
-          <Form.Item
-            label={<span className="text-lg font-semibold">Subject</span>}
-            required
-          >
-            {subjectsLoading ? (
-              <div className="flex justify-center p-3">
-                <Spin size="small" />
-              </div>
-            ) : (
+          {userRole === "AOC Manager" && (
+            <Form.Item
+              label={<span className="text-lg font-semibold">Request Type</span>}
+              required
+            >
               <Select
-                placeholder="Select subject"
-                value={requestData.requestEntityId || undefined}
-                onChange={handleSubjectChange}
+                placeholder="Select request type"
+                value={requestData.requestType}
+                onChange={handleRequestTypeChange}
                 className="w-full"
                 size="large"
+              >
+                <Option value={6}>Create New</Option>
+                <Option value={7}>Create Recurrent</Option>
+                <Option value={8}>Create Relearn</Option>
+
                 showSearch
                 optionFilterProp="children"
-                filterOption={(input, option) =>
-                  (option?.children?.toLowerCase() ?? '').includes(input.toLowerCase())
-                }
+                filterOption={(input, option) => {
+                  if (!option?.children) return false;
+                  // Chuyển cả input và text của option về lowercase để so sánh
+                  const subjectText = option.children.toString().toLowerCase();
+                  return subjectText.includes(input.toLowerCase());
+                }}
+                notFoundContent={subjects.length === 0 ? "No subjects available" : null}
               >
-                {subjects.length > 0 ? (
-                  subjects.map((subject) => (
-                    <Option 
-                      key={subject.subjectId} 
-                      value={subject.subjectId}
-                    >
-                      {subject.subjectName} ({subject.subjectId})
-                    </Option>
-                  ))
-                ) : (
-                  <Option disabled>No subjects available</Option>
-                )}
+                {subjects.map((subject) => (
+                  <Option 
+                    key={subject.subjectId} 
+                    value={subject.subjectId}
+                  >
+                    {`${subject.subjectName} (${subject.subjectId})`}
+                  </Option>
+                ))}
               </Select>
-            )}
-          </Form.Item>
+            </Form.Item>
+          )}
+
+          {userRole !== "AOC Manager" && (
+            <Form.Item
+              label={<span className="text-lg font-semibold">Subject</span>}
+              required
+            >
+              {subjectsLoading ? (
+                <div className="flex justify-center p-3">
+                  <Spin size="small" />
+                </div>
+              ) : (
+                <Select
+                  placeholder="Select subject"
+                  value={requestData.requestEntityId || undefined}
+                  onChange={handleSubjectChange}
+                  className="w-full"
+                  size="large"
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children?.toLowerCase() ?? '').includes(input.toLowerCase())
+                  }
+                >
+                  {subjects.length > 0 ? (
+                    subjects.map((subject) => (
+                      <Option 
+                        key={subject.subjectId} 
+                        value={subject.subjectId}
+                      >
+                        {subject.subjectName} ({subject.subjectId})
+                      </Option>
+                    ))
+                  ) : (
+                    <Option disabled>No subjects available</Option>
+                  )}
+                </Select>
+              )}
+            </Form.Item>
+          )}
 
           <Form.Item
             label={<span className="text-lg font-semibold">Description</span>}
@@ -212,10 +294,11 @@ const SendRequestPage = () => {
           >
             <Input
               name="description"
-              placeholder="Brief description of your complaint"
+              placeholder={userRole === "AOC Manager" ? "Brief description of your plan request" : "Brief description of your complaint"}
               value={requestData.description}
               onChange={handleChange}
               className="p-3 text-lg rounded-lg border border-gray-300 w-full"
+              maxLength={100}
             />
           </Form.Item>
 
@@ -226,11 +309,12 @@ const SendRequestPage = () => {
             <TextArea
               rows={4}
               name="notes"
-              placeholder="Provide any additional details or context for your complaint"
+              placeholder={userRole === "AOC Manager" ? "Provide any additional details for your plan request" : "Provide any additional details or context for your complaint"}
               value={requestData.notes}
               onChange={handleChange}
               className="p-3 text-lg rounded-lg border border-gray-300 w-full"
               required
+              maxLength={100}
             />
           </Form.Item>
 
@@ -241,7 +325,7 @@ const SendRequestPage = () => {
               onClick={handleSendRequest}
               loading={loading}
             >
-              {loading ? "Sending..." : "Submit Complaint"}
+              {loading ? "Sending..." :  "Submit"}
             </Button>
           </Form.Item>
         </Form>

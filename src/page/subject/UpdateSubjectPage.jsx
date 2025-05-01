@@ -126,12 +126,16 @@ const UpdateSubjectPage = () => {
             <Form.Item
               name="subjectName"
               label={<span className="text-gray-700 font-medium text-xl">Subject Name</span>}
-              rules={[{ required: true, message: "Subject name is required" }]}
+              rules={[
+                { required: true, message: "Subject name is required" },
+                { max: 100, message: "Subject name must not exceed 100 characters" }
+              ]}
             >
               <Input
                 placeholder="Enter subject name"
                 className="rounded-xl py-4 text-lg"
                 size="large"
+                maxLength={100}
               />
             </Form.Item>
 
@@ -139,13 +143,17 @@ const UpdateSubjectPage = () => {
             <Form.Item
               name="description"
               label={<span className="text-gray-700 font-medium text-xl">Description</span>}
-              rules={[{ required: true, message: "Description is required" }]}
+              rules={[
+                { required: true, message: "Description is required" },
+                { max: 100, message: "Description must not exceed 100 characters" }
+              ]}
             >
               <TextArea
                 rows={8}
                 placeholder="Enter subject description"
                 className="rounded-xl text-lg"
                 size="large"
+                maxLength={100}
               />
             </Form.Item>
 

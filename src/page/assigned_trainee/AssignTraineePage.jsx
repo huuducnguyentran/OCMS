@@ -100,6 +100,15 @@ const AssignTraineePage = () => {
       }
 
       const response = await assignTrainee(selectedFile);
+      
+      // Kiểm tra lỗi ngay cả khi status code là 200
+      if (response?.result?.failedCount > 0 || response?.result?.errors?.length > 0) {
+        // Hiển thị các lỗi từ response
+        const errorMessages = response?.result?.errors?.join(", ") || "Import completed with errors.";
+        message.error(errorMessages);
+        return;
+      }
+      
       message.success(response?.message || "File uploaded successfully.");
     } catch (error) {
       message.error(error?.response?.data?.message || "Import failed.");
@@ -121,7 +130,15 @@ const AssignTraineePage = () => {
     };
 
     try {
-      await assignTraineeManual(payload);
+      const response = await assignTraineeManual(payload);
+      
+      // Kiểm tra lỗi ngay cả khi status code là 200
+      if (response?.result?.failedCount > 0 || response?.result?.errors?.length > 0) {
+        const errorMessages = response?.result?.errors?.join(", ") || "Assignment completed with errors.";
+        message.error(errorMessages);
+        return;
+      }
+      
       message.success("Trainee assigned successfully!");
       setSelectedCourseId("");
       setSelectedTraineeId("");

@@ -2,7 +2,7 @@
 import { Input, Button, message, Form } from "antd";
 import { useState, useEffect } from "react";
 import { resetPassword } from "../../services/authServices";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeftOutlined,
   LockOutlined,
@@ -14,7 +14,7 @@ import {
 const ResetPassword = () => {
   // Get token from URL path params instead of query params
   const { token } = useParams();
-  const location = useLocation();
+  // const location = useLocation();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

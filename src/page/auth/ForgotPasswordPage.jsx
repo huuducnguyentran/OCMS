@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { forgotPassword } from "../../services/authServices";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeftOutlined, MailOutlined } from "@ant-design/icons";
-import * as THREE from 'three';
+import * as THREE from "three";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -12,11 +12,16 @@ const ForgotPassword = () => {
 
   useEffect(() => {
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 3000);
+    const camera = new THREE.PerspectiveCamera(
+      60,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      3000
+    );
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    
+
     renderer.setSize(window.innerWidth, window.innerHeight);
-    const container = document.getElementById('animation-container');
+    const container = document.getElementById("animation-container");
     if (container) {
       container.appendChild(renderer.domElement);
     }
@@ -30,7 +35,7 @@ const ForgotPassword = () => {
         topColor: { value: new THREE.Color(0x0066ff) },
         bottomColor: { value: new THREE.Color(0x000033) },
         offset: { value: 500 },
-        exponent: { value: 0.7 }
+        exponent: { value: 0.7 },
       };
 
       const skyMaterial = new THREE.ShaderMaterial({
@@ -54,7 +59,7 @@ const ForgotPassword = () => {
             gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent), 0.0)), 1.0);
           }
         `,
-        side: THREE.BackSide
+        side: THREE.BackSide,
       });
 
       return new THREE.Mesh(geometry, skyMaterial);
@@ -72,19 +77,22 @@ const ForgotPassword = () => {
         vertices.push(x, y, z);
       }
 
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(vertices, 3)
+      );
 
       const material = new THREE.PointsMaterial({
         color: 0xffffff,
         size: 2,
         transparent: true,
         opacity: 0.8,
-        sizeAttenuation: true
+        sizeAttenuation: true,
       });
 
       const stars = new THREE.Points(geometry, material);
       stars.userData = {
-        originalOpacity: material.opacity
+        originalOpacity: material.opacity,
       };
       return stars;
     };
@@ -111,7 +119,8 @@ const ForgotPassword = () => {
       stars.rotation.y += 0.0001;
       stars.rotation.x += 0.00005;
 
-      stars.material.opacity = stars.userData.originalOpacity * (0.8 + 0.2 * Math.sin(time * 2));
+      stars.material.opacity =
+        stars.userData.originalOpacity * (0.8 + 0.2 * Math.sin(time * 2));
 
       renderer.render(scene, camera);
     };
@@ -124,10 +133,10 @@ const ForgotPassword = () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
       if (container && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
@@ -179,7 +188,9 @@ const ForgotPassword = () => {
               <div className="w-full md:w-1/2 p-8 bg-white/5">
                 <div className="text-white mb-8">
                   <h2 className="text-3xl font-bold mb-2">Forgot Password?</h2>
-                  <p className="text-blue-200/80">Enter your email to reset your password</p>
+                  <p className="text-blue-200/80">
+                    Enter your email to reset your password
+                  </p>
                 </div>
 
                 <Form className="space-y-6">
@@ -218,7 +229,9 @@ const ForgotPassword = () => {
                   <div className="space-y-4">
                     <div className="text-gray-300 bg-white/5 p-6 rounded-lg">
                       <p className="text-sm opacity-80 leading-relaxed">
-                        Don't worry! It happens to the best of us. Enter your email address and we'll send you instructions to reset your password.
+                        Do not worry! It happens to the best of us. Enter your
+                        email address and we will send you instructions to reset
+                        your password.
                       </p>
                     </div>
                   </div>
