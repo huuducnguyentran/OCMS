@@ -132,25 +132,33 @@ const CreateTrainingPlanPage = () => {
               <Form.Item
                 name="planName"
                 label={<Text strong>Plan Name</Text>}
-                rules={[{ required: true, message: "Plan name is required" }]}
+                rules={[
+                  { required: true, message: "Plan name is required" },
+                  { max: 100, message: "Plan name must not exceed 100 characters" }
+                ]}
                 className="col-span-2"
               >
                 <Input 
                   placeholder="Enter plan name" 
                   className="rounded-lg py-2 px-3 text-base" 
+                  maxLength={100}
                 />
               </Form.Item>
 
               <Form.Item
                 name="description"
                 label={<Text strong>Description</Text>}
-                rules={[{ required: true, message: "Description is required" }]}
+                rules={[
+                  { required: true, message: "Description is required" },
+                  { max: 100, message: "Description must not exceed 100 characters" }
+                ]}
                 className="col-span-2"
               >
                 <TextArea 
                   rows={5} 
                   placeholder="Enter description" 
                   className="rounded-lg py-2 px-3 text-base" 
+                  maxLength={100}
                 />
               </Form.Item>
 
