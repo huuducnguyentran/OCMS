@@ -125,60 +125,6 @@ const SchedulePage = () => {
     }
   }, [userRole, viewMode]);
 
-  // Fetch subjects list
-  // useEffect(() => {
-  //   const fetchSubjects = async () => {
-  //     try {
-  //       setLoading(true);
-  //       console.log("Fetching subjects from API...");
-
-  //       let response;
-  //       if (userRole === "Instructor") {
-  //         response = await trainingScheduleService.getInstructorSubjects();
-  //         console.log("Instructor subjects response:", response);
-          
-  //         if (response && response.data) {
-  //           const subjects = response.data.map(subject => ({
-  //             subjectId: subject.subjectId,
-  //             subjectName: subject.subjectName,
-  //             courseId: subject.courseId,
-  //             schedules: subject.schedules || []
-  //           }));
-            
-  //         setSubjects(subjects);
-  //         setSubjectOptions(subjects);
-            
-  //           // Process schedules
-  //           if (response.schedules && Array.isArray(response.schedules)) {
-  //             setScheduleData(response.schedules);
-  //           }
-  //         }
-  //       } else if (userRole === "Trainee") {
-  //         response = await trainingScheduleService.getTraineeSubjects();
-  //         // Process trainee data...
-  //       } else if (userRole === "TrainingStaff") {
-  //         response = await trainingScheduleService.getAllSubjects();
-  //       }
-
-  //       if (!response || (!response.data && !response.schedules)) {
-  //         console.warn("No subjects returned or invalid format");
-  //         setSubjects([]);
-  //         setScheduleData([]);
-  //       }
-  //     } catch (error) {
-  //       console.error("Failed to fetch subjects:", error);
-  //         message.error("Không thể tải danh sách môn học");
-  //       setSubjects([]);
-  //       setScheduleData([]);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   if (userRole) {
-  //   fetchSubjects();
-  //   }
-  // }, [userRole]);
 
   const fetchScheduleData = async () => {
     try {
@@ -292,6 +238,24 @@ const SchedulePage = () => {
           setLoading(false);
         }
         return; // Quan trọng: dừng xử lý ngay tại đây cho Instructor
+      } else if (userRole === "Trainee") {
+        try {
+          const response = await trainingScheduleService.getTraineeSubjects();
+          console.log("Trainee schedule response:", response);
+          
+          if (response?.schedules && Array.isArray(response.schedules)) {
+            setScheduleData(response.schedules);
+          } else if (response?.data && Array.isArray(response.data)) {
+            setScheduleData(response.data);
+          } else {
+            console.log("No schedule data found for trainee");
+            setScheduleData([]);
+            message.info("No schedule found for your account");
+          }
+        } catch (error) {
+          console.error("Error fetching trainee schedule:", error);
+          handleError(error);
+        }
       }
       
       // Các phần code cho các role khác không thay đổi
