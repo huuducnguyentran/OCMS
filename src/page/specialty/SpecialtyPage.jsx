@@ -1,8 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Tag, Modal, message, Tree, Card, Typography } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, BranchesOutlined } from '@ant-design/icons';
-import { specialtyService } from '../../services/specialtyServices';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import {
+  Table,
+  Button,
+  Space,
+  Tag,
+  Modal,
+  message,
+  Tree,
+  Card,
+  Typography,
+} from "antd";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  BranchesOutlined,
+} from "@ant-design/icons";
+import { specialtyService } from "../../services/specialtyServices";
+import { useNavigate } from "react-router-dom";
 
 const { Title } = Typography;
 
@@ -24,7 +39,7 @@ const SpecialtyPage = () => {
         setTreeData(transformedData);
       }
     } catch (error) {
-      message.error('Failed to fetch specialties');
+      message.error("Failed to fetch specialties");
       console.error(error);
     } finally {
       setLoading(false);
@@ -38,72 +53,72 @@ const SpecialtyPage = () => {
   // Transform flat data to tree structure
   const transformToTreeData = (data) => {
     // First, find root level specialties (those with no parent)
-    const rootSpecialties = data.filter(item => !item.parentSpecialtyId);
-    
+    const rootSpecialties = data.filter((item) => !item.parentSpecialtyId);
+
     // Transform each root specialty into tree node format
-    return rootSpecialties.map(specialty => ({
+    return rootSpecialties.map((specialty) => ({
       key: specialty.specialtyId,
       title: specialty.specialtyName,
-      children: transformChildren(data, specialty.specialtyId)
+      children: transformChildren(data, specialty.specialtyId),
     }));
   };
 
   // Helper function to transform children
   const transformChildren = (data, parentId) => {
-    const children = data.filter(item => item.parentSpecialtyId === parentId);
-    return children.map(child => ({
+    const children = data.filter((item) => item.parentSpecialtyId === parentId);
+    return children.map((child) => ({
       key: child.specialtyId,
       title: child.specialtyName,
-      children: transformChildren(data, child.specialtyId)
+      children: transformChildren(data, child.specialtyId),
     }));
   };
 
   // Table columns configuration
   const columns = [
     {
-      title: 'ID',
-      dataIndex: 'specialtyId',
-      key: 'specialtyId',
+      title: "ID",
+      dataIndex: "specialtyId",
+      key: "specialtyId",
       width: 120,
     },
     {
-      title: 'Name',
-      dataIndex: 'specialtyName',
-      key: 'specialtyName',
+      title: "Name",
+      dataIndex: "specialtyName",
+      key: "specialtyName",
     },
     {
-      title: 'Description',
-      dataIndex: 'description',
-      key: 'description',
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
       ellipsis: true,
     },
     {
-      title: 'Parent Specialty',
-      dataIndex: 'parentSpecialtyName',
-      key: 'parentSpecialtyName',
-      render: (text) => text || 'None',
+      title: "Parent Specialty",
+      dataIndex: "parentSpecialtyName",
+      key: "parentSpecialtyName",
+      render: (text) => text || "None",
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
       render: (status) => (
-        <Tag color={status === 0 ? 'success' : 'error'} className="px-3 py-1">
-          {status === 0 ? 'Active' : 'Inactive'}
+        <Tag color={status === 0 ? "success" : "error"} className="px-3 py-1">
+          {status === 0 ? "Active" : "Inactive"}
         </Tag>
       ),
     },
     {
-      title: 'Actions',
-      key: 'actions',
+      title: "Actions",
+      key: "actions",
       render: (_, record) => (
         <Space>
-          <Button 
+          <Button
             icon={<EditOutlined />}
             className="hover:text-blue-600 hover:border-blue-600"
             onClick={() => handleEdit(record)}
           />
-          <Button 
+          <Button
             icon={<DeleteOutlined />}
             danger
             className="hover:text-red-600 hover:border-red-600"
@@ -121,47 +136,59 @@ const SpecialtyPage = () => {
 
   const handleDelete = (record) => {
     Modal.confirm({
-      title: 'Delete Specialty',
+      title: "Delete Specialty",
       content: (
         <div>
           <p>Are you sure you want to delete this specialty?</p>
-          <p><strong>Name:</strong> {record.specialtyName}</p>
-          {record.description && <p><strong>Description:</strong> {record.description}</p>}
+          <p>
+            <strong>Name:</strong> {record.specialtyName}
+          </p>
+          {record.description && (
+            <p>
+              <strong>Description:</strong> {record.description}
+            </p>
+          )}
           {record.parentSpecialtyName && (
-            <p><strong>Parent Specialty:</strong> {record.parentSpecialtyName}</p>
+            <p>
+              <strong>Parent Specialty:</strong> {record.parentSpecialtyName}
+            </p>
           )}
           <p className="text-red-500 mt-2">
             Warning: This action cannot be undone.
           </p>
         </div>
       ),
-      okText: 'Delete',
-      okType: 'danger',
-      cancelText: 'Cancel',
+      okText: "Delete",
+      okType: "danger",
+      cancelText: "Cancel",
       okButtonProps: {
-        className: 'bg-red-500'
+        className: "bg-red-500",
       },
       onOk: async () => {
         try {
           setLoading(true); // Add loading state to table
-          const response = await specialtyService.deleteSpecialty(record.specialtyId);
-          
+          const response = await specialtyService.deleteSpecialty(
+            record.specialtyId
+          );
+
           if (response.success) {
-            message.success('Specialty deleted successfully');
+            message.success("Specialty deleted successfully");
             // Check if the deleted specialty has children
-            const hasChildren = specialties.some(s => s.parentSpecialtyId === record.specialtyId);
+            const hasChildren = specialties.some(
+              (s) => s.parentSpecialtyId === record.specialtyId
+            );
             if (hasChildren) {
-              message.info('Child specialties have been updated');
+              message.info("Child specialties have been updated");
             }
             await fetchSpecialties(); // Refresh the list
           } else {
-            throw new Error(response.message || 'Failed to delete specialty');
+            throw new Error(response.message || "Failed to delete specialty");
           }
         } catch (error) {
           message.error(
-            error.response?.data?.message || 
-            error.message || 
-            'Failed to delete specialty'
+            error.response?.data?.message ||
+              error.message ||
+              "Failed to delete specialty"
           );
         } finally {
           setLoading(false);
@@ -178,22 +205,26 @@ const SpecialtyPage = () => {
       <Card className="mb-6 shadow-md">
         <div className="flex justify-between items-center">
           <div>
-            <Title level={2} className="!mb-1">Specialties Management</Title>
-            <p className="text-gray-500">Manage and organize medical specialties</p>
+            <Title level={2} className="!mb-1">
+              Specialties Management
+            </Title>
+            <p className="text-gray-500">
+              Manage and organize medical specialties
+            </p>
           </div>
           <div className="flex gap-4">
-            <Button 
+            <Button
               icon={<BranchesOutlined />}
-              onClick={() => navigate('/specialty/tree')}
+              onClick={() => navigate("/specialty/tree")}
               className="h-10 flex items-center"
             >
               View Tree
             </Button>
-            <Button 
+            <Button
               type="primary"
               icon={<PlusOutlined />}
               className="bg-blue-600 hover:bg-blue-700 h-10 flex items-center"
-              onClick={() => navigate('/specialty/create')}
+              onClick={() => navigate("/specialty/create")}
             >
               Add Specialty
             </Button>
@@ -204,7 +235,9 @@ const SpecialtyPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Tree View */}
         <Card className="shadow-md">
-          <Title level={4} className="!mb-4">Specialty Hierarchy</Title>
+          <Title level={4} className="!mb-4">
+            Specialty Hierarchy
+          </Title>
           <div className="border rounded-lg p-4 bg-gray-50">
             <Tree
               treeData={treeData}
@@ -228,7 +261,7 @@ const SpecialtyPage = () => {
               pagination={{
                 pageSize: 10,
                 showSizeChanger: true,
-                showTotal: (total) => `Total ${total} items`
+                showTotal: (total) => `Total ${total} items`,
               }}
               className="border rounded-lg"
             />

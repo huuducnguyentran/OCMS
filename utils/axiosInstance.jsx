@@ -1,7 +1,6 @@
 // utils/axiosInstance.js
 import axios from "axios";
 import { BASE_URL } from "./environment";
-import { API } from "../api/apiUrl";
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -59,14 +58,14 @@ export const setMessageApi = (api) => {
 // Check if user is authenticated, can be used in any component
 export const requireAuth = (navigate, message) => {
   const token = sessionStorage.getItem("token");
-  
+
   if (!token) {
     if (message) {
       message.error("Please login to continue");
     } else if (messageApi) {
       messageApi.error("Please login to continue");
     }
-    
+
     if (navigate) {
       navigate("/login");
     } else if (navigateToLogin) {
@@ -76,21 +75,20 @@ export const requireAuth = (navigate, message) => {
     }
     return false;
   }
-  
+
   return true;
 };
 
 // Higher-order component to protect routes
 export const withAuth = (WrappedComponent) => {
-  return (props) => {
+  const WithAuthComponent = (props) => {
     const token = sessionStorage.getItem("token");
-    
-    // If no token, redirect to login page
+
     if (!token) {
       if (messageApi) {
         messageApi.error("Please login to continue");
       }
-      
+
       if (navigateToLogin) {
         navigateToLogin("/login");
         return null;
@@ -99,21 +97,27 @@ export const withAuth = (WrappedComponent) => {
         return null;
       }
     }
-    
-    // If token exists, render the component
+
     return <WrappedComponent {...props} />;
   };
+
+  // Set a more helpful display name for debugging
+  const wrappedName =
+    WrappedComponent.displayName || WrappedComponent.name || "Component";
+  WithAuthComponent.displayName = `withAuth(${wrappedName})`;
+
+  return WithAuthComponent;
 };
 
 // Check user account status
 export const checkAccountStatus = async () => {
   if (isCheckingStatus) return true;
-  
+
   try {
     isCheckingStatus = true;
     const token = sessionStorage.getItem("token");
     if (!token) return false;
-    
+
     const response = await statusCheckInstance.get("/User/profile");
     const userData = response.data.user;
     sessionStorage.setItem("fullname", response.data.fullName);
@@ -122,19 +126,20 @@ export const checkAccountStatus = async () => {
     if (userData.accountStatus === "Deactivated") {
       // Xóa dữ liệu phiên khi tài khoản bị vô hiệu hóa
       sessionStorage.clear();
-      
+
       // Chuyển hướng về trang đăng nhập với thông báo
       if (navigateToLogin) {
         navigateToLogin("/login", {
-          state: { 
-            message: "Your account has been deactivated. Please contact the administrator for more information.",
-            type: "error" 
-          }
+          state: {
+            message:
+              "Your account has been deactivated. Please contact the administrator for more information.",
+            type: "error",
+          },
         });
       }
       return false;
     }
-    
+
     return true;
   } catch (error) {
     console.error("Error checking account status:", error);
@@ -158,24 +163,24 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     // Skip status check for login-related endpoints or when already checking status
     if (
-      error.config.url?.includes("login") || 
-      error.config.url?.includes("reset-password") || 
+      error.config.url?.includes("login") ||
+      error.config.url?.includes("reset-password") ||
       error.config.url?.includes("forgot-password") ||
       isCheckingStatus
     ) {
       return Promise.reject(error);
     }
-    
+
     // If 401 status (unauthorized), let the existing logout mechanism handle it
     if (error.response?.status === 401) {
       // Clear session and redirect to login
       sessionStorage.clear();
       if (navigateToLogin) {
         navigateToLogin("/login", {
-          state: { 
+          state: {
             message: "Your session has expired. Please login again.",
-            type: "error" 
-          }
+            type: "error",
+          },
         });
       } else {
         window.location.href = "/login";

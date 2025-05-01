@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   Empty,
@@ -8,18 +8,12 @@ import {
   Tag,
   Typography,
   Progress,
-  Badge,
   Statistic,
-  Divider,
   Row,
   Col,
-  Timeline,
   Table,
   Button,
-  Space,
   Collapse,
-  Avatar,
-  Tooltip,
   Alert
 } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -29,17 +23,12 @@ import {
   CalendarOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
-  EnvironmentOutlined,
   TeamOutlined,
   EyeOutlined,
-  RightOutlined,
   FileTextOutlined,
-  UserOutlined,
   InfoCircleOutlined,
-  CheckCircleFilled,
   CheckOutlined,
   DownOutlined,
-  UpOutlined
 } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
@@ -57,7 +46,7 @@ const scheduleContainerStyle = {
 };
 
 const AssignedTraineeCoursePage = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [courseDetails, setCourseDetails] = useState({});
   const [loading, setLoading] = useState(true);
@@ -70,7 +59,7 @@ const AssignedTraineeCoursePage = () => {
   const [errorState, setErrorState] = useState({});
   const [retryCount, setRetryCount] = useState({});
   const MAX_RETRIES = 2;
-  const [errorShown, setErrorShown] = useState(false);
+  // const [errorShown, setErrorShown] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -304,18 +293,18 @@ const AssignedTraineeCoursePage = () => {
   };
 
   // Get color based on status
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case "approved":
-        return "green";
-      case "pending":
-        return "orange";
-      case "rejected":
-        return "red";
-      default:
-        return "blue";
-    }
-  };
+  // const getStatusColor = (status) => {
+  //   switch (status?.toLowerCase()) {
+  //     case "approved":
+  //       return "green";
+  //     case "pending":
+  //       return "orange";
+  //     case "rejected":
+  //       return "red";
+  //     default:
+  //       return "blue";
+  //   }
+  // };
 
   // Get color based on course level
   const getLevelColor = (level) => {
@@ -473,16 +462,16 @@ const AssignedTraineeCoursePage = () => {
   ];
 
   // Get step color for status
-  const getStatusStepColor = (status) => {
-    switch(status?.toLowerCase()) {
-      case 'ongoing':
-        return 'blue';
-      case 'completed':
-        return 'green';
-      default:
-        return 'gray';
-    }
-  };
+  // const getStatusStepColor = (status) => {
+  //   switch(status?.toLowerCase()) {
+  //     case 'ongoing':
+  //       return 'blue';
+  //     case 'completed':
+  //       return 'green';
+  //     default:
+  //       return 'gray';
+  //   }
+  // };
 
   // Find and update the JSX for schedule display to include animation
   // For example, in the part where schedules are shown:
@@ -619,7 +608,7 @@ const AssignedTraineeCoursePage = () => {
                 <div className="flex items-center mb-2">
                   <span className="text-red-500 mr-2">⚠️</span>
                   <Text strong className="text-red-600">
-                    Some courses can't be loaded
+                    Some courses can not be loaded
                   </Text>
                 </div>
                 <Text className="text-red-500">

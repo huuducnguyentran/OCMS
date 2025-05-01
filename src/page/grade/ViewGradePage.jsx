@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   message,
@@ -21,9 +21,12 @@ import {
   FilterOutlined,
   DownloadOutlined,
 } from "@ant-design/icons";
-import { gradeServices,exportCourseResults} from "../../services/gradeServices";
+import {
+  gradeServices,
+  exportCourseResults,
+} from "../../services/gradeServices";
 import { useNavigate } from "react-router-dom";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -34,7 +37,7 @@ const ViewGradePage = () => {
   const [searchText, setSearchText] = useState("");
   const [filteredGrades, setFilteredGrades] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState("all");
-  const [userRole, setUserRole] = useState('');
+  const [userRole, setUserRole] = useState("");
   const [subjectList, setSubjectList] = useState([]);
   const [sortedInfo, setSortedInfo] = useState({});
   const [pagination, setPagination] = useState({
@@ -49,7 +52,7 @@ const ViewGradePage = () => {
   };
   useEffect(() => {
     // Lấy role người dùng từ session
-    const role = sessionStorage.getItem('role');
+    const role = sessionStorage.getItem("role");
     setUserRole(role);
   }, []);
 
@@ -63,8 +66,8 @@ const ViewGradePage = () => {
       render: (_, __, index) => {
         // Tính số thứ tự dựa trên trang hiện tại và số bản ghi mỗi trang
         const { current, pageSize } = pagination;
-        return ((current - 1) * pageSize) + index + 1;
-      }
+        return (current - 1) * pageSize + index + 1;
+      },
     },
     {
       title: "Trainee",
@@ -173,7 +176,7 @@ const ViewGradePage = () => {
       render: (score) => {
         const roundedScore = Number(score).toFixed(2);
         const formattedScore = parseFloat(roundedScore);
-        
+
         return (
           <Tag
             color={score >= 5 ? "success" : "error"}
@@ -340,10 +343,11 @@ const ViewGradePage = () => {
     let filtered = [...grades];
 
     if (search) {
-      filtered = filtered.filter((grade) =>
-        grade.gradeId.toLowerCase().includes(search.toLowerCase()) ||
-        grade.traineeAssignID.toLowerCase().includes(search.toLowerCase()) ||
-        grade.subjectId.toLowerCase().includes(search.toLowerCase())
+      filtered = filtered.filter(
+        (grade) =>
+          grade.gradeId.toLowerCase().includes(search.toLowerCase()) ||
+          grade.traineeAssignID.toLowerCase().includes(search.toLowerCase()) ||
+          grade.subjectId.toLowerCase().includes(search.toLowerCase())
       );
     }
 
@@ -389,33 +393,44 @@ const ViewGradePage = () => {
   };
   const handleExportCourseResults = async () => {
     try {
-      message.loading({ content: "Đang chuẩn bị tải xuống...", key: "exportLoading" });
+      message.loading({
+        content: "Đang chuẩn bị tải xuống...",
+        key: "exportLoading",
+      });
       await exportCourseResults();
-      message.success({ content: "Tải xuống thành công", key: "exportLoading" });
+      message.success({
+        content: "Tải xuống thành công",
+        key: "exportLoading",
+      });
     } catch (error) {
       console.error("Error exporting trainee info:", error);
-      message.error({ content: "Không thể tải xuống file. Vui lòng thử lại", key: "exportLoading" });
+      message.error({
+        content: "Không thể tải xuống file. Vui lòng thử lại",
+        key: "exportLoading",
+      });
     }
   };
 
   const handleExportData = () => {
     try {
       message.loading({ content: "Đang chuẩn bị xuất file...", key: "export" });
-      
+
       // Chuẩn bị dữ liệu để xuất
-      const dataToExport = filteredGrades.map(grade => ({
-        'Grade ID': grade.gradeId,
-        'Trainee ID': grade.traineeAssignID,
-        'Subject': grade.subjectId,
-        'Participation Score': grade.participantScore,
-        'Assignment Score': grade.assignmentScore,
-        'Final Exam Score': grade.finalExamScore,
-        'Resit Score': grade.finalResitScore || '-',
-        'Total Score': Number(grade.totalScore).toFixed(2),
-        'Status': grade.gradeStatus,
-        'Remarks': grade.remarks || '',
-        'Graded By': grade.gradedByInstructorId,
-        'Evaluation Date': grade.evaluationDate ? new Date(grade.evaluationDate).toLocaleString() : '',
+      const dataToExport = filteredGrades.map((grade) => ({
+        "Grade ID": grade.gradeId,
+        "Trainee ID": grade.traineeAssignID,
+        Subject: grade.subjectId,
+        "Participation Score": grade.participantScore,
+        "Assignment Score": grade.assignmentScore,
+        "Final Exam Score": grade.finalExamScore,
+        "Resit Score": grade.finalResitScore || "-",
+        "Total Score": Number(grade.totalScore).toFixed(2),
+        Status: grade.gradeStatus,
+        Remarks: grade.remarks || "",
+        "Graded By": grade.gradedByInstructorId,
+        "Evaluation Date": grade.evaluationDate
+          ? new Date(grade.evaluationDate).toLocaleString()
+          : "",
       }));
 
       // Tạo workbook và worksheet
@@ -425,14 +440,19 @@ const ViewGradePage = () => {
 
       // Tạo tên file với timestamp
       const date = new Date();
-      const fileName = `grades_${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}.xlsx`;
+      const fileName = `grades_${date.getFullYear()}-${
+        date.getMonth() + 1
+      }-${date.getDate()}_${date.getHours()}-${date.getMinutes()}.xlsx`;
 
       // Xuất file
       XLSX.writeFile(workbook, fileName);
       message.success({ content: "Xuất file thành công!", key: "export" });
     } catch (error) {
       console.error("Error exporting data:", error);
-      message.error({ content: "Không thể xuất file. Vui lòng thử lại!", key: "export" });
+      message.error({
+        content: "Không thể xuất file. Vui lòng thử lại!",
+        key: "export",
+      });
     }
   };
 
@@ -488,7 +508,7 @@ const ViewGradePage = () => {
         <div className="mb-4 flex items-center gap-2">
           {searchText && (
             <Tag color="blue" className="text-sm px-3 py-1">
-              Search: "{searchText}"
+              Search: {searchText}
             </Tag>
           )}
           {selectedSubject !== "all" && (
@@ -520,35 +540,32 @@ const ViewGradePage = () => {
           size="middle"
         />
 
-        {userRole === 'Reviewer' && (
+        {userRole === "Reviewer" && (
           <div className="mt-6 flex justify-end">
             <div className="flex items-center gap-2 p-5">
-            <Button
-              type="primary"
-              icon={<DownloadOutlined />}
-              size="large"
-              onClick={handleExportData}
-              className="bg-green-600 hover:bg-green-700 border-0"
-            >
-              Export All Information
-            </Button>
+              <Button
+                type="primary"
+                icon={<DownloadOutlined />}
+                size="large"
+                onClick={handleExportData}
+                className="bg-green-600 hover:bg-green-700 border-0"
+              >
+                Export All Information
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="primary"
+                icon={<DownloadOutlined />}
+                size="large"
+                onClick={handleExportCourseResults}
+                className="bg-green-600 hover:bg-green-700 border-0"
+              >
+                Export Course Results
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              type="primary"
-              icon={<DownloadOutlined />}
-              size="large"
-              onClick={handleExportCourseResults}
-              className="bg-green-600 hover:bg-green-700 border-0"
-            >
-              Export Course Results
-            </Button>
-          </div>
-
-          </div>
-          
         )}
-
       </div>
     </div>
   );

@@ -1,14 +1,31 @@
 import { useState, useEffect } from "react";
-import { Layout, Input, Button, message, Form, Select, Spin, Card, Row, Col, Breadcrumb, Typography } from "antd";
+import {
+  Layout,
+  Input,
+  Button,
+  message,
+  Form,
+  Select,
+  Spin,
+  Card,
+  Row,
+  Col,
+  Breadcrumb,
+  Typography,
+} from "antd";
 import { createSubject } from "../../services/subjectService";
 import { courseService } from "../../services/courseService";
-import { ArrowLeftOutlined, BookOutlined, FormOutlined, TrophyOutlined } from "@ant-design/icons";
+import {
+  ArrowLeftOutlined,
+  BookOutlined,
+  TrophyOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { applySubjectValidation } from "../../../utils/validationSchemas";
 
 const { TextArea } = Input;
 const { Option } = Select;
-const { Title, Paragraph, Text } = Typography;
+const { Title } = Typography;
 
 const CreateSubjectPage = () => {
   const [form] = Form.useForm();
@@ -32,7 +49,7 @@ const CreateSubjectPage = () => {
         message.warning("No courses found. Please create a course first.");
       }
     } catch (error) {
-      message.error("Failed to load courses");
+      message.error("Failed to load courses", error);
     } finally {
       setLoadingCourses(false);
     }
@@ -42,17 +59,17 @@ const CreateSubjectPage = () => {
     try {
       setLoading(true);
       await applySubjectValidation(values);
-      
+
       await createSubject({
         ...values,
         credits: Number(values.credits),
         passingScore: Number(values.passingScore),
       });
-      
+
       message.success("Subject created successfully!");
       navigate("/subject");
     } catch (error) {
-      if (error.name === 'ValidationError') {
+      if (error.name === "ValidationError") {
         message.error(error.message);
       } else {
         message.error("Failed to create subject");
@@ -71,14 +88,19 @@ const CreateSubjectPage = () => {
             <div>
               <Breadcrumb className="mb-4">
                 <Breadcrumb.Item>
-                  <a onClick={() => navigate('/subject')} className="text-blue-600">
+                  <a
+                    onClick={() => navigate("/subject")}
+                    className="text-blue-600"
+                  >
                     <BookOutlined className="mr-1" />
                     Subjects
                   </a>
                 </Breadcrumb.Item>
                 <Breadcrumb.Item>Create New Subject</Breadcrumb.Item>
               </Breadcrumb>
-              <Title level={2} className="mb-2">Create New Subject</Title>
+              <Title level={2} className="mb-2">
+                Create New Subject
+              </Title>
             </div>
             <Button
               type="link"
@@ -101,10 +123,17 @@ const CreateSubjectPage = () => {
               <Col xs={24} md={12}>
                 <Form.Item
                   name="subjectId"
-                  label={<span className="text-gray-700 font-medium">Subject ID</span>}
+                  label={
+                    <span className="text-gray-700 font-medium">
+                      Subject ID
+                    </span>
+                  }
                   rules={[
                     { required: true, message: "Subject ID is required" },
-                    { max: 100, message: "Subject ID must not exceed 100 characters" }
+                    {
+                      max: 100,
+                      message: "Subject ID must not exceed 100 characters",
+                    },
                   ]}
                 >
                   <Input
@@ -119,7 +148,9 @@ const CreateSubjectPage = () => {
               <Col xs={24} md={12}>
                 <Form.Item
                   name="courseId"
-                  label={<span className="text-gray-700 font-medium">Course</span>}
+                  label={
+                    <span className="text-gray-700 font-medium">Course</span>
+                  }
                   rules={[{ required: true, message: "Course is required" }]}
                 >
                   <Select
@@ -139,14 +170,17 @@ const CreateSubjectPage = () => {
                       ) : (
                         <div className="text-center py-4">
                           <div>No courses found</div>
-                          <Button type="link" onClick={() => navigate('/course/create')}>
+                          <Button
+                            type="link"
+                            onClick={() => navigate("/course/create")}
+                          >
                             Create a new course
                           </Button>
                         </div>
                       )
                     }
                   >
-                    {courses.map(course => (
+                    {courses.map((course) => (
                       <Option key={course.courseId} value={course.courseId}>
                         {course.courseName} ({course.courseId})
                       </Option>
@@ -158,10 +192,17 @@ const CreateSubjectPage = () => {
               <Col span={24}>
                 <Form.Item
                   name="subjectName"
-                  label={<span className="text-gray-700 font-medium">Subject Name</span>}
+                  label={
+                    <span className="text-gray-700 font-medium">
+                      Subject Name
+                    </span>
+                  }
                   rules={[
                     { required: true, message: "Subject name is required" },
-                    { max: 100, message: "Subject name must not exceed 100 characters" }
+                    {
+                      max: 100,
+                      message: "Subject name must not exceed 100 characters",
+                    },
                   ]}
                 >
                   <Input
@@ -176,10 +217,17 @@ const CreateSubjectPage = () => {
               <Col span={24}>
                 <Form.Item
                   name="description"
-                  label={<span className="text-gray-700 font-medium">Description</span>}
+                  label={
+                    <span className="text-gray-700 font-medium">
+                      Description
+                    </span>
+                  }
                   rules={[
                     { required: true, message: "Description is required" },
-                    { max: 100, message: "Description must not exceed 100 characters" }
+                    {
+                      max: 100,
+                      message: "Description must not exceed 100 characters",
+                    },
                   ]}
                 >
                   <TextArea
@@ -199,7 +247,11 @@ const CreateSubjectPage = () => {
                 <Card className="rounded-xl shadow-md hover:shadow-lg transition-shadow">
                   <Form.Item
                     name="credits"
-                    label={<span className="text-gray-700 font-medium">Credits (1-10)</span>}
+                    label={
+                      <span className="text-gray-700 font-medium">
+                        Credits (1-10)
+                      </span>
+                    }
                     rules={[
                       { required: true, message: "Credits are required" },
                       () => ({
@@ -207,11 +259,13 @@ const CreateSubjectPage = () => {
                           if (!value) return Promise.resolve();
                           const num = Number(value);
                           if (num < 1 || num > 10 || !Number.isInteger(num)) {
-                            return Promise.reject('Credits must be between 1 and 10');
+                            return Promise.reject(
+                              "Credits must be between 1 and 10"
+                            );
                           }
                           return Promise.resolve();
-                        }
-                      })
+                        },
+                      }),
                     ]}
                     className="mb-0"
                   >
@@ -231,7 +285,11 @@ const CreateSubjectPage = () => {
                 <Card className="rounded-xl shadow-md hover:shadow-lg transition-shadow">
                   <Form.Item
                     name="passingScore"
-                    label={<span className="text-gray-700 font-medium">Passing Score (0-10)</span>}
+                    label={
+                      <span className="text-gray-700 font-medium">
+                        Passing Score (0-10)
+                      </span>
+                    }
                     rules={[
                       { required: true, message: "Passing score is required" },
                       () => ({
@@ -239,11 +297,13 @@ const CreateSubjectPage = () => {
                           if (!value) return Promise.resolve();
                           const num = Number(value);
                           if (num < 0 || num > 10) {
-                            return Promise.reject('Passing score must be between 0 and 10');
+                            return Promise.reject(
+                              "Passing score must be between 0 and 10"
+                            );
                           }
                           return Promise.resolve();
-                        }
-                      })
+                        },
+                      }),
                     ]}
                     className="mb-0"
                   >

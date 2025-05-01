@@ -1,8 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Select, message, Spin, Card, Typography, Tag } from 'antd';
-import { useNavigate, useParams } from 'react-router-dom';
-import { specialtyService } from '../../services/specialtyServices';
-import { ArrowLeftOutlined } from '@ant-design/icons';
+import { useState, useEffect } from "react";
+import {
+  Form,
+  Input,
+  Button,
+  Select,
+  message,
+  Spin,
+  Card,
+  Typography,
+  Tag,
+} from "antd";
+import { useNavigate, useParams } from "react-router-dom";
+import { specialtyService } from "../../services/specialtyServices";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 const { Title } = Typography;
 
 const EditSpecialtyPage = () => {
@@ -19,7 +29,7 @@ const EditSpecialtyPage = () => {
       try {
         const [specialtyData, allSpecialties] = await Promise.all([
           specialtyService.getSpecialtyById(id),
-          specialtyService.getAllSpecialties()
+          specialtyService.getAllSpecialties(),
         ]);
 
         if (specialtyData.success) {
@@ -28,16 +38,18 @@ const EditSpecialtyPage = () => {
             specialtyName: specialtyData.data.specialtyName,
             description: specialtyData.data.description,
             parentSpecialtyId: specialtyData.data.parentSpecialtyId,
-            status: specialtyData.data.status
+            status: specialtyData.data.status,
           });
         }
 
         if (allSpecialties.success) {
           // Filter out current specialty from parent options
-          setSpecialties(allSpecialties.data.filter(s => s.specialtyId !== id));
+          setSpecialties(
+            allSpecialties.data.filter((s) => s.specialtyId !== id)
+          );
         }
       } catch (error) {
-        message.error('Failed to fetch specialty data');
+        message.error("Failed to fetch specialty data");
         console.error(error);
       } finally {
         setLoading(false);
@@ -55,17 +67,17 @@ const EditSpecialtyPage = () => {
       setLoading(true);
       const response = await specialtyService.updateSpecialty(id, {
         ...values,
-        status: parseInt(values.status)
+        status: parseInt(values.status),
       });
 
       if (response.success) {
-        message.success('Specialty updated successfully');
-        navigate('/specialty');
+        message.success("Specialty updated successfully");
+        navigate("/specialty");
       } else {
-        message.error(response.message || 'Failed to update specialty');
+        message.error(response.message || "Failed to update specialty");
       }
     } catch (error) {
-      message.error('Error updating specialty');
+      message.error("Error updating specialty");
       console.error(error);
     } finally {
       setLoading(false);
@@ -76,18 +88,20 @@ const EditSpecialtyPage = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <Card className="max-w-6xl mx-auto shadow-lg">
         <div className="mb-6">
-          <Button 
-            icon={<ArrowLeftOutlined />} 
+          <Button
+            icon={<ArrowLeftOutlined />}
             className="mb-4"
-            onClick={() => navigate('/specialty')}
+            onClick={() => navigate("/specialty")}
           >
             Back to Specialties
           </Button>
           <Title level={2} className="!mb-1">
-            {id ? 'Edit Specialty' : 'Create New Specialty'}
+            {id ? "Edit Specialty" : "Create New Specialty"}
           </Title>
           <p className="text-gray-500">
-            {id ? 'Update specialty information' : 'Add a new medical specialty'}
+            {id
+              ? "Update specialty information"
+              : "Add a new medical specialty"}
           </p>
         </div>
 
@@ -108,27 +122,21 @@ const EditSpecialtyPage = () => {
                 name="specialtyName"
                 label="Specialty Name"
                 rules={[
-                  { required: true, message: 'Please enter specialty name' },
-                  { max: 100, message: 'Name cannot exceed 100 characters' }
+                  { required: true, message: "Please enter specialty name" },
+                  { max: 100, message: "Name cannot exceed 100 characters" },
                 ]}
               >
-                <Input 
-                  placeholder="Enter specialty name"
-                  className="h-10" 
-                />
+                <Input placeholder="Enter specialty name" className="h-10" />
               </Form.Item>
 
-              <Form.Item
-                name="parentSpecialtyId"
-                label="Parent Specialty"
-              >
+              <Form.Item name="parentSpecialtyId" label="Parent Specialty">
                 <Select
                   allowClear
                   placeholder="Select parent specialty"
                   className="h-10"
-                  options={specialties.map(s => ({
+                  options={specialties.map((s) => ({
                     value: s.specialtyId,
-                    label: s.specialtyName
+                    label: s.specialtyName,
                   }))}
                 />
               </Form.Item>
@@ -138,11 +146,14 @@ const EditSpecialtyPage = () => {
               name="description"
               label="Description"
               rules={[
-                { required: true, message: 'Please enter description' },
-                { max: 500, message: 'Description cannot exceed 500 characters' }
+                { required: true, message: "Please enter description" },
+                {
+                  max: 500,
+                  message: "Description cannot exceed 500 characters",
+                },
               ]}
             >
-              <Input.TextArea 
+              <Input.TextArea
                 placeholder="Enter description"
                 rows={4}
                 className="resize-none"
@@ -152,7 +163,7 @@ const EditSpecialtyPage = () => {
             <Form.Item
               name="status"
               label="Status"
-              rules={[{ required: true, message: 'Please select status' }]}
+              rules={[{ required: true, message: "Please select status" }]}
             >
               <Select className="w-full md:w-1/3">
                 <Select.Option value={0}>
@@ -165,19 +176,19 @@ const EditSpecialtyPage = () => {
             </Form.Item>
 
             <div className="flex justify-end gap-4 pt-6 border-t">
-              <Button 
-                onClick={() => navigate('/specialty')}
+              <Button
+                onClick={() => navigate("/specialty")}
                 className="min-w-[100px]"
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 type="primary"
                 htmlType="submit"
                 loading={loading}
                 className="bg-blue-600 hover:bg-blue-700 min-w-[100px]"
               >
-                {id ? 'Save Changes' : 'Create'}
+                {id ? "Save Changes" : "Create"}
               </Button>
             </div>
           </Form>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Card,
   Form,
@@ -13,17 +13,21 @@ import {
   Col,
   Alert,
   Popconfirm,
-  Checkbox
-} from 'antd';
+  Checkbox,
+} from "antd";
 import {
   UserSwitchOutlined,
   TeamOutlined,
   CheckCircleOutlined,
-  WarningOutlined,
-  DeleteOutlined
-} from '@ant-design/icons';
-import { useParams, useNavigate } from 'react-router-dom';
-import { assignToDepartment, getDepartmentById, removeFromDepartment, getAllUsers } from '../../services/departmentServices';
+  DeleteOutlined,
+} from "@ant-design/icons";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  assignToDepartment,
+  getDepartmentById,
+  removeFromDepartment,
+  getAllUsers,
+} from "../../services/departmentServices";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -36,7 +40,7 @@ const AssignDepartment = () => {
   const [department, setDepartment] = useState(null);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [searchValue, setSearchValue] = useState('');
+  // const [searchValue, setSearchValue] = useState("");
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectedUsersToRemove, setSelectedUsersToRemove] = useState([]);
 
@@ -47,20 +51,20 @@ const AssignDepartment = () => {
       try {
         const [deptData, usersData] = await Promise.all([
           getDepartmentById(departmentId),
-          getAllUsers()
+          getAllUsers(),
         ]);
         setDepartment(deptData);
-        
+
         // Lấy tất cả users có cùng specialtyId
-        const filteredUsers = usersData.filter(user => 
-          user.specialtyId === deptData.specialtyId
+        const filteredUsers = usersData.filter(
+          (user) => user.specialtyId === deptData.specialtyId
         );
         setUsers(filteredUsers);
-        console.log('Department:', deptData);
-        console.log('Filtered Users:', filteredUsers);
+        console.log("Department:", deptData);
+        console.log("Filtered Users:", filteredUsers);
       } catch (error) {
-        console.error('Error fetching data:', error);
-        message.error('Failed to fetch data');
+        console.error("Error fetching data:", error);
+        message.error("Failed to fetch data");
       } finally {
         setLoading(false);
       }
@@ -69,48 +73,48 @@ const AssignDepartment = () => {
   }, [departmentId]);
 
   const handleUserSelect = (userId) => {
-    console.log('Selected User ID:', userId);
-    const user = users.find(u => u.userId === userId);
-    console.log('Found User:', user);
+    console.log("Selected User ID:", userId);
+    const user = users.find((u) => u.userId === userId);
+    console.log("Found User:", user);
     setSelectedUser(user);
   };
 
   const handleSubmit = async (values) => {
-    console.log('Submit Values:', values);
-    console.log('Selected User:', selectedUser);
-    
+    console.log("Submit Values:", values);
+    console.log("Selected User:", selectedUser);
+
     if (!selectedUser) {
-      message.warning('Please select a user');
+      message.warning("Please select a user");
       return;
     }
 
     if (selectedUser.specialtyId !== department.specialtyId) {
-      message.error('User specialty does not match department specialty');
+      message.error("User specialty does not match department specialty");
       return;
     }
 
     try {
       setLoading(true);
       await assignToDepartment(departmentId, values.userId);
-      message.success('User assigned successfully');
-      
+      message.success("User assigned successfully");
+
       // Thay đổi từ navigate('/department') thành load lại data
       const [deptData, usersData] = await Promise.all([
         getDepartmentById(departmentId),
-        getAllUsers()
+        getAllUsers(),
       ]);
       setDepartment(deptData);
-      const filteredUsers = usersData.filter(user => 
-        user.specialtyId === deptData.specialtyId
+      const filteredUsers = usersData.filter(
+        (user) => user.specialtyId === deptData.specialtyId
       );
       setUsers(filteredUsers);
-      
+
       // Reset form và selected user
       form.resetFields();
       setSelectedUser(null);
     } catch (error) {
-      console.error('Error assigning user:', error);
-      message.error('Failed to assign user');
+      console.error("Error assigning user:", error);
+      message.error("Failed to assign user");
     } finally {
       setLoading(false);
     }
@@ -120,21 +124,21 @@ const AssignDepartment = () => {
     try {
       setLoading(true);
       await removeFromDepartment(userId);
-      message.success('User removed from department successfully');
-      
+      message.success("User removed from department successfully");
+
       // Load lại data thay vì navigate
       const [deptData, usersData] = await Promise.all([
         getDepartmentById(departmentId),
-        getAllUsers()
+        getAllUsers(),
       ]);
       setDepartment(deptData);
-      const filteredUsers = usersData.filter(user => 
-        user.specialtyId === deptData.specialtyId
+      const filteredUsers = usersData.filter(
+        (user) => user.specialtyId === deptData.specialtyId
       );
       setUsers(filteredUsers);
     } catch (error) {
-      console.error('Error removing user:', error);
-      message.error('Failed to remove user from department');
+      console.error("Error removing user:", error);
+      message.error("Failed to remove user from department");
     } finally {
       setLoading(false);
     }
@@ -145,24 +149,24 @@ const AssignDepartment = () => {
       setLoading(true);
       // Thực hiện assign lần lượt cho từng user
       await Promise.all(
-        selectedUsers.map(userId => assignToDepartment(departmentId, userId))
+        selectedUsers.map((userId) => assignToDepartment(departmentId, userId))
       );
-      message.success('Users assigned successfully');
-      
+      message.success("Users assigned successfully");
+
       // Load lại data
       const [deptData, usersData] = await Promise.all([
         getDepartmentById(departmentId),
-        getAllUsers()
+        getAllUsers(),
       ]);
       setDepartment(deptData);
-      const filteredUsers = usersData.filter(user => 
-        user.specialtyId === deptData.specialtyId
+      const filteredUsers = usersData.filter(
+        (user) => user.specialtyId === deptData.specialtyId
       );
       setUsers(filteredUsers);
       setSelectedUsers([]); // Reset selection
     } catch (error) {
-      console.error('Error assigning users:', error);
-      message.error('Failed to assign users');
+      console.error("Error assigning users:", error);
+      message.error("Failed to assign users");
     } finally {
       setLoading(false);
     }
@@ -172,62 +176,70 @@ const AssignDepartment = () => {
     try {
       setLoading(true);
       await Promise.all(
-        selectedUsersToRemove.map(userId => removeFromDepartment(userId))
+        selectedUsersToRemove.map((userId) => removeFromDepartment(userId))
       );
-      message.success('Users removed successfully');
-      
+      message.success("Users removed successfully");
+
       // Load lại data
       const [deptData, usersData] = await Promise.all([
         getDepartmentById(departmentId),
-        getAllUsers()
+        getAllUsers(),
       ]);
       setDepartment(deptData);
-      const filteredUsers = usersData.filter(user => 
-        user.specialtyId === deptData.specialtyId
+      const filteredUsers = usersData.filter(
+        (user) => user.specialtyId === deptData.specialtyId
       );
       setUsers(filteredUsers);
       setSelectedUsersToRemove([]); // Reset selection
     } catch (error) {
-      console.error('Error removing users:', error);
-      message.error('Failed to remove users');
+      console.error("Error removing users:", error);
+      message.error("Failed to remove users");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSelectAllChange = (type, checked) => {
-    if (type === 'assign') {
-      const availableUsers = users.filter(user => !user.departmentId).map(user => user.userId);
-      setSelectedUsers(checked ? availableUsers : []);
-    } else {
-      const assignedUsers = users.filter(user => user.departmentId).map(user => user.userId);
-      setSelectedUsersToRemove(checked ? assignedUsers : []);
-    }
-  };
+  // const handleSelectAllChange = (type, checked) => {
+  //   if (type === 'assign') {
+  //     const availableUsers = users.filter(user => !user.departmentId).map(user => user.userId);
+  //     setSelectedUsers(checked ? availableUsers : []);
+  //   } else {
+  //     const assignedUsers = users.filter(user => user.departmentId).map(user => user.userId);
+  //     setSelectedUsersToRemove(checked ? assignedUsers : []);
+  //   }
+  // };
 
   const columns = [
     {
       title: () => (
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: "flex", alignItems: "center" }}>
           <Checkbox
             checked={
-              users.length > 0 && 
-              users.every(u => 
-                !u.departmentId ? selectedUsers.includes(u.userId) : selectedUsersToRemove.includes(u.userId)
+              users.length > 0 &&
+              users.every((u) =>
+                !u.departmentId
+                  ? selectedUsers.includes(u.userId)
+                  : selectedUsersToRemove.includes(u.userId)
               )
             }
             indeterminate={
               (selectedUsers.length > 0 || selectedUsersToRemove.length > 0) &&
-              !users.every(u => 
-                !u.departmentId ? selectedUsers.includes(u.userId) : selectedUsersToRemove.includes(u.userId)
+              !users.every((u) =>
+                !u.departmentId
+                  ? selectedUsers.includes(u.userId)
+                  : selectedUsersToRemove.includes(u.userId)
               )
             }
             onChange={(e) => {
               const checked = e.target.checked;
               if (checked) {
                 // Select tất cả
-                const availableUsers = users.filter(u => !u.departmentId).map(u => u.userId);
-                const assignedUsers = users.filter(u => u.departmentId).map(u => u.userId);
+                const availableUsers = users
+                  .filter((u) => !u.departmentId)
+                  .map((u) => u.userId);
+                const assignedUsers = users
+                  .filter((u) => u.departmentId)
+                  .map((u) => u.userId);
                 setSelectedUsers(availableUsers);
                 setSelectedUsersToRemove(assignedUsers);
               } else {
@@ -237,66 +249,71 @@ const AssignDepartment = () => {
               }
             }}
           />
-          <span style={{ marginLeft: '8px' }}>Select</span>
+          <span style={{ marginLeft: "8px" }}>Select</span>
         </div>
       ),
-      key: 'select',
-      width: '5%',
+      key: "select",
+      width: "5%",
       render: (_, record) => (
         <Checkbox
-          checked={record.departmentId ? 
-            selectedUsersToRemove.includes(record.userId) : 
-            selectedUsers.includes(record.userId)
+          checked={
+            record.departmentId
+              ? selectedUsersToRemove.includes(record.userId)
+              : selectedUsers.includes(record.userId)
           }
           onChange={(e) => {
             if (record.departmentId) {
               // Xử lý cho remove
               if (e.target.checked) {
-                setSelectedUsersToRemove(prev => [...prev, record.userId]);
+                setSelectedUsersToRemove((prev) => [...prev, record.userId]);
               } else {
-                setSelectedUsersToRemove(prev => prev.filter(id => id !== record.userId));
+                setSelectedUsersToRemove((prev) =>
+                  prev.filter((id) => id !== record.userId)
+                );
               }
             } else {
               // Xử lý cho assign
               if (e.target.checked) {
-                setSelectedUsers(prev => [...prev, record.userId]);
+                setSelectedUsers((prev) => [...prev, record.userId]);
               } else {
-                setSelectedUsers(prev => prev.filter(id => id !== record.userId));
+                setSelectedUsers((prev) =>
+                  prev.filter((id) => id !== record.userId)
+                );
               }
             }
           }}
         />
-      )
+      ),
     },
     {
-      title: 'User ID',
-      dataIndex: 'userId',
-      key: 'userId',
-      width: '12%',
+      title: "User ID",
+      dataIndex: "userId",
+      key: "userId",
+      width: "12%",
       sorter: (a, b) => a.userId.localeCompare(b.userId),
     },
     {
-      title: 'Name',
-      dataIndex: 'fullName',
-      key: 'fullName',
-      width: '18%',
+      title: "Name",
+      dataIndex: "fullName",
+      key: "fullName",
+      width: "18%",
       sorter: (a, b) => a.fullName.localeCompare(b.fullName),
     },
     {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
-      width: '22%',
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+      width: "22%",
       sorter: (a, b) => a.email.localeCompare(b.email),
     },
     {
-      title: 'Specialty',
-      dataIndex: 'specialtyId',
-      key: 'specialtyId',
-      width: '18%',
+      title: "Specialty",
+      dataIndex: "specialtyId",
+      key: "specialtyId",
+      width: "18%",
       sorter: (a, b) => a.specialtyId.localeCompare(b.specialtyId),
       render: (specialtyId) => (
-        <Tag color={specialtyId === department?.specialtyId ? 'green' : 'red'}>
+        <Tag color={specialtyId === department?.specialtyId ? "green" : "red"}>
           {specialtyId}
           {specialtyId === department?.specialtyId && (
             <CheckCircleOutlined style={{ marginLeft: 8 }} />
@@ -305,20 +322,20 @@ const AssignDepartment = () => {
       ),
     },
     {
-      title: 'Status',
-      key: 'departmentStatus',
-      width: '12%',
+      title: "Status",
+      key: "departmentStatus",
+      width: "12%",
       sorter: (a, b) => (a.departmentId ? 1 : 0) - (b.departmentId ? 1 : 0),
       render: (_, record) => (
-        <Tag color={record.departmentId ? 'blue' : 'orange'}>
-          {record.departmentId ? 'Assigned' : 'Available'}
+        <Tag color={record.departmentId ? "blue" : "orange"}>
+          {record.departmentId ? "Assigned" : "Available"}
         </Tag>
       ),
     },
     {
-      title: 'Actions',
-      key: 'actions',
-      width: '13%',
+      title: "Actions",
+      key: "actions",
+      width: "13%",
       render: (_, record) => (
         <Space>
           {!record.departmentId ? (
@@ -342,11 +359,7 @@ const AssignDepartment = () => {
               cancelText="No"
               okButtonProps={{ danger: true }}
             >
-              <Button 
-                danger
-                icon={<DeleteOutlined />}
-                size="middle"
-              >
+              <Button danger icon={<DeleteOutlined />} size="middle">
                 Remove
               </Button>
             </Popconfirm>
@@ -361,7 +374,7 @@ const AssignDepartment = () => {
       <Row justify="center">
         <Col xs={24} xl={20}>
           <Card className="shadow-xl rounded-lg">
-            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <Space direction="vertical" size="large" style={{ width: "100%" }}>
               {/* Header */}
               <div className="flex items-center justify-between">
                 <Space align="start">
@@ -370,13 +383,16 @@ const AssignDepartment = () => {
                     Assign User to Department
                   </Title>
                   {department && (
-                    <Tag color="blue" style={{ fontSize: '16px', padding: '4px 12px' }}>
+                    <Tag
+                      color="blue"
+                      style={{ fontSize: "16px", padding: "4px 12px" }}
+                    >
                       <TeamOutlined className="mr-2" />
                       {department.departmentName}
                     </Tag>
                   )}
                 </Space>
-                <Button type="link" onClick={() => navigate('/department')}>
+                <Button type="link" onClick={() => navigate("/department")}>
                   Back to Departments
                 </Button>
               </div>
@@ -387,9 +403,16 @@ const AssignDepartment = () => {
                   message="Department Information"
                   description={
                     <Space direction="vertical">
-                      <Text>Department ID: <strong>{department.departmentId}</strong></Text>
-                      <Text>Specialty ID: <strong>{department.specialtyId}</strong></Text>
-                      <Text type="secondary">Only users with matching specialty can be assigned</Text>
+                      <Text>
+                        Department ID:{" "}
+                        <strong>{department.departmentId}</strong>
+                      </Text>
+                      <Text>
+                        Specialty ID: <strong>{department.specialtyId}</strong>
+                      </Text>
+                      <Text type="secondary">
+                        Only users with matching specialty can be assigned
+                      </Text>
                     </Space>
                   }
                   type="info"
@@ -407,25 +430,23 @@ const AssignDepartment = () => {
                 <Form.Item
                   name="userId"
                   label="Select User"
-                  rules={[{ required: true, message: 'Please select a user' }]}
+                  rules={[{ required: true, message: "Please select a user" }]}
                 >
                   <Select
                     placeholder="Select a user to assign"
                     onChange={handleUserSelect}
-                    style={{ width: '100%' }}
+                    style={{ width: "100%" }}
                     showSearch
                     allowClear
                     filterOption={(input, option) => {
-                        const childrenText = option?.children?.toString().toLowerCase() || '';
-                        const searchText = input.toLowerCase();
-                        return childrenText.includes(searchText);
+                      const childrenText =
+                        option?.children?.toString().toLowerCase() || "";
+                      const searchText = input.toLowerCase();
+                      return childrenText.includes(searchText);
                     }}
                   >
-                    {users.map(user => (
-                      <Option 
-                        key={user.userId}
-                        value={user.userId}
-                      >
+                    {users.map((user) => (
+                      <Option key={user.userId} value={user.userId}>
                         {user.fullName} - {user.email}
                       </Option>
                     ))}
@@ -439,10 +460,10 @@ const AssignDepartment = () => {
                     loading={loading}
                     disabled={!selectedUser}
                     size="large"
-                    style={{ 
-                      backgroundColor: '#1890ff',
-                      width: '200px',
-                      height: '40px'
+                    style={{
+                      backgroundColor: "#1890ff",
+                      width: "200px",
+                      height: "40px",
                     }}
                   >
                     Assign User
@@ -472,9 +493,9 @@ const AssignDepartment = () => {
                         onClick={handleMultipleAssign}
                         loading={loading}
                         icon={<UserSwitchOutlined />}
-                        style={{ 
-                          backgroundColor: '#52c41a',
-                          borderColor: '#52c41a'
+                        style={{
+                          backgroundColor: "#52c41a",
+                          borderColor: "#52c41a",
                         }}
                       >
                         Assign Selected ({selectedUsers.length})
@@ -491,18 +512,26 @@ const AssignDepartment = () => {
                     pageSize: 5,
                     showTotal: (total) => `Total ${total} users`,
                     showSizeChanger: true,
-                    pageSizeOptions: ['5', '10', '20', '50'],
+                    pageSizeOptions: ["5", "10", "20", "50"],
                   }}
                   className="shadow-lg rounded-lg overflow-hidden"
                   scroll={{ x: 1200 }}
                   rowClassName={(record) => {
                     if (record.departmentId) {
-                      return selectedUsersToRemove.includes(record.userId) ? 'bg-red-50' : 'bg-gray-50';
+                      return selectedUsersToRemove.includes(record.userId)
+                        ? "bg-red-50"
+                        : "bg-gray-50";
                     }
-                    return selectedUsers.includes(record.userId) ? 'bg-blue-50' : '';
+                    return selectedUsers.includes(record.userId)
+                      ? "bg-blue-50"
+                      : "";
                   }}
                   onChange={(pagination, filters, sorter) => {
-                    console.log('Table change:', { pagination, filters, sorter });
+                    console.log("Table change:", {
+                      pagination,
+                      filters,
+                      sorter,
+                    });
                   }}
                 />
               </div>

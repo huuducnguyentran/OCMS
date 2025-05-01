@@ -1,20 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  Form,
   Input,
   Button,
   Upload,
   message,
   Card,
-  Typography,
-  DatePicker,
   Space,
   Spin,
   Empty,
   Modal,
-  Tooltip,
-  Table
+  Table,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -23,11 +19,13 @@ import {
   PlusOutlined,
   UploadOutlined,
   EyeOutlined,
-  FileImageOutlined
+  FileImageOutlined,
 } from "@ant-design/icons";
-import { getExternalCertificatesByCandidateId, deleteExternalCertificate, updateExternalCertificate } from "../../services/externalCertifcateService";
-
-const { Title } = Typography;
+import {
+  getExternalCertificatesByCandidateId,
+  deleteExternalCertificate,
+  updateExternalCertificate,
+} from "../../services/externalCertifcateService";
 
 const EditExternalCertiPage = () => {
   const { id: candidateId } = useParams();
@@ -38,13 +36,13 @@ const EditExternalCertiPage = () => {
   const [editingCertificate, setEditingCertificate] = useState(null);
   const [editForm, setEditForm] = useState({
     certificateName: "",
-    certificateCode: "",    
+    certificateCode: "",
     certificateProvider: "",
   });
   const [fileList, setFileList] = useState([]);
   const [previewVisible, setPreviewVisible] = useState(false);
-  const [previewImage, setPreviewImage] = useState('');
-  const [previewTitle, setPreviewTitle] = useState('');
+  const [previewImage, setPreviewImage] = useState("");
+  const [previewTitle, setPreviewTitle] = useState("");
 
   useEffect(() => {
     fetchCertificates();
@@ -73,12 +71,12 @@ const EditExternalCertiPage = () => {
     setEditModalVisible(true);
   };
 
-  const normFile = (e) => {
-    if (Array.isArray(e)) {
-      return e;
-    }
-    return e?.fileList;
-  };
+  // const normFile = (e) => {
+  //   if (Array.isArray(e)) {
+  //     return e;
+  //   }
+  //   return e?.fileList;
+  // };
 
   const handleUpdateCertificate = async () => {
     try {
@@ -91,14 +89,14 @@ const EditExternalCertiPage = () => {
         certificateCode: editForm.certificateCode.trim(),
         certificateName: editForm.certificateName.trim(),
         issuingOrganization: editForm.certificateProvider?.trim() || "",
-        candidateId: candidateId
+        candidateId: candidateId,
       };
 
       if (fileList.length > 0) {
         const formData = new FormData();
         formData.append("certificateImage", fileList[0].originFileObj);
-        
-        Object.keys(updateData).forEach(key => {
+
+        Object.keys(updateData).forEach((key) => {
           formData.append(key, updateData[key]);
         });
 
@@ -116,7 +114,6 @@ const EditExternalCertiPage = () => {
 
       // Refresh lại trang
       window.location.reload();
-
     } catch (error) {
       console.error("Error updating certificate:", error);
       message.error("Failed to update certificate");
@@ -142,7 +139,7 @@ const EditExternalCertiPage = () => {
                   className="max-w-[200px] h-auto rounded-lg border"
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = 'https://placehold.co/200x200?text=No+Image';
+                    e.target.src = "https://placehold.co/200x200?text=No+Image";
                   }}
                 />
               </div>
@@ -160,7 +157,7 @@ const EditExternalCertiPage = () => {
           setLoading(true); // Thêm loading state
           await deleteExternalCertificate(cert.id);
           message.success("Certificate deleted successfully");
-          
+
           // Refresh lại trang
           window.location.reload();
         } catch (error) {
@@ -244,28 +241,30 @@ const EditExternalCertiPage = () => {
             Certificate Image
           </label>
           <div className="space-y-4">
-            {editingCertificate?.certificateFileURLWithSas && fileList.length === 0 && (
-              <div className="relative group inline-block">
-                <div className="max-w-md overflow-hidden rounded-lg border border-gray-200">
-                  <img
-                    src={editingCertificate.certificateFileURLWithSas}
-                    alt="Current Certificate"
-                    className="w-xs h-auto object-contain bg-white"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = 'https://placehold.co/300x300?text=No+Image';
-                    }}
-                  />
-                </div>
-                <div 
-                  className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 
+            {editingCertificate?.certificateFileURLWithSas &&
+              fileList.length === 0 && (
+                <div className="relative group inline-block">
+                  <div className="max-w-md overflow-hidden rounded-lg border border-gray-200">
+                    <img
+                      src={editingCertificate.certificateFileURLWithSas}
+                      alt="Current Certificate"
+                      className="w-xs h-auto object-contain bg-white"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src =
+                          "https://placehold.co/300x300?text=No+Image";
+                      }}
+                    />
+                  </div>
+                  <div
+                    className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 
                              transition-opacity rounded-lg flex items-center justify-center cursor-pointer"
-                  onClick={() => handlePreviewImage(editingCertificate)}
-                >
-                  <EyeOutlined className="text-white text-2xl" />
+                    onClick={() => handlePreviewImage(editingCertificate)}
+                  >
+                    <EyeOutlined className="text-white text-2xl" />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
             <Upload
               listType="picture-card"
               fileList={fileList}
@@ -303,7 +302,8 @@ const EditExternalCertiPage = () => {
           className="max-w-full max-h-[70vh] object-contain"
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = 'https://placehold.co/800x600?text=Image+Not+Available';
+            e.target.src =
+              "https://placehold.co/800x600?text=Image+Not+Available";
           }}
         />
       </div>
@@ -360,7 +360,7 @@ const EditExternalCertiPage = () => {
                 {
                   title: "Image",
                   key: "image",
-                  render: (_, record) => (
+                  render: (_, record) =>
                     record.certificateFileURLWithSas ? (
                       <div className="relative group">
                         <div className="w-24 h-24 overflow-hidden rounded-lg border border-gray-200">
@@ -370,11 +370,12 @@ const EditExternalCertiPage = () => {
                             className="w-full h-full object-contain bg-white"
                             onError={(e) => {
                               e.target.onerror = null;
-                              e.target.src = 'https://placehold.co/100x100?text=No+Image';
+                              e.target.src =
+                                "https://placehold.co/100x100?text=No+Image";
                             }}
                           />
                         </div>
-                        <div 
+                        <div
                           className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 
                                      transition-opacity rounded-lg flex items-center justify-center cursor-pointer"
                           onClick={() => handlePreviewImage(record)}
@@ -383,12 +384,13 @@ const EditExternalCertiPage = () => {
                         </div>
                       </div>
                     ) : (
-                      <div className="w-24 h-24 bg-gray-50 rounded-lg border border-gray-200 
-                                      flex items-center justify-center">
+                      <div
+                        className="w-24 h-24 bg-gray-50 rounded-lg border border-gray-200 
+                                      flex items-center justify-center"
+                      >
                         <FileImageOutlined className="text-gray-400 text-2xl" />
                       </div>
-                    )
-                  ),
+                    ),
                 },
                 {
                   title: "Actions",

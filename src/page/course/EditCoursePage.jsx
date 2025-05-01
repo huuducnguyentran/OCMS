@@ -1,21 +1,32 @@
-import React, { useState, useEffect } from "react";
-import { 
-  Layout, Input, Button, Select, message, Form, 
-  Spin, Card, Typography, Divider 
+import { useState, useEffect } from "react";
+import {
+  Layout,
+  Input,
+  Button,
+  message,
+  Form,
+  Spin,
+  Card,
+  Typography,
+  Divider,
 } from "antd";
-import { ArrowLeftOutlined, SaveOutlined, ReloadOutlined } from "@ant-design/icons";
+import {
+  ArrowLeftOutlined,
+  SaveOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import { courseService } from "../../services/courseService";
 import { trainingPlanService } from "../../services/trainingPlanService";
 
-const { Option } = Select;
+// const { Option } = Select;
 const { Title, Text } = Typography;
 
 const EditCoursePage = () => {
   // State management
   const [form] = Form.useForm();
   const navigate = useNavigate();
-  const { id } = useParams(); 
+  const { id } = useParams();
   const [loading, setLoading] = useState(false);
   const [loadingCourse, setLoadingCourse] = useState(true);
   const [trainingPlans, setTrainingPlans] = useState([]);
@@ -32,13 +43,13 @@ const EditCoursePage = () => {
       setLoadingCourse(true);
       const response = await courseService.getCourseById(id);
       console.log("Course data:", response);
-      
+
       if (response && response.success && response.data) {
         // Set form values với đầy đủ các trường
         form.setFieldsValue({
           description: response.data.description,
           courseName: response.data.courseName,
-          courseRelatedId: response.data.courseRelatedId || "" // Đảm bảo có giá trị mặc định
+          courseRelatedId: response.data.courseRelatedId || "", // Đảm bảo có giá trị mặc định
         });
       } else {
         message.error("Failed to load course data");
@@ -73,18 +84,22 @@ const EditCoursePage = () => {
       const formattedData = {
         description: values.description?.trim() || "",
         courseName: values.courseName?.trim() || "",
-        courseRelatedId: values.courseRelatedId?.trim() || ""
+        courseRelatedId: values.courseRelatedId?.trim() || "",
       };
 
       console.log("Sending update data:", formattedData);
-      
+
       // Đảm bảo gọi đúng endpoint với đúng format
       await courseService.updateCourse(id, formattedData);
       message.success("Course updated successfully!");
       navigate("/all-courses", { state: { refresh: true } });
     } catch (error) {
       console.error("Failed to update course:", error);
-      message.error(`Failed to update course: ${error.response?.data?.message || error.message}`);
+      message.error(
+        `Failed to update course: ${
+          error.response?.data?.message || error.message
+        }`
+      );
     } finally {
       setLoading(false);
     }
@@ -92,14 +107,16 @@ const EditCoursePage = () => {
 
   return (
     <Layout className="min-h-screen bg-gray-50 p-8 sm:p-10">
-      <Card 
+      <Card
         className="max-w-5xl mx-auto shadow-xl rounded-xl overflow-hidden border-0"
         title={
           <div className="flex items-center justify-between py-2">
-            <Title level={2} className="m-0 text-gray-800">Edit Course</Title>
-            <Button 
+            <Title level={2} className="m-0 text-gray-800">
+              Edit Course
+            </Title>
+            <Button
               size="large"
-              icon={<ArrowLeftOutlined />} 
+              icon={<ArrowLeftOutlined />}
               onClick={() => navigate("/all-courses")}
               className="flex items-center text-gray-600 hover:text-gray-800 border-gray-300"
             >
@@ -108,8 +125,8 @@ const EditCoursePage = () => {
           </div>
         }
         styles={{
-          header: { borderBottom: '1px solid #f0f0f0' },
-          body: { padding: '16px' }
+          header: { borderBottom: "1px solid #f0f0f0" },
+          body: { padding: "16px" },
         }}
       >
         <Spin spinning={loading || loadingCourse || loadingPlans} size="large">
@@ -123,26 +140,34 @@ const EditCoursePage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
               <Form.Item
                 name="courseName"
-                label={<Text strong className="text-lg">Course Name</Text>}
+                label={
+                  <Text strong className="text-lg">
+                    Course Name
+                  </Text>
+                }
                 rules={[{ required: true, message: "Course name is required" }]}
                 className="col-span-2"
               >
-                <Input 
-                  placeholder="Enter course name" 
-                  className="rounded-lg py-3 px-4 text-lg" 
+                <Input
+                  placeholder="Enter course name"
+                  className="rounded-lg py-3 px-4 text-lg"
                   size="large"
                 />
               </Form.Item>
 
               <Form.Item
                 name="description"
-                label={<Text strong className="text-lg">Description</Text>}
+                label={
+                  <Text strong className="text-lg">
+                    Description
+                  </Text>
+                }
                 rules={[{ required: true, message: "Description is required" }]}
                 className="col-span-2"
               >
-                <Input.TextArea 
-                  placeholder="Enter course description" 
-                  className="rounded-lg py-3 px-4 text-lg" 
+                <Input.TextArea
+                  placeholder="Enter course description"
+                  className="rounded-lg py-3 px-4 text-lg"
                   size="large"
                   rows={4}
                 />
@@ -150,12 +175,16 @@ const EditCoursePage = () => {
 
               <Form.Item
                 name="courseRelatedId"
-                label={<Text strong className="text-lg">Course Related ID</Text>}
+                label={
+                  <Text strong className="text-lg">
+                    Course Related ID
+                  </Text>
+                }
                 className="col-span-2"
               >
-                <Input 
-                  placeholder="Enter course related ID" 
-                  className="rounded-lg py-3 px-4 text-lg" 
+                <Input
+                  placeholder="Enter course related ID"
+                  className="rounded-lg py-3 px-4 text-lg"
                   size="large"
                 />
               </Form.Item>
@@ -164,7 +193,7 @@ const EditCoursePage = () => {
             <Divider className="my-8 border-gray-200" />
 
             <div className="flex justify-end space-x-6 mt-8">
-              <Button 
+              <Button
                 icon={<ReloadOutlined />}
                 onClick={fetchCourseData}
                 className="rounded-lg border-gray-300 hover:border-gray-400 hover:text-gray-700 px-6 py-3 h-auto text-base flex items-center"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Form,
   Input,
@@ -13,7 +13,6 @@ import {
   Row,
   Col,
   Typography,
-  Space,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
@@ -24,7 +23,6 @@ import {
 import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
 import dayjs from "dayjs";
-
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -72,7 +70,7 @@ const CreateSchedulePage = () => {
             name: subject.subjectName,
             description: subject.description,
             courseId: subject.courseId,
-            specialtyId: subject.specialtyId
+            specialtyId: subject.specialtyId,
           }))
         );
 
@@ -83,7 +81,7 @@ const CreateSchedulePage = () => {
           response.data.map((subject) => ({
             id: subject.subjectId || subject.id,
             name: subject.subjectName || subject.name,
-            specialtyId: subject.specialtyId
+            specialtyId: subject.specialtyId,
           }))
         );
       } else {
@@ -96,9 +94,17 @@ const CreateSchedulePage = () => {
 
       // Sample data based on actual API
       setSubjects([
-        { id: "S-0002", name: "Air plane daily journey", specialtyId: "Airplane" },
+        {
+          id: "S-0002",
+          name: "Air plane daily journey",
+          specialtyId: "Airplane",
+        },
         { id: "S-0003", name: "Air plane basic rule", specialtyId: "Airplane" },
-        { id: "S-0004", name: "Air plane daily journey 2", specialtyId: "Airplane" },
+        {
+          id: "S-0004",
+          name: "Air plane daily journey 2",
+          specialtyId: "Airplane",
+        },
         { id: "Sb-00001", name: "basic step fr dummy", specialtyId: "Basic" },
       ]);
     } finally {
@@ -113,29 +119,33 @@ const CreateSchedulePage = () => {
       const token = sessionStorage.getItem("token");
       const response = await axiosInstance.get(API.GET_ALL_USER, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { roleName: "Instructor" }
+        params: { roleName: "Instructor" },
       });
 
       console.log("Instructor API response:", response.data);
 
       if (response.data && response.data.users) {
-        const instructorData = response.data.users.filter(user => user.roleName === "Instructor");
+        const instructorData = response.data.users.filter(
+          (user) => user.roleName === "Instructor"
+        );
         setInstructors(
           instructorData.map((instructor) => ({
             id: instructor.userId || instructor.id,
             name: instructor.fullName || instructor.name || instructor.userName,
             roleName: instructor.roleName,
-            specialtyId: instructor.specialtyId
+            specialtyId: instructor.specialtyId,
           }))
         );
       } else if (response.data && Array.isArray(response.data)) {
-        const filteredInstructors = response.data.filter(user => user.roleName === "Instructor");
+        const filteredInstructors = response.data.filter(
+          (user) => user.roleName === "Instructor"
+        );
         setInstructors(
           filteredInstructors.map((instructor) => ({
             id: instructor.userId || instructor.id,
             name: instructor.fullName || instructor.name || instructor.userName,
             roleName: instructor.roleName,
-            specialtyId: instructor.specialtyId
+            specialtyId: instructor.specialtyId,
           }))
         );
       } else {
@@ -162,7 +172,7 @@ const CreateSchedulePage = () => {
 
       // Format time to string
       const classTime = values.classTime.format("HH:mm:ss");
-      
+
       // Format subjectPeriod để lưu chính xác thời gian học
       const subjectPeriod = values.subjectPeriod
         ? values.subjectPeriod.format("HH:mm:ss")
@@ -282,10 +292,13 @@ const CreateSchedulePage = () => {
                     >
                       {subjects.map((subject) => (
                         <Option key={subject.id} value={subject.id}>
-                          {subject.name} {subject.specialtyId ? `(${subject.specialtyId})` : ''}
+                          {subject.name}{" "}
+                          {subject.specialtyId
+                            ? `(${subject.specialtyId})`
+                            : ""}
                         </Option>
                       ))}
-                    </Select>     
+                    </Select>
                   </Form.Item>
 
                   <Form.Item
@@ -306,7 +319,10 @@ const CreateSchedulePage = () => {
                     >
                       {instructors.map((instructor) => (
                         <Option key={instructor.id} value={instructor.id}>
-                          {instructor.name} {instructor.specialtyId ? `(${instructor.specialtyId})` : ''}
+                          {instructor.name}{" "}
+                          {instructor.specialtyId
+                            ? `(${instructor.specialtyId})`
+                            : ""}
                         </Option>
                       ))}
                     </Select>
@@ -456,16 +472,13 @@ const CreateSchedulePage = () => {
                       </Form.Item>
                     </Col>
                     <Col span={12}>
-                      <Form.Item
-                        name="subjectPeriod"
-                        label="Duration"
-                      >
+                      <Form.Item name="subjectPeriod" label="Duration">
                         <TimePicker
                           className="w-full"
                           format="HH:mm"
                           placeholder="Select duration"
                           showNow={false}
-                          minuteStep={15}  // Cho phép chọn thời gian theo bước 15 phút
+                          minuteStep={15} // Cho phép chọn thời gian theo bước 15 phút
                         />
                       </Form.Item>
                     </Col>

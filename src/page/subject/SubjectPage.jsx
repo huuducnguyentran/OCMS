@@ -8,7 +8,6 @@ import {
   Tag,
   Typography,
   Tooltip,
-  Badge,
   Select,
 } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +19,6 @@ import {
   BookOutlined,
   TrophyOutlined,
   QuestionCircleOutlined,
-  ClockCircleOutlined,
   EyeOutlined,
   CalendarOutlined,
 } from "@ant-design/icons";
@@ -56,7 +54,7 @@ const SubjectPage = () => {
               courseId: subject.courseId,
               description: subject.description,
               credits: subject.credits,
-              passingScore: subject.passingScore
+              passingScore: subject.passingScore,
             }));
             setSubjects(traineeSubjects);
             setFilteredSubjects(traineeSubjects);

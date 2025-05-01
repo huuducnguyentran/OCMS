@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
-import { read, utils } from 'xlsx';
-import { message, Button, Table, Typography, Spin } from 'antd';
-import { UploadOutlined, FileExcelOutlined, ReloadOutlined } from '@ant-design/icons';
-import { gradeServices } from '../../services/gradeServices';
+import { useState } from "react";
+import { read, utils } from "xlsx";
+import { message, Button, Table, Typography, Spin } from "antd";
+import {
+  UploadOutlined,
+  FileExcelOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
+import { gradeServices } from "../../services/gradeServices";
 
 const { Title } = Typography;
 
@@ -19,21 +23,21 @@ const GradeImportPage = () => {
       setLoading(true);
       setError(null);
       setSelectedFile(file);
-      
-      if (!file.type.includes('sheet') && !file.type.includes('excel')) {
-        throw new Error('Please upload only Excel files (.xlsx, .xls)');
+
+      if (!file.type.includes("sheet") && !file.type.includes("excel")) {
+        throw new Error("Please upload only Excel files (.xlsx, .xls)");
       }
 
       const data = await file.arrayBuffer();
       const workbook = read(data);
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = utils.sheet_to_json(worksheet);
-      
+
       if (jsonData.length === 0) {
-        throw new Error('File contains no data');
+        throw new Error("File contains no data");
       }
 
-      const tableColumns = Object.keys(jsonData[0]).map(key => ({
+      const tableColumns = Object.keys(jsonData[0]).map((key) => ({
         title: key,
         dataIndex: key,
         key: key,
@@ -41,10 +45,10 @@ const GradeImportPage = () => {
 
       setColumns(tableColumns);
       setExcelData(jsonData);
-      message.success('Excel file read successfully');
+      message.success("Excel file read successfully");
     } catch (err) {
-      setError('Error reading file: ' + err.message);
-      message.error('Cannot read file');
+      setError("Error reading file: " + err.message);
+      message.error("Cannot read file");
     } finally {
       setLoading(false);
       setIsDragging(false);
@@ -54,35 +58,38 @@ const GradeImportPage = () => {
   const handleImportGrades = async () => {
     try {
       if (!selectedFile) {
-        message.error('Please select an Excel file before importing');
+        message.error("Please select an Excel file before importing");
         return;
       }
 
       setLoading(true);
       const response = await gradeServices.importGrades(selectedFile);
-      
+
       if (response.result) {
-        const { totalRecords, successCount, failedCount, errors } = response.result;
-        
+        const { totalRecords, successCount, failedCount, errors } =
+          response.result;
+
         if (failedCount > 0 || errors.length > 0) {
-          setError(`Import failed: ${errors.join(', ')}`);
-          message.error('Grade import failed');
+          setError(`Import failed: ${errors.join(", ")}`);
+          message.error("Grade import failed");
         } else if (successCount > 0) {
-          message.success(`Successfully imported ${successCount}/${totalRecords} records`);
+          message.success(
+            `Successfully imported ${successCount}/${totalRecords} records`
+          );
           setExcelData([]);
           setColumns([]);
           setSelectedFile(null);
           setError(null);
         } else {
-          setError('No records were imported');
-          message.warning('No records were imported');
+          setError("No records were imported");
+          message.warning("No records were imported");
         }
       } else {
-        throw new Error('Invalid response format');
+        throw new Error("Invalid response format");
       }
     } catch (err) {
-      setError('Error importing grades: ' + (err.message || 'Unknown error'));
-      message.error('Cannot import grades');
+      setError("Error importing grades: " + (err.message || "Unknown error"));
+      message.error("Cannot import grades");
     } finally {
       setLoading(false);
     }
@@ -113,13 +120,13 @@ const GradeImportPage = () => {
             <FileExcelOutlined className="text-green-600" />
             Import Grades from Excel
           </Title>
-          
+
           {!excelData.length && (
             <div
               className={`border-2 border-dashed rounded-lg p-12 mb-6 text-center transition-all duration-200 ${
                 isDragging
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-300 hover:border-blue-400'
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-300 hover:border-blue-400"
               }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -153,8 +160,16 @@ const GradeImportPage = () => {
             <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <svg
+                    className="h-5 w-5 text-red-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
                 <div className="ml-3">
@@ -197,10 +212,13 @@ const GradeImportPage = () => {
                   </Button>
                 </div>
               </div>
-              
+
               <Table
                 columns={columns}
-                dataSource={excelData.map((item, index) => ({ ...item, key: index }))}
+                dataSource={excelData.map((item, index) => ({
+                  ...item,
+                  key: index,
+                }))}
                 bordered
                 size="middle"
                 scroll={{ x: true }}

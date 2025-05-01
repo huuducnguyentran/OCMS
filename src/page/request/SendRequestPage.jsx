@@ -1,8 +1,16 @@
 import { useState, useEffect } from "react";
-import { Layout, Input, Button, message, Select, Form, Typography, Spin } from "antd";
+import {
+  Layout,
+  Input,
+  Button,
+  message,
+  Select,
+  Form,
+  Typography,
+  Spin,
+} from "antd";
 import { createRequest } from "../../services/requestService";
 import { getAllSubject } from "../../services/subjectService";
-import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
 
@@ -22,19 +30,18 @@ const SendRequestPage = () => {
   const [subjects, setSubjects] = useState([]);
   const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [userRole, setUserRole] = useState("");
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Get user role from sessionStorage
     const role = sessionStorage.getItem("role");
     console.log("Current user role:", role);
     setUserRole(role);
-    
+
     // Nếu là AOC Manager, cập nhật requestType mặc định thành 6 (CreateNew)
     if (role === "AOC Manager") {
-      setRequestData(prev => ({...prev, requestType: 6}));
+      setRequestData((prev) => ({ ...prev, requestType: 6 }));
     }
-    
+
     console.log("Component mounted, fetching subjects...");
     // Fetch subjects when component mounts
     fetchSubjects();
@@ -46,7 +53,7 @@ const SendRequestPage = () => {
     try {
       const response = await getAllSubject();
       console.log("Subjects API response:", response);
-      
+
       // Kiểm tra cấu trúc response
       if (response && response.subjects && Array.isArray(response.subjects)) {
         console.log("Using response.subjects array");
@@ -57,7 +64,12 @@ const SendRequestPage = () => {
       } else if (response && response.data && Array.isArray(response.data)) {
         console.log("Using response.data as subjects list");
         setSubjects(response.data);
-      } else if (response && response.data && response.data.subjects && Array.isArray(response.data.subjects)) {
+      } else if (
+        response &&
+        response.data &&
+        response.data.subjects &&
+        Array.isArray(response.data.subjects)
+      ) {
         console.log("Using response.data.subjects as subjects list");
         setSubjects(response.data.subjects);
       } else {
@@ -81,19 +93,28 @@ const SendRequestPage = () => {
       console.log("Trying to fetch subjects directly...");
       const response = await axiosInstance.get(`/${API.GET_ALL_SUBJECTS}`);
       console.log("Direct API response:", response);
-      
+
       if (response && response.data) {
         if (Array.isArray(response.data)) {
           console.log("Setting subjects from direct API call (array)");
           setSubjects(response.data);
-        } else if (response.data.subjects && Array.isArray(response.data.subjects)) {
+        } else if (
+          response.data.subjects &&
+          Array.isArray(response.data.subjects)
+        ) {
           console.log("Setting subjects from direct API call (data.subjects)");
           setSubjects(response.data.subjects);
         } else if (response.data.data && Array.isArray(response.data.data)) {
           console.log("Setting subjects from direct API call (data.data)");
           setSubjects(response.data.data);
-        } else if (response.data.data && response.data.data.subjects && Array.isArray(response.data.data.subjects)) {
-          console.log("Setting subjects from direct API call (data.data.subjects)");
+        } else if (
+          response.data.data &&
+          response.data.data.subjects &&
+          Array.isArray(response.data.data.subjects)
+        ) {
+          console.log(
+            "Setting subjects from direct API call (data.data.subjects)"
+          );
           setSubjects(response.data.data.subjects);
         } else {
           console.error("Unexpected direct response format:", response.data);
@@ -118,7 +139,7 @@ const SendRequestPage = () => {
     console.log("Selected subject ID:", value);
     setRequestData({ ...requestData, requestEntityId: value });
   };
-  
+
   const handleRequestTypeChange = (value) => {
     setRequestData({ ...requestData, requestType: value });
   };
@@ -152,7 +173,7 @@ const SendRequestPage = () => {
     setLoading(true);
     try {
       let payload;
-      
+
       if (userRole === "AOC Manager") {
         // Create payload without requestEntityId for AOC Manager
         payload = {
@@ -171,10 +192,11 @@ const SendRequestPage = () => {
 
       console.log("Sending payload:", payload);
       await createRequest(payload);
-      
-      const successMessage = userRole === "AOC Manager" 
-        ? "Plan request sent successfully!" 
-        : "Complaint sent successfully!";
+
+      const successMessage =
+        userRole === "AOC Manager"
+          ? "Plan request sent successfully!"
+          : "Complaint sent successfully!";
       message.success(successMessage);
 
       // Reset form
@@ -194,9 +216,10 @@ const SendRequestPage = () => {
       }
     } catch (error) {
       console.error("Request error:", error);
-      const errorMessage = userRole === "AOC Manager"
-        ? "Failed to send plan request. Please try again."
-        : "Failed to send complaint. Please try again.";
+      const errorMessage =
+        userRole === "AOC Manager"
+          ? "Failed to send plan request. Please try again."
+          : "Failed to send complaint. Please try again.";
       message.error(errorMessage);
     } finally {
       setLoading(false);
@@ -207,13 +230,17 @@ const SendRequestPage = () => {
     <Layout className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
       <div className="bg-white p-10 shadow-xl rounded-lg w-full max-w-3xl space-y-6">
         <Title level={2} className="text-center text-gray-800 mb-6">
-          {userRole === "AOC Manager" ? "Request create plan" : "Send a Complaint"}
+          {userRole === "AOC Manager"
+            ? "Request create plan"
+            : "Send a Complaint"}
         </Title>
-        
+
         <Form layout="vertical">
           {userRole === "AOC Manager" && (
             <Form.Item
-              label={<span className="text-lg font-semibold">Request Type</span>}
+              label={
+                <span className="text-lg font-semibold">Request Type</span>
+              }
               required
             >
               <Select
@@ -226,25 +253,6 @@ const SendRequestPage = () => {
                 <Option value={6}>Create New</Option>
                 <Option value={7}>Create Recurrent</Option>
                 <Option value={8}>Create Relearn</Option>
-
-                showSearch
-                optionFilterProp="children"
-                filterOption={(input, option) => {
-                  if (!option?.children) return false;
-                  // Chuyển cả input và text của option về lowercase để so sánh
-                  const subjectText = option.children.toString().toLowerCase();
-                  return subjectText.includes(input.toLowerCase());
-                }}
-                notFoundContent={subjects.length === 0 ? "No subjects available" : null}
-              >
-                {subjects.map((subject) => (
-                  <Option 
-                    key={subject.subjectId} 
-                    value={subject.subjectId}
-                  >
-                    {`${subject.subjectName} (${subject.subjectId})`}
-                  </Option>
-                ))}
               </Select>
             </Form.Item>
           )}
@@ -268,15 +276,14 @@ const SendRequestPage = () => {
                   showSearch
                   optionFilterProp="children"
                   filterOption={(input, option) =>
-                    (option?.children?.toLowerCase() ?? '').includes(input.toLowerCase())
+                    (option?.children?.toLowerCase() ?? "").includes(
+                      input.toLowerCase()
+                    )
                   }
                 >
                   {subjects.length > 0 ? (
                     subjects.map((subject) => (
-                      <Option 
-                        key={subject.subjectId} 
-                        value={subject.subjectId}
-                      >
+                      <Option key={subject.subjectId} value={subject.subjectId}>
                         {subject.subjectName} ({subject.subjectId})
                       </Option>
                     ))
@@ -294,7 +301,11 @@ const SendRequestPage = () => {
           >
             <Input
               name="description"
-              placeholder={userRole === "AOC Manager" ? "Brief description of your plan request" : "Brief description of your complaint"}
+              placeholder={
+                userRole === "AOC Manager"
+                  ? "Brief description of your plan request"
+                  : "Brief description of your complaint"
+              }
               value={requestData.description}
               onChange={handleChange}
               className="p-3 text-lg rounded-lg border border-gray-300 w-full"
@@ -303,13 +314,19 @@ const SendRequestPage = () => {
           </Form.Item>
 
           <Form.Item
-            label={<span className="text-lg font-semibold">Additional Details</span>}
+            label={
+              <span className="text-lg font-semibold">Additional Details</span>
+            }
             required
           >
             <TextArea
               rows={4}
               name="notes"
-              placeholder={userRole === "AOC Manager" ? "Provide any additional details for your plan request" : "Provide any additional details or context for your complaint"}
+              placeholder={
+                userRole === "AOC Manager"
+                  ? "Provide any additional details for your plan request"
+                  : "Provide any additional details or context for your complaint"
+              }
               value={requestData.notes}
               onChange={handleChange}
               className="p-3 text-lg rounded-lg border border-gray-300 w-full"
@@ -325,7 +342,7 @@ const SendRequestPage = () => {
               onClick={handleSendRequest}
               loading={loading}
             >
-              {loading ? "Sending..." :  "Submit"}
+              {loading ? "Sending..." : "Submit"}
             </Button>
           </Form.Item>
         </Form>

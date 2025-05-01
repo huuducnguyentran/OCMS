@@ -1,9 +1,18 @@
 // src/pages/AssignedTraineePage.jsx
 import { useEffect, useState } from "react";
-import { Table, Tag, Tooltip, Typography, Button, Space, Input, message } from "antd";
+import {
+  Table,
+  Tag,
+  Tooltip,
+  Typography,
+  Button,
+  Space,
+  Input,
+  message,
+} from "antd";
 import { useNavigate } from "react-router-dom";
 import { getAllAssignedTrainee } from "../../services/traineeService";
-import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -11,7 +20,7 @@ const { Search } = Input;
 const AssignedTraineePage = () => {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
   const [filteredAssignments, setFilteredAssignments] = useState([]);
   const [sortedInfo, setSortedInfo] = useState({});
   const navigate = useNavigate();
@@ -28,7 +37,8 @@ const AssignedTraineePage = () => {
       width: 130,
       ellipsis: true,
       sorter: (a, b) => a.traineeAssignId.localeCompare(b.traineeAssignId),
-      sortOrder: sortedInfo.columnKey === 'traineeAssignId' ? sortedInfo.order : null,
+      sortOrder:
+        sortedInfo.columnKey === "traineeAssignId" ? sortedInfo.order : null,
     },
     {
       title: "Trainee ID",
@@ -37,7 +47,7 @@ const AssignedTraineePage = () => {
       width: 140,
       ellipsis: true,
       sorter: (a, b) => a.traineeId.localeCompare(b.traineeId),
-      sortOrder: sortedInfo.columnKey === 'traineeId' ? sortedInfo.order : null,
+      sortOrder: sortedInfo.columnKey === "traineeId" ? sortedInfo.order : null,
       render: (text, record) => (
         <Tooltip title={text}>
           <span
@@ -58,7 +68,7 @@ const AssignedTraineePage = () => {
       width: 110,
       ellipsis: true,
       sorter: (a, b) => a.courseId.localeCompare(b.courseId),
-      sortOrder: sortedInfo.columnKey === 'courseId' ? sortedInfo.order : null,
+      sortOrder: sortedInfo.columnKey === "courseId" ? sortedInfo.order : null,
     },
     {
       title: "Assigned By",
@@ -67,7 +77,8 @@ const AssignedTraineePage = () => {
       width: 120,
       ellipsis: true,
       sorter: (a, b) => a.assignByUserId.localeCompare(b.assignByUserId),
-      sortOrder: sortedInfo.columnKey === 'assignByUserId' ? sortedInfo.order : null,
+      sortOrder:
+        sortedInfo.columnKey === "assignByUserId" ? sortedInfo.order : null,
     },
     {
       title: "Assign Date",
@@ -75,7 +86,8 @@ const AssignedTraineePage = () => {
       key: "assignDate",
       width: 170,
       sorter: (a, b) => new Date(a.assignDate) - new Date(b.assignDate),
-      sortOrder: sortedInfo.columnKey === 'assignDate' ? sortedInfo.order : null,
+      sortOrder:
+        sortedInfo.columnKey === "assignDate" ? sortedInfo.order : null,
       render: (date) => new Date(date).toLocaleString(),
     },
     {
@@ -84,7 +96,8 @@ const AssignedTraineePage = () => {
       key: "requestStatus",
       width: 130,
       sorter: (a, b) => a.requestStatus.localeCompare(b.requestStatus),
-      sortOrder: sortedInfo.columnKey === 'requestStatus' ? sortedInfo.order : null,
+      sortOrder:
+        sortedInfo.columnKey === "requestStatus" ? sortedInfo.order : null,
       render: (status) => {
         let color = "default";
         if (status === "Pending") color = "orange";
@@ -99,8 +112,10 @@ const AssignedTraineePage = () => {
       dataIndex: "approveByUserId",
       key: "approveByUserId",
       width: 120,
-      sorter: (a, b) => (a.approveByUserId || '').localeCompare(b.approveByUserId || ''),
-      sortOrder: sortedInfo.columnKey === 'approveByUserId' ? sortedInfo.order : null,
+      sorter: (a, b) =>
+        (a.approveByUserId || "").localeCompare(b.approveByUserId || ""),
+      sortOrder:
+        sortedInfo.columnKey === "approveByUserId" ? sortedInfo.order : null,
       render: (text) => text || "—",
     },
     {
@@ -108,8 +123,10 @@ const AssignedTraineePage = () => {
       dataIndex: "approvalDate",
       key: "approvalDate",
       width: 170,
-      sorter: (a, b) => new Date(a.approvalDate || 0) - new Date(b.approvalDate || 0),
-      sortOrder: sortedInfo.columnKey === 'approvalDate' ? sortedInfo.order : null,
+      sorter: (a, b) =>
+        new Date(a.approvalDate || 0) - new Date(b.approvalDate || 0),
+      sortOrder:
+        sortedInfo.columnKey === "approvalDate" ? sortedInfo.order : null,
       render: (date) => (date ? new Date(date).toLocaleString() : "—"),
     },
     {
@@ -119,7 +136,7 @@ const AssignedTraineePage = () => {
       width: 140,
       ellipsis: true,
       sorter: (a, b) => a.requestId.localeCompare(b.requestId),
-      sortOrder: sortedInfo.columnKey === 'requestId' ? sortedInfo.order : null,
+      sortOrder: sortedInfo.columnKey === "requestId" ? sortedInfo.order : null,
     },
     {
       title: "Notes",
@@ -136,10 +153,11 @@ const AssignedTraineePage = () => {
     if (!value) {
       setFilteredAssignments(assignments);
     } else {
-      const filtered = assignments.filter(assignment => 
-        assignment.traineeId.toLowerCase().includes(value.toLowerCase()) ||
-        assignment.courseId.toLowerCase().includes(value.toLowerCase()) ||
-        assignment.assignByUserId.toLowerCase().includes(value.toLowerCase())
+      const filtered = assignments.filter(
+        (assignment) =>
+          assignment.traineeId.toLowerCase().includes(value.toLowerCase()) ||
+          assignment.courseId.toLowerCase().includes(value.toLowerCase()) ||
+          assignment.assignByUserId.toLowerCase().includes(value.toLowerCase())
       );
       setFilteredAssignments(filtered);
     }
@@ -155,10 +173,10 @@ const AssignedTraineePage = () => {
       }));
       setAssignments(formattedData);
       setFilteredAssignments(formattedData);
-      setSearchText('');
+      setSearchText("");
     } catch (error) {
       console.error("Failed to fetch assigned trainees:", error);
-      message.error('Unable to load assigned trainees');
+      message.error("Unable to load assigned trainees");
     } finally {
       setLoading(false);
     }
@@ -204,7 +222,7 @@ const AssignedTraineePage = () => {
         {searchText && (
           <div className="mb-4">
             <Tag color="blue" className="text-sm px-3 py-1">
-              Found {filteredAssignments.length} results for "{searchText}"
+              Found {filteredAssignments.length} results for {searchText}
             </Tag>
           </div>
         )}

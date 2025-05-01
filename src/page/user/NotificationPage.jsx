@@ -3,7 +3,6 @@ import {
   List,
   Typography,
   Badge,
-  Card,
   message,
   Spin,
   Tag,
@@ -14,24 +13,19 @@ import {
   Alert,
   Input,
   Select,
-  Space,
   Radio,
 } from "antd";
 import { notificationService } from "../../services/notificationService";
 import {
-  CheckOutlined,
-  ClockCircleOutlined,
   BellOutlined,
-  CloseCircleOutlined,
   SearchOutlined,
-  FilterOutlined,
   SortAscendingOutlined,
   SortDescendingOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { Option } = Select;
 
 const NotificationPage = () => {
@@ -97,16 +91,19 @@ const NotificationPage = () => {
       }
     } catch (error) {
       console.error("Error when loading notifications:", error);
-      
+
       // Kiểm tra nếu thông báo là "No notifications found for this user."
-      if (error.response?.data?.message === "No notifications found for this user.") {
+      if (
+        error.response?.data?.message ===
+        "No notifications found for this user."
+      ) {
         // Đây không phải là lỗi, chỉ là không có dữ liệu
         setError(null);
       } else {
         // Các lỗi khác vẫn hiển thị thông báo lỗi
         setError("Unable to load notifications. Please try again later.");
       }
-      
+
       setAllNotifications([]);
       setFilteredNotifications([]);
       setNotifications([]);
