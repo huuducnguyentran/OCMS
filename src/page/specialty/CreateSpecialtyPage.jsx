@@ -1,8 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Select, message, Spin, Card, Typography, Tag } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import { specialtyService } from '../../services/specialtyServices';
-import { ArrowLeftOutlined } from '@ant-design/icons';
+import { useState, useEffect } from "react";
+import {
+  Form,
+  Input,
+  Button,
+  Select,
+  message,
+  Spin,
+  Card,
+  Typography,
+  Tag,
+} from "antd";
+import { useNavigate } from "react-router-dom";
+import { specialtyService } from "../../services/specialtyServices";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
 
@@ -22,7 +32,7 @@ const CreateSpecialtyPage = () => {
           setSpecialties(response.data);
         }
       } catch (error) {
-        message.error('Failed to fetch specialties');
+        message.error("Failed to fetch specialties", error);
       } finally {
         setLoading(false);
       }
@@ -37,17 +47,17 @@ const CreateSpecialtyPage = () => {
       setLoading(true);
       const response = await specialtyService.createSpecialty({
         ...values,
-        status: parseInt(values.status)
+        status: parseInt(values.status),
       });
 
       if (response.success) {
-        message.success('Specialty created successfully');
-        navigate('/specialty');
+        message.success("Specialty created successfully");
+        navigate("/specialty");
       } else {
-        throw new Error(response.message || 'Failed to create specialty');
+        throw new Error(response.message || "Failed to create specialty");
       }
     } catch (error) {
-      message.error(error.message || 'Error creating specialty');
+      message.error(error.message || "Error creating specialty");
     } finally {
       setLoading(false);
     }
@@ -57,10 +67,10 @@ const CreateSpecialtyPage = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <Card className="max-w-6xl mx-auto shadow-lg">
         <div className="mb-6">
-          <Button 
-            icon={<ArrowLeftOutlined />} 
+          <Button
+            icon={<ArrowLeftOutlined />}
             className="mb-4"
-            onClick={() => navigate('/specialty')}
+            onClick={() => navigate("/specialty")}
           >
             Back to Specialties
           </Button>
@@ -89,27 +99,21 @@ const CreateSpecialtyPage = () => {
                 name="specialtyName"
                 label="Specialty Name"
                 rules={[
-                  { required: true, message: 'Please enter specialty name' },
-                  { max: 100, message: 'Name cannot exceed 100 characters' }
+                  { required: true, message: "Please enter specialty name" },
+                  { max: 100, message: "Name cannot exceed 100 characters" },
                 ]}
               >
-                <Input 
-                  placeholder="Enter specialty name"
-                  className="h-10" 
-                />
+                <Input placeholder="Enter specialty name" className="h-10" />
               </Form.Item>
 
-              <Form.Item
-                name="parentSpecialtyId"
-                label="Parent Specialty"
-              >
+              <Form.Item name="parentSpecialtyId" label="Parent Specialty">
                 <Select
                   allowClear
                   placeholder="Select parent specialty"
                   className="h-10"
-                  options={specialties.map(s => ({
+                  options={specialties.map((s) => ({
                     value: s.specialtyId,
-                    label: s.specialtyName
+                    label: s.specialtyName,
                   }))}
                 />
               </Form.Item>
@@ -119,11 +123,14 @@ const CreateSpecialtyPage = () => {
               name="description"
               label="Description"
               rules={[
-                { required: true, message: 'Please enter description' },
-                { max: 500, message: 'Description cannot exceed 500 characters' }
+                { required: true, message: "Please enter description" },
+                {
+                  max: 500,
+                  message: "Description cannot exceed 500 characters",
+                },
               ]}
             >
-              <Input.TextArea 
+              <Input.TextArea
                 placeholder="Enter description"
                 rows={4}
                 className="resize-none"
@@ -133,7 +140,7 @@ const CreateSpecialtyPage = () => {
             <Form.Item
               name="status"
               label="Status"
-              rules={[{ required: true, message: 'Please select status' }]}
+              rules={[{ required: true, message: "Please select status" }]}
             >
               <Select className="w-full md:w-1/3">
                 <Select.Option value={0}>
@@ -146,13 +153,13 @@ const CreateSpecialtyPage = () => {
             </Form.Item>
 
             <div className="flex justify-end gap-4 pt-6 border-t">
-              <Button 
-                onClick={() => navigate('/specialty')}
+              <Button
+                onClick={() => navigate("/specialty")}
                 className="min-w-[100px]"
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 type="primary"
                 htmlType="submit"
                 loading={loading}

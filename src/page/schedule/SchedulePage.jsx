@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Table, Spin, Empty, message, Select, Tag, Button, Alert } from "antd";
+import { useState, useEffect, useRef } from "react";
+import { Table, Spin, Empty, message, Select, Button } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   CalendarOutlined,
@@ -13,12 +13,12 @@ import {
   TagOutlined,
 } from "@ant-design/icons";
 import { trainingScheduleService } from "../../services/trainingScheduleService";
-import { SchedulePageValidationSchema } from '../../../utils/validationSchemas';
+import { SchedulePageValidationSchema } from "../../../utils/validationSchemas";
 const { Option } = Select;
 
 const SchedulePage = () => {
   // State cho instructor filter (chỉ dùng khi TrainingStaff)
-  const [selectedInstructor, setSelectedInstructor] = useState('INST-1');
+  const [selectedInstructor, setSelectedInstructor] = useState("INST-1");
   const location = useLocation();
   const navigate = useNavigate();
   const [scheduleData, setScheduleData] = useState([]);
@@ -27,7 +27,7 @@ const SchedulePage = () => {
   const [viewMode, setViewMode] = useState(location.state?.viewMode || "all");
   const [subjects, setSubjects] = useState([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
-  const [ setSelectedSubjectDetails] = useState(null);
+  const [setSelectedSubjectDetails] = useState(null);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentWeek, setCurrentWeek] = useState(null);
   const [weekOptions, setWeekOptions] = useState([]);
@@ -42,14 +42,20 @@ const SchedulePage = () => {
     // Get current week number and set it
     const now = new Date();
     const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const weekNumber = Math.ceil(((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
-    
+    const weekNumber = Math.ceil(
+      ((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7
+    );
+
     // Generate week options for the entire year
     generateWeekOptions(now.getFullYear());
-    
+
     // Set the current week in format "DD/MM To DD/MM"
     const currentWeekDates = getWeekDates(weekNumber, now.getFullYear());
-    setCurrentWeek(`${formatDateShort(currentWeekDates.start)} To ${formatDateShort(currentWeekDates.end)}`);
+    setCurrentWeek(
+      `${formatDateShort(currentWeekDates.start)} To ${formatDateShort(
+        currentWeekDates.end
+      )}`
+    );
   }, []);
 
   // Generate week options for dropdown
@@ -58,9 +64,13 @@ const SchedulePage = () => {
     for (let week = 1; week <= 52; week++) {
       const weekDates = getWeekDates(week, year);
       options.push({
-        value: `${formatDateShort(weekDates.start)} To ${formatDateShort(weekDates.end)}`,
-        label: `${formatDateShort(weekDates.start)} To ${formatDateShort(weekDates.end)}`,
-        weekNumber: week
+        value: `${formatDateShort(weekDates.start)} To ${formatDateShort(
+          weekDates.end
+        )}`,
+        label: `${formatDateShort(weekDates.start)} To ${formatDateShort(
+          weekDates.end
+        )}`,
+        weekNumber: week,
       });
     }
     setWeekOptions(options);
@@ -69,11 +79,13 @@ const SchedulePage = () => {
   // Get start and end dates for a specific week in a year
   const getWeekDates = (weekNumber, year) => {
     const startOfYear = new Date(year, 0, 1);
-    const daysOffset = (startOfYear.getDay() > 0 ? 7 - startOfYear.getDay() : 0) + (weekNumber - 1) * 7;
+    const daysOffset =
+      (startOfYear.getDay() > 0 ? 7 - startOfYear.getDay() : 0) +
+      (weekNumber - 1) * 7;
     const startDate = new Date(year, 0, 1 + daysOffset);
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + 6);
-    
+
     return { start: startDate, end: endDate };
   };
 
@@ -84,23 +96,16 @@ const SchedulePage = () => {
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     const role = sessionStorage.getItem("role");
+    const userId = sessionStorage.getItem("userId");
 
     if (!token) {
-      message.error("Phiên đăng nhập hết hạn, vui lòng đăng nhập lại");
+      message.error("Session expired, please login again");
       navigate("/login");
       return;
     }
 
-    if (role) {
-      setUserRole(role);
-    } else {
-      const userId = sessionStorage.getItem("role");
-      if (userId && userId.startsWith("TS-")) {
-        setUserRole("TrainingStaff");
-      } else {
-        setUserRole("Trainee");
-      }
-    }
+    console.log("Current user info:", { role, userId }); // Thêm log để debug
+    setUserRole(role);
   }, [navigate]);
 
   // Fetch instructor list nếu là TrainingStaff
@@ -108,22 +113,22 @@ const SchedulePage = () => {
     const fetchInstructors = async () => {
       if (userRole === "TrainingStaff" || userRole === "Training staff") {
         try {
-          const token = sessionStorage.getItem("token");
-          const response = await trainingScheduleService.getAllInstructors(token);
-          if (response && Array.isArray(response)) {
-            setInstructorList(response);
-          } else if (response && response.data && Array.isArray(response.data)) {
-            setInstructorList(response.data);
-          } else {
-            setInstructorList([]);
+          // Thay vì gọi getAllInstructors, lấy danh sách instructors từ scheduleData
+          const uniqueInstructors = Array.from(
+            new Set(scheduleData.map((item) => item.instructorName))
+          ).filter(Boolean);
+
+          if (uniqueInstructors.length > 0) {
+            setSelectedInstructor(uniqueInstructors[0]); // Set default instructor
           }
         } catch (error) {
-          setInstructorList([]);
+          console.error("Error getting instructors:", error);
+          message.error("Failed to load instructor list");
         }
       }
     };
     fetchInstructors();
-  }, [userRole]);
+  }, [userRole, scheduleData]);
 
   // Fetch schedule data based on user role
   useEffect(() => {
@@ -132,207 +137,183 @@ const SchedulePage = () => {
     }
   }, [userRole, viewMode]);
 
-  // Fetch subjects list
-  // useEffect(() => {
-  //   const fetchSubjects = async () => {
-  //     try {
-  //       setLoading(true);
-  //       console.log("Fetching subjects from API...");
-
-  //       let response;
-  //       if (userRole === "Instructor") {
-  //         response = await trainingScheduleService.getInstructorSubjects();
-  //         console.log("Instructor subjects response:", response);
-          
-  //         if (response && response.data) {
-  //           const subjects = response.data.map(subject => ({
-  //             subjectId: subject.subjectId,
-  //             subjectName: subject.subjectName,
-  //             courseId: subject.courseId,
-  //             schedules: subject.schedules || []
-  //           }));
-            
-  //         setSubjects(subjects);
-  //         setSubjectOptions(subjects);
-            
-  //           // Process schedules
-  //           if (response.schedules && Array.isArray(response.schedules)) {
-  //             setScheduleData(response.schedules);
-  //           }
-  //         }
-  //       } else if (userRole === "Trainee") {
-  //         response = await trainingScheduleService.getTraineeSubjects();
-  //         // Process trainee data...
-  //       } else if (userRole === "TrainingStaff") {
-  //         response = await trainingScheduleService.getAllSubjects();
-  //       }
-
-  //       if (!response || (!response.data && !response.schedules)) {
-  //         console.warn("No subjects returned or invalid format");
-  //         setSubjects([]);
-  //         setScheduleData([]);
-  //       }
-  //     } catch (error) {
-  //       console.error("Failed to fetch subjects:", error);
-  //         message.error("Không thể tải danh sách môn học");
-  //       setSubjects([]);
-  //       setScheduleData([]);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   if (userRole) {
-  //   fetchSubjects();
-  //   }
-  // }, [userRole]);
-
   const fetchScheduleData = async () => {
     try {
       setLoading(true);
 
       const token = sessionStorage.getItem("token");
       if (!token) {
-        message.error("Phiên đăng nhập hết hạn");
+        message.error("Session expired");
         navigate("/login");
         return;
       }
 
-      // If a subject is selected
-      if (selectedSubjectId) {
+      if (userRole === "Instructor") {
         try {
-          console.log("Fetching data for subject:", selectedSubjectId);
+          const response =
+            await trainingScheduleService.getInstructorSubjects();
+          console.log("Raw instructor response:", response);
 
-          const data = await trainingScheduleService.getScheduleBySubjectId(
-            selectedSubjectId
-          );
-          console.log("Received data:", data);
+          // In ra đầy đủ cấu trúc để debug
+          console.log("Response type:", typeof response);
+          console.log("Has message:", Boolean(response?.message));
+          console.log("Has subscheldule:", Boolean(response?.subscheldule));
 
-          if (data && data.subjectDetails) {
-            setSelectedSubjectDetails(data.subjectDetails);
-            const schedules = Array.isArray(data.schedules) ? data.schedules : [];
-            console.log("Processed schedules:", schedules);
-
-            setScheduleData(schedules);
-
-            if (schedules.length === 0) {
-              message.info("Không có lịch học cho môn này");
-            }
-          } else {
-            console.log("No subject details found");
+          // Kiểm tra thông báo không có khóa học được gán
+          if (
+            response?.message ===
+            "No subject assignments found for this instructor."
+          ) {
+            console.log("Instructor has no assignments");
             setScheduleData([]);
-            setSelectedSubjectDetails(null);
-            message.warning("Không tìm thấy thông tin môn học");
+            message.info("You have no assigned courses");
+            return;
           }
-        } catch (error) {
-          console.error("Error in subject fetch:", error);
-          handleError(error);
-        }
-        return;
-      }
 
-      // Handle the case when no subject is selected
-      let response;
-      try {
-        if (userRole === "Training staff" || userRole === "TrainingStaff") {
-          switch (viewMode) {
-            case "instructor":
-              response = await trainingScheduleService.getInstructorSubjects();
-              break;
-            case "trainee":
-              response = await trainingScheduleService.getTraineeSubjects();
-              break;
-            case "created":
-              const userId = sessionStorage.getItem("userId");
-              response = await trainingScheduleService.getCreatedSchedules(
-                userId
+          // Kiểm tra nếu data là subscheldule array
+          if (response?.subscheldule && Array.isArray(response.subscheldule)) {
+            console.log(
+              "Found subscheldule array with length:",
+              response.subscheldule.length
+            );
+
+            // Xử lý dữ liệu
+            const processedData = [];
+            response.subscheldule.forEach((subject) => {
+              console.log(
+                `Processing subject: ${subject.subjectId} - ${subject.subjectName}`,
+                subject
               );
-              break;
-            default:
-              response =
-                await trainingScheduleService.getAllTrainingSchedules();
-          }
-        } else if (userRole === "Instructor") {
-          response = await trainingScheduleService.getInstructorSubjects();
-          console.log("Instructor schedule response:", response);
-          
-          // Xử lý dữ liệu cho instructor
-          if (response && response.data && Array.isArray(response.data)) {
-            const allSchedules = [];
-            response.data.forEach(subject => {
+
               if (subject.schedules && Array.isArray(subject.schedules)) {
-                const schedulesWithSubjectInfo = subject.schedules.map(schedule => ({
-                  ...schedule,
-                  subjectId: subject.subjectId,
-                  subjectName: subject.subjectName,
-                  courseId: subject.courseId
-                }));
-                allSchedules.push(...schedulesWithSubjectInfo);
+                console.log(
+                  `Subject has ${subject.schedules.length} schedules`
+                );
+
+                subject.schedules.forEach((schedule) => {
+                  console.log("Schedule item:", schedule);
+
+                  // Đảm bảo kết quả cuối cùng có định dạng đúng
+                  processedData.push({
+                    ...schedule,
+                    subjectId: subject.subjectId,
+                    subjectName: subject.subjectName || "Unknown Subject",
+                    instructorID: sessionStorage.getItem("userId"),
+                    // Đảm bảo các trường quan trọng có giá trị
+                    daysOfWeek: schedule.daysOfWeek || "",
+                    classTime: schedule.classTime || "17:00:00",
+                    room: schedule.room || "N/A",
+                    location: schedule.location || "N/A",
+                  });
+                });
+              } else {
+                console.log("Subject has no schedules array");
               }
             });
-            console.log("Processed instructor schedules:", allSchedules);
-            setScheduleData(allSchedules);
-            return;
-          }
-        } else if (userRole === "Trainee") {
-          response = await trainingScheduleService.getTraineeSubjects();
-          // Lọc dữ liệu chỉ lấy subject có schedules status 'Incoming' và không rỗng
-          if (response && response.data && Array.isArray(response.data)) {
-            const filteredSubjects = response.data
-              .map(subject => ({
-                ...subject,
-                schedules: (subject.schedules || []).filter(sch => sch.status === "Incoming")
-              }))
-              .filter(subject => subject.schedules.length > 0);
-            setSubjects(filteredSubjects);
-            // Gộp tất cả schedules lại để hiển thị
-            setScheduleData(filteredSubjects.flatMap(subject =>
-              subject.schedules
-                .filter(schedule => schedule.status === "Incoming")
-                .map(schedule => ({
-                  ...schedule,
-                  subjectID: subject.subjectId,
-                  subjectName: subject.subjectName
-                }))
-            ));
-            return;
-          }
-        } else {
-          response = await trainingScheduleService.getTraineeSubjects();
-        }
 
-        console.log("Response from service:", response);
+            console.log("Final processed data:", processedData);
+            setScheduleData(processedData);
+          } else {
+            // Kiểm tra xem có cấu trúc khác không
+            console.log(
+              "No valid subscheldule array found, checking alternative structures"
+            );
 
-        // Process the response
-        if (response && response.schedules) {
-          setScheduleData(response.schedules);
-        } else if (Array.isArray(response)) {
-          setScheduleData(response);
-        } else if (response && response.data) {
-          const schedulesWithSpecialty = await Promise.all(
-            response.data.map(async (schedule) => {
-              try {
-                const instructorDetails = await trainingScheduleService.getInstructorDetails(schedule.instructorID);
-                return {
-                  ...schedule,
-                  instructorSpecialtyId: instructorDetails?.specialtyId
-                };
-              } catch (error) {
-                console.error("Error fetching instructor details:", error);
-                return schedule;
+            // Kiểm tra cấu trúc schedules nếu có
+            if (response?.schedules && Array.isArray(response.schedules)) {
+              console.log("Found schedules array directly in response");
+              setScheduleData(response.schedules);
+              return;
+            }
+
+            // Kiểm tra cấu trúc data nếu có
+            if (response?.data) {
+              console.log("Found data property:", response.data);
+
+              if (Array.isArray(response.data)) {
+                console.log(
+                  "Data is an array with length:",
+                  response.data.length
+                );
+                setScheduleData(response.data);
+                return;
               }
-            })
-          );
-          response.data = schedulesWithSpecialty;
-          setScheduleData(response.data);
-        } else {
-          console.warn("Unexpected response format:", response);
-          setScheduleData([]);
+
+              if (
+                response.data.schedules &&
+                Array.isArray(response.data.schedules)
+              ) {
+                console.log("Found schedules array in data property");
+                setScheduleData(response.data.schedules);
+                return;
+              }
+            }
+
+            console.log("No recognizable data structure found");
+            setScheduleData([]);
+          }
+        } catch (error) {
+          console.error("Error fetching instructor schedule:", error);
+
+          if (error.response?.status === 401) {
+            message.error("Session expired");
+            navigate("/login");
+          } else if (error.response?.status === 404) {
+            console.log("404 error - no data found");
+            setScheduleData([]);
+          } else {
+            message.error(
+              "Error loading schedule: " + (error.message || "Unknown error")
+            );
+            setScheduleData([]);
+          }
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error("Error in general fetch:", error);
-        handleError(error);
+        return; // Quan trọng: dừng xử lý ngay tại đây cho Instructor
+      } else if (userRole === "Trainee") {
+        try {
+          const response = await trainingScheduleService.getTraineeSubjects();
+          console.log("Trainee schedule response:", response);
+
+          if (response?.schedules && Array.isArray(response.schedules)) {
+            setScheduleData(response.schedules);
+          } else if (response?.data && Array.isArray(response.data)) {
+            setScheduleData(response.data);
+          } else {
+            console.log("No schedule data found for trainee");
+            setScheduleData([]);
+            message.info("No schedule found for your account");
+          }
+        } catch (error) {
+          console.error("Error fetching trainee schedule:", error);
+          handleError(error);
+        }
+      } else if (
+        userRole === "TrainingStaff" ||
+        userRole === "Training staff"
+      ) {
+        try {
+          const response =
+            await trainingScheduleService.getAllTrainingSchedules();
+          console.log("Trainee schedule response:", response);
+
+          if (response?.schedules && Array.isArray(response.schedules)) {
+            setScheduleData(response.schedules);
+          } else if (response?.data && Array.isArray(response.data)) {
+            setScheduleData(response.data);
+          } else {
+            console.log("No schedule data found for trainee");
+            setScheduleData([]);
+            message.info("No schedule found for your account");
+          }
+        } catch (error) {
+          console.error("Error fetching trainee schedule:", error);
+          handleError(error);
+        }
       }
+
+      // Các phần code cho các role khác không thay đổi
     } finally {
       setLoading(false);
     }
@@ -342,20 +323,20 @@ const SchedulePage = () => {
     if (error.response) {
       switch (error.response.status) {
         case 404:
-          message.error("Không tìm thấy dữ liệu");
+          message.error("Data not found");
           break;
         case 403:
-          message.error("Bạn không có quyền truy cập");
+          message.error("You do not have access");
           break;
         case 401:
-          message.error("Phiên đăng nhập hết hạn");
+          message.error("Session expired");
           navigate("/login");
           break;
         default:
-          message.error("Có lỗi xảy ra khi tải dữ liệu");
+          message.error("An error occurred while loading data");
       }
     } else {
-      message.error("Không thể kết nối đến server");
+      message.error("Cannot connect to server");
     }
     setScheduleData([]);
   };
@@ -375,13 +356,22 @@ const SchedulePage = () => {
   // Parse days of week string into an array of days
   const parseDaysOfWeek = (daysOfWeekString) => {
     if (!daysOfWeekString) return [];
-    console.log("Parsing days:", daysOfWeekString);
-    const days = daysOfWeekString
+
+    console.log("Original days string:", daysOfWeekString);
+
+    // Standardize format
+    const normalized = daysOfWeekString
+      .replace(/\s+/g, "")
       .split(",")
-      .map((day) => day.trim())
+      .map((day) => {
+        // Ensure first letter is capitalized and rest is lowercase
+        day = day.trim();
+        return day.charAt(0).toUpperCase() + day.slice(1).toLowerCase();
+      })
       .filter(Boolean);
-    console.log("Parsed days:", days);
-    return days;
+
+    console.log("Parsed days:", normalized);
+    return normalized;
   };
 
   // Format time from string to display format
@@ -389,75 +379,101 @@ const SchedulePage = () => {
 
   // Generate dates for current week based on selected week
   const generateWeekDates = (weekString) => {
-    // If week string is not set, use current date
     if (!weekString) {
       const today = new Date();
-      const dayOfWeek = today.getDay(); // Sẽ trả về 0 cho Sunday, 1 cho Monday,...
-      const startDate = new Date(today);
-      startDate.setDate(today.getDate() - dayOfWeek); // Lùi về Sunday
-      
+      const monday = new Date(today);
+      const day = today.getDay();
+      // Adjust to get Monday (adjust 0 (Sunday) to be 6, otherwise subtract 1)
+      const daysFromMonday = day === 0 ? 6 : day - 1;
+      monday.setDate(today.getDate() - daysFromMonday);
+
       const dates = [];
       for (let i = 0; i < 7; i++) {
-        const date = new Date(startDate);
-        date.setDate(startDate.getDate() + i);
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + i);
         dates.push(date);
       }
+      console.log(
+        "Generated current week dates:",
+        dates.map((d) => d.toDateString())
+      );
       return dates;
     }
-    
-    // Parse selected week string (format: "DD/MM To DD/MM")
-    const [startDateStr, endDateStr] = weekString.split(" To ");
-    const [startDay, startMonth] = startDateStr.split("/").map(Number);
-    
-    // Create date for Sunday of selected week
+
+    // Parse week string (format: "DD/MM To DD/MM")
+    const [startStr] = weekString.split(" To ");
+    const [startDay, startMonth] = startStr.split("/").map(Number);
+
+    // Create date for Monday
     const startDate = new Date(currentYear, startMonth - 1, startDay);
-    const dayOfWeek = startDate.getDay();
-    startDate.setDate(startDate.getDate() - dayOfWeek); // Điều chỉnh về Sunday
-    
-    // Generate dates for the entire week
+    console.log("Start date from string:", startDate.toDateString());
+
+    // Generate dates for the week
     const dates = [];
     for (let i = 0; i < 7; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
       dates.push(date);
     }
-    
+
+    console.log(
+      "Generated week dates from string:",
+      dates.map((d) => d.toDateString())
+    );
     return dates;
   };
 
   // Get formatted date string (DD/MM)
   const getFormattedDate = (date) => {
-    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+    return `${date.getDate().toString().padStart(2, "0")}/${(
+      date.getMonth() + 1
+    )
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   // Check if a course is active on a specific date
   const isCourseActiveOnDate = (schedule, date) => {
+    if (!schedule.startDateTime || !schedule.endDateTime) {
+      console.log("Schedule missing date range:", schedule);
+      return false;
+    }
+
+    // Format dates consistently
     const startDate = new Date(schedule.startDateTime);
     const endDate = new Date(schedule.endDateTime);
-    
-    // Reset time components for accurate date comparison
+    const checkDate = new Date(date);
+
+    // Reset time components
     startDate.setHours(0, 0, 0, 0);
     endDate.setHours(23, 59, 59, 999);
-    date.setHours(12, 0, 0, 0);
-    
-    return date >= startDate && date <= endDate;
+    checkDate.setHours(12, 0, 0, 0);
+
+    const isActive = checkDate >= startDate && checkDate <= endDate;
+    console.log(
+      `Date check: ${checkDate.toDateString()} is ${
+        isActive ? "within" : "outside"
+      } range ${startDate.toDateString()} - ${endDate.toDateString()}`
+    );
+
+    return isActive;
   };
 
   const checkScheduleConflict = (schedule1, schedule2) => {
     // Kiểm tra trùng thời gian
     if (schedule1.classTime !== schedule2.classTime) return false;
-    
+
     // Kiểm tra trùng ngày
     const days1 = parseDaysOfWeek(schedule1.daysOfWeek);
     const days2 = parseDaysOfWeek(schedule2.daysOfWeek);
-    
-    return days1.some(day => days2.includes(day));
+
+    return days1.some((day) => days2.includes(day));
   };
 
   // Lấy danh sách unique instructor từ scheduleData
   const getInstructorOptions = () => {
     const map = new Map();
-    scheduleData.forEach(item => {
+    scheduleData.forEach((item) => {
       if (item.instructorID && !map.has(item.instructorID)) {
         map.set(item.instructorID, true);
       }
@@ -467,52 +483,73 @@ const SchedulePage = () => {
 
   // Process schedule data into time slots
   const processScheduleData = () => {
-    // Lọc lịch theo instructor nếu chọn
+    console.log("Processing schedule data. Total items:", scheduleData.length);
+
     let filteredData = scheduleData;
-    if ((userRole === "TrainingStaff" || userRole === "Training staff") && selectedInstructor && selectedInstructor !== 'all') {
-      filteredData = scheduleData.filter(sch => sch.instructorID === selectedInstructor);
+
+    // Lọc theo instructor nếu là Training Staff và có chọn instructor
+    if (
+      (userRole === "TrainingStaff" || userRole === "Training staff") &&
+      selectedInstructor
+    ) {
+      filteredData = scheduleData.filter(
+        (sch) => sch.instructorName === selectedInstructor
+      );
     }
+
     if (!Array.isArray(filteredData) || filteredData.length === 0) {
+      console.log("No schedule data to process");
       return [];
     }
 
+    console.log("Filtered schedule data:", filteredData);
+
     // Get all unique time slots and format them
-    const uniqueTimeSlots = [...new Set(filteredData.map((item) => item.classTime))]
+    const uniqueTimeSlots = [
+      ...new Set(filteredData.map((item) => item.classTime)),
+    ]
+      .filter(Boolean) // Filter out null/undefined
+      .map((time) => time.substring(0, 5)) // Normalize time format (remove seconds)
       .sort()
-      .map(timeSlot => {
-        const schedule = filteredData.find(s => s.classTime === timeSlot);
-        
-        // Xử lý thời gian kết thúc dựa trên subjectPeriod
-        const [startHour, startMinute] = timeSlot.split(':').map(Number);
-        
-        // Chuyển đổi subjectPeriod từ "HH:mm:ss" sang số phút
-        let durationInMinutes = 0;
-        if (schedule.subjectPeriod) {
-          const [periodHour, periodMinute] = schedule.subjectPeriod.split(':').map(Number);
-          durationInMinutes = (periodHour * 60) + periodMinute;
-        }
+      .map((timeSlot) => {
+        // Find any schedule with this time to get duration info
+        const schedule = filteredData.find(
+          (s) => s.classTime && s.classTime.startsWith(timeSlot)
+        );
+        const duration = schedule?.subjectPeriod || "01:30:00";
 
-        // Tính toán thời gian kết thúc
-        let endMinutes = startMinute + durationInMinutes;
-        let endHour = startHour + Math.floor(endMinutes / 60);
-        endMinutes = endMinutes % 60;
+        // Calculate end time based on duration
+        const [startHour, startMinute] = timeSlot.split(":").map(Number);
+        const [durationHour, durationMinute] = duration.split(":").map(Number);
 
-        // Định dạng thời gian kết thúc
-        const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
-        
+        const totalMinutes = startMinute + durationMinute;
+        const endHour =
+          startHour + durationHour + Math.floor(totalMinutes / 60);
+        const endMinute = totalMinutes % 60;
+
+        const endTime = `${String(endHour).padStart(2, "0")}:${String(
+          endMinute
+        ).padStart(2, "0")}`;
+
         return {
           start: timeSlot,
           end: endTime,
-          display: `${timeSlot} - ${endTime}`
+          display: `${timeSlot} - ${endTime}`,
         };
       });
-    
+
+    console.log("Unique time slots:", uniqueTimeSlots);
+
     // Generate dates for the current/selected week
     const weekDates = generateWeekDates(currentWeek);
+    console.log(
+      "Week dates:",
+      weekDates.map((d) => d.toDateString())
+    );
 
     return uniqueTimeSlots.map((timeSlot, timeIndex) => {
       const row = {
-        key: `timeslot-${timeIndex}-${timeSlot.start}`,
+        key: `timeslot-${timeIndex}`,
         timeFrame: timeSlot.display,
       };
 
@@ -523,46 +560,49 @@ const SchedulePage = () => {
         "Thursday",
         "Friday",
         "Saturday",
-        "Sunday"
+        "Sunday",
       ];
 
       // For each day of the week
       daysOfWeek.forEach((day, dayIndex) => {
         const currentDate = weekDates[dayIndex];
-        
+
         // Find schedules for this time slot and day
         const matchingSchedules = filteredData.filter((schedule) => {
-          const scheduleDays = parseDaysOfWeek(schedule.daysOfWeek);
-          return (
-            schedule.classTime === timeSlot.start &&
-            scheduleDays.includes(day) &&
-            isCourseActiveOnDate(schedule, currentDate) &&
-            ((userRole !== "Trainee" && userRole !== "Instructor") || schedule.status === "Incoming")
+          // Normalize time to remove seconds
+          const scheduleTime = schedule.classTime
+            ? schedule.classTime.substring(0, 5)
+            : "";
+
+          // Parse days of week
+          const scheduleDays = schedule.daysOfWeek
+            ? schedule.daysOfWeek.split(",").map((d) => d.trim())
+            : [];
+
+          const matchesDay = scheduleDays.includes(day);
+          const matchesTime = scheduleTime === timeSlot.start;
+          const isActive = isCourseActiveOnDate(schedule, currentDate);
+
+          console.log(
+            `Checking schedule: ${schedule.scheduleID}, day: ${day}, time: ${timeSlot.start}`,
+            {
+              matchesDay,
+              matchesTime,
+              isActive,
+              scheduleDays,
+              scheduleTime,
+            }
           );
+
+          return matchesDay && matchesTime && isActive;
         });
 
-        if (matchingSchedules.length > 1) {
-          console.warn(`Warning: Multiple schedules found for ${day} at ${timeSlot.display}`);
-          message.warning(`Phát hiện lịch học trùng vào ${day} lúc ${timeSlot.display}`);
-          
-          row[day] = (
-            <div className="conflict-warning">
-              <Alert
-                type="warning"
-                message="Lịch học trùng"
-                description={
-                  <div>
-                    {matchingSchedules.map(schedule => (
-                      <div key={schedule.scheduleID}>
-                        {schedule.subjectName} - Room: {schedule.room}
-                      </div>
-                    ))}
-                  </div>
-                }
-              />
-            </div>
-          );
-        } else if (matchingSchedules.length === 1) {
+        console.log(
+          `${day} at ${timeSlot.start} has ${matchingSchedules.length} matches`
+        );
+
+        if (matchingSchedules.length > 0) {
+          // Tiếp tục phần code hiển thị lịch như cũ
           const schedule = matchingSchedules[0];
           row[day] = (
             <div
@@ -574,7 +614,7 @@ const SchedulePage = () => {
               <div className="font-semibold text-blue-600 hover:text-blue-700">
                 {schedule.subjectName}
               </div>
-              
+
               <div className="text-xs font-medium text-indigo-600 bg-indigo-50 p-2 rounded">
                 <div className="flex items-center gap-2">
                   <ClockCircleOutlined className="text-indigo-500" />
@@ -583,24 +623,23 @@ const SchedulePage = () => {
                 {schedule.subjectPeriod && (
                   <div className="flex items-center gap-2 mt-1">
                     <ClockCircleOutlined className="text-indigo-500" />
-                    <span>Duration: {schedule.subjectPeriod.substring(0, 5)} hours</span>
+                    <span>
+                      Duration: {schedule.subjectPeriod.substring(0, 5)} hours
+                    </span>
                   </div>
                 )}
               </div>
-              
+
               <div className="text-sm text-gray-500">
                 <div>{schedule.room || "N/A"}</div>
                 <div>{schedule.location || "N/A"}</div>
                 {schedule.courseId && <div>Course: {schedule.courseId}</div>}
-                {userRole === "TrainingStaff" && (
-                  <div className="flex items-center gap-2">
-                    <UserSwitchOutlined className="text-gray-400" />
-                    <span>
-                      Instructor: {schedule.instructorID}
-                      {schedule.instructorSpecialtyId && ` (${schedule.instructorSpecialtyId})`}
-                    </span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2 mt-1">
+                  <UserSwitchOutlined className="text-gray-400" />
+                  <span>
+                    {schedule.instructorName} ({schedule.instructorID})
+                  </span>
+                </div>
               </div>
             </div>
           );
@@ -616,7 +655,7 @@ const SchedulePage = () => {
   // Generate column headers with dates
   const generateColumns = () => {
     const weekDates = generateWeekDates(currentWeek);
-    
+
     const columns = [
       {
         title: (
@@ -637,9 +676,9 @@ const SchedulePage = () => {
             </div>
           </div>
         ),
-      }
+      },
     ];
-    
+
     // Days of week with corresponding dates
     const daysOfWeek = [
       "Monday",
@@ -648,13 +687,13 @@ const SchedulePage = () => {
       "Thursday",
       "Friday",
       "Saturday",
-      "Sunday", 
+      "Sunday",
     ];
-    
+
     // Add column for each day with its date
     daysOfWeek.forEach((day, index) => {
       const date = weekDates[index];
-      
+
       columns.push({
         title: (
           <div className="text-center font-semibold text-indigo-700">
@@ -674,63 +713,99 @@ const SchedulePage = () => {
                            hover:shadow-md cursor-pointer group"
               >
                 {/* Active Indicator */}
-                {content.props && content.props.schedule && 
-                 isCourseActiveOnDate(content.props.schedule, new Date()) && (
-                  <div className="absolute -top-1 -right-1">
-                    <div className="relative">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <div className="absolute top-0 right-0">
-                        <div className="w-3 h-3 bg-green-400 rounded-full animate-ping"></div>
+                {content.props &&
+                  content.props.schedule &&
+                  isCourseActiveOnDate(content.props.schedule, new Date()) && (
+                    <div className="absolute -top-1 -right-1">
+                      <div className="relative">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <div className="absolute top-0 right-0">
+                          <div className="w-3 h-3 bg-green-400 rounded-full animate-ping"></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-                
+                  )}
+
                 {/* Content */}
                 <div className="space-y-3">
                   {/* Subject Name with Icon */}
                   <div className="font-semibold text-blue-600 group-hover:text-blue-700 flex items-center gap-2">
                     <BookOutlined className="text-lg" />
-                    <span>{content.props?.children[0]?.props?.children || "N/A"}</span>
+                    <span>
+                      {content.props?.children[0]?.props?.children || "N/A"}
+                    </span>
                   </div>
 
                   {/* Date Range with Icons */}
                   <div className="text-xs font-medium text-indigo-600 bg-indigo-50 p-2 rounded">
                     <div className="flex items-center gap-2 mb-1">
                       <CalendarOutlined className="text-indigo-500" />
-                      <span>Room: {content.props?.children[2]?.props?.children[0]?.props?.children}</span>
+                      <span>
+                        Room:{" "}
+                        {
+                          content.props?.children[2]?.props?.children[0]?.props
+                            ?.children
+                        }
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CalendarOutlined className="text-indigo-500" />
-                      <span>Location: {content.props?.children[2]?.props?.children[1]?.props?.children}</span>
+                      <span>
+                        Location:{" "}
+                        {
+                          content.props?.children[2]?.props?.children[1]?.props
+                            ?.children
+                        }
+                      </span>
                     </div>
                   </div>
-                  
+
                   {/* Additional Details */}
                   <div className="text-sm text-gray-500 space-y-1">
                     {content.props?.children[4]?.props?.children[2] && (
                       <div className="flex items-center gap-2">
                         <TagOutlined className="text-gray-400" />
-                        <span>Course: {content.props?.children[4]?.props?.children[2]?.props?.children[1]}</span>
+                        <span>
+                          Course:{" "}
+                          {
+                            content.props?.children[4]?.props?.children[2]
+                              ?.props?.children[1]
+                          }
+                        </span>
                       </div>
                     )}
                     {content.props?.children[4]?.props?.children[3] && (
                       <div className="flex items-center gap-2">
                         <ClockCircleOutlined className="text-gray-400" />
-                        <span>{content.props.children[4].props.children[3].props.children}</span>
+                        <span>
+                          {
+                            content.props.children[4].props.children[3].props
+                              .children
+                          }
+                        </span>
                       </div>
                     )}
-                    {userRole === "TrainingStaff" && content.props?.children[4]?.props?.children[4] && (
-                      <div className="flex items-center gap-2">
-                        <UserSwitchOutlined className="text-gray-400" />
-                        <span>{content.props.children[4].props.children[4].props.children}</span>
-                      </div>
-                    )}
-                    {userRole === "TrainingStaff" && content.props?.children[4]?.props?.children[5] && (
-                      <div className="flex items-center gap-2">
-                        {content.props.children[4].props.children[5].props.children}
-                      </div>
-                    )}
+                    {userRole === "TrainingStaff" &&
+                      content.props?.children[4]?.props?.children[4] && (
+                        <div className="flex items-center gap-2">
+                          <UserSwitchOutlined className="text-gray-400" />
+                          <span>
+                            {
+                              content.props.children[4].props.children[4].props
+                                .children
+                            }
+                          </span>
+                        </div>
+                      )}
+                    {userRole === "TrainingStaff" &&
+                      content.props?.children[4]?.props?.children[5] && (
+                        <div className="flex items-center gap-2">
+                          {
+                            content.props.children[4].props.children[5].props
+                              .children
+                          }
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
@@ -744,7 +819,7 @@ const SchedulePage = () => {
         ),
       });
     });
-    
+
     return columns;
   };
 
@@ -767,7 +842,7 @@ const SchedulePage = () => {
               style={{ width: 200 }}
             >
               <Option value="all">All Schedules</Option>
-              <Option value="created">Lịch đã tạo</Option>
+              <Option value="created">Created Schedule</Option>
               <Option value="instructor">Instructor View</Option>
               <Option value="trainee">Trainee View</Option>
             </Select>
@@ -779,21 +854,36 @@ const SchedulePage = () => {
 
   // Instructor Filter chỉ hiển thị cho TrainingStaff
 
-
   const renderInstructorFilter = () => {
     if (userRole === "TrainingStaff" || userRole === "Training staff") {
-      const instructorOptions = getInstructorOptions();
+      // Lấy danh sách unique instructors với cả ID và Name
+      const instructorOptions = Array.from(
+        new Set(
+          scheduleData.map((item) => ({
+            id: item.instructorID,
+            name: item.instructorName,
+          }))
+        ),
+        (instructor) => JSON.stringify(instructor)
+      )
+        .map((str) => JSON.parse(str))
+        .filter((instructor) => instructor.id && instructor.name);
+
       return (
-        <div className="mb-4">
+        <div className="mb-4" style={{ maxWidth: 300 }}>
           <label className="mr-2 font-medium">Instructor:</label>
           <Select
-            style={{ width: 220 }}
+            style={{ width: "100%" }}
             value={selectedInstructor}
             onChange={setSelectedInstructor}
-            allowClear={false}
+            dropdownMatchSelectWidth={false}
+            showSearch
+            optionFilterProp="children"
           >
-            {instructorOptions.map(instId => (
-              <Option key={instId} value={instId}>{instId}</Option>
+            {instructorOptions.map((instructor) => (
+              <Option key={instructor.id} value={instructor.id}>
+                {instructor.name} ({instructor.id})
+              </Option>
             ))}
           </Select>
         </div>
@@ -881,40 +971,46 @@ const SchedulePage = () => {
             <div className="p-2 bg-indigo-100 rounded-lg">
               <CalendarOutlined className="text-xl text-indigo-600" />
             </div>
-            <span className="text-lg font-semibold text-gray-700">Select Period</span>
+            <span className="text-lg font-semibold text-gray-700">
+              Select Period
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Year selector */}
+            {/* Year selector */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-600">Academic Year</label>
-            <Select
-              value={currentYear}
-              onChange={(value) => {
-                setCurrentYear(value);
-                generateWeekOptions(value);
-              }}
+              <label className="text-sm font-medium text-gray-600">
+                Academic Year
+              </label>
+              <Select
+                value={currentYear}
+                onChange={(value) => {
+                  setCurrentYear(value);
+                  generateWeekOptions(value);
+                }}
                 size="large"
                 className="w-full"
                 dropdownClassName="custom-dropdown"
-            >
-              {[2023, 2024, 2025, 2026].map((year) => (
-                <Option key={year} value={year}>
+              >
+                {[2023, 2024, 2025, 2026].map((year) => (
+                  <Option key={year} value={year}>
                     <div className="flex items-center gap-2">
                       <CalendarOutlined className="text-indigo-600" />
                       <span>{year}</span>
                     </div>
-                </Option>
-              ))}
-            </Select>
-          </div>
-          
-          {/* Week selector */}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+
+            {/* Week selector */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-600">Week Period</label>
-            <Select
-              value={currentWeek}
-              onChange={setCurrentWeek}
+              <label className="text-sm font-medium text-gray-600">
+                Week Period
+              </label>
+              <Select
+                value={currentWeek}
+                onChange={setCurrentWeek}
                 size="large"
                 className="w-full"
                 dropdownClassName="custom-dropdown"
@@ -941,11 +1037,11 @@ const SchedulePage = () => {
         classTime: values.classTime,
         daysOfWeek: values.daysOfWeek,
         startDate: values.startDate,
-        endDate: values.endDate
+        endDate: values.endDate,
       });
-      
+
       if (response.hasConflict) {
-        throw new Error('Thời gian này đã có lịch học khác!');
+        throw new Error("This time is already scheduled!");
       }
     } catch (error) {
       message.error(error.message);
@@ -988,26 +1084,31 @@ const SchedulePage = () => {
             {renderSubjectSelector()}
             {renderDateSelector()}
             {/* Instructor Dropdown for TrainingStaff */}
-            {(userRole === "TrainingStaff" || userRole === "Training staff") && (
+            {(userRole === "TrainingStaff" ||
+              userRole === "Training staff") && (
               <div className="mb-4" style={{ maxWidth: 300 }}>
                 <label className="mr-2 font-medium">Instructor:</label>
                 <Select
-                  style={{ width: '100%' }}
+                  style={{ width: "100%" }}
                   value={selectedInstructor}
                   onChange={setSelectedInstructor}
                   dropdownMatchSelectWidth={false}
                   showSearch
                   optionFilterProp="children"
                 >
-                   {Array.from(new Set(scheduleData.map(item => item.instructorID)))
+                  {Array.from(
+                    new Set(scheduleData.map((item) => item.instructorName))
+                  )
                     .filter(Boolean)
-                    .map(instId => (
-                      <Option key={instId} value={instId}>{instId}</Option>
+                    .map((instName) => (
+                      <Option key={instName} value={instName}>
+                        {" "}
+                        {instName}
+                      </Option>
                     ))}
                 </Select>
               </div>
             )}
-
           </div>
         </div>
 
@@ -1016,24 +1117,32 @@ const SchedulePage = () => {
           {loading ? (
             <div className="flex flex-col items-center justify-center h-64 space-y-4">
               <div className="relative">
-              <Spin size="large" />
+                <Spin size="large" />
                 <div className="absolute -top-2 -right-2">
                   <div className="animate-ping w-3 h-3 bg-indigo-400 rounded-full"></div>
                 </div>
               </div>
-              <span className="text-gray-500 animate-pulse font-medium">Loading your schedule...</span>
+              <span className="text-gray-500 animate-pulse font-medium">
+                Loading your schedule...
+              </span>
             </div>
           ) : scheduleData.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-6">
               <div className="p-6 bg-indigo-50 rounded-full animate-pulse">
                 <CalendarOutlined className="text-5xl text-indigo-400" />
               </div>
-              <Empty 
+              <Empty
                 description={
                   <div className="space-y-3">
-                    <p className="text-gray-700 font-semibold text-lg">No Schedule Found</p>
+                    <p className="text-gray-700 font-semibold text-lg">
+                      {userRole === "Instructor"
+                        ? "You have no assigned courses"
+                        : "No schedule found"}
+                    </p>
                     <p className="text-gray-500 text-sm max-w-md text-center">
-                      Select a subject or time period to view your training schedule
+                      {userRole === "Instructor"
+                        ? "Please contact Training Staff to be assigned a course"
+                        : "Please select a different time period to view your schedule"}
                     </p>
                   </div>
                 }
@@ -1042,13 +1151,13 @@ const SchedulePage = () => {
             </div>
           ) : (
             <div className="space-y-6">
-            <Table
-              dataSource={processScheduleData()}
-              columns={columns}
+              <Table
+                dataSource={processScheduleData()}
+                columns={columns}
                 bordered={false}
-              scroll={{ x: "max-content" }}
-              pagination={false}
-              className="custom-schedule-table"
+                scroll={{ x: "max-content" }}
+                pagination={false}
+                className="custom-schedule-table"
                 rowClassName="hover:bg-blue-50/50 transition-colors duration-200"
                 components={{
                   header: {
@@ -1082,7 +1191,7 @@ const SchedulePage = () => {
                   },
                 }}
               />
-              
+
               {/* Status and Legend Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
                 {/* Legend */}
@@ -1099,7 +1208,9 @@ const SchedulePage = () => {
                           <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
                         </div>
                       </div>
-                      <span className="text-sm text-gray-600">Active Class</span>
+                      <span className="text-sm text-gray-600">
+                        Active Class
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
                       <div className="w-3 h-3 rounded-full bg-gray-300"></div>
@@ -1108,7 +1219,9 @@ const SchedulePage = () => {
                     {userRole === "TrainingStaff" && (
                       <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
                         <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                        <span className="text-sm text-gray-600">Pending Schedule</span>
+                        <span className="text-sm text-gray-600">
+                          Pending Schedule
+                        </span>
                       </div>
                     )}
                   </div>
@@ -1121,10 +1234,12 @@ const SchedulePage = () => {
                       <InfoCircleOutlined className="text-blue-600 text-lg" />
                     </div>
                     <div className="space-y-1">
-                      <h4 className="font-medium text-blue-700">Schedule Information</h4>
+                      <h4 className="font-medium text-blue-700">
+                        Schedule Information
+                      </h4>
                       <p className="text-sm text-blue-600/90">
-                        Click on any class card to view detailed information. Active classes are highlighted 
-                        with a green indicator.
+                        Click on any class card to view detailed information.
+                        Active classes are highlighted with a green indicator.
                       </p>
                     </div>
                   </div>
@@ -1139,15 +1254,21 @@ const SchedulePage = () => {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h4 className="font-medium text-green-700">Active Classes</h4>
+                      <h4 className="font-medium text-green-700">
+                        Active Classes
+                      </h4>
                       <div className="px-2 py-0.5 bg-green-100 rounded text-sm text-green-700">
-                        {scheduleData.filter(schedule => 
-                          isCourseActiveOnDate(schedule, new Date())
-                        ).length} Classes
+                        {
+                          scheduleData.filter((schedule) =>
+                            isCourseActiveOnDate(schedule, new Date())
+                          ).length
+                        }{" "}
+                        Classes
                       </div>
                     </div>
                     <p className="text-sm text-green-600 mt-1">
-                      You have active classes scheduled for this week. Click on any class for more details.
+                      You have active classes scheduled for this week. Click on
+                      any class for more details.
                     </p>
                   </div>
                 </div>

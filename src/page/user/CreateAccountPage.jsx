@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Form,
   Input,
@@ -11,16 +11,19 @@ import {
   Layout,
   Spin,
   Upload,
-} from 'antd';
-import { useNavigate } from 'react-router-dom';
-import { 
-  UploadOutlined, 
-  SaveOutlined, 
+} from "antd";
+import { useNavigate } from "react-router-dom";
+import {
+  UploadOutlined,
+  SaveOutlined,
   ArrowLeftOutlined,
-} from '@ant-design/icons';
-import { createUser, getAllSpecialties } from '../../services/userService';
-import dayjs from 'dayjs';
-import { CreateAccountSchema, validateField } from '../../../utils/validationSchemas';
+} from "@ant-design/icons";
+import { createUser, getAllSpecialties } from "../../services/userService";
+import dayjs from "dayjs";
+import {
+  CreateAccountSchema,
+  validateField,
+} from "../../../utils/validationSchemas";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -35,19 +38,19 @@ const CreateAccountPage = () => {
   const [formErrors, setFormErrors] = useState({});
 
   const roleOptions = [
-    { label: 'HeadMaster', value: 2 },
-    { label: 'Training Staff', value: 3 },
-    { label: 'HR', value: 4 },
-    { label: 'Instructor', value: 5 },
-    { label: 'Reviewer', value: 6 },
-    { label: 'AOC Manager', value: 8 }
+    { label: "HeadMaster", value: 2 },
+    { label: "Training Staff", value: 3 },
+    { label: "HR", value: 4 },
+    { label: "Instructor", value: 5 },
+    { label: "Reviewer", value: 6 },
+    { label: "AOC Manager", value: 8 },
   ];
 
   useEffect(() => {
-    const token = sessionStorage.getItem('token');
+    const token = sessionStorage.getItem("token");
     if (!token) {
-      message.error('Vui lòng đăng nhập để tiếp tục');
-      navigate('/login');
+      message.error("Vui lòng đăng nhập để tiếp tục");
+      navigate("/login");
       return;
     }
     fetchSpecialties();
@@ -59,17 +62,17 @@ const CreateAccountPage = () => {
       const response = await getAllSpecialties();
       if (response.data) {
         const activeSpecialties = response.data.filter(
-          specialty => specialty.status === 0
+          (specialty) => specialty.status === 0
         );
         setSpecialties(activeSpecialties);
       }
     } catch (error) {
       if (error.response?.status === 401) {
-        message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại');
+        message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại");
         sessionStorage.clear();
-        navigate('/login');
+        navigate("/login");
       } else {
-        message.error('Không thể tải danh sách chuyên ngành');
+        message.error("Không thể tải danh sách chuyên ngành");
       }
     } finally {
       setLoadingSpecialties(false);
@@ -84,27 +87,27 @@ const CreateAccountPage = () => {
 
     try {
       // Xử lý đặc biệt cho dateOfBirth
-      if (fieldName === 'dateOfBirth' && value) {
+      if (fieldName === "dateOfBirth" && value) {
         const dateValue = value.toDate();
         const age = calculateAge(dateValue);
-        
+
         if (dateValue > new Date()) {
-          setFormErrors(prev => ({
+          setFormErrors((prev) => ({
             ...prev,
-            dateOfBirth: "Date of birth cannot be in the future"
+            dateOfBirth: "Date of birth cannot be in the future",
           }));
           return;
         }
-        
+
         if (age < 18) {
-          setFormErrors(prev => ({
+          setFormErrors((prev) => ({
             ...prev,
-            dateOfBirth: "User must be at least 18 years old"
+            dateOfBirth: "User must be at least 18 years old",
           }));
           return;
         }
-        
-        setFormErrors(prev => {
+
+        setFormErrors((prev) => {
           const newErrors = { ...prev };
           delete newErrors.dateOfBirth;
           return newErrors;
@@ -113,23 +116,23 @@ const CreateAccountPage = () => {
       }
 
       // Xử lý đặc biệt cho email
-      if (fieldName === 'email' && value) {
+      if (fieldName === "email" && value) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(value)) {
-          setFormErrors(prev => ({
+          setFormErrors((prev) => ({
             ...prev,
-            email: "Invalid email format"
+            email: "Invalid email format",
           }));
           return;
         }
         if (value.length > 100) {
-          setFormErrors(prev => ({
+          setFormErrors((prev) => ({
             ...prev,
-            email: "Email must not exceed 100 characters"
+            email: "Email must not exceed 100 characters",
           }));
           return;
         }
-        setFormErrors(prev => {
+        setFormErrors((prev) => {
           const newErrors = { ...prev };
           delete newErrors.email;
           return newErrors;
@@ -138,15 +141,15 @@ const CreateAccountPage = () => {
       }
 
       await validateField(fieldName, value);
-      setFormErrors(prev => {
+      setFormErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[fieldName];
         return newErrors;
       });
     } catch (error) {
-      setFormErrors(prev => ({
+      setFormErrors((prev) => ({
         ...prev,
-        [fieldName]: error.message
+        [fieldName]: error.message,
       }));
     }
   };
@@ -158,7 +161,7 @@ const CreateAccountPage = () => {
       const formData = {
         ...values,
         status: 0,
-        isAssign: false
+        isAssign: false,
       };
 
       await CreateAccountSchema.validate(formData, { abortEarly: false });
@@ -166,7 +169,7 @@ const CreateAccountPage = () => {
       const userData = {
         fullName: values.fullName.trim(),
         gender: values.gender,
-        dateOfBirth: dayjs(values.dateOfBirth).format('YYYY-MM-DD'),
+        dateOfBirth: dayjs(values.dateOfBirth).format("YYYY-MM-DD"),
         address: values.address.trim(),
         phoneNumber: values.phoneNumber.trim(),
         email: values.email.trim(),
@@ -174,30 +177,30 @@ const CreateAccountPage = () => {
         specialtyId: values.specialtyId,
         departmentId: values.departmentId?.trim() || null,
         status: 0,
-        isAssign: false
+        isAssign: false,
       };
 
       await createUser(userData);
-      message.success('Tạo tài khoản thành công!');
-      navigate('/accounts');
+      message.success("Tạo tài khoản thành công!");
+      navigate("/accounts");
     } catch (error) {
-      if (error.name === 'ValidationError') {
+      if (error.name === "ValidationError") {
         const errors = {};
-        error.inner.forEach(err => {
+        error.inner.forEach((err) => {
           errors[err.path] = err.message;
         });
         setFormErrors(errors);
-        message.error('Vui lòng kiểm tra lại thông tin');
+        message.error("Vui lòng kiểm tra lại thông tin");
       } else if (error.response?.status === 401) {
-        message.error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại');
+        message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại");
         sessionStorage.clear();
-        navigate('/login');
+        navigate("/login");
       } else if (error.response?.data?.errors) {
         Object.entries(error.response.data.errors).forEach(([key, value]) => {
           message.error(`${key}: ${value[0]}`);
         });
       } else {
-        message.error('Không thể tạo tài khoản');
+        message.error("Không thể tạo tài khoản");
       }
     } finally {
       setLoading(false);
@@ -220,8 +223,11 @@ const CreateAccountPage = () => {
     const birth = new Date(birthDate);
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
       age--;
     }
     return age;
@@ -233,12 +239,16 @@ const CreateAccountPage = () => {
         {/* Header Section */}
         <div className="flex justify-between items-center mb-8 border-b pb-4">
           <div>
-            <Title level={2} className="mb-0 text-indigo-800">Create New Account</Title>
-            <Text type="secondary">Fill in the information to create a new user account</Text>
+            <Title level={2} className="mb-0 text-indigo-800">
+              Create New Account
+            </Title>
+            <Text type="secondary">
+              Fill in the information to create a new user account
+            </Text>
           </div>
-          <Button 
-            icon={<ArrowLeftOutlined />} 
-            onClick={() => navigate('/accounts')}
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate("/accounts")}
             className="hover:bg-gray-100"
           >
             Back
@@ -252,25 +262,27 @@ const CreateAccountPage = () => {
             onFinish={handleSubmit}
             onFieldsChange={handleFieldChange}
             initialValues={{
-              gender: 'Male',
+              gender: "Male",
               isAssign: false,
-              status: 0
+              status: 0,
             }}
             className="space-y-6"
           >
             {/* Personal Information Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <Title level={4} className="mb-4 text-indigo-700">Personal Information</Title>
+              <Title level={4} className="mb-4 text-indigo-700">
+                Personal Information
+              </Title>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Form.Item
                   name="fullName"
                   label="Full Name"
-                  validateStatus={formErrors.fullName ? 'error' : ''}
+                  validateStatus={formErrors.fullName ? "error" : ""}
                   help={formErrors.fullName}
                   className="mb-4"
                 >
-                  <Input 
-                    placeholder="Enter full name" 
+                  <Input
+                    placeholder="Enter full name"
                     className="rounded-lg"
                     size="large"
                   />
@@ -279,11 +291,11 @@ const CreateAccountPage = () => {
                 <Form.Item
                   name="gender"
                   label="Gender"
-                  validateStatus={formErrors.gender ? 'error' : ''}
+                  validateStatus={formErrors.gender ? "error" : ""}
                   help={formErrors.gender}
                   className="mb-4"
                 >
-                  <Select 
+                  <Select
                     placeholder="Select gender"
                     className="rounded-lg"
                     size="large"
@@ -297,42 +309,51 @@ const CreateAccountPage = () => {
                 <Form.Item
                   name="dateOfBirth"
                   label="Date of Birth"
-                  validateStatus={formErrors.dateOfBirth ? 'error' : ''}
+                  validateStatus={formErrors.dateOfBirth ? "error" : ""}
                   help={formErrors.dateOfBirth}
                   className="mb-4"
                   rules={[
                     {
                       required: true,
-                      message: "Date of birth is required"
+                      message: "Date of birth is required",
                     },
                     {
                       validator: async (_, value) => {
                         if (value) {
                           const age = calculateAge(value.toDate());
                           if (age < 18) {
-                            throw new Error("User must be at least 18 years old");
+                            throw new Error(
+                              "User must be at least 18 years old"
+                            );
                           }
                           if (value.toDate() > new Date()) {
-                            throw new Error("Date of birth cannot be in the future");
+                            throw new Error(
+                              "Date of birth cannot be in the future"
+                            );
                           }
                         }
-                      }
-                    }
+                      },
+                    },
                   ]}
                 >
-                  <DatePicker 
+                  <DatePicker
                     className="w-full rounded-lg"
                     placeholder="Select date of birth"
                     format="DD/MM/YYYY"
                     size="large"
                     onChange={(date) => {
                       form.setFieldsValue({ dateOfBirth: date });
-                      handleFieldChange([{ name: ['dateOfBirth'] }]);
+                      handleFieldChange([{ name: ["dateOfBirth"] }]);
                     }}
                     disabledDate={(current) => {
                       const eighteenYearsAgo = new Date();
-                      eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
-                      return current && (current > new Date() || current > eighteenYearsAgo);
+                      eighteenYearsAgo.setFullYear(
+                        eighteenYearsAgo.getFullYear() - 18
+                      );
+                      return (
+                        current &&
+                        (current > new Date() || current > eighteenYearsAgo)
+                      );
                     }}
                   />
                 </Form.Item>
@@ -341,36 +362,38 @@ const CreateAccountPage = () => {
 
             {/* Contact Information Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <Title level={4} className="mb-4 text-indigo-700">Contact Information</Title>
+              <Title level={4} className="mb-4 text-indigo-700">
+                Contact Information
+              </Title>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Form.Item
                   name="email"
                   label="Email"
-                  validateStatus={formErrors.email ? 'error' : ''}
+                  validateStatus={formErrors.email ? "error" : ""}
                   help={formErrors.email}
                   className="mb-4"
                   rules={[
                     {
                       required: true,
-                      message: "Email is required"
+                      message: "Email is required",
                     },
                     {
-                      type: 'email',
-                      message: "Invalid email format"
+                      type: "email",
+                      message: "Invalid email format",
                     },
                     {
                       max: 100,
-                      message: "Email must not exceed 100 characters"
-                    }
+                      message: "Email must not exceed 100 characters",
+                    },
                   ]}
                 >
-                  <Input 
-                    placeholder="Enter email" 
+                  <Input
+                    placeholder="Enter email"
                     className="rounded-lg"
                     size="large"
                     onChange={(e) => {
                       form.setFieldsValue({ email: e.target.value });
-                      handleFieldChange([{ name: ['email'] }]);
+                      handleFieldChange([{ name: ["email"] }]);
                     }}
                   />
                 </Form.Item>
@@ -378,12 +401,12 @@ const CreateAccountPage = () => {
                 <Form.Item
                   name="phoneNumber"
                   label="Phone Number"
-                  validateStatus={formErrors.phoneNumber ? 'error' : ''}
+                  validateStatus={formErrors.phoneNumber ? "error" : ""}
                   help={formErrors.phoneNumber}
                   className="mb-4"
                 >
-                  <Input 
-                    placeholder="Enter phone number" 
+                  <Input
+                    placeholder="Enter phone number"
                     className="rounded-lg"
                     size="large"
                     maxLength={10}
@@ -393,12 +416,12 @@ const CreateAccountPage = () => {
                 <Form.Item
                   name="address"
                   label="Address"
-                  validateStatus={formErrors.address ? 'error' : ''}
+                  validateStatus={formErrors.address ? "error" : ""}
                   help={formErrors.address}
                   className="mb-4 md:col-span-2"
                 >
-                  <Input 
-                    placeholder="Enter address" 
+                  <Input
+                    placeholder="Enter address"
                     className="rounded-lg"
                     size="large"
                   />
@@ -408,21 +431,23 @@ const CreateAccountPage = () => {
 
             {/* Role & Department Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <Title level={4} className="mb-4 text-indigo-700">Role & Department</Title>
+              <Title level={4} className="mb-4 text-indigo-700">
+                Role & Department
+              </Title>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Form.Item
                   name="roleId"
                   label="Role"
-                  validateStatus={formErrors.roleId ? 'error' : ''}
+                  validateStatus={formErrors.roleId ? "error" : ""}
                   help={formErrors.roleId}
                   className="mb-4"
                 >
-                  <Select 
+                  <Select
                     placeholder="Select role"
                     className="rounded-lg"
                     size="large"
                   >
-                    {roleOptions.map(role => (
+                    {roleOptions.map((role) => (
                       <Option key={role.value} value={role.value}>
                         {role.label}
                       </Option>
@@ -433,7 +458,7 @@ const CreateAccountPage = () => {
                 <Form.Item
                   name="specialtyId"
                   label="Specialty"
-                  validateStatus={formErrors.specialtyId ? 'error' : ''}
+                  validateStatus={formErrors.specialtyId ? "error" : ""}
                   help={formErrors.specialtyId}
                   className="mb-4"
                 >
@@ -445,9 +470,12 @@ const CreateAccountPage = () => {
                     className="rounded-lg"
                     size="large"
                   >
-                    {specialties.map(specialty => (
-                      <Option key={specialty.specialtyId} value={specialty.specialtyId}>
-                        {specialty.specialtyName} ({specialty.specialtyId}) 
+                    {specialties.map((specialty) => (
+                      <Option
+                        key={specialty.specialtyId}
+                        value={specialty.specialtyId}
+                      >
+                        {specialty.specialtyName} ({specialty.specialtyId})
                       </Option>
                     ))}
                   </Select>
@@ -456,12 +484,12 @@ const CreateAccountPage = () => {
                 <Form.Item
                   name="departmentId"
                   label="Department ID"
-                  validateStatus={formErrors.departmentId ? 'error' : ''}
+                  validateStatus={formErrors.departmentId ? "error" : ""}
                   help={formErrors.departmentId}
                   className="mb-4"
                 >
-                  <Input 
-                    placeholder="Enter department ID" 
+                  <Input
+                    placeholder="Enter department ID"
                     className="rounded-lg"
                     size="large"
                   />
@@ -471,18 +499,17 @@ const CreateAccountPage = () => {
 
             {/* Avatar Section */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <Title level={4} className="mb-4 text-indigo-700">Profile Picture</Title>
-              <Form.Item
-                name="avatar"
-                className="mb-4"
-              >
+              <Title level={4} className="mb-4 text-indigo-700">
+                Profile Picture
+              </Title>
+              <Form.Item name="avatar" className="mb-4">
                 <Upload
                   maxCount={1}
                   beforeUpload={() => false}
                   onChange={handleAvatarChange}
                   className="upload-list-inline"
                 >
-                  <Button 
+                  <Button
                     icon={<UploadOutlined />}
                     size="large"
                     className="rounded-lg"
@@ -495,14 +522,14 @@ const CreateAccountPage = () => {
 
             {/* Action Buttons */}
             <div className="flex justify-end space-x-4 pt-6 border-t">
-              <Button 
+              <Button
                 onClick={handleReset}
                 size="large"
                 className="rounded-lg min-w-[120px]"
               >
                 Reset
               </Button>
-              <Button 
+              <Button
                 type="primary"
                 htmlType="submit"
                 icon={<SaveOutlined />}

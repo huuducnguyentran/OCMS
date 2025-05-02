@@ -1,20 +1,14 @@
 import { useEffect, useState } from "react";
-import { 
-  Layout, 
-  Card, 
-  Typography, 
-  Tag, 
-  Statistic, 
-  Button, 
-  Row, 
-  Col, 
-  Tooltip,
+import {
+  Layout,
+  Card,
+  Typography,
+  Button,
+  Row,
+  Col,
   Badge,
-  Empty,
   Spin,
-  Space,
   Timeline,
-  message
 } from "antd";
 import {
   BookOutlined,
@@ -22,19 +16,10 @@ import {
   CalendarOutlined,
   TrophyOutlined,
   FileTextOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  BranchesOutlined,
   SafetyCertificateOutlined,
-  DashboardOutlined,
-  BellOutlined,
-  UserOutlined,
-  RiseOutlined,
-  BarChartOutlined,
-  AimOutlined,
   SolutionOutlined,
   FileProtectOutlined,
-  DeploymentUnitOutlined
+  DeploymentUnitOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -54,7 +39,7 @@ const HomePage = () => {
     ongoingSchedules: 0,
     certificatesIssued: 0,
     pendingRequests: 0,
-    completedCourses: 0
+    completedCourses: 0,
   });
   const [userData, setUserData] = useState(null);
   const [allowedNavs, setAllowedNavs] = useState([]);
@@ -63,42 +48,40 @@ const HomePage = () => {
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
     const storedRoleName = sessionStorage.getItem("roleName");
-    
+
     if (storedRole) setRole(storedRole);
     if (storedRoleName) setRoleName(storedRoleName);
-    
+
     // Get allowed navigation items for this role
-    const allowed = navItems.filter(item => 
-      item.roles?.includes(storedRole)
-    );
+    const allowed = navItems.filter((item) => item.roles?.includes(storedRole));
     setAllowedNavs(allowed);
-    
+
     getUserProfile()
       .then((data) => {
         setUserData(data);
       })
-      .catch(err => console.error("Error getting user profile:", err));
-      
+      .catch((err) => console.error("Error getting user profile:", err));
+
     // Fetch real data
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch data based on role permissions
         if (["Admin", "Training staff", "HeadMaster"].includes(storedRole)) {
           const coursesResponse = await courseService.getAllCourses();
           const totalCourses = coursesResponse.data?.length || 0;
-          
+
           const assignedTraineesResponse = await getAllAssignedTrainee();
           const activeTrainees = assignedTraineesResponse?.length || 0;
-          
+
           setStats({
             totalCourses,
             activeTrainees,
             ongoingSchedules: 18,
             certificatesIssued: 5,
             pendingRequests: 12,
-            completedCourses: 45
+            completedCourses: 45,
           });
         } else if (storedRole === "Trainee") {
           // Get trainee-specific stats
@@ -106,7 +89,7 @@ const HomePage = () => {
             completedCourses: 3,
             ongoingSchedules: 2,
             pendingRequests: 0,
-            certificatesIssued: 1
+            certificatesIssued: 1,
           });
         } else if (storedRole === "Instructor") {
           // Get instructor-specific stats
@@ -116,7 +99,7 @@ const HomePage = () => {
             ongoingSchedules: 0, // Số lịch dạy hiện tại
             completedCourses: 0, // Số khóa học đã hoàn thành
             upcomingSchedules: 0, // Số lịch dạy sắp tới
-            pendingGrades: 0 // Số bài cần chấm điểm
+            pendingGrades: 0, // Số bài cần chấm điểm
           });
         }
       } catch (error) {
@@ -128,20 +111,18 @@ const HomePage = () => {
 
     fetchData();
   }, []);
-  
 
   const StatisticCard = ({ icon, title, value, color, onClick }) => (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      <Card 
+    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+      <Card
         onClick={onClick}
         className="cursor-pointer hover:shadow-lg transition-all duration-300"
-        bodyStyle={{ padding: '24px' }}
+        bodyStyle={{ padding: "24px" }}
       >
         <div className="flex items-center gap-4">
-          <div className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center`}>
+          <div
+            className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center`}
+          >
             {icon}
           </div>
           <div>
@@ -155,11 +136,15 @@ const HomePage = () => {
     </motion.div>
   );
 
-  const QuickAccessCard = ({ icon, title, description, path, color, badge }) => (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
+  const QuickAccessCard = ({
+    icon,
+    title,
+    description,
+    path,
+    color,
+    badge,
+  }) => (
+    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
       <Card
         onClick={() => navigate(path)}
         className="h-full cursor-pointer hover:shadow-xl transition-all duration-300 border-none"
@@ -167,12 +152,12 @@ const HomePage = () => {
       >
         <div className="flex flex-col h-full">
           <div className="flex justify-between items-start mb-4">
-            <div className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center`}>
+            <div
+              className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center`}
+            >
               {icon}
             </div>
-            {badge && (
-              <Badge count={badge} />
-            )}
+            {badge && <Badge count={badge} />}
           </div>
           <Title level={4} className="mb-2">
             {title}
@@ -181,7 +166,10 @@ const HomePage = () => {
             {description}
           </Paragraph>
           <div className="mt-4">
-            <Button type="primary" className={`${color} border-none hover:opacity-90`}>
+            <Button
+              type="primary"
+              className={`${color} border-none hover:opacity-90`}
+            >
               Access Now →
             </Button>
           </div>
@@ -193,8 +181,8 @@ const HomePage = () => {
   // Render quick access cards based on allowed nav items
   const renderQuickAccessCards = () => {
     const cards = [];
-    
-    allowedNavs.forEach(nav => {
+
+    allowedNavs.forEach((nav) => {
       // Map nav items to cards
       switch (nav.key) {
         case "2": // Plan
@@ -203,7 +191,7 @@ const HomePage = () => {
             title: "Training Plans",
             description: "View and manage training plans in your organization",
             path: "/plan",
-            color: "bg-blue-500"
+            color: "bg-blue-500",
           });
           break;
         case "6": // Accounts
@@ -213,7 +201,7 @@ const HomePage = () => {
               title: "User Accounts",
               description: "Manage user accounts and permissions",
               path: "/accounts",
-              color: "bg-purple-500"
+              color: "bg-purple-500",
             });
           }
           break;
@@ -224,7 +212,7 @@ const HomePage = () => {
             description: "Review candidate applications and track progress",
             path: "/candidates-view",
             color: "bg-green-500",
-            badge: stats.pendingRequests
+            badge: stats.pendingRequests,
           });
           break;
         case "13": // Course
@@ -232,8 +220,9 @@ const HomePage = () => {
             icon: <BookOutlined className="text-2xl text-white" />,
             title: role === "Trainee" ? "My Courses" : "Courses",
             description: "Access training courses and learning materials",
-            path: role === "Trainee" ? "/assigned-trainee-courses" : "/all-courses",
-            color: "bg-indigo-500"
+            path:
+              role === "Trainee" ? "/assigned-trainee-courses" : "/all-courses",
+            color: "bg-indigo-500",
           });
           break;
         case "14": // Certificate
@@ -242,7 +231,7 @@ const HomePage = () => {
             title: "Certificates",
             description: "View and manage training certificates",
             path: "/certificate",
-            color: "bg-yellow-500"
+            color: "bg-yellow-500",
           });
           break;
         case "11": // Assign Trainee
@@ -251,16 +240,16 @@ const HomePage = () => {
             title: "Trainee Assignment",
             description: "Assign trainees to courses and track progress",
             path: "/assigned-trainee",
-            color: "bg-cyan-500"
+            color: "bg-cyan-500",
           });
           break;
       }
     });
-    
+
     // Return at most 3 cards
-    return cards.slice(0, 3).map((card, index) => (
-      <QuickAccessCard key={index} {...card} />
-    ));
+    return cards
+      .slice(0, 3)
+      .map((card, index) => <QuickAccessCard key={index} {...card} />);
   };
 
   const renderDashboard = () => {
@@ -279,7 +268,7 @@ const HomePage = () => {
                 Welcome back, {userData?.fullName || roleName}
               </Title>
               <Text className="text-blue-100 text-lg">
-                Here's what's happening in your training system today
+                Here is what happening in your training system today
               </Text>
             </Col>
           </Row>
@@ -293,14 +282,14 @@ const HomePage = () => {
               title="My Courses"
               value={stats.ongoingSchedules}
               color="bg-blue-500"
-              onClick={() => navigate('/assigned-trainee-courses')}
+              onClick={() => navigate("/assigned-trainee-courses")}
             />
             <StatisticCard
               icon={<TrophyOutlined className="text-2xl text-white" />}
               title="Completed Courses"
               value={stats.completedCourses}
               color="bg-green-500"
-              onClick={() => navigate('/trainee-grade')}
+              onClick={() => navigate("/trainee-grade")}
             />
           </div>
         ) : role === "Instructor" ? (
@@ -310,21 +299,21 @@ const HomePage = () => {
               title="Current Schedules"
               value={stats.ongoingSchedules}
               color="bg-blue-500"
-              onClick={() => navigate('/schedule')}
+              onClick={() => navigate("/schedule")}
             />
             <StatisticCard
               icon={<TeamOutlined className="text-2xl text-white" />}
               title="Active Trainees"
               value={stats.activeTrainees}
               color="bg-green-500"
-              onClick={() => navigate('/grade')}
+              onClick={() => navigate("/grade")}
             />
             <StatisticCard
               icon={<FileTextOutlined className="text-2xl text-white" />}
               title="Pending Grades"
               value={stats.pendingGrades}
               color="bg-orange-500"
-              onClick={() => navigate('/grade')}
+              onClick={() => navigate("/grade")}
             />
           </div>
         ) : (
@@ -335,7 +324,7 @@ const HomePage = () => {
                 title="Active Trainees"
                 value={stats.activeTrainees}
                 color="bg-green-500"
-                onClick={() => navigate('/assigned-trainee')}
+                onClick={() => navigate("/assigned-trainee")}
               />
             )}
             {["Admin", "Training staff"].includes(role) && (
@@ -344,16 +333,18 @@ const HomePage = () => {
                 title="Total Courses"
                 value={stats.totalCourses}
                 color="bg-blue-500"
-                onClick={() => navigate('/all-courses')}
+                onClick={() => navigate("/all-courses")}
               />
             )}
             {["Admin", "HR", "AOC Manager"].includes(role) && (
               <StatisticCard
-                icon={<SafetyCertificateOutlined className="text-2xl text-white" />}
+                icon={
+                  <SafetyCertificateOutlined className="text-2xl text-white" />
+                }
                 title="Certificates Issued"
                 value={stats.certificatesIssued}
                 color="bg-purple-500"
-                onClick={() => navigate('/certificate')}
+                onClick={() => navigate("/certificate")}
               />
             )}
           </div>
@@ -361,7 +352,9 @@ const HomePage = () => {
 
         {/* Quick Access Section */}
         <div>
-          <Title level={3} className="mb-6">Quick Access</Title>
+          <Title level={3} className="mb-6">
+            Quick Access
+          </Title>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {role === "Instructor" ? (
               <>
@@ -393,11 +386,13 @@ const HomePage = () => {
             )}
           </div>
         </div>
-        
+
         {/* Recent Activities for Instructor */}
         {role === "Instructor" && (
           <Card className="shadow-md">
-            <Title level={4} className="mb-4">Recent Activities</Title>
+            <Title level={4} className="mb-4">
+              Recent Activities
+            </Title>
             {loading ? (
               <div className="text-center py-8">
                 <Spin size="large" />
@@ -439,4 +434,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-

@@ -1,6 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Layout,
   Button,
   Card,
   Tag,
@@ -15,19 +14,15 @@ import {
 import {
   ArrowLeftOutlined,
   BookOutlined,
-  EditOutlined,
   TrophyOutlined,
-  ClockCircleOutlined,
   TeamOutlined,
   CalendarOutlined,
-  EnvironmentOutlined,
-  CheckCircleOutlined,
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { getSubjectById } from "../../services/subjectService";
 import moment from "moment";
 
-const { Title, Paragraph, Text } = Typography;
+const { Title, Text } = Typography;
 
 const SubjectDetailPage = () => {
   const { subjectId } = useParams();

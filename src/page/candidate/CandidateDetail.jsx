@@ -61,6 +61,7 @@ const CandidateDetailPage = () => {
 
   // Lấy role của người dùng từ session storage
   const userRole = sessionStorage.getItem("role");
+  const canEdit = userRole === "HR" || userRole === "Admin";
   // Kiểm tra có phải HeadMaster không
   const isHeadMaster = userRole === "HeadMaster";
   const isTrainingStaff = userRole === "Training staff";
@@ -194,7 +195,7 @@ const CandidateDetailPage = () => {
   };
 
   const handleSaveEdit = async () => {
-    if (!editingField) return;
+    if (!canEdit || !editingField) return;
 
     try {
       // Validate only the current editing field
@@ -235,6 +236,8 @@ const CandidateDetailPage = () => {
   };
 
   const handleEditClick = (field) => {
+    if (!canEdit) return;
+    
     if (field === "dateOfBirth" && candidate[field]) {
       setEditValue(candidate[field]);
     } else {
@@ -253,7 +256,7 @@ const CandidateDetailPage = () => {
       label={
         <div className="flex items-center justify-between">
           <span>{label}</span>
-          {!isHeadMaster||!isTrainingStaff && editingField !== field && (
+          {canEdit && editingField !== field && (
             <EditOutlined
               className="text-blue-500 ml-2 cursor-pointer"
               onClick={() => handleEditClick(field)}
@@ -262,7 +265,7 @@ const CandidateDetailPage = () => {
         </div>
       }
     >
-      {editingField === field ? (
+      {editingField === field && canEdit ? (
         <div className="flex items-center gap-2">
           {field === "gender" ? (
             <Select

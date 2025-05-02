@@ -2,7 +2,10 @@
 import { createContext, useState, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { useNavigate, useLocation } from "react-router-dom";
-import axiosInstance, { setNavigateFunction, checkAccountStatus } from "../../utils/axiosInstance";
+import {
+  setNavigateFunction,
+  checkAccountStatus,
+} from "../../utils/axiosInstance";
 
 export const AuthContext = createContext();
 
@@ -50,7 +53,7 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         setUser(userData ? JSON.parse(userData) : null);
         setAutoLogout(expiryTime - Date.now());
-        
+
         // Kiểm tra trạng thái tài khoản khi đăng nhập hoặc khôi phục phiên
         if (!isPublicRoute(location.pathname)) {
           await verifyAccountStatus();
@@ -97,7 +100,7 @@ export const AuthProvider = ({ children }) => {
     }, 30000);
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    
+
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       clearInterval(statusInterval);
@@ -106,13 +109,13 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ 
-        isAuthenticated, 
-        setIsAuthenticated, 
-        user, 
-        setUser, 
+      value={{
+        isAuthenticated,
+        setIsAuthenticated,
+        user,
+        setUser,
         logout,
-        verifyAccountStatus 
+        verifyAccountStatus,
       }}
     >
       {children}

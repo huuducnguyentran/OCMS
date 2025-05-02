@@ -1,15 +1,37 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Button, Typography, Descriptions, Spin, message, Tag, Card, Divider, Row, Col, Breadcrumb, Space } from "antd";
-import { ArrowLeftOutlined, CheckCircleOutlined, FileTextOutlined, ClockCircleOutlined, UserOutlined, TagOutlined } from "@ant-design/icons";
-import { getPendingDecision, getActiveDecision, signDecision } from "../../services/decisionService";
+import {
+  Button,
+  Typography,
+  Spin,
+  message,
+  Tag,
+  Card,
+  Divider,
+  Row,
+  Col,
+  Breadcrumb,
+  Space,
+} from "antd";
+import {
+  ArrowLeftOutlined,
+  CheckCircleOutlined,
+  FileTextOutlined,
+  ClockCircleOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
+import {
+  getPendingDecision,
+  getActiveDecision,
+  signDecision,
+} from "../../services/decisionService";
 
 const { Title, Text } = Typography;
 
 const DecisionDetailPage = () => {
   const { decisionId } = useParams();
   const navigate = useNavigate();
-  const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
+  const userRole = sessionStorage.getItem("role");
   const isHeadMaster = userRole === "HeadMaster";
 
   const [decision, setDecision] = useState(null);
@@ -21,14 +43,16 @@ const DecisionDetailPage = () => {
         setLoading(true);
         // Thử lấy từ danh sách decision pending
         let pendingData = await getPendingDecision();
-        let foundDecision = pendingData.find(d => d.decisionId === decisionId);
-        
+        let foundDecision = pendingData.find(
+          (d) => d.decisionId === decisionId
+        );
+
         // Nếu không tìm thấy trong pending, thử lấy từ active
         if (!foundDecision) {
           let activeData = await getActiveDecision();
-          foundDecision = activeData.find(d => d.decisionId === decisionId);
+          foundDecision = activeData.find((d) => d.decisionId === decisionId);
         }
-        
+
         if (foundDecision) {
           setDecision(foundDecision);
         } else {
@@ -54,16 +78,20 @@ const DecisionDetailPage = () => {
     try {
       await signDecision(decisionId);
       message.success("Decision signed successfully!");
-      
+
       // Cập nhật lại thông tin quyết định sau khi ký
       const updatedPendingData = await getPendingDecision();
-      let updatedDecision = updatedPendingData.find(d => d.decisionId === decisionId);
-      
+      let updatedDecision = updatedPendingData.find(
+        (d) => d.decisionId === decisionId
+      );
+
       if (!updatedDecision) {
         const updatedActiveData = await getActiveDecision();
-        updatedDecision = updatedActiveData.find(d => d.decisionId === decisionId);
+        updatedDecision = updatedActiveData.find(
+          (d) => d.decisionId === decisionId
+        );
       }
-      
+
       if (updatedDecision) {
         setDecision(updatedDecision);
       }
@@ -102,7 +130,10 @@ const DecisionDetailPage = () => {
           </div>
           <Card className="shadow-md rounded-xl text-center py-16">
             <Title level={3}>Decision not found</Title>
-            <Text className="text-gray-500">The decision you are looking for does not exist or has been removed.</Text>
+            <Text className="text-gray-500">
+              The decision you are looking for does not exist or has been
+              removed.
+            </Text>
           </Card>
         </div>
       </div>
@@ -120,12 +151,14 @@ const DecisionDetailPage = () => {
             </Breadcrumb.Item>
             <Breadcrumb.Item>
               <a onClick={() => navigate(getBackPath())}>
-                {decision.status === 1 ? "Active Decisions" : "Pending Decisions"}
+                {decision.status === 1
+                  ? "Active Decisions"
+                  : "Pending Decisions"}
               </a>
             </Breadcrumb.Item>
             <Breadcrumb.Item>{decision.decisionCode}</Breadcrumb.Item>
           </Breadcrumb>
-          
+
           <div className="flex justify-between items-center">
             <Button
               type="link"
@@ -136,15 +169,23 @@ const DecisionDetailPage = () => {
             >
               Back
             </Button>
-            
+
             {decision.status === 0 && (
               <Button
                 type="primary"
                 icon={<CheckCircleOutlined />}
                 onClick={handleSignDecision}
                 disabled={!isHeadMaster}
-                className={`text-white ${isHeadMaster ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500 cursor-not-allowed'}`}
-                title={isHeadMaster ? "Sign this decision" : "Only HeadMaster can sign decisions"}
+                className={`text-white ${
+                  isHeadMaster
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-gray-400 hover:bg-gray-500 cursor-not-allowed"
+                }`}
+                title={
+                  isHeadMaster
+                    ? "Sign this decision"
+                    : "Only HeadMaster can sign decisions"
+                }
               >
                 Sign Decision
               </Button>
@@ -154,7 +195,9 @@ const DecisionDetailPage = () => {
 
         {/* Main Title Card */}
         <Card className="mb-6 shadow-md border-0 rounded-xl">
-          <Title level={2} className="mb-2 text-indigo-800">{decision.title}</Title>
+          <Title level={2} className="mb-2 text-indigo-800">
+            {decision.title}
+          </Title>
           <div className="flex items-center space-x-2 text-gray-500">
             <FileTextOutlined />
             <Text>{decision.decisionCode}</Text>
@@ -168,62 +211,95 @@ const DecisionDetailPage = () => {
         <Row gutter={16} className="mb-6">
           <Col xs={24} md={8}>
             <Card className="h-full shadow-md border-0 rounded-xl">
-              <Title level={4} className="mb-4 text-indigo-700">Decision Information</Title>
-              
+              <Title level={4} className="mb-4 text-indigo-700">
+                Decision Information
+              </Title>
+
               <Space direction="vertical" size="large" className="w-full">
                 <div>
-                  <Text strong className="text-gray-500 block mb-1">Decision ID</Text>
+                  <Text strong className="text-gray-500 block mb-1">
+                    Decision ID
+                  </Text>
                   <Text className="text-lg">{decision.decisionId}</Text>
                 </div>
-                
+
                 <div>
-                  <Text strong className="text-gray-500 block mb-1">Decision Code</Text>
+                  <Text strong className="text-gray-500 block mb-1">
+                    Decision Code
+                  </Text>
                   <Text className="text-lg">{decision.decisionCode}</Text>
                 </div>
-                
+
                 <div>
-                  <Text strong className="text-gray-500 block mb-1">Issued By</Text>
+                  <Text strong className="text-gray-500 block mb-1">
+                    Issued By
+                  </Text>
                   <div className="flex items-center space-x-2">
                     <UserOutlined className="text-blue-500" />
                     <Text className="text-lg">{decision.issuedBy}</Text>
                   </div>
                 </div>
-                
+
                 <div>
-                  <Text strong className="text-gray-500 block mb-1">Status</Text>
-                  <Tag color={decision.status === 1 ? "success" : "processing"} icon={decision.status === 1 ? <CheckCircleOutlined /> : <ClockCircleOutlined />} className="px-3 py-1 text-base">
+                  <Text strong className="text-gray-500 block mb-1">
+                    Status
+                  </Text>
+                  <Tag
+                    color={decision.status === 1 ? "success" : "processing"}
+                    icon={
+                      decision.status === 1 ? (
+                        <CheckCircleOutlined />
+                      ) : (
+                        <ClockCircleOutlined />
+                      )
+                    }
+                    className="px-3 py-1 text-base"
+                  >
                     {decision.status === 1 ? "Active" : "Pending"}
                   </Tag>
                 </div>
-                
+
                 <div>
-                  <Text strong className="text-gray-500 block mb-1">Issue Date</Text>
+                  <Text strong className="text-gray-500 block mb-1">
+                    Issue Date
+                  </Text>
                   <div className="flex items-center space-x-2">
                     <ClockCircleOutlined className="text-green-500" />
-                    <Text className="text-lg">{new Date(decision.issueDate).toLocaleString()}</Text>
+                    <Text className="text-lg">
+                      {new Date(decision.issueDate).toLocaleString()}
+                    </Text>
                   </div>
                 </div>
               </Space>
             </Card>
           </Col>
-          
+
           <Col xs={24} md={16}>
             <Card className="shadow-md border-0 rounded-xl">
-              <Title level={4} className="mb-4 text-indigo-700">Decision Preview</Title>
-              
+              <Title level={4} className="mb-4 text-indigo-700">
+                Decision Preview
+              </Title>
+
               {decision.contentWithSas ? (
                 <div className="border rounded-lg overflow-hidden shadow-inner">
                   <iframe
                     src={decision.contentWithSas}
                     title="Decision Preview"
                     className="w-full h-[700px] border-0"
-                    onError={() => message.error("Failed to load decision preview.")}
+                    onError={() =>
+                      message.error("Failed to load decision preview.")
+                    }
                   />
                 </div>
               ) : (
                 <div className="text-center py-10 bg-gray-50 rounded-lg">
-                  <FileTextOutlined style={{ fontSize: '48px' }} className="text-gray-300 mb-4" />
-                  <Text className="text-gray-500 block">No preview available</Text>
+                  <FileTextOutlined
+                    style={{ fontSize: "48px" }}
+                    className="text-gray-300 mb-4"
+                  />
+                  <Text className="text-gray-500 block">
+                    No preview available
+                  </Text>
                 </div>
               )}
             </Card>
@@ -234,4 +310,4 @@ const DecisionDetailPage = () => {
   );
 };
 
-export default DecisionDetailPage; 
+export default DecisionDetailPage;

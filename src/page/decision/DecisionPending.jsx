@@ -31,7 +31,7 @@ const DecisionPendingPage = () => {
   const [searchText, setSearchText] = useState("");
   const [filterDate, setFilterDate] = useState(null);
   const navigate = useNavigate();
-  const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
+  const userRole = sessionStorage.getItem("role");
   const isHeadMaster = userRole === "HeadMaster";
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const DecisionPendingPage = () => {
       message.warning("Only HeadMaster can select decisions for signing");
       return;
     }
-    
+
     setSelectedDecisions((prev) =>
       checked ? [...prev, decisionId] : prev.filter((id) => id !== decisionId)
     );
@@ -65,9 +65,11 @@ const DecisionPendingPage = () => {
       message.warning("Only HeadMaster can select decisions for signing");
       return;
     }
-    
+
     if (checked) {
-      const allDecisionIds = filteredDecisions.map(decision => decision.decisionId);
+      const allDecisionIds = filteredDecisions.map(
+        (decision) => decision.decisionId
+      );
       setSelectedDecisions(allDecisionIds);
     } else {
       setSelectedDecisions([]);
@@ -79,7 +81,7 @@ const DecisionPendingPage = () => {
       message.warning("Only HeadMaster can sign decisions");
       return;
     }
-    
+
     if (selectedDecisions.length === 0) {
       message.warning("Please select at least one decision.");
       return;
@@ -103,11 +105,11 @@ const DecisionPendingPage = () => {
   const filteredDecisions = useMemo(() => {
     return decisions.filter((decision) => {
       const searchLower = searchText.toLowerCase();
-      const matchSearch = 
+      const matchSearch =
         decision.decisionCode.toLowerCase().includes(searchLower) ||
         decision.title.toLowerCase().includes(searchLower) ||
         decision.issuedBy.toLowerCase().includes(searchLower);
-        
+
       const decisionDate = dayjs(decision.issueDate);
       const matchDate =
         filterDate && filterDate.length === 2
@@ -120,8 +122,9 @@ const DecisionPendingPage = () => {
     });
   }, [decisions, searchText, filterDate]);
 
-  const areAllSelected = filteredDecisions.length > 0 && 
-    filteredDecisions.every(decision => 
+  const areAllSelected =
+    filteredDecisions.length > 0 &&
+    filteredDecisions.every((decision) =>
       selectedDecisions.includes(decision.decisionId)
     );
 
@@ -160,8 +163,10 @@ const DecisionPendingPage = () => {
             />
           </Col>
           <Col xs={24} md={8} className="flex justify-end items-center gap-3">
-            <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can select decisions"}>
-              <Checkbox 
+            <Tooltip
+              title={isHeadMaster ? "" : "Only HeadMaster can select decisions"}
+            >
+              <Checkbox
                 checked={areAllSelected}
                 onChange={(e) => handleSelectAll(e.target.checked)}
                 disabled={!isHeadMaster || filteredDecisions.length === 0}
@@ -169,7 +174,9 @@ const DecisionPendingPage = () => {
                 Select All
               </Checkbox>
             </Tooltip>
-            <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can sign decisions"}>
+            <Tooltip
+              title={isHeadMaster ? "" : "Only HeadMaster can sign decisions"}
+            >
               <Button
                 type="primary"
                 onClick={handleSignDecisions}
@@ -195,7 +202,11 @@ const DecisionPendingPage = () => {
               key={decision.decisionId}
               className="relative group rounded-2xl border border-gray-200 shadow-md hover:shadow-lg transition-all bg-white"
             >
-              <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can select decisions"}>
+              <Tooltip
+                title={
+                  isHeadMaster ? "" : "Only HeadMaster can select decisions"
+                }
+              >
                 <Checkbox
                   className="absolute top-2 right-2 z-10 bg-white p-1 rounded"
                   checked={selectedDecisions.includes(decision.decisionId)}

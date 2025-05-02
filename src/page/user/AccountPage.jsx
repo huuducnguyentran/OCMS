@@ -1,9 +1,30 @@
 import { useEffect, useState } from "react";
-import { Table, Tag, Typography, Button, Space, Input, message, Popconfirm, Switch, Modal } from "antd";
-import { ReloadOutlined, SearchOutlined, DownloadOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import { getAllUsers, exportTraineeInfo, activateUser, deactivateUser } from "../../services/userService";
+import {
+  Table,
+  Tag,
+  Typography,
+  Button,
+  Space,
+  Input,
+  message,
+  Switch,
+  Modal,
+} from "antd";
+import {
+  ReloadOutlined,
+  SearchOutlined,
+  DownloadOutlined,
+  EditOutlined,
+  ExclamationCircleOutlined,
+} from "@ant-design/icons";
+import {
+  getAllUsers,
+  exportTraineeInfo,
+  activateUser,
+  deactivateUser,
+} from "../../services/userService";
 import { useNavigate } from "react-router-dom";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -13,10 +34,10 @@ const AccountPage = () => {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
   const [filteredAccounts, setFilteredAccounts] = useState([]);
   const [sortedInfo, setSortedInfo] = useState({});
-  const [userRole, setUserRole] = useState('');
+  const [userRole, setUserRole] = useState("");
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -25,16 +46,16 @@ const AccountPage = () => {
 
   useEffect(() => {
     // Lấy role người dùng từ session
-    const role = sessionStorage.getItem('role');
+    const role = sessionStorage.getItem("role");
     setUserRole(role);
   }, []);
 
   // Kiểm tra nếu user là Admin
-  const isAdmin = userRole === 'Admin';
-  const isReviewer = userRole === 'Reviewer';
+  const isAdmin = userRole === "Admin";
+  const isReviewer = userRole === "Reviewer";
 
   const handleChange = (pagination, filters, sorter) => {
-    console.log('Pagination changed:', pagination);
+    console.log("Pagination changed:", pagination);
     setPagination(pagination);
     setSortedInfo(sorter);
   };
@@ -47,45 +68,54 @@ const AccountPage = () => {
   // Hàm xử lý xuất thông tin học viên
   const handleExportTraineeInfo = async (userId) => {
     try {
-      message.loading({ content: "Đang chuẩn bị tải xuống...", key: "exportLoading" });
+      message.loading({
+        content: "Đang chuẩn bị tải xuống...",
+        key: "exportLoading",
+      });
       await exportTraineeInfo(userId);
-      message.success({ content: "Tải xuống thành công", key: "exportLoading" });
+      message.success({
+        content: "Tải xuống thành công",
+        key: "exportLoading",
+      });
     } catch (error) {
       console.error("Error exporting trainee info:", error);
-      message.error({ content: "Không thể tải xuống file. Vui lòng thử lại", key: "exportLoading" });
+      message.error({
+        content: "Không thể tải xuống file. Vui lòng thử lại",
+        key: "exportLoading",
+      });
     }
   };
 
-  // Hàm xử lý xóa tài khoản
-  const handleDeleteConfirm = (userId) => {
-    try {
-      message.loading({ content: "Đang xóa tài khoản...", key: "deleteAccount" });
-      // Gọi API xóa tài khoản tại đây 
-      // Ví dụ: await deleteUser(userId);
-      
-      // Sau khi xóa thành công, cập nhật lại danh sách
-      fetchAccounts();
-      message.success({ content: "Xóa tài khoản thành công", key: "deleteAccount" });
-    } catch (error) {
-      console.error("Error deleting account:", error);
-      message.error({ content: "Không thể xóa tài khoản. Vui lòng thử lại", key: "deleteAccount" });
-    }
-  };
+  // // Hàm xử lý xóa tài khoản
+  // const handleDeleteConfirm = (userId) => {
+  //   try {
+  //     message.loading({ content: "Đang xóa tài khoản...", key: "deleteAccount" });
+  //     // Gọi API xóa tài khoản tại đây
+  //     // Ví dụ: await deleteUser(userId);
+
+  //     // Sau khi xóa thành công, cập nhật lại danh sách
+  //     fetchAccounts();
+  //     message.success({ content: "Xóa tài khoản thành công", key: "deleteAccount" });
+  //   } catch (error) {
+  //     console.error("Error deleting account:", error);
+  //     message.error({ content: "Không thể xóa tài khoản. Vui lòng thử lại", key: "deleteAccount" });
+  //   }
+  // };
 
   // Cập nhật một tài khoản cụ thể trong danh sách
   const updateAccountInList = (userId, newStatus) => {
-    setAccounts(prevAccounts => 
-      prevAccounts.map(account => 
-        account.userId === userId 
-          ? { ...account, accountStatus: newStatus } 
+    setAccounts((prevAccounts) =>
+      prevAccounts.map((account) =>
+        account.userId === userId
+          ? { ...account, accountStatus: newStatus }
           : account
       )
     );
-    
-    setFilteredAccounts(prevFilteredAccounts => 
-      prevFilteredAccounts.map(account => 
-        account.userId === userId 
-          ? { ...account, accountStatus: newStatus } 
+
+    setFilteredAccounts((prevFilteredAccounts) =>
+      prevFilteredAccounts.map((account) =>
+        account.userId === userId
+          ? { ...account, accountStatus: newStatus }
           : account
       )
     );
@@ -96,12 +126,12 @@ const AccountPage = () => {
     // Nếu đang chuyển sang trạng thái Deactivated (tắt), hiển thị xác nhận
     if (!checked && currentStatus === "Active") {
       confirm({
-        title: 'Are you sure you want to deactivate this account?',
+        title: "Are you sure you want to deactivate this account?",
         icon: <ExclamationCircleOutlined />,
-        content: 'Account will not be able to login after being deactivated.',
-        okText: 'Deactivate',
-        okType: 'danger',
-        cancelText: 'Cancel',
+        content: "Account will not be able to login after being deactivated.",
+        okText: "Deactivate",
+        okType: "danger",
+        cancelText: "Cancel",
         async onOk() {
           await toggleAccountStatus(userId, checked);
         },
@@ -117,26 +147,34 @@ const AccountPage = () => {
     try {
       setActionLoading(true);
       const messageKey = "toggleStatus";
-      
-      message.loading({ 
-        content: checked ? "Activating account..." : "Deactivating account...", 
-        key: messageKey 
+
+      message.loading({
+        content: checked ? "Activating account..." : "Deactivating account...",
+        key: messageKey,
       });
-      
+
       if (checked) {
         await activateUser(userId);
         updateAccountInList(userId, "Active");
-        message.success({ content: "Account activated successfully", key: messageKey });
+        message.success({
+          content: "Account activated successfully",
+          key: messageKey,
+        });
       } else {
         await deactivateUser(userId);
         updateAccountInList(userId, "Deactivated");
-        message.success({ content: "Account deactivated successfully", key: messageKey });
+        message.success({
+          content: "Account deactivated successfully",
+          key: messageKey,
+        });
       }
     } catch (error) {
       console.error("Error toggling account status:", error);
-      message.error({ 
-        content: checked ? "Cannot activate account. Please try again" : "Cannot deactivate account. Please try again", 
-        key: "toggleStatus" 
+      message.error({
+        content: checked
+          ? "Cannot activate account. Please try again"
+          : "Cannot deactivate account. Please try again",
+        key: "toggleStatus",
       });
     } finally {
       setActionLoading(false);
@@ -151,7 +189,7 @@ const AccountPage = () => {
       width: 120,
       ellipsis: true,
       sorter: (a, b) => a.userId.localeCompare(b.userId),
-      sortOrder: sortedInfo.columnKey === 'userId' ? sortedInfo.order : null,
+      sortOrder: sortedInfo.columnKey === "userId" ? sortedInfo.order : null,
     },
     {
       title: "Username",
@@ -160,7 +198,7 @@ const AccountPage = () => {
       width: 150,
       ellipsis: true,
       sorter: (a, b) => a.username.localeCompare(b.username),
-      sortOrder: sortedInfo.columnKey === 'username' ? sortedInfo.order : null,
+      sortOrder: sortedInfo.columnKey === "username" ? sortedInfo.order : null,
     },
     {
       title: "Specialty",
@@ -169,7 +207,8 @@ const AccountPage = () => {
       width: 150,
       ellipsis: true,
       sorter: (a, b) => a.specialtyId.localeCompare(b.specialtyId),
-      sortOrder: sortedInfo.columnKey === 'specialtyId' ? sortedInfo.order : null,
+      sortOrder:
+        sortedInfo.columnKey === "specialtyId" ? sortedInfo.order : null,
     },
     {
       title: "Full Name",
@@ -178,7 +217,7 @@ const AccountPage = () => {
       width: 180,
       ellipsis: true,
       sorter: (a, b) => a.fullName.localeCompare(b.fullName),
-      sortOrder: sortedInfo.columnKey === 'fullName' ? sortedInfo.order : null,
+      sortOrder: sortedInfo.columnKey === "fullName" ? sortedInfo.order : null,
     },
     {
       title: "Email",
@@ -187,7 +226,7 @@ const AccountPage = () => {
       width: 200,
       ellipsis: true,
       sorter: (a, b) => a.email.localeCompare(b.email),
-      sortOrder: sortedInfo.columnKey === 'email' ? sortedInfo.order : null,
+      sortOrder: sortedInfo.columnKey === "email" ? sortedInfo.order : null,
     },
     {
       title: "Phone",
@@ -196,7 +235,8 @@ const AccountPage = () => {
       width: 130,
       ellipsis: true,
       sorter: (a, b) => a.phoneNumber.localeCompare(b.phoneNumber),
-      sortOrder: sortedInfo.columnKey === 'phoneNumber' ? sortedInfo.order : null,
+      sortOrder:
+        sortedInfo.columnKey === "phoneNumber" ? sortedInfo.order : null,
     },
     {
       title: "Gender",
@@ -204,7 +244,7 @@ const AccountPage = () => {
       key: "gender",
       width: 100,
       sorter: (a, b) => a.gender.localeCompare(b.gender),
-      sortOrder: sortedInfo.columnKey === 'gender' ? sortedInfo.order : null,
+      sortOrder: sortedInfo.columnKey === "gender" ? sortedInfo.order : null,
     },
     {
       title: "Role",
@@ -212,7 +252,7 @@ const AccountPage = () => {
       key: "roleName",
       width: 120,
       sorter: (a, b) => a.roleName.localeCompare(b.roleName),
-      sortOrder: sortedInfo.columnKey === 'roleName' ? sortedInfo.order : null,
+      sortOrder: sortedInfo.columnKey === "roleName" ? sortedInfo.order : null,
       render: (roleName) => {
         let color = "default";
         if (roleName === "Admin") color = "red";
@@ -228,7 +268,8 @@ const AccountPage = () => {
       key: "dateOfBirth",
       width: 150,
       sorter: (a, b) => new Date(a.dateOfBirth) - new Date(b.dateOfBirth),
-      sortOrder: sortedInfo.columnKey === 'dateOfBirth' ? sortedInfo.order : null,
+      sortOrder:
+        sortedInfo.columnKey === "dateOfBirth" ? sortedInfo.order : null,
       render: (date) => new Date(date).toLocaleDateString(),
     },
     {
@@ -242,7 +283,9 @@ const AccountPage = () => {
         return (
           <Switch
             checked={isActive}
-            onChange={(checked) => handleToggleStatus(record.userId, checked, accountStatus)}
+            onChange={(checked) =>
+              handleToggleStatus(record.userId, checked, accountStatus)
+            }
             disabled={!isAdmin || actionLoading}
             className={isActive ? "bg-green-500" : "bg-gray-400"}
           />
@@ -250,35 +293,40 @@ const AccountPage = () => {
       },
     },
     // Thêm cột Action nếu người dùng là Admin hoặc Reviewer
-    ...(isAdmin || isReviewer ? [
-      {
-        title: "Action",
-        key: "action",
-        width: 80,
-        fixed: "right",
-        render: (_, record) => (
-          isAdmin ? (
-            <Button 
-              type="primary" 
-              icon={<EditOutlined />} 
-              size="small"
-              onClick={() => navigateToUpdate(record.userId)}
-              className="w-full bg-blue-500 hover:bg-blue-600"
-            />
-          ) : (
-            <Button 
-              type="primary" 
-              icon={<DownloadOutlined />} 
-              size="small"
-              onClick={() => handleExportTraineeInfo(record.userId)}
-              disabled={record.roleName !== "Trainee"}
-              className="bg-green-500 hover:bg-green-600"
-              title={record.roleName !== "Trainee" ? "Only available for Trainee accounts" : "Export trainee information"}
-            />
-          )
-        ),
-      },
-    ] : []),
+    ...(isAdmin || isReviewer
+      ? [
+          {
+            title: "Action",
+            key: "action",
+            width: 80,
+            fixed: "right",
+            render: (_, record) =>
+              isAdmin ? (
+                <Button
+                  type="primary"
+                  icon={<EditOutlined />}
+                  size="small"
+                  onClick={() => navigateToUpdate(record.userId)}
+                  className="w-full bg-blue-500 hover:bg-blue-600"
+                />
+              ) : (
+                <Button
+                  type="primary"
+                  icon={<DownloadOutlined />}
+                  size="small"
+                  onClick={() => handleExportTraineeInfo(record.userId)}
+                  disabled={record.roleName !== "Trainee"}
+                  className="bg-green-500 hover:bg-green-600"
+                  title={
+                    record.roleName !== "Trainee"
+                      ? "Only available for Trainee accounts"
+                      : "Export trainee information"
+                  }
+                />
+              ),
+          },
+        ]
+      : []),
   ];
 
   const handleSearch = (value) => {
@@ -287,22 +335,25 @@ const AccountPage = () => {
       setFilteredAccounts(accounts);
     } else {
       const searchValue = value.toLowerCase().trim();
-      const filtered = accounts.filter(account => {
+      const filtered = accounts.filter((account) => {
         // Chuyển đổi date of birth thành chuỗi để tìm kiếm
-        const dateOfBirthStr = account.dateOfBirth ? 
-          new Date(account.dateOfBirth).toLocaleDateString() : '';
-        
+        const dateOfBirthStr = account.dateOfBirth
+          ? new Date(account.dateOfBirth).toLocaleDateString()
+          : "";
+
         // Tìm kiếm trong tất cả các trường
         return (
-          (account.userId?.toString() || '').toLowerCase().includes(searchValue) ||      // User ID
-          (account.username || '').toLowerCase().includes(searchValue) ||                // Username
-          (account.specialtyId || '').toLowerCase().includes(searchValue) ||            // Specialty
-          (account.fullName || '').toLowerCase().includes(searchValue) ||               // Full Name
-          (account.email || '').toLowerCase().includes(searchValue) ||                  // Email
-          (account.phoneNumber || '').toLowerCase().includes(searchValue) ||            // Phone
-          (account.gender || '').toLowerCase().includes(searchValue) ||                 // Gender
-          (account.roleName || '').toLowerCase().includes(searchValue) ||              // Role
-          dateOfBirthStr.toLowerCase().includes(searchValue)                           // Date of Birth
+          (account.userId?.toString() || "")
+            .toLowerCase()
+            .includes(searchValue) || // User ID
+          (account.username || "").toLowerCase().includes(searchValue) || // Username
+          (account.specialtyId || "").toLowerCase().includes(searchValue) || // Specialty
+          (account.fullName || "").toLowerCase().includes(searchValue) || // Full Name
+          (account.email || "").toLowerCase().includes(searchValue) || // Email
+          (account.phoneNumber || "").toLowerCase().includes(searchValue) || // Phone
+          (account.gender || "").toLowerCase().includes(searchValue) || // Gender
+          (account.roleName || "").toLowerCase().includes(searchValue) || // Role
+          dateOfBirthStr.toLowerCase().includes(searchValue) // Date of Birth
         );
       });
       setFilteredAccounts(filtered);
@@ -313,15 +364,17 @@ const AccountPage = () => {
   const handleExportData = () => {
     try {
       // Chuẩn bị dữ liệu để xuất
-      const dataToExport = filteredAccounts.map(account => ({
-        'User ID': account.userId,
-        'Username': account.username,
-        'Full Name': account.fullName,
-        'Email': account.email,
-        'Phone': account.phoneNumber,
-        'Gender': account.gender,
-        'Role': account.roleName,
-        'Date of Birth': account.dateOfBirth ? new Date(account.dateOfBirth).toLocaleDateString() : '',
+      const dataToExport = filteredAccounts.map((account) => ({
+        "User ID": account.userId,
+        Username: account.username,
+        "Full Name": account.fullName,
+        Email: account.email,
+        Phone: account.phoneNumber,
+        Gender: account.gender,
+        Role: account.roleName,
+        "Date of Birth": account.dateOfBirth
+          ? new Date(account.dateOfBirth).toLocaleDateString()
+          : "",
       }));
 
       // Tạo workbook và worksheet
@@ -331,7 +384,9 @@ const AccountPage = () => {
 
       // Tạo tên file với timestamp
       const date = new Date();
-      const fileName = `accounts_${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}.xlsx`;
+      const fileName = `accounts_${date.getFullYear()}-${
+        date.getMonth() + 1
+      }-${date.getDate()}_${date.getHours()}-${date.getMinutes()}.xlsx`;
 
       // Xuất file
       XLSX.writeFile(workbook, fileName);
@@ -352,10 +407,10 @@ const AccountPage = () => {
       }));
       setAccounts(formattedData);
       setFilteredAccounts(formattedData);
-      setSearchText('');
+      setSearchText("");
     } catch (error) {
       console.error("Failed to fetch accounts:", error);
-      message.error('Unable to load accounts');
+      message.error("Unable to load accounts");
     } finally {
       setLoading(false);
     }
@@ -401,10 +456,11 @@ const AccountPage = () => {
         {searchText && (
           <div className="mb-4">
             <Tag color="blue" className="text-sm px-3 py-1">
-              Found {filteredAccounts.length} results for "{searchText}"
+              Found {filteredAccounts.length} results for {searchText}
             </Tag>
             <Text type="secondary" className="ml-2">
-              Searching in: User ID, Username, Specialty, Full Name, Email, Phone, Gender, Role, Date of Birth
+              Searching in: User ID, Username, Specialty, Full Name, Email,
+              Phone, Gender, Role, Date of Birth
             </Text>
           </div>
         )}
@@ -420,8 +476,8 @@ const AccountPage = () => {
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} records`,
             onChange: (page, pageSize) => {
-              console.log('Page changed to:', page);
-              console.log('PageSize changed to:', pageSize);
+              console.log("Page changed to:", page);
+              console.log("PageSize changed to:", pageSize);
               setPagination({ current: page, pageSize: pageSize });
             },
           }}
@@ -447,4 +503,4 @@ const AccountPage = () => {
   );
 };
 
-export default AccountPage; 
+export default AccountPage;
