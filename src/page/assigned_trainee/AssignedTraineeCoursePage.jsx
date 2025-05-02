@@ -688,7 +688,7 @@ const AssignedTraineeCoursePage = () => {
                       </div>
                     </div>
 
-                    {/* Course Details - with smooth transition */}
+                    {/* Course Details */}
                     <div 
                       style={{
                         maxHeight: isExpanded ? '2000px' : '0px',

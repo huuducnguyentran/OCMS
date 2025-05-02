@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import {
+  Popconfirm,
   Layout,
   Card,
   Table,
@@ -31,6 +32,7 @@ import {
   EyeOutlined,
   SendOutlined,
   SearchOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { courseService } from "../../services/courseService";
@@ -154,6 +156,33 @@ const CoursePage = () => {
   const handleChange = (pagination, filters, sorter) => {
     setSortedInfo(sorter);
   };
+  const handleDelete = async (courseId) => {
+    try {
+      await courseService.deleteCourse(courseId);
+      message.success("Course deleted successfully");
+      fetchCourses();
+    } catch (error) {
+      console.error("Failed to delete course:", error);
+      
+      // Hiển thị thông báo lỗi từ API
+      if (error.response && error.response.data) {
+        const errorData = error.response.data;
+        
+        if (errorData.message && errorData.error) {
+          message.error(`${errorData.message} ${errorData.error}`);
+        } else if (errorData.message) {
+          message.error(errorData.message);
+        } else if (errorData.error) {
+          message.error(errorData.error);
+        } else {
+          message.error("Failed to delete course");
+        }
+      } else {
+        message.error(`Failed to delete course: ${error.message || "Unknown error"}`);
+      }
+    }
+  };
+
 
   // Thêm hàm xử lý request
   const handleRequest = (course) => {
@@ -278,6 +307,7 @@ const CoursePage = () => {
               className="bg-gray-600 hover:bg-gray-700 border-0"
             />
           </Tooltip>
+          {record.status !== "Approved" && (
           <Tooltip title="Edit">
             <Button
               size="small"
@@ -286,6 +316,23 @@ const CoursePage = () => {
               className="text-gray-600 hover:text-gray-700"
             />
           </Tooltip>
+        )}
+        {record.status !== "Approved" && (
+          <Tooltip title="Delete">
+            <Popconfirm
+              title="Are you sure you want to delete this course?"
+              onConfirm={() => handleDelete(record.courseId)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button
+                size="small"
+                icon={<DeleteOutlined />}
+                className="text-gray-600 hover:text-gray-700"
+              />
+            </Popconfirm>
+          </Tooltip>
+        )}
           {/* Thêm nút Send Request chỉ khi status là Approved */}
           {record.status === "Approved" && (
             <Tooltip title="Send Request">
@@ -328,13 +375,27 @@ const CoursePage = () => {
                 </Tag>
               </div>
               <div className="flex space-x-3">
+              {selectedCourse.status !== "Approved" && (
                 <Button
+                type="#"
                   icon={<EditOutlined />}
                   onClick={() => navigate(`/course/edit/${selectedCourse.courseId}`)}
                   className="flex items-center"
                 >
                   Edit
                 </Button>
+                )}
+                {selectedCourse.status !== "Approved" && (
+                <Button
+                type="#"
+                  icon={<DeleteOutlined />}
+                  onClick={() => handleDelete(selectedCourse.courseId)}
+                  className="flex items-center"
+                >
+                  Delete
+                </Button>         
+                )}
+                
                 {/* Chỉ hiển thị nút Send Request khi status là Approved */}
                 {selectedCourse.status === "Approved" && (
                   <Button
@@ -693,20 +754,7 @@ const CoursePage = () => {
                       </Tag>
                     </div>
                   }
-                  className="shadow-md rounded-lg overflow-hidden"
-                  extra={
-                    <Button
-                      type="primary"
-                      icon={<EditOutlined />}
-                      size="small"
-                      onClick={() =>
-                        navigate(`/course/edit/${selectedCourse.courseId}`)
-                      }
-                      className="bg-gray-600 hover:bg-gray-700 border-0"
-                    >
-                      Edit
-                    </Button>
-                  }
+                  
                 >
                   {/* Thay đổi cách sử dụng Tabs để không dùng TabPane */}
                   <Tabs

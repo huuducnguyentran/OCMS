@@ -72,7 +72,7 @@ export const API = {
   GET_COURSE_BY_ID: "Course",
   CREATE_COURSE: "Course/create",
   UPDATE_COURSE: "Course/update",
-  DELETE_COURSE: "Course",
+  DELETE_COURSE: "Course/delete",
   GET_COURSE_SUBJECTS: "Course/subjects",
   ASSIGN_TRAINEE_TO_COURSE: "Course/assign-trainee",
   ADD_SUBJECT_TO_COURSE: "Course/add-subject",

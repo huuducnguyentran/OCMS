@@ -19,6 +19,7 @@ import {
   ArrowLeftOutlined,
 } from "@ant-design/icons";
 import { createUser, getAllSpecialties } from "../../services/userService";
+import { getAllDepartments } from "../../services/departmentServices";
 import dayjs from "dayjs";
 import {
   CreateAccountSchema,
@@ -34,7 +35,9 @@ const CreateAccountPage = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const navigate = useNavigate();
   const [specialties, setSpecialties] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loadingSpecialties, setLoadingSpecialties] = useState(false);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
   const [formErrors, setFormErrors] = useState({});
 
   const roleOptions = [
@@ -49,12 +52,42 @@ const CreateAccountPage = () => {
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     if (!token) {
-      message.error("Vui lòng đăng nhập để tiếp tục");
+      message.error("Please log in to continue");
       navigate("/login");
       return;
     }
     fetchSpecialties();
+    fetchDepartment();
   }, [navigate]);
+  const fetchDepartment = async () => {
+    try {
+      setLoadingDepartments(true);
+      const response = await getAllDepartments();
+      
+      let departmentList = [];
+      if (Array.isArray(response)) {
+        departmentList = response;
+      } 
+      
+      // Lọc các phòng ban có trạng thái là 0 (active)
+      const activeDepartments = departmentList.filter(
+        (department) => department.status === 0
+      );
+      
+      setDepartments(activeDepartments);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      if (error.response?.status === 401) {
+        message.error("Session expired. Please log in again");
+        sessionStorage.clear();
+        navigate("/login");
+      } else {
+        message.error("Cannot load department list");
+      }
+    } finally {
+      setLoadingDepartments(false);
+    }
+  };
 
   const fetchSpecialties = async () => {
     try {
@@ -68,11 +101,11 @@ const CreateAccountPage = () => {
       }
     } catch (error) {
       if (error.response?.status === 401) {
-        message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại");
+        message.error("Session expired. Please log in again");
         sessionStorage.clear();
         navigate("/login");
       } else {
-        message.error("Không thể tải danh sách chuyên ngành");
+        message.error("Cannot load specialty list");
       }
     } finally {
       setLoadingSpecialties(false);
@@ -181,7 +214,7 @@ const CreateAccountPage = () => {
       };
 
       await createUser(userData);
-      message.success("Tạo tài khoản thành công!");
+      message.success("Create account successfully!");
       navigate("/accounts");
     } catch (error) {
       if (error.name === "ValidationError") {
@@ -190,9 +223,9 @@ const CreateAccountPage = () => {
           errors[err.path] = err.message;
         });
         setFormErrors(errors);
-        message.error("Vui lòng kiểm tra lại thông tin");
+        message.error("Please check the information again");
       } else if (error.response?.status === 401) {
-        message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại");
+        message.error("Session expired. Please log in again");
         sessionStorage.clear();
         navigate("/login");
       } else if (error.response?.data?.errors) {
@@ -200,7 +233,7 @@ const CreateAccountPage = () => {
           message.error(`${key}: ${value[0]}`);
         });
       } else {
-        message.error("Không thể tạo tài khoản");
+        message.error("Cannot create account");
       }
     } finally {
       setLoading(false);
@@ -280,11 +313,13 @@ const CreateAccountPage = () => {
                   validateStatus={formErrors.fullName ? "error" : ""}
                   help={formErrors.fullName}
                   className="mb-4"
+                  required
                 >
                   <Input
                     placeholder="Enter full name"
                     className="rounded-lg"
                     size="large"
+                    required
                   />
                 </Form.Item>
 
@@ -294,11 +329,13 @@ const CreateAccountPage = () => {
                   validateStatus={formErrors.gender ? "error" : ""}
                   help={formErrors.gender}
                   className="mb-4"
+                  required
                 >
                   <Select
                     placeholder="Select gender"
                     className="rounded-lg"
                     size="large"
+                    required
                   >
                     <Option value="Male">Male</Option>
                     <Option value="Female">Female</Option>
@@ -404,12 +441,14 @@ const CreateAccountPage = () => {
                   validateStatus={formErrors.phoneNumber ? "error" : ""}
                   help={formErrors.phoneNumber}
                   className="mb-4"
+                  required
                 >
                   <Input
                     placeholder="Enter phone number"
                     className="rounded-lg"
                     size="large"
                     maxLength={10}
+                    required
                   />
                 </Form.Item>
 
@@ -419,11 +458,13 @@ const CreateAccountPage = () => {
                   validateStatus={formErrors.address ? "error" : ""}
                   help={formErrors.address}
                   className="mb-4 md:col-span-2"
+                  required
                 >
                   <Input
                     placeholder="Enter address"
                     className="rounded-lg"
                     size="large"
+                    required
                   />
                 </Form.Item>
               </div>
@@ -441,11 +482,13 @@ const CreateAccountPage = () => {
                   validateStatus={formErrors.roleId ? "error" : ""}
                   help={formErrors.roleId}
                   className="mb-4"
+                  required
                 >
                   <Select
                     placeholder="Select role"
                     className="rounded-lg"
                     size="large"
+                    required
                   >
                     {roleOptions.map((role) => (
                       <Option key={role.value} value={role.value}>
@@ -461,6 +504,7 @@ const CreateAccountPage = () => {
                   validateStatus={formErrors.specialtyId ? "error" : ""}
                   help={formErrors.specialtyId}
                   className="mb-4"
+                  required
                 >
                   <Select
                     placeholder="Select specialty"
@@ -483,16 +527,28 @@ const CreateAccountPage = () => {
 
                 <Form.Item
                   name="departmentId"
-                  label="Department ID"
+                  label="Department"
                   validateStatus={formErrors.departmentId ? "error" : ""}
                   help={formErrors.departmentId}
                   className="mb-4"
                 >
-                  <Input
-                    placeholder="Enter department ID"
+                    <Select
+                    placeholder="Select department"
+                    loading={loadingDepartments}
+                    showSearch
+                    optionFilterProp="children"
                     className="rounded-lg"
                     size="large"
-                  />
+                  >
+                    {departments.map((department) => (
+                      <Option
+                        key={department.departmentId}
+                        value={department.departmentId}
+                      >
+                        {department.departmentName} ({department.departmentId})
+                      </Option>
+                    ))}
+                  </Select>
                 </Form.Item>
               </div>
             </div>

@@ -120,7 +120,23 @@ const SubjectPage = () => {
           message.success("Subject deleted successfully!");
         } catch (error) {
           console.error("Error deleting subject:", error);
-          message.error("Failed to delete subject.");
+          
+          // Hiển thị thông báo lỗi từ API
+          if (error.response && error.response.data) {
+            const errorData = error.response.data;
+            
+            if (errorData.message && errorData.error) {
+              message.error(`${errorData.message} ${errorData.error}`);
+            } else if (errorData.message) {
+              message.error(errorData.message);
+            } else if (errorData.error) {
+              message.error(errorData.error);
+            } else {
+              message.error("Failed to delete subject.");
+            }
+          } else {
+            message.error(`Failed to delete subject: ${error.message || "Unknown error"}`);
+          }
         }
       },
     });
@@ -192,6 +208,7 @@ const SubjectPage = () => {
                     <div className="font-medium">{subject.subjectName}</div>
                     <div className="text-xs text-gray-500">
                       Course: {subject.courseId || "N/A"}
+                      {subject.specialtyId && ` • Specialty: ${subject.specialtyId}`}
                     </div>
                   </div>
                 </Option>
@@ -221,6 +238,7 @@ const SubjectPage = () => {
                   <div className="font-medium">{subject.subjectName}</div>
                   <div className="text-xs text-gray-500">
                     ID: {subject.subjectId}
+                    {subject.specialtyId && ` • Specialty: ${subject.specialtyId}`}
                   </div>
                 </div>
               </Option>
@@ -291,6 +309,7 @@ const SubjectPage = () => {
             {filteredSubjects.map((subject) => (
               <Card
                 key={subject.subjectId}
+                
                 className="hover:shadow-xl transition-shadow duration-300 rounded-xl border-none bg-white overflow-hidden"
                 actions={[
                   <Tooltip title="View Details">
@@ -331,9 +350,16 @@ const SubjectPage = () => {
                       >
                         {subject.subjectName}
                       </Title>
-                      <Tag color="blue" className="mb-2">
-                        {subject.subjectId}
-                      </Tag>
+                      <div className="flex gap-2 mb-2">
+                        <Tag color="blue">
+                          {subject.subjectId}
+                        </Tag>
+                        {subject.specialtyId && (
+                          <Tag color="purple">
+                            {subject.specialtyId}
+                          </Tag>
+                        )}
+                      </div>
                     </div>
                     <BookOutlined className="text-2xl text-blue-500" />
                   </div>
