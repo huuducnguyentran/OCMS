@@ -26,6 +26,7 @@ import {
   BarsOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import {
@@ -42,6 +43,7 @@ const DepartmentPage = () => {
   const [searchText, setSearchText] = useState("");
   const navigate = useNavigate();
   const isAdmin = sessionStorage.getItem("role") === "Admin";
+  const isReviewer = sessionStorage.getItem("role") === "Reviewer";
 
   // Fetch departments
   const fetchDepartments = async () => {
@@ -99,6 +101,39 @@ const DepartmentPage = () => {
           val && val.toString().toLowerCase().includes(searchText.toLowerCase())
       )
     );
+  };
+  //export data
+  const handleExport = () => {
+    const data = getFilteredData();
+    const csvContent = [
+      [
+        "Department ID",
+        "Department Name",
+        "Description",
+        "Specialty",
+        "Status",
+      ], // adjust columns
+      ...data.map((item) => [
+        item.departmentId,
+        item.departmentName,
+        item.departmentDescription,
+        item.specialtyId,
+        item.status === 0 ? "Active" : "Inactive",
+      ]),
+    ]
+      .map((e) => e.join(","))
+      .join("\n");
+
+    const utf8BOM = "\uFEFF"; // Add BOM for Excel UTF-8 support
+    const blob = new Blob([utf8BOM + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", "departments.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Department statistics
@@ -219,7 +254,7 @@ const DepartmentPage = () => {
       ],
       onFilter: (value, record) => record.status === value,
     },
-    {
+    !isReviewer && {
       title: "Actions",
       key: "actions",
       fixed: "right",
@@ -255,7 +290,7 @@ const DepartmentPage = () => {
         </Space>
       ),
     },
-  ];
+  ].filter(Boolean);
 
   return (
     <div className="min-h-screen bg-slate-50 p-6">
@@ -348,11 +383,24 @@ const DepartmentPage = () => {
           className="shadow-sm border-0 overflow-hidden"
           bodyStyle={{ padding: 0 }}
         >
-          <div className="p-4 bg-gradient-to-r from-blue-700 to-blue-600 text-white">
-            <Text strong className="text-white text-lg">
+          <div className="p-4 bg-gradient-to-r from-blue-600 to-blue-400 text-white flex justify-between items-center">
+            <Text strong className="!text-white text-lg">
               Department List
             </Text>
+
+            {isReviewer && (
+              <Button
+                icon={<DownloadOutlined />}
+                type="default"
+                size="small"
+                className="!bg-orange-600 !text-white !border-0 hover:bg-gray-100"
+                onClick={handleExport}
+              >
+                Export
+              </Button>
+            )}
           </div>
+
           <Table
             columns={columns}
             dataSource={getFilteredData()}

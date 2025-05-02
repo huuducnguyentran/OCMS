@@ -44,7 +44,7 @@ const SubjectPage = () => {
       try {
         setLoading(true);
         const role = sessionStorage.getItem("role");
-
+        const userId = sessionStorage.getItem("userID");
         if (role === "Trainee") {
           const response = await trainingScheduleService.getTraineeSubjects();
           if (Array.isArray(response)) {
@@ -68,6 +68,17 @@ const SubjectPage = () => {
               }))
             );
             setScheduleData(traineeSchedules);
+          }
+        } else if (role === "Instructor") {
+          const response = await getAllSubject();
+          if (response && response.subjects) {
+            const instructorSubjects = response.subjects.filter((subject) =>
+              subject.instructors.some(
+                (instructor) => instructor.instructorId === userId
+              )
+            );
+            setSubjects(instructorSubjects);
+            setFilteredSubjects(instructorSubjects);
           }
         } else {
           const response = await getAllSubject();
@@ -293,15 +304,17 @@ const SubjectPage = () => {
                 key={subject.subjectId}
                 className="hover:shadow-xl transition-shadow duration-300 rounded-xl border-none bg-white overflow-hidden"
                 actions={[
-                  <Tooltip title="View Details">
+                  <Tooltip title="View Details" key="view-tooltip">
                     <EyeOutlined
                       key="view"
                       className="text-blue-500 text-lg hover:text-blue-700"
                       onClick={() => navigate(`/subject/${subject.subjectId}`)}
                     />
                   </Tooltip>,
-                  sessionStorage.getItem("role") !== "Trainee" && (
-                    <Tooltip title="Edit Subject">
+                  !["Trainee", "Instructor"].includes(
+                    sessionStorage.getItem("role")
+                  ) && (
+                    <Tooltip title="Edit Subject" key="edit-tooltip">
                       <EditOutlined
                         key="edit"
                         className="text-green-500 text-lg hover:text-green-700"
@@ -311,8 +324,10 @@ const SubjectPage = () => {
                       />
                     </Tooltip>
                   ),
-                  sessionStorage.getItem("role") !== "Trainee" && (
-                    <Tooltip title="Delete Subject">
+                  !["Trainee", "Instructor"].includes(
+                    sessionStorage.getItem("role")
+                  ) && (
+                    <Tooltip title="Delete Subject" key="delete-tooltip">
                       <DeleteOutlined
                         key="delete"
                         className="text-red-500 text-lg hover:text-red-700"
@@ -382,7 +397,9 @@ const SubjectPage = () => {
         )}
 
         {/* Floating Action Button - Chỉ hiển thị cho Admin/Training Staff */}
-        {sessionStorage.getItem("role") !== "Trainee" && (
+        {!["Trainee", "Instructor"].includes(
+          sessionStorage.getItem("role")
+        ) && (
           <Tooltip title="Create New Subject" placement="left">
             <button
               onClick={() => navigate("/subject-create")}

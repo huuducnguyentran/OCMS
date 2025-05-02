@@ -14,6 +14,7 @@ import {
   Modal,
   Select,
   Tooltip,
+  Popconfirm,
 } from "antd";
 import {
   createCandidateAccount,
@@ -28,8 +29,10 @@ import {
   PlusOutlined,
   UserOutlined,
   FileOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import {
+  deleteExternalCertificate,
   getExternalCertificatesByCandidateId,
   updateExternalCertificate,
 } from "../../services/externalCertifcateService";
@@ -57,7 +60,7 @@ const CandidateDetailPage = () => {
     certificateCode: "",
     certificateProvider: "",
   });
-  const [certificateFilter, setCertificateFilter] = useState('all');
+  const [certificateFilter, setCertificateFilter] = useState("all");
 
   // Lấy role của người dùng từ session storage
   const userRole = sessionStorage.getItem("role");
@@ -66,7 +69,8 @@ const CandidateDetailPage = () => {
   const isHeadMaster = userRole === "HeadMaster";
   const isTrainingStaff = userRole === "Training staff";
   // Kiểm tra xem người dùng đến từ trang request hay không
-  const isFromRequest = location.state?.fromRequest || isHeadMaster || isTrainingStaff;
+  const isFromRequest =
+    location.state?.fromRequest || isHeadMaster || isTrainingStaff;
 
   useEffect(() => {
     const fetchCandidate = async () => {
@@ -194,6 +198,19 @@ const CandidateDetailPage = () => {
     }
   };
 
+  const handleDelete = async (certificateId) => {
+    try {
+      await deleteExternalCertificate(certificateId);
+      message.success("Certificate deleted");
+
+      const certs = await getExternalCertificatesByCandidateId(id);
+      setCertificates(certs);
+    } catch (error) {
+      console.error(error);
+      message.error("Failed to delete certificate");
+    }
+  };
+
   const handleSaveEdit = async () => {
     if (!canEdit || !editingField) return;
 
@@ -237,7 +254,7 @@ const CandidateDetailPage = () => {
 
   const handleEditClick = (field) => {
     if (!canEdit) return;
-    
+
     if (field === "dateOfBirth" && candidate[field]) {
       setEditValue(candidate[field]);
     } else {
@@ -364,26 +381,27 @@ const CandidateDetailPage = () => {
 
   const sortCertificates = (certificates) => {
     const certOrder = {
-      'IELTS': 1,
-      'Bằng IELTS': 1,
-      'Bằng IELTSSSS': 1,
-      'Driver': 2,
-      'Bằng lái xe': 2,
-      'Bằng lái': 2,
-      'TOEIC': 3,
-      'Test TOEIC': 3,
-      'TOEFL': 4,
-      'Test TOEFL': 4,
-      'Other': 5
+      IELTS: 1,
+      "Bằng IELTS": 1,
+      "Bằng IELTSSSS": 1,
+      Driver: 2,
+      "Bằng lái xe": 2,
+      "Bằng lái": 2,
+      TOEIC: 3,
+      "Test TOEIC": 3,
+      TOEFL: 4,
+      "Test TOEFL": 4,
+      Other: 5,
     };
 
     return [...certificates].sort((a, b) => {
       const getType = (name) => {
         const lowerName = name.toLowerCase();
-        if (lowerName.includes('ielts')) return 1;
-        if (lowerName.includes('lái xe') || lowerName.includes('driver')) return 2;
-        if (lowerName.includes('toeic')) return 3;
-        if (lowerName.includes('toefl')) return 4;
+        if (lowerName.includes("ielts")) return 1;
+        if (lowerName.includes("lái xe") || lowerName.includes("driver"))
+          return 2;
+        if (lowerName.includes("toeic")) return 3;
+        if (lowerName.includes("toefl")) return 4;
         return 5; // Other certificates
       };
 
@@ -392,25 +410,27 @@ const CandidateDetailPage = () => {
   };
 
   const filterCertificates = (certificates) => {
-    if (certificateFilter === 'all') return sortCertificates(certificates);
-    
-    return sortCertificates(certificates).filter(cert => {
+    if (certificateFilter === "all") return sortCertificates(certificates);
+
+    return sortCertificates(certificates).filter((cert) => {
       const lowerName = cert.certificateName.toLowerCase();
       switch (certificateFilter) {
-        case 'ielts':
-          return lowerName.includes('ielts');
-        case 'driver':
-          return lowerName.includes('lái xe') || lowerName.includes('driver');
-        case 'toeic':
-          return lowerName.includes('toeic');
-        case 'toefl':
-          return lowerName.includes('toefl');
-        case 'other':
-          return !lowerName.includes('ielts') && 
-                 !lowerName.includes('lái xe') && 
-                 !lowerName.includes('driver') &&
-                 !lowerName.includes('toeic') && 
-                 !lowerName.includes('toefl');
+        case "ielts":
+          return lowerName.includes("ielts");
+        case "driver":
+          return lowerName.includes("lái xe") || lowerName.includes("driver");
+        case "toeic":
+          return lowerName.includes("toeic");
+        case "toefl":
+          return lowerName.includes("toefl");
+        case "other":
+          return (
+            !lowerName.includes("ielts") &&
+            !lowerName.includes("lái xe") &&
+            !lowerName.includes("driver") &&
+            !lowerName.includes("toeic") &&
+            !lowerName.includes("toefl")
+          );
         default:
           return true;
       }
@@ -497,7 +517,7 @@ const CandidateDetailPage = () => {
             title={
               <div className="flex items-center space-x-2">
                 <CheckOutlined className="text-green-500" />
-                <span>Status Information</span>   
+                <span>Status Information</span>
               </div>
             }
           >
@@ -556,23 +576,25 @@ const CandidateDetailPage = () => {
                 <Select
                   defaultValue="all"
                   style={{ width: 200 }}
-                  onChange={value => setCertificateFilter(value)}
+                  onChange={(value) => setCertificateFilter(value)}
                   options={[
-                    { value: 'all', label: 'All Certificates' },
-                    { value: 'ielts', label: 'IELTS Certificates' },
-                    { value: 'driver', label: 'Driver Licenses' },
-                    { value: 'toeic', label: 'TOEIC Certificates' },
-                    { value: 'toefl', label: 'TOEFL Certificates' },
-                    { value: 'other', label: 'Other Certificates' }
+                    { value: "all", label: "All Certificates" },
+                    { value: "ielts", label: "IELTS Certificates" },
+                    { value: "driver", label: "Driver Licenses" },
+                    { value: "toeic", label: "TOEIC Certificates" },
+                    { value: "toefl", label: "TOEFL Certificates" },
+                    { value: "other", label: "Other Certificates" },
                   ]}
                 />
-                {!isHeadMaster  &&  !isTrainingStaff && (
+                {!isHeadMaster && !isTrainingStaff && (
                   <Space>
                     <Tooltip>
                       <Button
                         type="primary"
                         icon={<PlusOutlined />}
-                        onClick={() => navigate(`/external-certificate/create/${id}`)}
+                        onClick={() =>
+                          navigate(`/external-certificate/create/${id}`)
+                        }
                         className="bg-blue-500 hover:bg-blue-600"
                         disabled={userRole === "TrainingStaff"}
                       >
@@ -580,7 +602,9 @@ const CandidateDetailPage = () => {
                       </Button>
                     </Tooltip>
                     <Button
-                      onClick={() => navigate(`/external-certificate/edit/${id}`)}
+                      onClick={() =>
+                        navigate(`/external-certificate/edit/${id}`)
+                      }
                       icon={<EditOutlined />}
                       className="border-blue-500 text-blue-500 hover:text-blue-600 hover:border-blue-600"
                     >
@@ -602,7 +626,8 @@ const CandidateDetailPage = () => {
             <>
               <div className="mb-4">
                 <Text type="secondary">
-                  Showing {filterCertificates(certificates).length} of {certificates.length} certificates
+                  Showing {filterCertificates(certificates).length} of{" "}
+                  {certificates.length} certificates
                 </Text>
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -629,6 +654,17 @@ const CandidateDetailPage = () => {
                         </div>
                       }
                     />
+                    <Popconfirm
+                      title="Are you sure you want to delete this certificate?"
+                      onConfirm={() => {
+                        console.log("Deleting certificate with ID:", cert.id);
+                        handleDelete(cert.id);
+                      }}
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <DeleteOutlined className="absolute top-2 right-2 text-red-500 hover:text-red-700 cursor-pointer" />
+                    </Popconfirm>
                     {cert.certificateFileURLWithSas && (
                       <div className="mt-4">
                         <img
@@ -636,7 +672,10 @@ const CandidateDetailPage = () => {
                           alt="Certificate"
                           className="w-full h-48 object-cover rounded-lg border border-gray-200 hover:opacity-90 transition cursor-pointer"
                           onClick={() =>
-                            window.open(cert.certificateFileURLWithSas, "_blank")
+                            window.open(
+                              cert.certificateFileURLWithSas,
+                              "_blank"
+                            )
                           }
                           onError={(e) => {
                             e.target.style.display = "none";

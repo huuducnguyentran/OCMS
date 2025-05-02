@@ -27,13 +27,13 @@ const SchedulePage = () => {
   const [viewMode, setViewMode] = useState(location.state?.viewMode || "all");
   const [subjects, setSubjects] = useState([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
-  const [setSelectedSubjectDetails] = useState(null);
+  // const [setSelectedSubjectDetails] = useState(null);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [currentWeek, setCurrentWeek] = useState(null);
   const [weekOptions, setWeekOptions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [subjectOptions, setSubjectOptions] = useState([]);
-  const [searchLoading, setSearchLoading] = useState(false);
+  // const [searchLoading, setSearchLoading] = useState(false);
   const searchTimeoutRef = useRef(null);
   const [columns, setColumns] = useState([]);
 
@@ -354,28 +354,28 @@ const SchedulePage = () => {
   }, [userRole, viewMode, selectedSubjectId]);
 
   // Parse days of week string into an array of days
-  const parseDaysOfWeek = (daysOfWeekString) => {
-    if (!daysOfWeekString) return [];
+  // const parseDaysOfWeek = (daysOfWeekString) => {
+  //   if (!daysOfWeekString) return [];
 
-    console.log("Original days string:", daysOfWeekString);
+  //   console.log("Original days string:", daysOfWeekString);
 
-    // Standardize format
-    const normalized = daysOfWeekString
-      .replace(/\s+/g, "")
-      .split(",")
-      .map((day) => {
-        // Ensure first letter is capitalized and rest is lowercase
-        day = day.trim();
-        return day.charAt(0).toUpperCase() + day.slice(1).toLowerCase();
-      })
-      .filter(Boolean);
+  //   // Standardize format
+  //   const normalized = daysOfWeekString
+  //     .replace(/\s+/g, "")
+  //     .split(",")
+  //     .map((day) => {
+  //       // Ensure first letter is capitalized and rest is lowercase
+  //       day = day.trim();
+  //       return day.charAt(0).toUpperCase() + day.slice(1).toLowerCase();
+  //     })
+  //     .filter(Boolean);
 
-    console.log("Parsed days:", normalized);
-    return normalized;
-  };
+  //   console.log("Parsed days:", normalized);
+  //   return normalized;
+  // };
 
   // Format time from string to display format
-  const formatTime = SchedulePageValidationSchema.formatTime;
+  // const formatTime = SchedulePageValidationSchema.formatTime;
 
   // Generate dates for current week based on selected week
   const generateWeekDates = (weekString) => {
@@ -459,27 +459,27 @@ const SchedulePage = () => {
     return isActive;
   };
 
-  const checkScheduleConflict = (schedule1, schedule2) => {
-    // Kiểm tra trùng thời gian
-    if (schedule1.classTime !== schedule2.classTime) return false;
+  // const checkScheduleConflict = (schedule1, schedule2) => {
+  //   // Kiểm tra trùng thời gian
+  //   if (schedule1.classTime !== schedule2.classTime) return false;
 
-    // Kiểm tra trùng ngày
-    const days1 = parseDaysOfWeek(schedule1.daysOfWeek);
-    const days2 = parseDaysOfWeek(schedule2.daysOfWeek);
+  //   // Kiểm tra trùng ngày
+  //   const days1 = parseDaysOfWeek(schedule1.daysOfWeek);
+  //   const days2 = parseDaysOfWeek(schedule2.daysOfWeek);
 
-    return days1.some((day) => days2.includes(day));
-  };
+  //   return days1.some((day) => days2.includes(day));
+  // };
 
-  // Lấy danh sách unique instructor từ scheduleData
-  const getInstructorOptions = () => {
-    const map = new Map();
-    scheduleData.forEach((item) => {
-      if (item.instructorID && !map.has(item.instructorID)) {
-        map.set(item.instructorID, true);
-      }
-    });
-    return Array.from(map.keys());
-  };
+  // // Lấy danh sách unique instructor từ scheduleData
+  // const getInstructorOptions = () => {
+  //   const map = new Map();
+  //   scheduleData.forEach((item) => {
+  //     if (item.instructorID && !map.has(item.instructorID)) {
+  //       map.set(item.instructorID, true);
+  //     }
+  //   });
+  //   return Array.from(map.keys());
+  // };
 
   // Process schedule data into time slots
   const processScheduleData = () => {
@@ -611,7 +611,10 @@ const SchedulePage = () => {
               className="space-y-2"
               schedule={schedule}
             >
-              <div className="font-semibold text-blue-600 hover:text-blue-700">
+              <div
+                className="font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+                onClick={() => navigate(`/subject/${schedule.subjectID}`)}
+              >
                 {schedule.subjectName}
               </div>
 
@@ -854,43 +857,43 @@ const SchedulePage = () => {
 
   // Instructor Filter chỉ hiển thị cho TrainingStaff
 
-  const renderInstructorFilter = () => {
-    if (userRole === "TrainingStaff" || userRole === "Training staff") {
-      // Lấy danh sách unique instructors với cả ID và Name
-      const instructorOptions = Array.from(
-        new Set(
-          scheduleData.map((item) => ({
-            id: item.instructorID,
-            name: item.instructorName,
-          }))
-        ),
-        (instructor) => JSON.stringify(instructor)
-      )
-        .map((str) => JSON.parse(str))
-        .filter((instructor) => instructor.id && instructor.name);
+  // const renderInstructorFilter = () => {
+  //   if (userRole === "TrainingStaff" || userRole === "Training staff") {
+  //     // Lấy danh sách unique instructors với cả ID và Name
+  //     const instructorOptions = Array.from(
+  //       new Set(
+  //         scheduleData.map((item) => ({
+  //           id: item.instructorID,
+  //           name: item.instructorName,
+  //         }))
+  //       ),
+  //       (instructor) => JSON.stringify(instructor)
+  //     )
+  //       .map((str) => JSON.parse(str))
+  //       .filter((instructor) => instructor.id && instructor.name);
 
-      return (
-        <div className="mb-4" style={{ maxWidth: 300 }}>
-          <label className="mr-2 font-medium">Instructor:</label>
-          <Select
-            style={{ width: "100%" }}
-            value={selectedInstructor}
-            onChange={setSelectedInstructor}
-            dropdownMatchSelectWidth={false}
-            showSearch
-            optionFilterProp="children"
-          >
-            {instructorOptions.map((instructor) => (
-              <Option key={instructor.id} value={instructor.id}>
-                {instructor.name} ({instructor.id})
-              </Option>
-            ))}
-          </Select>
-        </div>
-      );
-    }
-    return null;
-  };
+  //     return (
+  //       <div className="mb-4" style={{ maxWidth: 300 }}>
+  //         <label className="mr-2 font-medium">Instructor:</label>
+  //         <Select
+  //           style={{ width: "100%" }}
+  //           value={selectedInstructor}
+  //           onChange={setSelectedInstructor}
+  //           dropdownMatchSelectWidth={false}
+  //           showSearch
+  //           optionFilterProp="children"
+  //         >
+  //           {instructorOptions.map((instructor) => (
+  //             <Option key={instructor.id} value={instructor.id}>
+  //               {instructor.name} ({instructor.id})
+  //             </Option>
+  //           ))}
+  //         </Select>
+  //       </div>
+  //     );
+  //   }
+  //   return null;
+  // };
 
   // Handle navigation to create schedule page
   const handleCreateSchedule = () => {
@@ -919,42 +922,42 @@ const SchedulePage = () => {
   // Render subject selector
   const renderSubjectSelector = () => {
     // Search function with setTimeout
-    const handleSearch = (value) => {
-      if (!value || value.length < 2) {
-        // Nếu không có search term, hiển thị tất cả subjects của trainee
-        setSubjectOptions(subjects);
-        return;
-      }
+    // const handleSearch = (value) => {
+    //   if (!value || value.length < 2) {
+    //     // Nếu không có search term, hiển thị tất cả subjects của trainee
+    //     setSubjectOptions(subjects);
+    //     return;
+    //   }
 
-      // Clear previous timeout if exists
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
+    //   // Clear previous timeout if exists
+    //   if (searchTimeoutRef.current) {
+    //     clearTimeout(searchTimeoutRef.current);
+    //   }
 
-      setSearchLoading(true);
-      setSearchTerm(value);
+    //   setSearchLoading(true);
+    //   setSearchTerm(value);
 
-      // Set new timeout
-      searchTimeoutRef.current = setTimeout(() => {
-        try {
-          // Filter from loaded subjects list
-          const filtered = subjects.filter((subject) => {
-            const searchValue = value.toLowerCase();
-            return (
-              subject.subjectName.toLowerCase().includes(searchValue) ||
-              subject.courseId?.toLowerCase().includes(searchValue) ||
-              subject.subjectId?.toLowerCase().includes(searchValue)
-            );
-          });
+    //   // Set new timeout
+    //   searchTimeoutRef.current = setTimeout(() => {
+    //     try {
+    //       // Filter from loaded subjects list
+    //       const filtered = subjects.filter((subject) => {
+    //         const searchValue = value.toLowerCase();
+    //         return (
+    //           subject.subjectName.toLowerCase().includes(searchValue) ||
+    //           subject.courseId?.toLowerCase().includes(searchValue) ||
+    //           subject.subjectId?.toLowerCase().includes(searchValue)
+    //         );
+    //       });
 
-          setSubjectOptions(filtered);
-        } catch (error) {
-          console.error("Error searching subjects:", error);
-        } finally {
-          setSearchLoading(false);
-        }
-      }, 300);
-    };
+    //       setSubjectOptions(filtered);
+    //     } catch (error) {
+    //       console.error("Error searching subjects:", error);
+    //     } finally {
+    //       setSearchLoading(false);
+    //     }
+    //   }, 300);
+    // };
 
     console.log("Rendering subject selector with:", {
       subjects: subjects.length,
@@ -1031,24 +1034,24 @@ const SchedulePage = () => {
     );
   };
 
-  const validateNewSchedule = async (values) => {
-    try {
-      const response = await trainingScheduleService.checkScheduleConflict({
-        classTime: values.classTime,
-        daysOfWeek: values.daysOfWeek,
-        startDate: values.startDate,
-        endDate: values.endDate,
-      });
+  // const validateNewSchedule = async (values) => {
+  //   try {
+  //     const response = await trainingScheduleService.checkScheduleConflict({
+  //       classTime: values.classTime,
+  //       daysOfWeek: values.daysOfWeek,
+  //       startDate: values.startDate,
+  //       endDate: values.endDate,
+  //     });
 
-      if (response.hasConflict) {
-        throw new Error("This time is already scheduled!");
-      }
-    } catch (error) {
-      message.error(error.message);
-      return false;
-    }
-    return true;
-  };
+  //     if (response.hasConflict) {
+  //       throw new Error("This time is already scheduled!");
+  //     }
+  //   } catch (error) {
+  //     message.error(error.message);
+  //     return false;
+  //   }
+  //   return true;
+  // };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
