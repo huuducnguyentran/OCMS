@@ -1,21 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Form,
-  Input,
-  Button,
-  Card,
-  message,
-  Typography,
-  Select,
-  Space
-} from 'antd';
+import { useState, useEffect } from "react";
+import { Form, Input, Button, Card, message, Typography, Select } from "antd";
 import {
   SaveOutlined,
   ArrowLeftOutlined,
-  TeamOutlined
-} from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
-import { createDepartment } from '../../services/departmentServices';
+  TeamOutlined,
+} from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import { createDepartment } from "../../services/departmentServices";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -24,12 +15,12 @@ const CreateDepartmentPage = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const isAdmin = sessionStorage.getItem('role') === 'Admin';
+  const isAdmin = sessionStorage.getItem("role") === "Admin";
 
   useEffect(() => {
     if (!isAdmin) {
-      message.error('You do not have permission to create departments');
-      navigate('/department');
+      message.error("You do not have permission to create departments");
+      navigate("/department");
     }
   }, []);
 
@@ -41,16 +32,19 @@ const CreateDepartmentPage = () => {
         departmentName: values.departmentName,
         departmentDescription: values.departmentDescription,
         specialtyId: values.specialtyId,
-        managerId: values.managerId
+        managerId: values.managerId,
       };
 
       // Gọi API để tạo department
       await createDepartment(departmentData);
-      message.success('Department created successfully');
-      navigate('/department');
+      message.success("Department created successfully");
+      navigate("/department");
     } catch (error) {
-      console.error('Error creating department:', error);
-      message.error('Failed to create department: ' + (error.response?.data?.message || error.message));
+      console.error("Error creating department:", error);
+      message.error(
+        "Failed to create department: " +
+          (error.response?.data?.message || error.message)
+      );
     } finally {
       setLoading(false);
     }
@@ -63,7 +57,7 @@ const CreateDepartmentPage = () => {
           <div className="mb-6">
             <Button
               icon={<ArrowLeftOutlined />}
-              onClick={() => navigate('/department')}
+              onClick={() => navigate("/department")}
               className="mb-4"
             >
               Back to Departments
@@ -71,10 +65,10 @@ const CreateDepartmentPage = () => {
             <div className="flex items-center gap-2">
               <TeamOutlined className="text-2xl text-blue-500" />
               <div>
-                <Title level={2} className="mb-0">Create New Department</Title>
-                <Text type="secondary">
-                  Add a new department to the system
-                </Text>
+                <Title level={2} className="mb-0">
+                  Create New Department
+                </Title>
+                <Text type="secondary">Add a new department to the system</Text>
               </div>
             </div>
           </div>
@@ -84,18 +78,21 @@ const CreateDepartmentPage = () => {
             layout="vertical"
             onFinish={handleSubmit}
             initialValues={{
-              status: 0 // Set default status as Active
+              status: 0, // Set default status as Active
             }}
           >
             <Form.Item
               name="departmentName"
               label="Department Name"
               rules={[
-                { required: true, message: 'Please enter department name' },
-                { max: 100, message: 'Department name cannot exceed 100 characters' }
+                { required: true, message: "Please enter department name" },
+                {
+                  max: 100,
+                  message: "Department name cannot exceed 100 characters",
+                },
               ]}
             >
-              <Input 
+              <Input
                 placeholder="Enter department name"
                 className="rounded-md"
               />
@@ -105,7 +102,10 @@ const CreateDepartmentPage = () => {
               name="departmentDescription"
               label="Description"
               rules={[
-                { max: 500, message: 'Description cannot exceed 500 characters' }
+                {
+                  max: 500,
+                  message: "Description cannot exceed 500 characters",
+                },
               ]}
             >
               <TextArea
@@ -118,35 +118,23 @@ const CreateDepartmentPage = () => {
             <Form.Item
               name="specialtyId"
               label="Specialty ID"
-              rules={[
-                { required: true, message: 'Please enter specialty ID' }
-              ]}
+              rules={[{ required: true, message: "Please enter specialty ID" }]}
             >
-              <Input 
-                placeholder="Enter specialty ID"
-                className="rounded-md"
-              />
+              <Input placeholder="Enter specialty ID" className="rounded-md" />
             </Form.Item>
 
             <Form.Item
               name="managerId"
               label="Manager ID"
-              rules={[
-                { required: true, message: 'Please enter manager ID' }
-              ]}
+              rules={[{ required: true, message: "Please enter manager ID" }]}
             >
-              <Input 
-                placeholder="Enter manager ID"
-                className="rounded-md"
-              />
+              <Input placeholder="Enter manager ID" className="rounded-md" />
             </Form.Item>
 
             <Form.Item
               name="status"
               label="Status"
-              rules={[
-                { required: true, message: 'Please select status' }
-              ]}
+              rules={[{ required: true, message: "Please select status" }]}
             >
               <Select className="rounded-md">
                 <Select.Option value={0}>Active</Select.Option>
@@ -155,8 +143,8 @@ const CreateDepartmentPage = () => {
             </Form.Item>
 
             <div className="flex justify-end gap-4 mt-6">
-              <Button 
-                onClick={() => navigate('/department')}
+              <Button
+                onClick={() => navigate("/department")}
                 className="min-w-[100px]"
               >
                 Cancel

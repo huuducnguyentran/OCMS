@@ -1,12 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { 
-  Layout, Input, Button, DatePicker, message, 
-  Select, Spin, Card, Typography, Divider, Form 
+import { useState, useEffect } from "react";
+import {
+  Layout,
+  Input,
+  Button,
+  DatePicker,
+  message,
+  Select,
+  Spin,
+  Card,
+  Typography,
+  Divider,
+  Form,
 } from "antd";
-import { ArrowLeftOutlined, SaveOutlined, ReloadOutlined } from "@ant-design/icons";
+import {
+  ArrowLeftOutlined,
+  SaveOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
-import { trainingPlanService } from '../../services/trainingPlanService';
+import { trainingPlanService } from "../../services/trainingPlanService";
 import { applyTrainingPlanValidation } from "../../../utils/validationSchemas";
 import axiosInstance from "../../../utils/axiosInstance";
 
@@ -32,7 +45,9 @@ const CreateTrainingPlanPage = () => {
       setLoadingSpecialties(true);
       const response = await axiosInstance.get("Specialty");
       if (response.data.success && response.data.data) {
-        const activeSpecialties = response.data.data.filter(specialty => specialty.status === 0);
+        const activeSpecialties = response.data.data.filter(
+          (specialty) => specialty.status === 0
+        );
         setSpecialties(activeSpecialties);
       }
     } catch (error) {
@@ -46,7 +61,7 @@ const CreateTrainingPlanPage = () => {
   // Cập nhật hàm disablePastDates
   const disablePastDates = (current) => {
     // Allow current minute and future, disable past
-    const today = dayjs().startOf('day');
+    const today = dayjs().startOf("day");
     return current && current.isBefore(today);
   };
 
@@ -55,26 +70,30 @@ const CreateTrainingPlanPage = () => {
     try {
       // Validate using Yup schema before submission
       await applyTrainingPlanValidation(values);
-      
+
       setLoading(true);
       const formattedData = {
-        "planName": values.planName.trim(),
-        "Desciption": values.description.trim(),
-        "planLevel": parseInt(values.planLevel),
-        "startDate": values.startDate.toISOString(),
-        "endDate": values.endDate.toISOString(),
-        "specialtyId": values.specialtyId
+        planName: values.planName.trim(),
+        Desciption: values.description.trim(),
+        planLevel: parseInt(values.planLevel),
+        startDate: values.startDate.toISOString(),
+        endDate: values.endDate.toISOString(),
+        specialtyId: values.specialtyId,
       };
 
       await trainingPlanService.createTrainingPlan(formattedData);
       message.success("Training Plan created successfully!");
       navigate("/plan", { state: { refresh: true } });
     } catch (error) {
-      if (error.name === 'ValidationError') {
+      if (error.name === "ValidationError") {
         message.error(`Validation error: ${error.message}`);
       } else {
-        console.error('Error details:', error.response?.data || error);
-        message.error(`Failed to create Training Plan: ${error.response?.data?.message || error.message}`);
+        console.error("Error details:", error.response?.data || error);
+        message.error(
+          `Failed to create Training Plan: ${
+            error.response?.data?.message || error.message
+          }`
+        );
       }
     } finally {
       setLoading(false);
@@ -83,10 +102,13 @@ const CreateTrainingPlanPage = () => {
 
   // Helper function for rendering specialty options
   const renderSpecialtyOptions = (specialties) => {
-    return specialties.map(specialty => {
-      if (specialty.children && specialty.children.length > 0 ) {
+    return specialties.map((specialty) => {
+      if (specialty.children && specialty.children.length > 0) {
         return (
-          <Select.OptGroup key={specialty.specialtyId} label={specialty.specialtyName}>
+          <Select.OptGroup
+            key={specialty.specialtyId}
+            label={specialty.specialtyName}
+          >
             <Option key={specialty.specialtyId} value={specialty.specialtyId}>
               {specialty.specialtyName} ({specialty.specialtyId})
             </Option>
@@ -104,14 +126,16 @@ const CreateTrainingPlanPage = () => {
 
   return (
     <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
-      <Card 
+      <Card
         className="max-w-6xl mx-auto shadow-lg rounded-xl overflow-hidden"
         title={
           <div className="flex items-center justify-between">
-            <Title level={3} className="m-0 text-blue-700">Create Training Plan</Title>
-            <Button 
-              type="text" 
-              icon={<ArrowLeftOutlined />} 
+            <Title level={3} className="m-0 text-blue-700">
+              Create Training Plan
+            </Title>
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
               onClick={() => navigate("/plan")}
               className="flex items-center"
             >
@@ -134,13 +158,16 @@ const CreateTrainingPlanPage = () => {
                 label={<Text strong>Plan Name</Text>}
                 rules={[
                   { required: true, message: "Plan name is required" },
-                  { max: 100, message: "Plan name must not exceed 100 characters" }
+                  {
+                    max: 100,
+                    message: "Plan name must not exceed 100 characters",
+                  },
                 ]}
                 className="col-span-2"
               >
-                <Input 
-                  placeholder="Enter plan name" 
-                  className="rounded-lg py-2 px-3 text-base" 
+                <Input
+                  placeholder="Enter plan name"
+                  className="rounded-lg py-2 px-3 text-base"
                   maxLength={100}
                 />
               </Form.Item>
@@ -150,14 +177,17 @@ const CreateTrainingPlanPage = () => {
                 label={<Text strong>Description</Text>}
                 rules={[
                   { required: true, message: "Description is required" },
-                  { max: 100, message: "Description must not exceed 100 characters" }
+                  {
+                    max: 100,
+                    message: "Description must not exceed 100 characters",
+                  },
                 ]}
                 className="col-span-2"
               >
-                <TextArea 
-                  rows={5} 
-                  placeholder="Enter description" 
-                  className="rounded-lg py-2 px-3 text-base" 
+                <TextArea
+                  rows={5}
+                  placeholder="Enter description"
+                  className="rounded-lg py-2 px-3 text-base"
                   maxLength={100}
                 />
               </Form.Item>
@@ -190,7 +220,13 @@ const CreateTrainingPlanPage = () => {
                   optionFilterProp="children"
                   className="rounded-lg"
                   dropdownClassName="rounded-lg shadow-md"
-                  notFoundContent={loadingSpecialties ? <Spin size="small" /> : "No specialties found"}
+                  notFoundContent={
+                    loadingSpecialties ? (
+                      <Spin size="small" />
+                    ) : (
+                      "No specialties found"
+                    )
+                  }
                 >
                   {renderSpecialtyOptions(specialties)}
                 </Select>
@@ -206,25 +242,27 @@ const CreateTrainingPlanPage = () => {
                       if (!value) return Promise.resolve();
                       const now = dayjs();
                       // Compare by minute precision
-                      if (value.isBefore(now, 'minute')) {
-                        return Promise.reject(new Error('Start date cannot be in the past'));
+                      if (value.isBefore(now, "minute")) {
+                        return Promise.reject(
+                          new Error("Start date cannot be in the past")
+                        );
                       }
                       return Promise.resolve();
-                    }
-                  })
+                    },
+                  }),
                 ]}
               >
                 <DatePicker
                   className="w-full rounded-lg py-2 px-3 text-base"
-                  showTime={{ 
-                    format: 'HH:mm',
+                  showTime={{
+                    format: "HH:mm",
                     minuteStep: 5,
-                    showNow: true 
+                    showNow: true,
                   }}
                   format="YYYY-MM-DD HH:mm"
                   disabledDate={disablePastDates}
                   disabledTime={(date) => {
-                    if (date && date.isSame(dayjs(), 'day')) {
+                    if (date && date.isSame(dayjs(), "day")) {
                       return {
                         disabledHours: () => {
                           const hours = [];
@@ -242,14 +280,14 @@ const CreateTrainingPlanPage = () => {
                             return minutes;
                           }
                           return [];
-                        }
+                        },
                       };
                     }
                     return {};
                   }}
                 />
               </Form.Item>
-              
+
               <Form.Item
                 name="endDate"
                 label={<Text strong>End Date</Text>}
@@ -258,36 +296,49 @@ const CreateTrainingPlanPage = () => {
                   ({ getFieldValue }) => ({
                     validator(_, value) {
                       if (!value) return Promise.resolve();
-                      const startDate = getFieldValue('startDate');
-                      
-                      if (startDate && (value.isBefore(startDate) || value.isSame(startDate))) {
-                        return Promise.reject(new Error('End date must be after start date'));
+                      const startDate = getFieldValue("startDate");
+
+                      if (
+                        startDate &&
+                        (value.isBefore(startDate) || value.isSame(startDate))
+                      ) {
+                        return Promise.reject(
+                          new Error("End date must be after start date")
+                        );
                       }
-                      
+
                       if (startDate) {
-                        const diffDays = value.diff(startDate, 'days');
+                        const diffDays = value.diff(startDate, "days");
                         if (diffDays < 1 || diffDays > 365) {
-                          return Promise.reject(new Error('Training plan duration should be between 1 day and 365 days'));
+                          return Promise.reject(
+                            new Error(
+                              "Training plan duration should be between 1 day and 365 days"
+                            )
+                          );
                         }
                       }
-                      
+
                       return Promise.resolve();
-                    }
-                  })
+                    },
+                  }),
                 ]}
               >
                 <DatePicker
                   className="w-full rounded-lg py-2 px-3 text-base"
-                  showTime={{ 
-                    format: 'HH:mm',
+                  showTime={{
+                    format: "HH:mm",
                     minuteStep: 5,
-                    showNow: true 
+                    showNow: true,
                   }}
                   format="YYYY-MM-DD HH:mm"
                   disabledDate={(current) => {
-                    const startDate = form.getFieldValue('startDate');
-                    return disablePastDates(current) || 
-                           (startDate && (current.isBefore(startDate) || current.isSame(startDate, 'day')));
+                    const startDate = form.getFieldValue("startDate");
+                    return (
+                      disablePastDates(current) ||
+                      (startDate &&
+                        (current.isBefore(startDate) ||
+                          current.isSame(startDate, "day")))
+                    );
                   }}
                 />
               </Form.Item>
@@ -296,15 +347,15 @@ const CreateTrainingPlanPage = () => {
             <Divider />
 
             <div className="flex justify-end space-x-4 mt-6">
-              <Button 
+              <Button
                 icon={<ReloadOutlined />}
                 onClick={() => form.resetFields()}
                 className="rounded-lg border-gray-300 hover:border-gray-400 hover:text-gray-700"
               >
                 Reset
               </Button>
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 htmlType="submit"
                 icon={<SaveOutlined />}
                 loading={loading}
@@ -321,7 +372,3 @@ const CreateTrainingPlanPage = () => {
 };
 
 export default CreateTrainingPlanPage;
-
-
-
-

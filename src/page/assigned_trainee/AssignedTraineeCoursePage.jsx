@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   Empty,
@@ -8,18 +8,12 @@ import {
   Tag,
   Typography,
   Progress,
-  Badge,
   Statistic,
-  Divider,
   Row,
   Col,
-  Timeline,
   Table,
   Button,
-  Space,
   Collapse,
-  Avatar,
-  Tooltip,
   Alert
 } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -29,17 +23,12 @@ import {
   CalendarOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
-  EnvironmentOutlined,
   TeamOutlined,
   EyeOutlined,
-  RightOutlined,
   FileTextOutlined,
-  UserOutlined,
   InfoCircleOutlined,
-  CheckCircleFilled,
   CheckOutlined,
   DownOutlined,
-  UpOutlined
 } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
@@ -57,7 +46,7 @@ const scheduleContainerStyle = {
 };
 
 const AssignedTraineeCoursePage = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [courseDetails, setCourseDetails] = useState({});
   const [loading, setLoading] = useState(true);
@@ -70,10 +59,24 @@ const AssignedTraineeCoursePage = () => {
   const [errorState, setErrorState] = useState({});
   const [retryCount, setRetryCount] = useState({});
   const MAX_RETRIES = 2;
-  const [errorShown, setErrorShown] = useState(false);
+  // const [errorShown, setErrorShown] = useState(false);
 
   useEffect(() => {
     fetchCourses();
+    
+    // Thêm event listener để theo dõi khi tab mất focus để tạm dừng các request không cần thiết
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        console.log("Tab is now hidden - pausing requests");
+        // Tạm dừng các request không cần thiết khi tab không hiển thị
+      }
+    };
+    
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   const fetchCourses = async () => {
@@ -81,6 +84,33 @@ const AssignedTraineeCoursePage = () => {
     try {
       setLoading(true);
       setErrorState({}); // Clear previous errors
+      
+      // Cache key cho dữ liệu khóa học
+      const cacheKey = `trainee_courses_${storedUserID}`;
+      
+      // Kiểm tra cache trước khi gọi API
+      const cachedData = sessionStorage.getItem(cacheKey);
+      if (cachedData) {
+        try {
+          const parsedData = JSON.parse(cachedData);
+          // Kiểm tra xem dữ liệu có quá cũ không (5 phút)
+          const now = Date.now();
+          if (parsedData.timestamp && (now - parsedData.timestamp < 5 * 60 * 1000)) {
+            console.log("Using cached course data");
+            const approvedCourses = Array.isArray(parsedData.data) 
+              ? parsedData.data.filter(course => course.status === "Approved")
+              : [];
+            
+            setCourses(approvedCourses);
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          console.error("Error parsing cached data:", e);
+          // Nếu có lỗi xử lý cache, tiếp tục gọi API
+        }
+      }
+      
       const data = await courseService.getAssignedTraineeCourse(storedUserID);
       
       // Only show approved courses
@@ -90,10 +120,27 @@ const AssignedTraineeCoursePage = () => {
       
       setCourses(approvedCourses);
       
-      // If there are courses, automatically load the details for courses on the first page
+      // Lưu vào cache
+      try {
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          data: approvedCourses,
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        console.error("Error caching course data:", e);
+      }
+      
+      // Tối ưu việc tải chi tiết khóa học
       if (approvedCourses.length > 0) {
-        const initialCourses = approvedCourses.slice(0, pageSize);
-        await Promise.all(initialCourses.map(course => fetchCourseDetails(course.courseId, 0)));
+        // Chỉ tải chi tiết cho khóa học đầu tiên trên trang hiện tại
+        if (approvedCourses.length > 0) {
+          const initialCourse = approvedCourses[0];
+          setTimeout(() => {
+            if (!courseDetails[initialCourse.courseId]) {
+              fetchCourseDetails(initialCourse.courseId, 0);
+            }
+          }, 1000); // Delay 1 giây
+        }
       }
     } catch (error) {
       console.error("Error fetching courses:", error);
@@ -106,6 +153,16 @@ const AssignedTraineeCoursePage = () => {
   const fetchCourseDetails = useCallback(async (courseId, currentRetry = 0) => {
     // Skip if max retries reached for this course
     if ((retryCount[courseId] || 0) >= MAX_RETRIES) {
+      return;
+    }
+
+    // Skip if this course is already loading
+    if (detailsLoading[courseId]) {
+      return;
+    }
+    
+    // Skip if we already have data for this course
+    if (courseDetails[courseId] && !currentRetry) {
       return;
     }
 
@@ -184,7 +241,7 @@ const AssignedTraineeCoursePage = () => {
     } finally {
       setDetailsLoading(prev => ({ ...prev, [courseId]: false }));
     }
-  }, [courseDetails, retryCount, errorMessageShown]);
+  }, [courseDetails, retryCount, errorMessageShown, detailsLoading]);
 
   // Get courses for current page
   const currentCourses = courses.slice(
@@ -195,25 +252,32 @@ const AssignedTraineeCoursePage = () => {
   useEffect(() => {
     // When changing pages, load details for courses on the new page
     const loadDetailsForPage = async () => {
-      await Promise.all(
-        currentCourses
-          .filter(course => !courseDetails[course.courseId])
-          .map(course => fetchCourseDetails(course.courseId, 0))
-      );
+      // Only load details for visible courses that don't have data yet
+      const coursesToLoad = currentCourses
+        .filter(course => !courseDetails[course.courseId] && !detailsLoading[course.courseId]);
+      
+      if (coursesToLoad.length > 0) {
+        // Limit the number of concurrent requests to avoid overwhelming the server
+        const limit = 2; // Load max 2 courses at a time
+        for (let i = 0; i < Math.min(limit, coursesToLoad.length); i++) {
+          await fetchCourseDetails(coursesToLoad[i].courseId, 0);
+        }
+      }
     };
 
     if (currentCourses.length > 0) {
       loadDetailsForPage();
     }
-  }, [currentPage, currentCourses, fetchCourseDetails]);
+  }, [currentPage, currentCourses, fetchCourseDetails, courseDetails, detailsLoading]);
 
   // Toggle expand/collapse course details
   const toggleCourseExpand = (courseId) => {
     if (expandedCourseId === courseId) {
       setExpandedCourseId(null);
     } else {
-      // Nếu chưa có dữ liệu chi tiết cho khóa học này, thì fetch
-      if (!courseDetails[courseId]) {
+      // Nếu chưa có dữ liệu chi tiết cho khóa học này và không đang tải
+      // và chưa có lỗi cho khóa học này
+      if (!courseDetails[courseId] && !detailsLoading[courseId] && !errorState[courseId]) {
         fetchCourseDetails(courseId, 0);
       }
       setExpandedCourseId(courseId);
@@ -229,18 +293,18 @@ const AssignedTraineeCoursePage = () => {
   };
 
   // Get color based on status
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case "approved":
-        return "green";
-      case "pending":
-        return "orange";
-      case "rejected":
-        return "red";
-      default:
-        return "blue";
-    }
-  };
+  // const getStatusColor = (status) => {
+  //   switch (status?.toLowerCase()) {
+  //     case "approved":
+  //       return "green";
+  //     case "pending":
+  //       return "orange";
+  //     case "rejected":
+  //       return "red";
+  //     default:
+  //       return "blue";
+  //   }
+  // };
 
   // Get color based on course level
   const getLevelColor = (level) => {
@@ -294,48 +358,42 @@ const AssignedTraineeCoursePage = () => {
   const renderProgressFormat = (percent, progress) => {
     if (progress?.toLowerCase() === 'completed') {
       return (
-        <Tooltip title="Completed">
-          <div style={{ 
-            backgroundColor: '#52c41a', 
-            borderRadius: '50%',
-            width: '60px',
-            height: '60px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white'
-          }}>
-            <CheckOutlined style={{ fontSize: '24px' }} />
-          </div>
-        </Tooltip>
+        <div style={{ 
+          backgroundColor: '#52c41a', 
+          borderRadius: '50%',
+          width: '60px',
+          height: '60px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white'
+        }}>
+          <CheckOutlined style={{ fontSize: '24px' }} />
+        </div>
       );
     }
     
     if (percent === "Ongoing") {
       return (
-        <Tooltip title="Ongoing">
-          <div style={{ 
-            backgroundColor: '#1890ff', 
-            borderRadius: '50%',
-            width: '60px',
-            height: '60px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white'
-          }}>
-            <ClockCircleOutlined style={{ fontSize: '24px' }} />
-          </div>
-        </Tooltip>
+        <div style={{ 
+          backgroundColor: '#1890ff', 
+          borderRadius: '50%',
+          width: '60px',
+          height: '60px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white'
+        }}>
+          <ClockCircleOutlined style={{ fontSize: '24px' }} />
+        </div>
       );
     }
     
     return (
-      <Tooltip title={progress || "Not Started"}>
-        <span style={{ color: getProgressColor(progress) }}>
-          {percent}%
-        </span>
-      </Tooltip>
+      <span style={{ color: getProgressColor(progress) }}>
+        {percent}%
+      </span>
     );
   };
 
@@ -404,16 +462,16 @@ const AssignedTraineeCoursePage = () => {
   ];
 
   // Get step color for status
-  const getStatusStepColor = (status) => {
-    switch(status?.toLowerCase()) {
-      case 'ongoing':
-        return 'blue';
-      case 'completed':
-        return 'green';
-      default:
-        return 'gray';
-    }
-  };
+  // const getStatusStepColor = (status) => {
+  //   switch(status?.toLowerCase()) {
+  //     case 'ongoing':
+  //       return 'blue';
+  //     case 'completed':
+  //       return 'green';
+  //     default:
+  //       return 'gray';
+  //   }
+  // };
 
   // Find and update the JSX for schedule display to include animation
   // For example, in the part where schedules are shown:
@@ -550,7 +608,7 @@ const AssignedTraineeCoursePage = () => {
                 <div className="flex items-center mb-2">
                   <span className="text-red-500 mr-2">⚠️</span>
                   <Text strong className="text-red-600">
-                    Some courses can't be loaded
+                    Some courses can not be loaded
                   </Text>
                 </div>
                 <Text className="text-red-500">

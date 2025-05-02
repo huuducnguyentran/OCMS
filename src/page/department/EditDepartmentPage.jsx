@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Form,
   Input,
@@ -9,24 +9,18 @@ import {
   Typography,
   Select,
   Spin,
-  Popconfirm,
-  Tooltip,
-  Tag,
-  Switch
-} from 'antd';
+} from "antd";
 import {
   SaveOutlined,
-  DeleteOutlined,
   ArrowLeftOutlined,
-  UserOutlined
-} from '@ant-design/icons';
-import { useNavigate, useParams } from 'react-router-dom';
+  UserOutlined,
+} from "@ant-design/icons";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   getDepartmentById,
   updateDepartment,
-  deleteDepartment,
-  getAllUsers
-} from '../../services/departmentServices';
+  getAllUsers,
+} from "../../services/departmentServices";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -39,13 +33,13 @@ const EditDepartmentPage = () => {
   const [loading, setLoading] = useState(false);
   const [department, setDepartment] = useState(null);
   const [users, setUsers] = useState([]);
-  const isAdmin = sessionStorage.getItem('role') === 'Admin';
+  const isAdmin = sessionStorage.getItem("role") === "Admin";
   const [departmentStatus, setDepartmentStatus] = useState(0);
 
   useEffect(() => {
     if (!isAdmin) {
-      message.error('You do not have permission to edit departments');
-      navigate('/department');
+      message.error("You do not have permission to edit departments");
+      navigate("/department");
       return;
     }
     fetchDepartment();
@@ -57,9 +51,9 @@ const EditDepartmentPage = () => {
       // Lọc users có role phù hợp (ví dụ: Manager, Admin, etc.)
       const filteredUsers = await getAllUsers();
       setUsers(filteredUsers);
-      console.log('Fetched users:', filteredUsers);
+      console.log("Fetched users:", filteredUsers);
     } catch (error) {
-      message.error('Failed to fetch users list');
+      message.error("Failed to fetch users list", error);
     }
   };
 
@@ -69,15 +63,15 @@ const EditDepartmentPage = () => {
       const data = await getDepartmentById(id);
       setDepartment(data);
       setDepartmentStatus(data.status);
-      console.log('Fetched department:', data);
+      console.log("Fetched department:", data);
       form.setFieldsValue({
         departmentName: data.departmentName,
         departmentDescription: data.departmentDescription,
         managerId: data.managerId,
       });
     } catch (error) {
-      message.error('Failed to fetch department details');
-      navigate('/department');
+      message.error("Failed to fetch department details", error);
+      navigate("/department");
     } finally {
       setLoading(false);
     }
@@ -91,33 +85,33 @@ const EditDepartmentPage = () => {
         departmentDescription: values.departmentDescription,
         managerId: values.managerId,
       };
-      
+
       await updateDepartment(id, updateData);
-      message.success('Department updated successfully');
-      navigate('/department');
+      message.success("Department updated successfully");
+      navigate("/department");
     } catch (error) {
-      message.error('Failed to update department');
+      message.error("Failed to update department", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStatusChange = async (checked) => {
-    if (!checked) {
-      try {
-        const confirmDelete = window.confirm(
-          'Deactivating this department will delete it permanently. Are you sure?'
-        );
-        if (confirmDelete) {
-          await deleteDepartment(id);
-          message.success('Department deleted successfully');
-          navigate('/department');
-        }
-      } catch (error) {
-        message.error('Failed to delete department');
-      }
-    }
-  };
+  // const handleStatusChange = async (checked) => {
+  //   if (!checked) {
+  //     try {
+  //       const confirmDelete = window.confirm(
+  //         "Deactivating this department will delete it permanently. Are you sure?"
+  //       );
+  //       if (confirmDelete) {
+  //         await deleteDepartment(id);
+  //         message.success("Department deleted successfully");
+  //         navigate("/department");
+  //       }
+  //     } catch (error) {
+  //       message.error("Failed to delete department");
+  //     }
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -134,7 +128,7 @@ const EditDepartmentPage = () => {
           <div className="mb-6">
             <Button
               icon={<ArrowLeftOutlined />}
-              onClick={() => navigate('/department')}
+              onClick={() => navigate("/department")}
               className="mb-4"
             >
               Back to Departments
@@ -145,37 +139,25 @@ const EditDepartmentPage = () => {
             </Text>
           </div>
 
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSubmit}
-          >
+          <Form form={form} layout="vertical" onFinish={handleSubmit}>
             <Form.Item
               name="departmentName"
               label="Department Name"
               rules={[
-                { required: true, message: 'Please enter department name' },
+                { required: true, message: "Please enter department name" },
               ]}
             >
               <Input placeholder="Enter department name" />
             </Form.Item>
 
-            <Form.Item
-              name="departmentDescription"
-              label="Description"
-            >
-              <TextArea
-                placeholder="Enter department description"
-                rows={4}
-              />
+            <Form.Item name="departmentDescription" label="Description">
+              <TextArea placeholder="Enter department description" rows={4} />
             </Form.Item>
 
             <Form.Item
               name="managerId"
               label="Manager"
-              rules={[
-                { required: true, message: 'Please select manager' },
-              ]}
+              rules={[{ required: true, message: "Please select manager" }]}
             >
               <Select
                 placeholder="Select a manager"
@@ -187,7 +169,7 @@ const EditDepartmentPage = () => {
                   return searchText.indexOf(input.toLowerCase()) >= 0;
                 }}
               >
-                {users.map(user => (
+                {users.map((user) => (
                   <Option key={user.userId} value={user.userId}>
                     {user.userId} - {user.fullName} ({user.roleName})
                   </Option>
@@ -228,9 +210,7 @@ const EditDepartmentPage = () => {
 
             <div className="flex justify-end mt-6">
               <Space>
-                <Button onClick={() => navigate('/department')}>
-                  Cancel
-                </Button>
+                <Button onClick={() => navigate("/department")}>Cancel</Button>
                 <Button
                   type="primary"
                   icon={<SaveOutlined />}

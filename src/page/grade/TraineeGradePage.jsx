@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   message,
@@ -6,14 +6,11 @@ import {
   Card,
   Tag,
   Spin,
-  Divider,
-  Space,
   Row,
   Col,
   Statistic,
   Empty,
-  Progress,
-  Input
+  Input,
 } from "antd";
 import {
   FileExcelOutlined,
@@ -21,12 +18,12 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   TrophyOutlined,
-  SearchOutlined
+  SearchOutlined,
 } from "@ant-design/icons";
 import { gradeServices } from "../../services/gradeServices";
 import { getSubjectById } from "../../services/subjectService";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { Search } = Input;
 
 const TraineeGradePage = () => {
@@ -38,7 +35,7 @@ const TraineeGradePage = () => {
     total: 0,
     passed: 0,
     failed: 0,
-    avgScore: 0
+    avgScore: 0,
   });
 
   useEffect(() => {
@@ -55,7 +52,7 @@ const TraineeGradePage = () => {
       }
 
       const response = await gradeServices.getTraineeGrades(userId);
-      
+
       if (response && Array.isArray(response)) {
         const enrichedGrades = await enrichGradesWithSubjectNames(response);
         setGrades(enrichedGrades);
@@ -80,10 +77,10 @@ const TraineeGradePage = () => {
         if (grade.subjectName) {
           return {
             ...grade,
-            key: grade.gradeId || grade.id
+            key: grade.gradeId || grade.id,
           };
         }
-        
+
         // Otherwise, fetch the subject details
         try {
           const subjectResponse = await getSubjectById(grade.subjectId);
@@ -91,21 +88,21 @@ const TraineeGradePage = () => {
             return {
               ...grade,
               subjectName: subjectResponse.subject.subjectName,
-              key: grade.gradeId || grade.id
+              key: grade.gradeId || grade.id,
             };
           }
         } catch (error) {
           console.error(`Error fetching subject ${grade.subjectId}:`, error);
         }
-        
+
         // If we couldn't get the subject name, return the original grade
         return {
           ...grade,
-          key: grade.gradeId || grade.id
+          key: grade.gradeId || grade.id,
         };
       })
     );
-    
+
     return enhancedGrades;
   };
 
@@ -113,43 +110,48 @@ const TraineeGradePage = () => {
     if (!gradesData.length) {
       setStats({
         total: 0,
-        passed: 0, 
+        passed: 0,
         failed: 0,
-        avgScore: 0
+        avgScore: 0,
       });
       return;
     }
 
     const total = gradesData.length;
-    const passed = gradesData.filter(g => g.gradeStatus === "Pass").length;
+    const passed = gradesData.filter((g) => g.gradeStatus === "Pass").length;
     const failed = total - passed;
-    
-    const totalScore = gradesData.reduce((sum, grade) => sum + Number(grade.totalScore || 0), 0);
+
+    const totalScore = gradesData.reduce(
+      (sum, grade) => sum + Number(grade.totalScore || 0),
+      0
+    );
     const avgScore = total > 0 ? (totalScore / total).toFixed(2) : 0;
-    
+
     setStats({
       total,
       passed,
       failed,
-      avgScore
+      avgScore,
     });
   };
 
   // Handle search functionality
   const handleSearch = (value) => {
     setSearchText(value);
-    
+
     if (!value.trim()) {
       setFilteredGrades(grades);
       return;
     }
-    
+
     const searchLower = value.toLowerCase();
-    const filtered = grades.filter(grade => 
-      (grade.subjectName && grade.subjectName.toLowerCase().includes(searchLower)) ||
-      (grade.subjectId && grade.subjectId.toLowerCase().includes(searchLower))
+    const filtered = grades.filter(
+      (grade) =>
+        (grade.subjectName &&
+          grade.subjectName.toLowerCase().includes(searchLower)) ||
+        (grade.subjectId && grade.subjectId.toLowerCase().includes(searchLower))
     );
-    
+
     setFilteredGrades(filtered);
   };
 
@@ -160,7 +162,7 @@ const TraineeGradePage = () => {
       key: "index",
       width: 70,
       render: (_, __, index) => index + 1,
-      align: "center"
+      align: "center",
     },
     {
       title: "Subject",
@@ -171,7 +173,7 @@ const TraineeGradePage = () => {
           <div className="font-semibold">{subjectName || record.subjectId}</div>
           <div className="text-xs text-gray-500">ID: {record.subjectId}</div>
         </div>
-      )
+      ),
     },
     {
       title: "Component Scores",
@@ -182,7 +184,10 @@ const TraineeGradePage = () => {
           key: "participantScore",
           width: 100,
           render: (score) => (
-            <Tag color={score >= 5 ? "success" : "error"} className="text-center w-16">
+            <Tag
+              color={score >= 5 ? "success" : "error"}
+              className="text-center w-16"
+            >
               {score}
             </Tag>
           ),
@@ -193,7 +198,10 @@ const TraineeGradePage = () => {
           key: "assignmentScore",
           width: 100,
           render: (score) => (
-            <Tag color={score >= 5 ? "success" : "error"} className="text-center w-16">
+            <Tag
+              color={score >= 5 ? "success" : "error"}
+              className="text-center w-16"
+            >
               {score}
             </Tag>
           ),
@@ -209,7 +217,10 @@ const TraineeGradePage = () => {
           key: "finalExamScore",
           width: 100,
           render: (score) => (
-            <Tag color={score >= 5 ? "success" : "error"} className="text-center w-16">
+            <Tag
+              color={score >= 5 ? "success" : "error"}
+              className="text-center w-16"
+            >
               {score || "-"}
             </Tag>
           ),
@@ -220,8 +231,14 @@ const TraineeGradePage = () => {
           key: "finalResitScore",
           width: 100,
           render: (score) => (
-            <Tag 
-              color={score === 0 || !score ? "default" : score >= 5 ? "success" : "error"} 
+            <Tag
+              color={
+                score === 0 || !score
+                  ? "default"
+                  : score >= 5
+                  ? "success"
+                  : "error"
+              }
               className="text-center w-16"
             >
               {score || "-"}
@@ -256,7 +273,13 @@ const TraineeGradePage = () => {
         <Tag
           color={status === "Pass" ? "success" : "error"}
           className="px-4 py-1"
-          icon={status === "Pass" ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+          icon={
+            status === "Pass" ? (
+              <CheckCircleOutlined />
+            ) : (
+              <CloseCircleOutlined />
+            )
+          }
         >
           {status === "Pass" ? "Pass" : "Fail"}
         </Tag>
@@ -268,7 +291,7 @@ const TraineeGradePage = () => {
       key: "remarks",
       width: 200,
       ellipsis: true,
-    }
+    },
   ];
 
   return (
@@ -328,11 +351,11 @@ const TraineeGradePage = () => {
             enterButton={<SearchOutlined />}
             size="large"
             onSearch={handleSearch}
-            onChange={e => handleSearch(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
             className="mb-4"
           />
         </Card>
-<br></br>
+        <br></br>
         {/* Grades Table */}
         <Card className="bg-white shadow-md">
           {loading ? (
@@ -347,14 +370,16 @@ const TraineeGradePage = () => {
               bordered
               size="middle"
               pagination={{ pageSize: 10 }}
-              scroll={{ x: 'max-content' }}
-              rowClassName={(record) => 
+              scroll={{ x: "max-content" }}
+              rowClassName={(record) =>
                 record.gradeStatus === "Pass" ? "bg-green-50" : ""
               }
             />
           ) : (
-            <Empty 
-              description={searchText ? "No matching grades found" : "No grades found"} 
+            <Empty
+              description={
+                searchText ? "No matching grades found" : "No grades found"
+              }
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               className="py-10"
             />
@@ -365,4 +390,4 @@ const TraineeGradePage = () => {
   );
 };
 
-export default TraineeGradePage; 
+export default TraineeGradePage;

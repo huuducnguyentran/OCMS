@@ -1,26 +1,37 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Layout, Button, Card, Tag, Typography, Breadcrumb, Row, Col, Spin, Table, Collapse, Tooltip, Empty, Tabs, message, Result } from "antd";
+import {
+  Layout,
+  Button,
+  Card,
+  Tag,
+  Typography,
+  Breadcrumb,
+  Row,
+  Col,
+  Spin,
+  Table,
+  Empty,
+  Tabs,
+  message,
+  Result,
+} from "antd";
 import {
   ArrowLeftOutlined,
   BookOutlined,
   EditOutlined,
   SendOutlined,
-  ClockCircleOutlined,
   TeamOutlined,
   CalendarOutlined,
-  EnvironmentOutlined,
-  CheckCircleOutlined,
   InfoCircleOutlined,
   ReloadOutlined,
-  WarningOutlined
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { trainingPlanService } from "../../services/trainingPlanService";
-import moment from 'moment';
+import moment from "moment";
 
 const { Title, Paragraph, Text } = Typography;
 const { TabPane } = Tabs;
-const { Panel } = Collapse;
+// const { Panel } = Collapse;
 
 const TrainingPlanDetailPage = () => {
   const { planId } = useParams();
@@ -36,10 +47,10 @@ const TrainingPlanDetailPage = () => {
       setError(null);
       setNetworkError(false);
       console.log("Fetching training plan with ID:", planId);
-      
+
       const response = await trainingPlanService.getTrainingPlanById(planId);
       console.log("Training plan data response:", response);
-      
+
       if (response && response.plan) {
         console.log("Plan data successfully fetched:", response.plan);
         setPlan(response.plan);
@@ -51,19 +62,21 @@ const TrainingPlanDetailPage = () => {
     } catch (error) {
       console.error("Error fetching training plan:", error);
       console.error("Error details:", error.message, error.stack);
-      
+
       if (error.code === "ERR_NETWORK") {
         setNetworkError(true);
         message.error("Network error. Unable to connect to the server.");
       } else {
         setError(error.message || "Unknown error");
-        message.error("Failed to load training plan: " + (error.message || "Unknown error"));
+        message.error(
+          "Failed to load training plan: " + (error.message || "Unknown error")
+        );
       }
     } finally {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     if (planId) {
       fetchTrainingPlan();
@@ -79,36 +92,49 @@ const TrainingPlanDetailPage = () => {
   };
 
   const getStatusColor = (status) => {
-    if (!status) return 'default';
-    
+    if (!status) return "default";
+
     switch (status) {
-      case 'Draft': return 'blue';
-      case 'Pending': return 'orange';
-      case 'Approved': return 'green';
-      case 'Rejected': return 'red';
-      default: return 'default';
+      case "Draft":
+        return "blue";
+      case "Pending":
+        return "orange";
+      case "Approved":
+        return "green";
+      case "Rejected":
+        return "red";
+      default:
+        return "default";
     }
   };
 
   const getPlanLevelColor = (level) => {
-    if (!level) return 'default';
-    
+    if (!level) return "default";
+
     switch (level) {
-      case 'Initial': return 'blue';
-      case 'Recurrent': return 'purple';
-      case 'Relearn': return 'orange';
-      default: return 'default';
+      case "Initial":
+        return "blue";
+      case "Recurrent":
+        return "purple";
+      case "Relearn":
+        return "orange";
+      default:
+        return "default";
     }
   };
 
   const getProgressColor = (progress) => {
-    if (!progress) return 'default';
-    
+    if (!progress) return "default";
+
     switch (progress) {
-      case 'NotYet': return 'blue';
-      case 'InProgress': return 'orange';
-      case 'Completed': return 'green';
-      default: return 'default';
+      case "NotYet":
+        return "blue";
+      case "InProgress":
+        return "orange";
+      case "Completed":
+        return "green";
+      default:
+        return "default";
     }
   };
 
@@ -117,7 +143,9 @@ const TrainingPlanDetailPage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Spin size="large" />
-          <div className="mt-4 text-gray-600">Loading training plan details...</div>
+          <div className="mt-4 text-gray-600">
+            Loading training plan details...
+          </div>
         </div>
       </div>
     );
@@ -131,10 +159,15 @@ const TrainingPlanDetailPage = () => {
           title="Network Error"
           subTitle="Unable to connect to the server. Please check your internet connection or try again later."
           extra={[
-            <Button type="primary" key="retry" icon={<ReloadOutlined />} onClick={handleRetry}>
+            <Button
+              type="primary"
+              key="retry"
+              icon={<ReloadOutlined />}
+              onClick={handleRetry}
+            >
               Retry
             </Button>,
-            <Button key="back" onClick={() => navigate('/plan')}>
+            <Button key="back" onClick={() => navigate("/plan")}>
               Back to Training Plans
             </Button>,
           ]}
@@ -149,12 +182,20 @@ const TrainingPlanDetailPage = () => {
         <Result
           status="warning"
           title="Training Plan Not Found"
-          subTitle={error || "The training plan you're looking for doesn't exist or has been removed."}
+          subTitle={
+            error ||
+            "The training plan you're looking for doesn't exist or has been removed."
+          }
           extra={[
-            <Button type="primary" key="retry" icon={<ReloadOutlined />} onClick={handleRetry}>
+            <Button
+              type="primary"
+              key="retry"
+              icon={<ReloadOutlined />}
+              onClick={handleRetry}
+            >
               Retry
             </Button>,
-            <Button key="back" onClick={() => navigate('/plan')}>
+            <Button key="back" onClick={() => navigate("/plan")}>
               Back to Training Plans
             </Button>,
           ]}
@@ -175,7 +216,10 @@ const TrainingPlanDetailPage = () => {
                 items={[
                   {
                     title: (
-                      <a onClick={() => navigate('/plan')} className="text-blue-600">
+                      <a
+                        onClick={() => navigate("/plan")}
+                        className="text-blue-600"
+                      >
                         <CalendarOutlined className="mr-1" />
                         Training Plans
                       </a>
@@ -186,8 +230,12 @@ const TrainingPlanDetailPage = () => {
                   },
                 ]}
               />
-              <Title level={2} className="mb-2">{plan?.planName}</Title>
-              <Tag color="blue" className="mb-4">{plan?.planId}</Tag>
+              <Title level={2} className="mb-2">
+                {plan?.planName}
+              </Title>
+              <Tag color="blue" className="mb-4">
+                {plan?.planId}
+              </Tag>
             </div>
             <Button
               type="link"
@@ -213,7 +261,11 @@ const TrainingPlanDetailPage = () => {
                 <div>
                   <Text className="text-gray-600 block">Time Period</Text>
                   <Title level={3} className="mb-0">
-                    {moment(plan?.endDate).diff(moment(plan?.startDate), 'days')} days
+                    {moment(plan?.endDate).diff(
+                      moment(plan?.startDate),
+                      "days"
+                    )}{" "}
+                    days
                   </Title>
                 </div>
               </div>
@@ -225,7 +277,9 @@ const TrainingPlanDetailPage = () => {
                 <TeamOutlined className="text-3xl text-green-500 mr-4" />
                 <div>
                   <Text className="text-gray-600 block">Creator</Text>
-                  <Title level={3} className="mb-0">{plan?.createByUserName}</Title>
+                  <Title level={3} className="mb-0">
+                    {plan?.createByUserName}
+                  </Title>
                 </div>
               </div>
             </Card>
@@ -236,7 +290,9 @@ const TrainingPlanDetailPage = () => {
                 <BookOutlined className="text-3xl text-purple-500 mr-4" />
                 <div>
                   <Text className="text-gray-600 block">Courses</Text>
-                  <Title level={3} className="mb-0">{plan?.courses?.length || 0}</Title>
+                  <Title level={3} className="mb-0">
+                    {plan?.courses?.length || 0}
+                  </Title>
                 </div>
               </div>
             </Card>
@@ -256,35 +312,55 @@ const TrainingPlanDetailPage = () => {
             <Row gutter={[16, 16]}>
               <Col xs={24} md={8}>
                 <div className="mb-4">
-                  <Text strong className="text-gray-700 block mb-1">Start Date:</Text>
-                  <div className="text-lg">{moment(plan?.startDate).format('DD/MM/YYYY')}</div>
+                  <Text strong className="text-gray-700 block mb-1">
+                    Start Date:
+                  </Text>
+                  <div className="text-lg">
+                    {moment(plan?.startDate).format("DD/MM/YYYY")}
+                  </div>
                 </div>
               </Col>
               <Col xs={24} md={8}>
                 <div className="mb-4">
-                  <Text strong className="text-gray-700 block mb-1">End Date:</Text>
-                  <div className="text-lg">{moment(plan?.endDate).format('DD/MM/YYYY')}</div>
+                  <Text strong className="text-gray-700 block mb-1">
+                    End Date:
+                  </Text>
+                  <div className="text-lg">
+                    {moment(plan?.endDate).format("DD/MM/YYYY")}
+                  </div>
                 </div>
               </Col>
               <Col xs={24} md={8}>
                 <div className="mb-4">
-                  <Text strong className="text-gray-700 block mb-1">Status:</Text>
-                  <Tag color={getStatusColor(plan?.trainingPlanStatus)} className="text-base">
+                  <Text strong className="text-gray-700 block mb-1">
+                    Status:
+                  </Text>
+                  <Tag
+                    color={getStatusColor(plan?.trainingPlanStatus)}
+                    className="text-base"
+                  >
                     {plan?.trainingPlanStatus}
                   </Tag>
                 </div>
               </Col>
               <Col xs={24} md={8}>
                 <div className="mb-4">
-                  <Text strong className="text-gray-700 block mb-1">Plan Level:</Text>
-                  <Tag color={getPlanLevelColor(plan?.planLevel)} className="text-base">
+                  <Text strong className="text-gray-700 block mb-1">
+                    Plan Level:
+                  </Text>
+                  <Tag
+                    color={getPlanLevelColor(plan?.planLevel)}
+                    className="text-base"
+                  >
                     {plan?.planLevel}
                   </Tag>
                 </div>
               </Col>
               <Col xs={24} md={8}>
                 <div className="mb-4">
-                  <Text strong className="text-gray-700 block mb-1">Specialty:</Text>
+                  <Text strong className="text-gray-700 block mb-1">
+                    Specialty:
+                  </Text>
                   <Tag color="cyan" className="text-base">
                     {plan?.specialtyName} ({plan?.specialtyId})
                   </Tag>
@@ -292,7 +368,9 @@ const TrainingPlanDetailPage = () => {
               </Col>
               <Col xs={24} md={8}>
                 <div className="mb-4">
-                  <Text strong className="text-gray-700 block mb-1">Created By:</Text>
+                  <Text strong className="text-gray-700 block mb-1">
+                    Created By:
+                  </Text>
                   <div className="text-lg">{plan?.createByUserId}</div>
                 </div>
               </Col>
@@ -317,8 +395,13 @@ const TrainingPlanDetailPage = () => {
                   expandable={{
                     expandedRowRender: (record) => (
                       <Tabs defaultActiveKey="subjects" className="px-4">
-                        <TabPane 
-                          tab={<span><BookOutlined /> Subjects ({record.subjects?.length || 0})</span>} 
+                        <TabPane
+                          tab={
+                            <span>
+                              <BookOutlined /> Subjects (
+                              {record.subjects?.length || 0})
+                            </span>
+                          }
                           key="subjects"
                         >
                           {record.subjects && record.subjects.length > 0 ? (
@@ -328,36 +411,47 @@ const TrainingPlanDetailPage = () => {
                               pagination={false}
                               size="small"
                             >
-                              <Table.Column 
-                                title="Subject ID" 
-                                dataIndex="subjectId" 
+                              <Table.Column
+                                title="Subject ID"
+                                dataIndex="subjectId"
                                 key="subjectId"
-                                render={(text) => <Tag color="blue">{text}</Tag>}
+                                render={(text) => (
+                                  <Tag color="blue">{text}</Tag>
+                                )}
                               />
-                              <Table.Column 
-                                title="Subject Name" 
-                                dataIndex="subjectName" 
+                              <Table.Column
+                                title="Subject Name"
+                                dataIndex="subjectName"
                                 key="subjectName"
                               />
-                              <Table.Column 
-                                title="Credits" 
-                                dataIndex="credits" 
+                              <Table.Column
+                                title="Credits"
+                                dataIndex="credits"
                                 key="credits"
-                                render={(text) => <Tag color="green">{text}</Tag>}
+                                render={(text) => (
+                                  <Tag color="green">{text}</Tag>
+                                )}
                               />
-                              <Table.Column 
-                                title="Passing Score" 
-                                dataIndex="passingScore" 
+                              <Table.Column
+                                title="Passing Score"
+                                dataIndex="passingScore"
                                 key="passingScore"
-                                render={(text) => <Tag color="orange">{text}</Tag>}
+                                render={(text) => (
+                                  <Tag color="orange">{text}</Tag>
+                                )}
                               />
                             </Table>
                           ) : (
                             <Empty description="No subjects found for this course" />
                           )}
                         </TabPane>
-                        <TabPane 
-                          tab={<span><TeamOutlined /> Trainees ({record.trainees?.length || 0})</span>} 
+                        <TabPane
+                          tab={
+                            <span>
+                              <TeamOutlined /> Trainees (
+                              {record.trainees?.length || 0})
+                            </span>
+                          }
                           key="trainees"
                         >
                           {record.trainees && record.trainees.length > 0 ? (
@@ -367,23 +461,29 @@ const TrainingPlanDetailPage = () => {
                               pagination={false}
                               size="small"
                             >
-                              <Table.Column 
-                                title="Trainee ID" 
-                                dataIndex="traineeId" 
+                              <Table.Column
+                                title="Trainee ID"
+                                dataIndex="traineeId"
                                 key="traineeId"
-                                render={(text) => <Tag color="blue">{text}</Tag>}
+                                render={(text) => (
+                                  <Tag color="blue">{text}</Tag>
+                                )}
                               />
-                              <Table.Column 
-                                title="Status" 
-                                dataIndex="requestStatus" 
+                              <Table.Column
+                                title="Status"
+                                dataIndex="requestStatus"
                                 key="requestStatus"
-                                render={(text) => <Tag color={getStatusColor(text)}>{text}</Tag>}
+                                render={(text) => (
+                                  <Tag color={getStatusColor(text)}>{text}</Tag>
+                                )}
                               />
-                              <Table.Column 
-                                title="Assigned Date" 
-                                dataIndex="assignDate" 
+                              <Table.Column
+                                title="Assigned Date"
+                                dataIndex="assignDate"
                                 key="assignDate"
-                                render={(text) => text ? moment(text).format('DD/MM/YYYY') : '-'}
+                                render={(text) =>
+                                  text ? moment(text).format("DD/MM/YYYY") : "-"
+                                }
                               />
                             </Table>
                           ) : (
@@ -394,41 +494,49 @@ const TrainingPlanDetailPage = () => {
                     ),
                   }}
                 >
-                  <Table.Column 
-                    title="Course ID" 
-                    dataIndex="courseId" 
+                  <Table.Column
+                    title="Course ID"
+                    dataIndex="courseId"
                     key="courseId"
                     render={(text) => <Tag color="blue">{text}</Tag>}
                   />
-                  <Table.Column 
-                    title="Course Name" 
-                    dataIndex="courseName" 
+                  <Table.Column
+                    title="Course Name"
+                    dataIndex="courseName"
                     key="courseName"
-                    render={(text) => <span className="font-medium">{text}</span>}
+                    render={(text) => (
+                      <span className="font-medium">{text}</span>
+                    )}
                   />
-                  <Table.Column 
-                    title="Level" 
-                    dataIndex="courseLevel" 
+                  <Table.Column
+                    title="Level"
+                    dataIndex="courseLevel"
                     key="courseLevel"
-                    render={(text) => <Tag color={getPlanLevelColor(text)}>{text}</Tag>}
+                    render={(text) => (
+                      <Tag color={getPlanLevelColor(text)}>{text}</Tag>
+                    )}
                   />
-                  <Table.Column 
-                    title="Status" 
-                    dataIndex="status" 
+                  <Table.Column
+                    title="Status"
+                    dataIndex="status"
                     key="status"
-                    render={(text) => <Tag color={getStatusColor(text)}>{text}</Tag>}
+                    render={(text) => (
+                      <Tag color={getStatusColor(text)}>{text}</Tag>
+                    )}
                   />
-                  <Table.Column 
-                    title="Progress" 
-                    dataIndex="progress" 
+                  <Table.Column
+                    title="Progress"
+                    dataIndex="progress"
                     key="progress"
-                    render={(text) => <Tag color={getProgressColor(text)}>{text}</Tag>}
+                    render={(text) => (
+                      <Tag color={getProgressColor(text)}>{text}</Tag>
+                    )}
                   />
-                  <Table.Column 
-                    title="Created Date" 
-                    dataIndex="createdAt" 
+                  <Table.Column
+                    title="Created Date"
+                    dataIndex="createdAt"
                     key="createdAt"
-                    render={(text) => moment(text).format('DD/MM/YYYY')}
+                    render={(text) => moment(text).format("DD/MM/YYYY")}
                   />
                 </Table>
               ) : (
@@ -439,7 +547,9 @@ const TrainingPlanDetailPage = () => {
 
           {/* Additional Information Card */}
           <Card className="rounded-xl shadow-md">
-            <Title level={4} className="mb-4">Additional Information</Title>
+            <Title level={4} className="mb-4">
+              Additional Information
+            </Title>
             <Row gutter={[16, 16]}>
               <Col xs={24} md={12}>
                 <Card className="bg-gray-50 border-none">
@@ -448,10 +558,14 @@ const TrainingPlanDetailPage = () => {
                     Schedule Information
                   </Title>
                   <Paragraph>
-                    This training plan runs from{' '}
-                    <Tag color="blue">{moment(plan?.startDate).format('DD/MM/YYYY')}</Tag>
-                    {' '}to{' '}
-                    <Tag color="blue">{moment(plan?.endDate).format('DD/MM/YYYY')}</Tag>
+                    This training plan runs from{" "}
+                    <Tag color="blue">
+                      {moment(plan?.startDate).format("DD/MM/YYYY")}
+                    </Tag>{" "}
+                    to{" "}
+                    <Tag color="blue">
+                      {moment(plan?.endDate).format("DD/MM/YYYY")}
+                    </Tag>
                   </Paragraph>
                 </Card>
               </Col>
@@ -462,11 +576,16 @@ const TrainingPlanDetailPage = () => {
                     Course Information
                   </Title>
                   <Paragraph>
-                    This plan contains{' '}
-                    <Tag color="blue">{plan?.courses?.length || 0} courses</Tag>
-                    {' '}with{' '}
+                    This plan contains{" "}
+                    <Tag color="blue">{plan?.courses?.length || 0} courses</Tag>{" "}
+                    with{" "}
                     <Tag color="green">
-                      {plan?.courses?.reduce((total, course) => total + (course.subjects?.length || 0), 0)} subjects
+                      {plan?.courses?.reduce(
+                        (total, course) =>
+                          total + (course.subjects?.length || 0),
+                        0
+                      )}{" "}
+                      subjects
                     </Tag>
                   </Paragraph>
                 </Card>
@@ -474,7 +593,7 @@ const TrainingPlanDetailPage = () => {
             </Row>
           </Card>
         </div>
-        
+
         {/* Action Buttons */}
         <div className="flex justify-end mt-8">
           <Button
@@ -501,4 +620,4 @@ const TrainingPlanDetailPage = () => {
   );
 };
 
-export default TrainingPlanDetailPage; 
+export default TrainingPlanDetailPage;

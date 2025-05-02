@@ -132,7 +132,7 @@ const Navbar = () => {
         label: (
           <Link to={item.path}>
             {item.label}
-            {item.key === "4" && <Badge count={unreadCount} offset={[10, 0]} />}
+            {item.key === "2" && <Badge count={unreadCount} offset={[10, 0]} />}
           </Link>
         ),
       };

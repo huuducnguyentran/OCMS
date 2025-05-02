@@ -1,13 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Form, Input, Button, Card, message, Spin, InputNumber, Typography, Breadcrumb } from 'antd';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { gradeServices } from '../../services/gradeServices';
-import { useAuth } from '../../context/useAuth';
+import { useState, useEffect } from "react";
+import {
+  Form,
+  Input,
+  Button,
+  Card,
+  message,
+  Spin,
+  InputNumber,
+  Typography,
+  Breadcrumb,
+} from "antd";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { gradeServices } from "../../services/gradeServices";
+import { useAuth } from "../../context/useAuth";
 import {
   ArrowLeftOutlined,
   BookOutlined,
-  FileExcelOutlined
-} from '@ant-design/icons';
+  FileExcelOutlined,
+} from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
@@ -21,19 +31,19 @@ const UpdateGradePage = () => {
   const { user } = useAuth();
   const [finalExamEnabled, setFinalExamEnabled] = useState(true);
   const [resitEnabled, setResitEnabled] = useState(false);
-  
+
   const gradeData = location.state?.gradeData;
 
   useEffect(() => {
     if (!gradeData || !id) {
-      message.error('No grade data provided');
-      navigate('/grade');
+      message.error("No grade data provided");
+      navigate("/grade");
       return;
     }
 
     if (id !== gradeData.gradeId) {
-      message.error('Invalid grade ID');
-      navigate('/grade');
+      message.error("Invalid grade ID");
+      navigate("/grade");
       return;
     }
 
@@ -44,7 +54,7 @@ const UpdateGradePage = () => {
       assignmentScore: parseFloat(gradeData.assignmentScore) || 0,
       finalExamScore: parseFloat(gradeData.finalExamScore) || 0,
       finalResultScore: parseFloat(gradeData.finalResultScore) || 0,
-      remarks: gradeData.remarks || ''
+      remarks: gradeData.remarks || "",
     };
 
     setInitialData(formattedData);
@@ -57,7 +67,7 @@ const UpdateGradePage = () => {
       if (finalExamScore > 0) {
         setFinalExamEnabled(true);
         setResitEnabled(false);
-        form.setFieldValue('finalResultScore', 0);
+        form.setFieldValue("finalResultScore", 0);
       } else {
         setFinalExamEnabled(false);
         setResitEnabled(true);
@@ -69,7 +79,7 @@ const UpdateGradePage = () => {
     const score = parseFloat(value) || 0;
     if (score > 0) {
       setResitEnabled(false);
-      form.setFieldValue('finalResultScore', 0);
+      form.setFieldValue("finalResultScore", 0);
     } else {
       setResitEnabled(true);
     }
@@ -79,7 +89,7 @@ const UpdateGradePage = () => {
     const score = parseFloat(value) || 0;
     if (score > 0) {
       setFinalExamEnabled(false);
-      form.setFieldValue('finalExamScore', 0);
+      form.setFieldValue("finalExamScore", 0);
     } else {
       setFinalExamEnabled(true);
     }
@@ -89,9 +99,9 @@ const UpdateGradePage = () => {
     try {
       setLoading(true);
       if (!id || !gradeData?.traineeAssignID) {
-        throw new Error('Required IDs are missing');
+        throw new Error("Required IDs are missing");
       }
-      
+
       const updateData = {
         traineeAssignID: gradeData.traineeAssignID,
         subjectId: gradeData.subjectId,
@@ -99,17 +109,17 @@ const UpdateGradePage = () => {
         assignmentScore: Number(values.assignmentScore),
         finalExamScore: Number(values.finalExamScore),
         finalResultScore: Number(values.finalResultScore),
-        remarks: values.remarks || ""
+        remarks: values.remarks || "",
       };
 
-      console.log('Updating grade:', { gradeId: id, data: updateData });
+      console.log("Updating grade:", { gradeId: id, data: updateData });
 
       await gradeServices.updateGrade(id, updateData);
-      message.success('Grade updated successfully');
-      navigate('/grade-view');
+      message.success("Grade updated successfully");
+      navigate("/grade-view");
     } catch (error) {
-      console.error('Error details:', error);
-      message.error(error.response?.data?.message || 'Failed to update grade');
+      console.error("Error details:", error);
+      message.error(error.response?.data?.message || "Failed to update grade");
     } finally {
       setLoading(false);
     }
@@ -130,7 +140,7 @@ const UpdateGradePage = () => {
           <div className="flex items-center space-x-4 mb-4">
             <Button
               icon={<ArrowLeftOutlined />}
-              onClick={() => navigate('/grade-view')}
+              onClick={() => navigate("/grade-view")}
               className="flex items-center bg-white/10 border-white/20 text-white hover:bg-white/20"
               ghost
             >
@@ -138,12 +148,19 @@ const UpdateGradePage = () => {
             </Button>
             <Breadcrumb className="text-white/60">
               <Breadcrumb.Item>
-                <a href="/grade-view" className="text-white/60 hover:text-white">Grades</a>
+                <a
+                  href="/grade-view"
+                  className="text-white/60 hover:text-white"
+                >
+                  Grades
+                </a>
               </Breadcrumb.Item>
-              <Breadcrumb.Item className="text-white">Update Grade</Breadcrumb.Item>
+              <Breadcrumb.Item className="text-white">
+                Update Grade
+              </Breadcrumb.Item>
             </Breadcrumb>
           </div>
-          
+
           <Title level={2} className="text-white mb-2">
             Update Grade
           </Title>
@@ -153,10 +170,7 @@ const UpdateGradePage = () => {
         </div>
       </div>
 
-      <Card 
-        className="max-w-3xl mx-auto shadow-md"
-        bordered={false}
-      >
+      <Card className="max-w-3xl mx-auto shadow-md" bordered={false}>
         <Form
           form={form}
           layout="vertical"
@@ -165,18 +179,18 @@ const UpdateGradePage = () => {
           className="space-y-4"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Form.Item
-              name="traineeAssignID"
-              label="Trainee Assign ID"
-            >
-              <Input disabled prefix={<BookOutlined className="text-gray-400" />} />
+            <Form.Item name="traineeAssignID" label="Trainee Assign ID">
+              <Input
+                disabled
+                prefix={<BookOutlined className="text-gray-400" />}
+              />
             </Form.Item>
 
-            <Form.Item
-              name="subjectId"
-              label="Subject ID"
-            >
-              <Input disabled prefix={<FileExcelOutlined className="text-gray-400" />} />
+            <Form.Item name="subjectId" label="Subject ID">
+              <Input
+                disabled
+                prefix={<FileExcelOutlined className="text-gray-400" />}
+              />
             </Form.Item>
           </div>
 
@@ -185,13 +199,18 @@ const UpdateGradePage = () => {
               name="participantScore"
               label="Participant Score"
               rules={[
-                { required: true, message: 'Please input participant score!' },
-                { type: 'number', min: 0, max: 10, message: 'Score must be between 0 and 10!' }
+                { required: true, message: "Please input participant score!" },
+                {
+                  type: "number",
+                  min: 0,
+                  max: 10,
+                  message: "Score must be between 0 and 10!",
+                },
               ]}
             >
-              <InputNumber 
-                className="w-full" 
-                step={0.1} 
+              <InputNumber
+                className="w-full"
+                step={0.1}
                 precision={1}
                 placeholder="Enter participant score"
               />
@@ -201,13 +220,18 @@ const UpdateGradePage = () => {
               name="assignmentScore"
               label="Assignment Score"
               rules={[
-                { required: true, message: 'Please input assignment score!' },
-                { type: 'number', min: 0, max: 10, message: 'Score must be between 0 and 10!' }
+                { required: true, message: "Please input assignment score!" },
+                {
+                  type: "number",
+                  min: 0,
+                  max: 10,
+                  message: "Score must be between 0 and 10!",
+                },
               ]}
             >
-              <InputNumber 
-                className="w-full" 
-                step={0.1} 
+              <InputNumber
+                className="w-full"
+                step={0.1}
                 precision={1}
                 placeholder="Enter assignment score"
               />
@@ -221,18 +245,28 @@ const UpdateGradePage = () => {
                 <span>
                   Final Exam Score
                   {!finalExamEnabled && (
-                    <span className="text-gray-400 ml-2">(Disabled when Resit &gt; 0)</span>
+                    <span className="text-gray-400 ml-2">
+                      (Disabled when Resit &gt; 0)
+                    </span>
                   )}
                 </span>
               }
               rules={[
-                { required: finalExamEnabled, message: 'Please input final exam score!' },
-                { type: 'number', min: 0, max: 10, message: 'Score must be between 0 and 10!' }
+                {
+                  required: finalExamEnabled,
+                  message: "Please input final exam score!",
+                },
+                {
+                  type: "number",
+                  min: 0,
+                  max: 10,
+                  message: "Score must be between 0 and 10!",
+                },
               ]}
             >
-              <InputNumber 
-                className="w-full" 
-                step={0.1} 
+              <InputNumber
+                className="w-full"
+                step={0.1}
                 precision={1}
                 placeholder="Enter final exam score"
                 disabled={!finalExamEnabled}
@@ -246,18 +280,28 @@ const UpdateGradePage = () => {
                 <span>
                   Resit
                   {!resitEnabled && (
-                    <span className="text-gray-400 ml-2">(Disabled when Final Exam &gt; 0)</span>
+                    <span className="text-gray-400 ml-2">
+                      (Disabled when Final Exam &gt; 0)
+                    </span>
                   )}
                 </span>
               }
               rules={[
-                { required: resitEnabled, message: 'Please input resit score!' },
-                { type: 'number', min: 0, max: 10, message: 'Score must be between 0 and 10!' }
+                {
+                  required: resitEnabled,
+                  message: "Please input resit score!",
+                },
+                {
+                  type: "number",
+                  min: 0,
+                  max: 10,
+                  message: "Score must be between 0 and 10!",
+                },
               ]}
             >
-              <InputNumber 
-                className="w-full" 
-                step={0.1} 
+              <InputNumber
+                className="w-full"
+                step={0.1}
                 precision={1}
                 placeholder="Enter resit score"
                 disabled={!resitEnabled}
@@ -266,11 +310,8 @@ const UpdateGradePage = () => {
             </Form.Item>
           </div>
 
-          <Form.Item
-            name="remarks"
-            label="Remarks"
-          >
-            <Input.TextArea 
+          <Form.Item name="remarks" label="Remarks">
+            <Input.TextArea
               rows={4}
               placeholder="Enter remarks (optional)"
               className="w-full"
@@ -279,15 +320,15 @@ const UpdateGradePage = () => {
 
           <Form.Item className="mb-0">
             <div className="flex justify-end space-x-4">
-              <Button 
-                onClick={() => navigate('/grade-view')}
+              <Button
+                onClick={() => navigate("/grade-view")}
                 className="min-w-[100px]"
               >
                 Cancel
               </Button>
-              <Button 
-                type="primary" 
-                htmlType="submit" 
+              <Button
+                type="primary"
+                htmlType="submit"
                 loading={loading}
                 className="min-w-[100px] bg-blue-600 hover:bg-blue-700"
               >
