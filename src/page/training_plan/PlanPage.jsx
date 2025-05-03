@@ -328,7 +328,28 @@ const PlanPage = () => {
       setRequestModalVisible(false);
     } catch (error) {
       console.error("Failed to send request:", error);
-      message.error("Failed to send request for this plan");
+      
+      // Xử lý và hiển thị thông báo lỗi chi tiết từ response
+      if (error.response && error.response.data) {
+        const errorData = error.response.data;
+        
+        if (errorData.error && errorData.message) {
+          message.error(
+            <div>
+              <div>{errorData.message}</div>
+              <div className="text-red-500 mt-1">{errorData.error}</div>
+            </div>
+          );
+        } else if (errorData.error) {
+          message.error(errorData.error);
+        } else if (errorData.message) {
+          message.error(errorData.message);
+        } else {
+          message.error("Failed to send request for this plan");
+        }
+      } else {
+        message.error(`Failed to send request: ${error.message || "Unknown error"}`);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -383,7 +404,7 @@ const PlanPage = () => {
       </Tooltip>,
     ];
 
-    if (!isTrainee && !isReviewer) {
+    if (!isTrainee && !isReviewer && !isApprovedStatus(plan.trainingPlanStatus)) {
       actions.push(
         <Tooltip title="Edit Plan">
           <EditOutlined
@@ -411,6 +432,16 @@ const PlanPage = () => {
               className="text-red-500 text-lg hover:text-red-700"
             />
           </Popconfirm>
+        </Tooltip>
+      );
+    } else if (!isTrainee && !isReviewer) {
+      actions.push(
+        <Tooltip title="Send Request">
+          <SendOutlined
+            key="request"
+            className="text-blue-500 text-lg hover:text-blue-700"
+            onClick={() => handleRequest(plan.planId, plan.planName)}
+          />
         </Tooltip>
       );
     }

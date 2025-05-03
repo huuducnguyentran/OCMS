@@ -310,9 +310,9 @@ const AssignTraineePage = () => {
                 <Option
                   key={inst.userId}
                   value={inst.userId}
-                  label={`${inst.fullName} (${inst.username})`}
+                  label={`${inst.fullName} (${inst.userId})`}
                 >
-                  {inst.fullName} ({inst.username})
+                  {inst.fullName} ({inst.userId})
                 </Option>
               ))}
             </Select>

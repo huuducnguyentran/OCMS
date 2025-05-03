@@ -454,7 +454,7 @@ const PlanDetailPage = () => {
                 </Breadcrumb.Item>
               </Breadcrumb>
             </div>
-            {(isReviewer || isHeadMaster) && (
+            {(isReviewer) && (
               <Tooltip title="Export PDF">
                 <Button
                   type="primary"
