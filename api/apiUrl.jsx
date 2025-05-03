@@ -117,6 +117,9 @@ export const API = {
   UPDATE_CERTIFICATE: "Certificate",
   REVOKE_CERTIFICATE: "Certificate/revoke",
   MANUAL_CREATE_CERTIFICATE: "Certificate/manual-create",
+  GET_ALL_RENEWAL_CERTIFICATE_BY_ID: "Certificate/renewal",
+  GET_RENEWAL_CERTIFICATE_BY_USER_ID: "Certificate/renewal-history",
+  GET_RENEWAL_CERTIFICATE_BY_TRAINEE: "Certificate/my-renewal-history",
 
   // Specialty APIs
   GET_ALL_SPECIALTY: "Specialty",

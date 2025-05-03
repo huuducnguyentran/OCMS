@@ -12,16 +12,20 @@ import {
   Checkbox,
   message,
   Tooltip,
+  Form,
+  Modal,
 } from "antd";
 import {
   getPendingCertificate,
   signCertificate,
+  revokeCertificate,
 } from "../../services/certificateService";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, UndoOutlined } from "@ant-design/icons";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+const { TextArea } = Input;
 const { RangePicker } = DatePicker;
 
 const CertificatePendingPage = () => {
@@ -30,9 +34,14 @@ const CertificatePendingPage = () => {
   const [searchText, setSearchText] = useState("");
   const [filterDate, setFilterDate] = useState(null);
   const [selectedCertificates, setSelectedCertificates] = useState([]);
+  const [revokeModalVisible, setRevokeModalVisible] = useState(false);
+  const [currentCertificate, setCurrentCertificate] = useState(null);
+  const [revokingLoading, setRevokingLoading] = useState(false);
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
   const isHeadMaster = userRole === "HeadMaster";
+  const isTrainingStaff = userRole === "Training staff";
+  const [form] = Form.useForm();
 
   useEffect(() => {
     const fetchCertificates = async () => {
@@ -54,7 +63,7 @@ const CertificatePendingPage = () => {
       message.warning("Only HeadMaster can select certificates for signing");
       return;
     }
-    
+
     setSelectedCertificates((prev) =>
       checked
         ? [...prev, certificateId]
@@ -67,9 +76,11 @@ const CertificatePendingPage = () => {
       message.warning("Only HeadMaster can select certificates for signing");
       return;
     }
-    
+
     if (checked) {
-      const allCertificateIds = filteredCertificates.map(cert => cert.certificateId);
+      const allCertificateIds = filteredCertificates.map(
+        (cert) => cert.certificateId
+      );
       setSelectedCertificates(allCertificateIds);
     } else {
       setSelectedCertificates([]);
@@ -81,7 +92,7 @@ const CertificatePendingPage = () => {
       message.warning("Only HeadMaster can sign certificates");
       return;
     }
-    
+
     if (selectedCertificates.length === 0) {
       message.warning("Please select at least one certificate.");
       return;
@@ -102,11 +113,43 @@ const CertificatePendingPage = () => {
       message.error("Failed to sign one or more certificates.");
     }
   };
+  const showRevokeModal = (e, certificate) => {
+    e.stopPropagation(); // Prevent clicking on the certificate card
+    setCurrentCertificate(certificate);
+    setRevokeModalVisible(true);
+  };
+
+  const handleRevoke = async () => {
+    try {
+      await form.validateFields();
+      const values = form.getFieldsValue();
+
+      setRevokingLoading(true);
+      await revokeCertificate(
+        currentCertificate.certificateId,
+        values.revokeReason
+      );
+
+      message.success("Certificate has been successfully revoked!");
+
+      // Refresh certificate list
+      const updatedData = await getPendingCertificate();
+      setCertificates(updatedData);
+
+      setRevokeModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      console.error("Error revoking certificate:", error);
+      message.error("Unable to revoke certificate. Please try again!");
+    } finally {
+      setRevokingLoading(false);
+    }
+  };
 
   const filteredCertificates = useMemo(() => {
     return certificates.filter((cert) => {
       const searchLower = searchText.toLowerCase();
-      const matchSearchText = 
+      const matchSearchText =
         cert.certificateCode.toLowerCase().includes(searchLower) ||
         cert.userId.toString().toLowerCase().includes(searchLower) ||
         cert.courseId.toString().toLowerCase().includes(searchLower);
@@ -122,8 +165,9 @@ const CertificatePendingPage = () => {
     });
   }, [certificates, searchText, filterDate]);
 
-  const areAllSelected = filteredCertificates.length > 0 && 
-    filteredCertificates.every(cert => 
+  const areAllSelected =
+    filteredCertificates.length > 0 &&
+    filteredCertificates.every((cert) =>
       selectedCertificates.includes(cert.certificateId)
     );
 
@@ -143,43 +187,71 @@ const CertificatePendingPage = () => {
 
       {/* Filters */}
       <Card className="!mb-6 border rounded-xl shadow-sm bg-white">
+        <Title level={5} className="!mb-4 flex items-center gap-2">
+          <SearchOutlined />
+          Filter Certificates
+        </Title>
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={8}>
             <Input
-              placeholder="Search by Certificate, User ID or Course ID"
+              placeholder="Search by Certificate Code, User ID or Course ID"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               prefix={<SearchOutlined />}
-              size="large"
+              size="middle"
               allowClear
             />
           </Col>
           <Col xs={24} sm={12} md={8}>
             <RangePicker
-              placeholder={["From Date", "To Date"]}
+              placeholder={["Issue Date From", "To"]}
               value={filterDate}
               onChange={(dates) => setFilterDate(dates)}
               style={{ width: "100%" }}
               allowClear
-              size="large"
+              size="middle"
             />
           </Col>
-          <Col xs={24} md={8} className="flex justify-end items-center gap-3">
-            <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can select certificates"}>
-              <Checkbox 
+          <Col
+            xs={24}
+            md={8}
+            className="flex justify-end items-center gap-3 flex-wrap"
+          >
+            <Button
+              onClick={() => {
+                setSearchText("");
+                setFilterDate(null);
+              }}
+              size="middle"
+            >
+              Reset Filters
+            </Button>
+
+            <Tooltip
+              title={
+                !isHeadMaster ? "Only HeadMaster can select certificates" : ""
+              }
+            >
+              <Checkbox
                 checked={areAllSelected}
                 onChange={(e) => handleSelectAll(e.target.checked)}
                 disabled={!isHeadMaster || filteredCertificates.length === 0}
+                className="!ml-20"
               >
                 Select All
               </Checkbox>
             </Tooltip>
-            <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can sign certificates"}>
+
+            <Tooltip
+              title={
+                !isHeadMaster ? "Only HeadMaster can sign certificates" : ""
+              }
+            >
               <Button
                 type="primary"
                 onClick={handleSignCertificates}
                 disabled={!isHeadMaster || selectedCertificates.length === 0}
-                size="large"
+                size="middle"
               >
                 Sign ({selectedCertificates.length})
               </Button>
@@ -200,7 +272,11 @@ const CertificatePendingPage = () => {
               key={cert.certificateId}
               className="relative group rounded-2xl border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 bg-white"
             >
-              <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can select certificates"}>
+              <Tooltip
+                title={
+                  isHeadMaster ? "" : "Only HeadMaster can select certificates"
+                }
+              >
                 <Checkbox
                   className="absolute top-3 right-3 z-10 p-1 rounded bg-white bg-opacity-70"
                   checked={selectedCertificates.includes(cert.certificateId)}
@@ -228,6 +304,21 @@ const CertificatePendingPage = () => {
                       title="Certificate Preview"
                       className="w-full h-64 rounded-t-2xl"
                     />
+                  }
+                  actions={
+                    isTrainingStaff
+                      ? [
+                          <Button
+                            key="revoke"
+                            danger
+                            type="text"
+                            icon={<UndoOutlined />}
+                            onClick={(e) => showRevokeModal(e, cert)}
+                          >
+                            Revoke
+                          </Button>,
+                        ]
+                      : undefined
                   }
                 >
                   <div className="space-y-2 text-sm">
@@ -264,6 +355,64 @@ const CertificatePendingPage = () => {
           ))}
         </div>
       )}
+      {/* Revoke Certificate Modal */}
+      <Modal
+        title="Revoke Certificate"
+        open={revokeModalVisible}
+        onCancel={() => {
+          setRevokeModalVisible(false);
+          form.resetFields();
+        }}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => {
+              setRevokeModalVisible(false);
+              form.resetFields();
+            }}
+          >
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            danger
+            loading={revokingLoading}
+            onClick={handleRevoke}
+          >
+            Revoke
+          </Button>,
+        ]}
+      >
+        {currentCertificate && (
+          <div className="mb-4">
+            <Text strong className="block mb-2">
+              Certificate: {currentCertificate.certificateCode}
+            </Text>
+            <Text className="block mb-4">
+              User ID: {currentCertificate.userId}
+            </Text>
+          </div>
+        )}
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="revokeReason"
+            label="Revocation Reason"
+            rules={[
+              {
+                required: true,
+                message:
+                  "Please enter the reason for revoking this certificate",
+              },
+            ]}
+          >
+            <TextArea
+              rows={4}
+              placeholder="Enter reason for certificate revocation..."
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

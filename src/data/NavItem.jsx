@@ -134,7 +134,7 @@ const navItems = [
     label: "Send Request",
     icon: "FileAddOutlined",
     path: "/send-request",
-    roles: ["Trainee", "AOC Manager"],
+    roles: ["Trainee", "AOC Manager", "Instructor"],
   },
 
   // 5. Certification & Decisions
