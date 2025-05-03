@@ -44,6 +44,7 @@ const ViewGradePage = () => {
     current: 1,
     pageSize: 10,
   });
+  const isInstructor = sessionStorage.getItem("role") === "Instructor";
   const navigate = useNavigate();
 
   const handleChange = (pagination, filters, sorter) => {
@@ -250,12 +251,13 @@ const ViewGradePage = () => {
       width: 80,
       render: (_, record) => {
         const items = [
-          {
+          isInstructor && {
             key: "edit",
             label: "Edit Grade",
             icon: <EditOutlined />,
             onClick: () => handleEdit(record),
           },
+
           {
             key: "delete",
             label: (
@@ -385,8 +387,7 @@ const ViewGradePage = () => {
       message.success("Grade deleted successfully");
       await fetchGrades();
     } catch (error) {
-      console.error("Error deleting grade:", error);
-      message.error(error.response?.data?.message || "Failed to delete grade");
+      message.error(JSON.stringify(error, null, 2));
     } finally {
       setLoading(false);
     }

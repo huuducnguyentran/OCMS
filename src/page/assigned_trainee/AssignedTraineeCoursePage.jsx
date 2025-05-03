@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Card,
   Empty,
@@ -221,27 +221,40 @@ const AssignedTraineeCoursePage = () => {
     } catch (error) {
       console.error(`Error fetching details for course ${courseId}:`, error);
       
-      
+      // Add a delay between retries to avoid overwhelming the server
       if (currentRetry < MAX_RETRIES) {
         const nextRetry = currentRetry + 1;
-        const delay = 3000; // Cố định delay để đơn giản
+        const delay = 5000 * Math.pow(2, currentRetry); // Longer delay: 5s, 10s, 20s
+        
+        console.log(`Retrying fetch for course ${courseId}, attempt ${nextRetry} in ${delay}ms`);
         
         setRetryCount(prev => ({
           ...prev,
           [courseId]: nextRetry
         }));
         
-        // Retry sau một khoảng thời gian
+        // Set error state for UI feedback
+        setErrorState(prev => ({ 
+          ...prev, 
+          [courseId]: "Loading failed. Retrying..." 
+        }));
+        
         setTimeout(() => {
-          if (!courseDetails[courseId]) {
+          if (!courseDetails[courseId]) { // Only retry if we still don't have the data
             fetchCourseDetails(courseId, nextRetry);
           }
         }, delay);
+      } else {
+        // Set final error state after all retries
+        setErrorState(prev => ({ 
+          ...prev, 
+          [courseId]: "Could not load data after multiple attempts" 
+        }));
       }
     } finally {
       setDetailsLoading(prev => ({ ...prev, [courseId]: false }));
     }
-  }, [courseDetails, retryCount, errorMessageShown, detailsLoading]);
+  }, [courseDetails, retryCount, detailsLoading]);
 
   // Get courses for current page
   const currentCourses = courses.slice(
@@ -270,8 +283,23 @@ const AssignedTraineeCoursePage = () => {
     }
   }, [currentPage, currentCourses, fetchCourseDetails, courseDetails, detailsLoading]);
 
-  // Toggle expand/collapse course details
-  const toggleCourseExpand = (courseId) => {
+  // Debounce function to limit how often a function can be called
+  const useDebounce = (fn, delay) => {
+    const timeoutRef = useRef(null);
+    
+    return (...args) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      
+      timeoutRef.current = setTimeout(() => {
+        fn(...args);
+      }, delay);
+    };
+  };
+  
+  // Toggle expand/collapse course details with debounce
+  const debouncedToggleCourseExpand = useDebounce((courseId) => {
     if (expandedCourseId === courseId) {
       setExpandedCourseId(null);
     } else {
@@ -282,7 +310,7 @@ const AssignedTraineeCoursePage = () => {
       }
       setExpandedCourseId(courseId);
     }
-  };
+  }, 300); // 300ms debounce
 
   // Toggle schedule expand/collapse
   const toggleScheduleExpand = (subjectId) => {
@@ -653,14 +681,14 @@ const AssignedTraineeCoursePage = () => {
                         <Button 
                           type="primary" 
                           icon={<EyeOutlined />} 
-                          onClick={() => toggleCourseExpand(course.courseId)}
+                          onClick={() => debouncedToggleCourseExpand(course.courseId)}
                         >
                           {isExpanded ? "Collapse" : "Details"}
                         </Button>
                       </div>
                     </div>
 
-                    {/* Course Details - with smooth transition */}
+                    {/* Course Details */}
                     <div 
                       style={{
                         maxHeight: isExpanded ? '2000px' : '0px',

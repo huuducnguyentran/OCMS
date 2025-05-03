@@ -9,6 +9,8 @@ import {
   Card,
   Typography,
   Divider,
+  Select,
+  Alert,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -19,7 +21,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { courseService } from "../../services/courseService";
 import { trainingPlanService } from "../../services/trainingPlanService";
 
-// const { Option } = Select;
+const { Option } = Select;
 const { Title, Text } = Typography;
 
 const EditCoursePage = () => {
@@ -31,11 +33,14 @@ const EditCoursePage = () => {
   const [loadingCourse, setLoadingCourse] = useState(true);
   const [trainingPlans, setTrainingPlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
 
   // Fetch course and training plans data
   useEffect(() => {
     fetchCourseData();
     fetchTrainingPlans();
+    fetchCourses();
   }, [id]);
 
   const fetchCourseData = async () => {
@@ -49,7 +54,7 @@ const EditCoursePage = () => {
         form.setFieldsValue({
           description: response.data.description,
           courseName: response.data.courseName,
-          courseRelatedId: response.data.courseRelatedId || "", // Đảm bảo có giá trị mặc định
+          courseRelatedId: response.data.courseRelatedId || "",
         });
       } else {
         message.error("Failed to load course data");
@@ -75,6 +80,26 @@ const EditCoursePage = () => {
     }
   };
 
+  // Fetch courses
+  const fetchCourses = async () => {
+    try {
+      setLoadingCourses(true);
+      const response = await courseService.getAllCourses();
+      if (response?.data) {
+        // Lọc ra các khóa học khác với khóa học hiện tại
+        const filteredCourses = response.data.filter(course => course.courseId !== id);
+        setCourses(filteredCourses);
+      } else {
+        setCourses([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch courses:", error);
+      message.error("Failed to load courses");
+    } finally {
+      setLoadingCourses(false);
+    }
+  };
+
   // Form submission
   const handleUpdateCourse = async (values) => {
     try {
@@ -84,7 +109,7 @@ const EditCoursePage = () => {
       const formattedData = {
         description: values.description?.trim() || "",
         courseName: values.courseName?.trim() || "",
-        courseRelatedId: values.courseRelatedId?.trim() || "",
+        courseRelatedId: values.courseRelatedId || "",
       };
 
       console.log("Sending update data:", formattedData);
@@ -95,11 +120,25 @@ const EditCoursePage = () => {
       navigate("/all-courses", { state: { refresh: true } });
     } catch (error) {
       console.error("Failed to update course:", error);
-      message.error(
-        `Failed to update course: ${
-          error.response?.data?.message || error.message
-        }`
-      );
+      
+      // Hiển thị thông báo lỗi từ API
+      if (error.response && error.response.data) {
+        const errorData = error.response.data;
+        
+        if (errorData.message && errorData.error) {
+          message.error(`${errorData.message} ${errorData.error}`);
+        } else if (errorData.message) {
+          message.error(errorData.message);
+        } else if (errorData.error) {
+          message.error(errorData.error);
+        } else {
+          message.error("Failed to update course");
+        }
+      } else {
+        message.error(
+          `Failed to update course: ${error.message || "Unknown error"}`
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -129,7 +168,9 @@ const EditCoursePage = () => {
           body: { padding: "16px" },
         }}
       >
-        <Spin spinning={loading || loadingCourse || loadingPlans} size="large">
+        <Spin spinning={loading || loadingCourse || loadingPlans || loadingCourses} size="large">
+         
+          
           <Form
             form={form}
             layout="vertical"
@@ -177,16 +218,38 @@ const EditCoursePage = () => {
                 name="courseRelatedId"
                 label={
                   <Text strong className="text-lg">
-                    Course Related ID
+                    Related Course
                   </Text>
                 }
                 className="col-span-2"
               >
-                <Input
-                  placeholder="Enter course related ID"
-                  className="rounded-lg py-3 px-4 text-lg"
+                <Select
+                  placeholder="Select a related course"
+                  loading={loadingCourses}
+                  className="rounded-lg"
                   size="large"
-                />
+                  showSearch
+                  allowClear
+                  optionFilterProp="children"
+                  notFoundContent={
+                    loadingCourses ? (
+                      <div className="text-center py-4">
+                        <Spin size="small" />
+                        <div className="mt-2">Loading courses...</div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <div>No courses found</div>
+                      </div>
+                    )
+                  }
+                >
+                  {courses.map((course) => (
+                    <Option key={course.courseId} value={course.courseId}>
+                      {course.courseName} ({course.courseId})
+                    </Option>
+                  ))}
+                </Select>
               </Form.Item>
             </div>
 

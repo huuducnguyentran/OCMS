@@ -118,8 +118,8 @@ const UpdateGradePage = () => {
       message.success("Grade updated successfully");
       navigate("/grade-view");
     } catch (error) {
-      console.error("Error details:", error);
-      message.error(error.response?.data?.message || "Failed to update grade");
+      message.error(JSON.stringify(error, null, 2));
+
     } finally {
       setLoading(false);
     }
