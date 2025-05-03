@@ -29,7 +29,8 @@ const SubjectDetailPage = () => {
   const navigate = useNavigate();
   const [subject, setSubject] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const isTrainee = sessionStorage.getItem("role") === "Trainee";
+  const isInstructor = sessionStorage.getItem("role") === "Instructor";
   useEffect(() => {
     const fetchSubject = async () => {
       try {
@@ -65,11 +66,11 @@ const SubjectDetailPage = () => {
           <div className="flex items-center space-x-4 mb-4">
             <Button
               icon={<ArrowLeftOutlined />}
-              onClick={() => navigate("/subject")}
+              onClick={() => navigate(isTrainee ? "/schedule" : "/subject")}
               className="flex items-center bg-white/10 border-white/20 text-white hover:bg-white/20"
               ghost
             >
-              Back to Subjects
+              {isTrainee ? "Back to schedule" : "Back to Subjects"}
             </Button>
             <Breadcrumb className="text-white/60">
               <Breadcrumb.Item>
