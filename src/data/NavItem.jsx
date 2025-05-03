@@ -39,7 +39,7 @@ const navItems = [
     label: "Plan",
     icon: "AccountBookOutlined",
     path: "/plan",
-    roles: ["Training staff", "Trainee", "Reviewer", "HR"],
+    roles: ["Training staff", "Trainee", "Reviewer"],
   },
   {
     key: "4",
@@ -134,7 +134,7 @@ const navItems = [
     label: "Send Request",
     icon: "FileAddOutlined",
     path: "/send-request",
-    roles: ["Trainee", "AOC Manager"],
+    roles: ["Trainee", "AOC Manager","Instructor"],
   },
 
   // 5. Certification & Decisions
@@ -143,25 +143,25 @@ const navItems = [
     label: "Certificate",
     icon: "FileProtectOutlined",
     path: "/certificate",
-    roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
+    roles: ["Admin", "AOC Manager", "Training staff", "HeadMaster"],
     children: [
       {
         key: "11-1",
         label: "Certificate Pending",
         path: "/certificate-pending",
-        roles: ["Admin", "HR", "Training staff", "HeadMaster"],
+        roles: ["Admin",  "Training staff", "HeadMaster"],
       },
       {
         key: "11-2",
         label: "Certificate Active",
         path: "/certificate-active",
-        roles: ["Admin", "HR", "AOC Manager", "Training staff", "HeadMaster"],
+        roles: ["Admin", "AOC Manager", "Training staff", "HeadMaster"],
       },
       {
         key: "11-3",
         label: "Certificate Revoked",
         path: "/certificate-revoked",
-        roles: ["Admin", "HR", "Training staff", "HeadMaster"],
+        roles: ["Admin", "Training staff", "HeadMaster"],
       },
     ],
   },

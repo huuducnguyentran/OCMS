@@ -21,6 +21,7 @@ import {
   SearchOutlined,
   SortAscendingOutlined,
   SortDescendingOutlined,
+  ArrowRightOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
@@ -43,10 +44,17 @@ const NotificationPage = () => {
   const [filterTypes, setFilterTypes] = useState([]); // Thay đổi thành mảng để lưu nhiều loại
   const [filterReadStatus, setFilterReadStatus] = useState("all");
   const [sortOrder, setSortOrder] = useState("desc"); // 'desc' là mới nhất lên đầu, 'asc' là cũ nhất lên đầu
+  const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
   const navigate = useNavigate();
+
+  // Kiểm tra xem người dùng có phải là HeadMaster hoặc Training Staff không
+  const isHeadmasterOrTrainingStaff = userRole === "HeadMaster" || userRole === "TrainingStaff";
 
   useEffect(() => {
     const userID = sessionStorage.getItem("userID");
+    const role = sessionStorage.getItem("role");
+    setUserRole(role);
+    
     if (userID) {
       fetchNotifications(userID);
     } else {
@@ -301,6 +309,45 @@ const NotificationPage = () => {
     return Array.from(types);
   };
 
+  // Hàm xử lý điều hướng dựa vào loại thông báo
+  const handleNavigateByType = (notification) => {
+    console.log("Notification for navigation:", notification);
+    
+    if (notification.title && notification.title.includes("CertificateSignature")) {
+      navigate("/certificates/pending");
+    } else if (notification.title && notification.title.includes("DecisionSignature")) {
+      navigate("/decisions/pending");
+    } else if (notification.title && notification.title.includes("Request") || 
+               notification.notificationType === "Request" ||
+               notification.message && notification.message.includes("request")) {
+      navigate("/request");
+    } else if (notification.title && notification.title.includes("Trainee Assignment")) {
+      navigate("/assign-trainee");
+    } else {
+      // Mặc định nếu không phù hợp với các trường hợp trên
+      message.info("No specific navigation for this notification type");
+    }
+    handleCloseModal();
+  };
+
+  // Kiểm tra liệu thông báo có thể điều hướng được không
+  const canNavigate = (notification) => {
+    return notification.title && (
+      notification.title.includes("CertificateSignature") ||
+      notification.title.includes("DecisionSignature") ||
+      notification.title.includes("Request") ||
+      (notification.message && notification.message.toLowerCase().includes("request")) ||
+      notification.notificationType === "Request" ||
+      notification.title.includes("Trainee Assignment")
+    );
+  };
+
+  // Hiển thị thông tin debug về vai trò người dùng khi component mount
+  useEffect(() => {
+    console.log("Current user role:", userRole);
+    console.log("Is Headmaster or Training Staff:", isHeadmasterOrTrainingStaff);
+  }, [userRole, isHeadmasterOrTrainingStaff]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
       <div className="max-w-4xl mx-auto">
@@ -486,7 +533,33 @@ const NotificationPage = () => {
         }
         open={modalVisible}
         onCancel={handleCloseModal}
-        footer={null}
+        footer={
+          selectedNotification && isHeadmasterOrTrainingStaff ? (
+            <div className="flex justify-end">
+              <Button 
+                onClick={handleCloseModal} 
+                style={{ marginRight: 8 }}
+              >
+                Close
+              </Button>
+              {canNavigate(selectedNotification) && (
+                <Button 
+                  type="primary" 
+                  onClick={() => handleNavigateByType(selectedNotification)}
+                  icon={<ArrowRightOutlined />}
+                >
+                  {selectedNotification.title?.includes("CertificateSignature") 
+                    ? "Đến Certificate Pending" 
+                    : selectedNotification.title?.includes("DecisionSignature")
+                      ? "Đến Decision Pending"
+                      : selectedNotification.title?.includes("Trainee Assignment")
+                        ? "Đến Assign Trainee"
+                        : "Đến trang Request"}
+                </Button>
+              )}
+            </div>
+          ) : null
+        }
         width={500}
       >
         {selectedNotification && (

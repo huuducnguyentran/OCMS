@@ -250,6 +250,11 @@ const ViewGradePage = () => {
       fixed: "right",
       width: 80,
       render: (_, record) => {
+        // Nếu người dùng là Reviewer, không hiển thị nút hành động
+        if (userRole === "Reviewer") {
+          return null;
+        }
+
         const items = [
           isInstructor && {
             key: "edit",
@@ -297,6 +302,15 @@ const ViewGradePage = () => {
       },
     },
   ];
+
+  // Hàm trả về danh sách cột dựa trên vai trò người dùng
+  const getTableColumns = () => {
+    // Nếu người dùng là Reviewer, không hiển thị cột Actions
+    if (userRole === "Reviewer") {
+      return columns.filter(col => col.key !== "actions");
+    }
+    return columns;
+  };
 
   const getUniqueSubjects = (gradeData) => {
     const subjects = [...new Set(gradeData.map((grade) => grade.subjectId))];
@@ -526,7 +540,7 @@ const ViewGradePage = () => {
 
         <Table
           loading={loading}
-          columns={columns}
+          columns={getTableColumns()}
           dataSource={filteredGrades}
           onChange={handleChange}
           pagination={{

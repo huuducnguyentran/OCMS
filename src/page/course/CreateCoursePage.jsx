@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   Layout, Input, Button, Select, message, Form, 
-  Spin, Card, Typography, Divider 
+  Spin, Card, Typography, Divider, AutoComplete 
 } from "antd";
 import { ArrowLeftOutlined, PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -19,10 +19,13 @@ const CreateCoursePage = () => {
   const [trainingPlans, setTrainingPlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
   const [courseLevel, setCourseLevel] = useState(0);
+  const [initialCourses, setInitialCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
 
-  // Fetch training plans
+  // Fetch training plans and initial courses
   useEffect(() => {
     fetchTrainingPlans();
+    fetchInitialCourses();
   }, []);
 
   const fetchTrainingPlans = async () => {
@@ -38,6 +41,25 @@ const CreateCoursePage = () => {
     }
   };
 
+  const fetchInitialCourses = async () => {
+    try {
+      setLoadingCourses(true);
+      const response = await courseService.getAllCourses();
+      if (response.data) {
+        // Lọc các khóa học có courseLevel: "Initial" và progress: "Completed"
+        const filteredCourses = response.data.filter(
+          course => course.courseLevel === "Initial" && course.progress !== "Pending"
+        );
+        setInitialCourses(filteredCourses);
+      }
+    } catch (error) {
+      console.error("Failed to fetch initial courses:", error);
+      message.error("Failed to load initial courses");
+    } finally {
+      setLoadingCourses(false);
+    }
+  };
+
   // Form submission
   const handleCreateCourse = async (values) => {
     try {
@@ -46,7 +68,7 @@ const CreateCoursePage = () => {
       const formattedData = {
         courseId: values.courseId,
         trainingPlanId: values.trainingPlanId,
-        courseName: values.courseName,
+        courseName: values.courseName,  
         description: values.description,
         courseRelatedId: values.courseRelatedId || "",
       };
@@ -110,7 +132,7 @@ const CreateCoursePage = () => {
         headStyle={{ borderBottom: '2px solid #f0f0f0', padding: '16px 24px' }}
         bodyStyle={{ padding: '32px' }}
       >
-        <Spin spinning={loading || loadingPlans} size="large">
+        <Spin spinning={loading || loadingPlans || loadingCourses} size="large">
           <Form
             form={form}
             layout="vertical"
@@ -163,12 +185,26 @@ const CreateCoursePage = () => {
                   { max: 100, message: "Course Related ID must not exceed 100 characters" }
                 ]}
               >
-                <Input 
-                  placeholder="Enter Course Related ID" 
-                  className="rounded-lg py-3 px-4 text-lg" 
+                <AutoComplete
+                  placeholder="Select or enter Course Related ID"
+                  className="rounded-lg"
                   size="large"
-                  maxLength={100}
-                />
+                  style={{ width: '100%' }}
+                  options={initialCourses.map(course => ({
+                    value: course.courseId,
+                    label: `${course.courseName} (${course.courseId})`
+                  }))}
+                  filterOption={(inputValue, option) =>
+                    option.value.toLowerCase().indexOf(inputValue.toLowerCase()) !== -1 ||
+                    option.label.toLowerCase().indexOf(inputValue.toLowerCase()) !== -1
+                  }
+                  onChange={(value) => form.setFieldsValue({ courseRelatedId: value })}
+                >
+                  <Input
+                    className="py-3 px-4 text-lg"
+                    maxLength={100}
+                  />
+                </AutoComplete>
               </Form.Item>
 
               <Form.Item
