@@ -10,6 +10,10 @@ import {
   Spin,
   Table,
   Statistic,
+  Avatar,
+  List,
+  Empty,
+  message,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -17,9 +21,12 @@ import {
   TrophyOutlined,
   TeamOutlined,
   CalendarOutlined,
+  UserOutlined,
+  MailOutlined,
+  IdcardOutlined,
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
-import { getSubjectById } from "../../services/subjectService";
+import { getSubjectById, getSubjectTrainees } from "../../services/subjectService";
 import moment from "moment";
 
 const { Title, Text } = Typography;
@@ -29,8 +36,11 @@ const SubjectDetailPage = () => {
   const navigate = useNavigate();
   const [subject, setSubject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [trainees, setTrainees] = useState([]);
+  const [loadingTrainees, setLoadingTrainees] = useState(false);
   const isTrainee = sessionStorage.getItem("role") === "Trainee";
   const isInstructor = sessionStorage.getItem("role") === "Instructor";
+
   useEffect(() => {
     const fetchSubject = async () => {
       try {
@@ -43,6 +53,28 @@ const SubjectDetailPage = () => {
       }
     };
     fetchSubject();
+  }, [subjectId]);
+
+  useEffect(() => {
+    const fetchTrainees = async () => {
+      if (subjectId) {
+        try {
+          setLoadingTrainees(true);
+          const response = await getSubjectTrainees(subjectId);
+          if (response && response.trainees) {
+            setTrainees(Array.isArray(response.trainees) ? response.trainees : [response.trainees]);
+          } else {
+            setTrainees([]);
+          }
+        } catch (error) {
+          console.error("Error fetching trainees:", error);
+          message.error("Error fetching trainees");
+        } finally {
+          setLoadingTrainees(false);
+        }
+      }
+    };
+    fetchTrainees();
   }, [subjectId]);
 
   if (loading) {
@@ -361,6 +393,57 @@ const SubjectDetailPage = () => {
               },
             ]}
           />
+        </Card>
+
+        {/* Trainees Section */}
+        <Card
+          title={
+            <div className="flex items-center space-x-2">
+              <UserOutlined className="text-green-500" />
+              <span>Enrolled Trainees</span>
+            </div>
+          }
+          className="mt-8 shadow-sm hover:shadow-md transition-shadow"
+        >
+          {loadingTrainees ? (
+            <div className="flex justify-center items-center p-8">
+              <Spin size="large" tip="Loading trainees..." />
+            </div>
+          ) : trainees.length === 0 ? (
+            <Empty description="Không có học viên nào trong môn học này" />
+          ) : (
+            <List
+              itemLayout="horizontal"
+              dataSource={trainees}
+              pagination={{
+                pageSize: 5,
+                showSizeChanger: false,
+              }}
+              renderItem={(trainee) => (
+                <List.Item>
+                  <List.Item.Meta
+                    avatar={<Avatar icon={<UserOutlined />} className="bg-blue-500" />}
+                    title={<div className="text-lg font-medium">{trainee.name}</div>}
+                    description={
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
+                        <div className="flex items-center gap-2">
+                          <IdcardOutlined className="text-gray-500" />
+                          <span className="text-gray-700">ID: {trainee.traineeId}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MailOutlined className="text-gray-500" />
+                          <span className="text-gray-700">{trainee.email}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Tag color="blue">Trainee Assign ID: {trainee.traineeAssignId}</Tag>
+                        </div>
+                      </div>
+                    }
+                  />
+                </List.Item>
+              )}
+            />
+          )}
         </Card>
       </div>
     </div>

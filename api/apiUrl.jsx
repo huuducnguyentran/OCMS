@@ -66,7 +66,7 @@ export const API = {
   CREATE_SUBJECT: "Subject",
   UPDATE_SUBJECT: "Subject",
   DELETE_SUBJECT: "Subject",
-
+  GET_SUBJECT_TRAINEE: "Subject/trainee",
   // Course
   GET_ALL_COURSES: "Course/all",
   GET_COURSE_BY_ID: "Course",
@@ -90,6 +90,7 @@ export const API = {
   // Grade
   IMPORT_GRADE: "Grade/import",
   GET_ALL_GRADES: "Grade",
+  GET_INSTRUCTOR_GRADES: "Grade/instructor",
   CREATE_GRADE: "Grade",
   GET_PASSED_GRADES: "Grade/passed",
   GET_FAILED_GRADES: "Grade/failed",
