@@ -71,6 +71,19 @@ const ViewGradePage = () => {
       },
     },
     {
+      title: "Trainee Assign ID",
+      dataIndex: "traineeAssignID",
+      key: "traineeAssignID",
+      width: 120,
+      sorter: (a, b) => a.traineeAssignID.localeCompare(b.traineeAssignID),
+      sortOrder:
+        sortedInfo.columnKey === "traineeAssignID" ? sortedInfo.order : null,
+      // filteredValue: [searchText],
+      // onFilter: (value, record) => {
+      //   return record.subjectId.toLowerCase().includes(value.toLowerCase());
+      // },
+    },
+    {
       title: "Trainee",
       dataIndex: "fullname",
       key: "fullname",
@@ -375,7 +388,8 @@ const ViewGradePage = () => {
         (grade) =>
           grade.gradeId.toLowerCase().includes(search.toLowerCase()) ||
           grade.traineeAssignID.toLowerCase().includes(search.toLowerCase()) ||
-          grade.subjectId.toLowerCase().includes(search.toLowerCase())
+          grade.subjectId.toLowerCase().includes(search.toLowerCase()) ||
+          grade.fullname.toLowerCase().includes(search.toLowerCase())
       );
     }
 
@@ -510,7 +524,7 @@ const ViewGradePage = () => {
                 className="rounded-lg"
               />
               <Search
-                placeholder="Search by Grade ID, Trainee ID, or Subject ID"
+                placeholder="Search by Grade ID, Trainee ID, Full Name, or Subject ID"
                 allowClear
                 enterButton={<SearchOutlined />}
                 size="large"
