@@ -14,6 +14,7 @@ import {
   Input,
   Select,
   Radio,
+  Tooltip,
 } from "antd";
 import { notificationService } from "../../services/notificationService";
 import {
@@ -22,6 +23,8 @@ import {
   SortAscendingOutlined,
   SortDescendingOutlined,
   ArrowRightOutlined,
+  CheckOutlined,
+  LoadingOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
@@ -342,6 +345,67 @@ const NotificationPage = () => {
     );
   };
 
+  // Kiểm tra nếu có thông báo chưa đọc
+  const hasUnreadNotifications = () => {
+    return allNotifications.some(notification => !isNotificationRead(notification));
+  };
+
+  // Hàm xử lý đánh dấu tất cả thông báo là đã đọc
+  const handleMarkAllAsRead = async () => {
+    try {
+      const userID = sessionStorage.getItem("userID");
+      if (!userID) {
+        message.error("User ID not found, please log in again");
+        return;
+      }
+
+      setLoading(true);
+      message.loading({ content: "Marking all notifications...", key: "markAllAsRead" });
+
+      // Lọc ra các thông báo chưa đọc
+      const unreadNotifications = allNotifications.filter(
+        notification => !isNotificationRead(notification)
+      );
+
+      if (unreadNotifications.length === 0) {
+        message.info("No notifications to mark as read");
+        setLoading(false);
+        return;
+      }
+
+      // Gọi API để đánh dấu từng thông báo là đã đọc
+      // Tạo mảng các promise để thực hiện các cuộc gọi API song song
+      const markPromises = unreadNotifications.map(notification => 
+        notificationService.markAsRead(notification.notificationId)
+      );
+
+      // Chờ tất cả các cuộc gọi API hoàn thành
+      await Promise.all(markPromises);
+
+      // Cập nhật UI
+      const updatedNotifications = allNotifications.map(notification => ({
+        ...notification,
+        isRead: true
+      }));
+
+      setAllNotifications(updatedNotifications);
+      applyFiltersAndSearch();
+      
+      // Làm mới số lượng thông báo chưa đọc
+      refreshUnreadCount();
+
+      message.success({ content: "Marked all notifications as read", key: "markAllAsRead" });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      message.error({ 
+        content: "Cannot mark all notifications: " + (error.message || "An error occurred"), 
+        key: "markAllAsRead" 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Hiển thị thông tin debug về vai trò người dùng khi component mount
   useEffect(() => {
     console.log("Current user role:", userRole);
@@ -351,9 +415,24 @@ const NotificationPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
       <div className="max-w-4xl mx-auto">
-        <Title level={2} className="text-center mb-8 text-gray-800">
-          Notifications
-        </Title>
+        <div className="flex justify-between items-center mb-6">
+          <Title level={2} className="text-center text-gray-800 mb-0">
+            Notifications
+          </Title>
+          {hasUnreadNotifications() && (
+            <Tooltip title="Mark all as read">
+              <Button
+                type="primary"
+                icon={<CheckOutlined />}
+                onClick={handleMarkAllAsRead}
+                loading={loading}
+                className="bg-green-600 hover:bg-green-700 border-0"
+              >
+                Mark All as Read
+              </Button>
+            </Tooltip>
+          )}
+        </div>
 
         {error && (
           <Alert
