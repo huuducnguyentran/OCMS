@@ -298,23 +298,36 @@ const CandidatePage = () => {
       key: "actions",
       fixed: "right",
       width: 80,
-      render: (_, record) => (
-        <Space size="small">
-          <Dropdown
-            menu={getActionItems(record)}
-            placement="bottomRight"
-            trigger={["click"]}
-          >
-            <Button
-              type="text"
-              icon={<MoreOutlined />}
-              className="text-gray-600 hover:text-blue-600"
-            />
-          </Dropdown>
-        </Space>
-      ),
+      render: (_, record) => {
+        if (userRole === "Reviewer") {
+          return null;
+        }
+        
+        return (
+          <Space size="small">
+            <Dropdown
+              menu={getActionItems(record)}
+              placement="bottomRight"
+              trigger={["click"]}
+            >
+              <Button
+                type="text"
+                icon={<MoreOutlined />}
+                className="text-gray-600 hover:text-blue-600"
+              />
+            </Dropdown>
+          </Space>
+        );
+      },
     },
   ];
+
+  const getTableColumns = () => {
+    if (userRole === "Reviewer") {
+      return columns.filter(col => col.key !== "actions");
+    }
+    return columns;
+  };
 
   const filteredCandidates = candidates.filter((candidate) =>
     Object.values(candidate)
@@ -350,7 +363,7 @@ const CandidatePage = () => {
         </div>
 
         <Table
-          columns={columns}
+          columns={getTableColumns()}
           dataSource={getSortedData(filteredCandidates).map((item) => ({
             ...item,
             key: item.candidateId,

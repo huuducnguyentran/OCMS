@@ -50,7 +50,7 @@ const CertificateDetailPage = () => {
       message.error("Failed to sign certificate.");
     }
   };
-  
+
   const handleRevokeCertificate = async () => {
     if (!isHeadMaster) {
       message.warning("Only HeadMaster can revoke certificates");
@@ -121,7 +121,20 @@ const CertificateDetailPage = () => {
           <strong>Template ID:</strong> {certificate.templateId}
         </p>
         <p>
-          <strong>Status:</strong> {certificate.status}
+          <strong>
+            Status:
+            <span
+              className={`ml-2 px-4 py-1 rounded-full text-white ${
+                certificate.status === "Active"
+                  ? "bg-green-500"
+                  : certificate.status === "Revoked"
+                  ? "bg-red-500"
+                  : "bg-gray-400"
+              }`}
+            >
+              {certificate.status}
+            </span>{" "}
+          </strong>
         </p>
         <p>
           <strong>Issue Date:</strong>{" "}
@@ -134,23 +147,33 @@ const CertificateDetailPage = () => {
       </div>
       {certificate.status === "Pending" && (
         <div className="flex justify-end mt-8">
-          <Tooltip title={isHeadMaster ? "" : "Only HeadMaster can sign certificates"}>
+          <Tooltip
+            title={isHeadMaster ? "" : "Only HeadMaster can sign certificates"}
+          >
             <Button
               type="primary"
               icon={<CheckCircleOutlined />}
               onClick={handleSignCertificate}
               disabled={!isHeadMaster}
-              className={`text-white ${isHeadMaster ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 hover:bg-gray-500 cursor-not-allowed'}`}
+              className={`text-white ${
+                isHeadMaster
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-gray-400 hover:bg-gray-500 cursor-not-allowed"
+              }`}
             >
               Sign Certificate
             </Button>
           </Tooltip>
         </div>
       )}
-      {certificate.status !== "Pending" && certificate.status !== "Revoked" &&(
-        <Tooltip title={isTrainingStaff ? "" : "Only TrainingStaff can revoke certificates"}>
-          <Button 
-            danger 
+      {certificate.status !== "Pending" && certificate.status !== "Revoked" && (
+        <Tooltip
+          title={
+            isTrainingStaff ? "" : "Only TrainingStaff can revoke certificates"
+          }
+        >
+          <Button
+            danger
             onClick={handleRevokeCertificate}
             disabled={!isTrainingStaff}
           >

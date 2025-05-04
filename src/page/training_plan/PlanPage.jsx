@@ -13,14 +13,11 @@ import {
   Select,
   Checkbox,
   Space,
-  DatePicker,
   Row,
   Col,
   Input as AntInput,
   Typography,
-  Badge,
   Spin,
-  Table,
 } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -109,7 +106,14 @@ const PlanPage = () => {
   // Hàm kiểm tra trạng thái "Approved"
   const isApprovedStatus = (status) => {
     // Kiểm tra cả trường hợp status là số (1) hoặc chuỗi ("Approved")
-    return status === 1 || status === StatusEnum.Approved || status === "Approved" || status === 3 || status === "Completed" || status === StatusEnum.Completed;
+    return (
+      status === 1 ||
+      status === StatusEnum.Approved ||
+      status === "Approved" ||
+      status === 3 ||
+      status === "Completed" ||
+      status === StatusEnum.Completed
+    );
   };
 
   const fetchTrainingPlans = async () => {
@@ -123,13 +127,15 @@ const PlanPage = () => {
       let plans = [];
       if (response) {
         plans = Array.isArray(response) ? response : response.plans || [];
-        
-        // Kiểm tra và log dữ liệu 
+
+        // Kiểm tra và log dữ liệu
         console.log("API response data:", plans);
-        
+
         // Nếu là trainee, chỉ hiển thị các kế hoạch có trạng thái "Approved"
         if (isTrainee) {
-          plans = plans.filter(plan => isApprovedStatus(plan.trainingPlanStatus));
+          plans = plans.filter((plan) =>
+            isApprovedStatus(plan.trainingPlanStatus)
+          );
           console.log("Filtered plans for trainee:", plans);
         }
       }
@@ -175,8 +181,10 @@ const PlanPage = () => {
         (plan) =>
           (plan.planName &&
             plan.planName.toLowerCase().includes(lowerSearchText)) ||
-          (plan.planId && plan.planId.toLowerCase().includes(lowerSearchText)) ||
-          (plan.specialtyId && plan.specialtyId.toLowerCase().includes(lowerSearchText))
+          (plan.planId &&
+            plan.planId.toLowerCase().includes(lowerSearchText)) ||
+          (plan.specialtyId &&
+            plan.specialtyId.toLowerCase().includes(lowerSearchText))
       );
     }
 
@@ -185,10 +193,13 @@ const PlanPage = () => {
       result = result.filter((plan) => {
         // Nếu status là chuỗi, chuyển đổi thành giá trị enum tương ứng
         let statusValue = plan.trainingPlanStatus;
-        if (typeof plan.trainingPlanStatus === 'string') {
-          if (plan.trainingPlanStatus === 'Approved') statusValue = StatusEnum.Approved;
-          else if (plan.trainingPlanStatus === 'Pending') statusValue = StatusEnum.Pending;
-          else if (plan.trainingPlanStatus === 'Rejected') statusValue = StatusEnum.Rejected;
+        if (typeof plan.trainingPlanStatus === "string") {
+          if (plan.trainingPlanStatus === "Approved")
+            statusValue = StatusEnum.Approved;
+          else if (plan.trainingPlanStatus === "Pending")
+            statusValue = StatusEnum.Pending;
+          else if (plan.trainingPlanStatus === "Rejected")
+            statusValue = StatusEnum.Rejected;
         }
         return selectedStatusValues.includes(statusValue);
       });
@@ -199,10 +210,12 @@ const PlanPage = () => {
       result = result.filter((plan) => {
         // Nếu planLevel là chuỗi, chuyển đổi thành giá trị enum tương ứng
         let levelValue = plan.planLevel;
-        if (typeof plan.planLevel === 'string') {
-          if (plan.planLevel === 'Initial') levelValue = PlanLevelEnum.Initial;
-          else if (plan.planLevel === 'Recurrent') levelValue = PlanLevelEnum.Recurrent;
-          else if (plan.planLevel === 'Relearn') levelValue = PlanLevelEnum.Relearn;
+        if (typeof plan.planLevel === "string") {
+          if (plan.planLevel === "Initial") levelValue = PlanLevelEnum.Initial;
+          else if (plan.planLevel === "Recurrent")
+            levelValue = PlanLevelEnum.Recurrent;
+          else if (plan.planLevel === "Relearn")
+            levelValue = PlanLevelEnum.Relearn;
         }
         return selectedLevelValues.includes(levelValue);
       });
@@ -218,8 +231,8 @@ const PlanPage = () => {
     // Sort by specialty
     if (specialtySort !== null) {
       result.sort((a, b) => {
-        const specialtyA = a.specialtyId || '';
-        const specialtyB = b.specialtyId || '';
+        const specialtyA = a.specialtyId || "";
+        const specialtyB = b.specialtyId || "";
         return specialtySort === "asc"
           ? specialtyA.localeCompare(specialtyB)
           : specialtyB.localeCompare(specialtyA);
@@ -252,7 +265,14 @@ const PlanPage = () => {
     if (trainingPlans.length > 0) {
       applyFilters(trainingPlans);
     }
-  }, [searchText, selectedStatusValues, selectedLevelValues, selectedSpecialtyValues, dateSort, specialtySort]);
+  }, [
+    searchText,
+    selectedStatusValues,
+    selectedLevelValues,
+    selectedSpecialtyValues,
+    dateSort,
+    specialtySort,
+  ]);
 
   const getStatusColor = (status) => {
     if (!status) return "default";
@@ -328,7 +348,30 @@ const PlanPage = () => {
       setRequestModalVisible(false);
     } catch (error) {
       console.error("Failed to send request:", error);
-      message.error("Failed to send request for this plan");
+
+      // Xử lý và hiển thị thông báo lỗi chi tiết từ response
+      if (error.response && error.response.data) {
+        const errorData = error.response.data;
+
+        if (errorData.error && errorData.message) {
+          message.error(
+            <div>
+              <div>{errorData.message}</div>
+              <div className="text-red-500 mt-1">{errorData.error}</div>
+            </div>
+          );
+        } else if (errorData.error) {
+          message.error(errorData.error);
+        } else if (errorData.message) {
+          message.error(errorData.message);
+        } else {
+          message.error("Failed to send request for this plan");
+        }
+      } else {
+        message.error(
+          `Failed to send request: ${error.message || "Unknown error"}`
+        );
+      }
     } finally {
       setSubmitting(false);
     }
@@ -354,13 +397,16 @@ const PlanPage = () => {
   // Add function to get unique specialties
   const getUniqueSpecialties = () => {
     if (!trainingPlans || !Array.isArray(trainingPlans)) return [];
-    
+
     const specialties = trainingPlans
-      .map(plan => plan.specialtyId)
-      .filter(specialty => specialty) // Remove undefined/null values
+      .map((plan) => plan.specialtyId)
+      .filter((specialty) => specialty) // Remove undefined/null values
       .filter((specialty, index, array) => array.indexOf(specialty) === index); // Remove duplicates
-    
-    return specialties.map(specialty => ({ label: specialty, value: specialty }));
+
+    return specialties.map((specialty) => ({
+      label: specialty,
+      value: specialty,
+    }));
   };
 
   const handleSpecialtyChange = (values) => {
@@ -383,7 +429,11 @@ const PlanPage = () => {
       </Tooltip>,
     ];
 
-    if (!isTrainee && !isReviewer) {
+    if (
+      !isTrainee &&
+      !isReviewer &&
+      !isApprovedStatus(plan.trainingPlanStatus)
+    ) {
       actions.push(
         <Tooltip title="Edit Plan">
           <EditOutlined
@@ -413,6 +463,16 @@ const PlanPage = () => {
           </Popconfirm>
         </Tooltip>
       );
+    } else if (!isTrainee && !isReviewer) {
+      actions.push(
+        <Tooltip title="Send Request">
+          <SendOutlined
+            key="request"
+            className="text-blue-500 text-lg hover:text-blue-700"
+            onClick={() => handleRequest(plan.planId, plan.planName)}
+          />
+        </Tooltip>
+      );
     }
 
     return actions;
@@ -420,7 +480,7 @@ const PlanPage = () => {
 
   const renderFilterSection = () => {
     const specialtyOptions = getUniqueSpecialties();
-    
+
     return (
       <Card
         className="mb-6 w-full shadow-md animate__animated animate__fadeIn"
@@ -466,14 +526,14 @@ const PlanPage = () => {
           </Col>
 
           <Col xs={24} md={isTrainee ? 12 : 8}>
-            <div className="mb-2 font-semibold">
-              Date Sort / Specialty Sort
-            </div>
+            <div className="mb-2 font-semibold">Date Sort / Specialty Sort</div>
             <Space direction="vertical" className="w-full">
               <Button
                 type="default"
                 icon={
-                  <SortAscendingOutlined rotate={dateSort === "desc" ? 180 : 0} />
+                  <SortAscendingOutlined
+                    rotate={dateSort === "desc" ? 180 : 0}
+                  />
                 }
                 onClick={handleDateSortChange}
                 className="w-full"
@@ -483,12 +543,15 @@ const PlanPage = () => {
               <Button
                 type="default"
                 icon={
-                  <SortAscendingOutlined rotate={specialtySort === "desc" ? 180 : 0} />
+                  <SortAscendingOutlined
+                    rotate={specialtySort === "desc" ? 180 : 0}
+                  />
                 }
                 onClick={handleSpecialtySortChange}
                 className="w-full"
               >
-                Sort Specialty {specialtySort === "asc" ? "Ascending ↑" : "Descending ↓"}
+                Sort Specialty{" "}
+                {specialtySort === "asc" ? "Ascending ↑" : "Descending ↓"}
               </Button>
             </Space>
           </Col>
@@ -556,10 +619,17 @@ const PlanPage = () => {
             label="Description"
             rules={[
               { required: true, message: "Please enter a description" },
-              { max: 100, message: "Description must not exceed 100 characters" }
+              {
+                max: 100,
+                message: "Description must not exceed 100 characters",
+              },
             ]}
           >
-            <Input.TextArea rows={4} placeholder="Enter request description" maxLength={100} />
+            <Input.TextArea
+              rows={4}
+              placeholder="Enter request description"
+              maxLength={100}
+            />
           </Form.Item>
 
           <Form.Item
@@ -567,10 +637,14 @@ const PlanPage = () => {
             label="Notes"
             rules={[
               { required: true, message: "Please enter a Notes" },
-              { max: 100, message: "Notes must not exceed 100 characters" }
+              { max: 100, message: "Notes must not exceed 100 characters" },
             ]}
           >
-            <Input.TextArea rows={3} placeholder="Additional notes " maxLength={100} />
+            <Input.TextArea
+              rows={3}
+              placeholder="Additional notes "
+              maxLength={100}
+            />
           </Form.Item>
         </Form>
       </Modal>
@@ -749,9 +823,10 @@ const PlanPage = () => {
                         {plan.planId}
                       </Tag>
                       <div className="mt-2">
-                      <Tag color="cyan">Specialty: {plan.specialtyId || "N/A"}</Tag>
-                    </div>
-
+                        <Tag color="cyan">
+                          Specialty: {plan.specialtyId || "N/A"}
+                        </Tag>
+                      </div>
                     </div>
                     <CalendarOutlined className="text-2xl text-blue-500" />
                   </div>
@@ -790,7 +865,7 @@ const PlanPage = () => {
             ))}
           </div>
         )}
-        
+
         {!isTrainee && !isReviewer && (
           <Tooltip title="Create New Plan" placement="left">
             <button

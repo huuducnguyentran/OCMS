@@ -369,7 +369,7 @@ const HomePage = () => {
                   icon={<FileTextOutlined className="text-2xl text-white" />}
                   title="Grade Management"
                   description="Manage and submit grades for your trainees"
-                  path="/grade"
+                  path="/grade-view"
                   color="bg-orange-500"
                   badge={stats.pendingGrades}
                 />

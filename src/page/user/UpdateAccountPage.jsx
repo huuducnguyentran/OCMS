@@ -173,6 +173,21 @@ const UpdateAccountPage = () => {
                   }
                   rules={[
                     { required: true, message: "Please select date of birth" },
+                    {
+                      validator: (_, value) => {
+                        if (!value) return Promise.resolve();
+                        
+                        // Tính tuổi (lấy thời điểm hiện tại trừ đi ngày sinh)
+                        const today = dayjs();
+                        const birthDate = dayjs(value);
+                        const age = today.diff(birthDate, 'year');
+                        
+                        if (age < 18) {
+                          return Promise.reject('User must be at least 18 years old');
+                        }
+                        return Promise.resolve();
+                      }
+                    },
                   ]}
                 >
                   <DatePicker
@@ -180,6 +195,14 @@ const UpdateAccountPage = () => {
                     placeholder="Select date of birth"
                     className="w-full h-11 rounded-lg"
                     showToday={false}
+                    disabledDate={(current) => {
+                      // Vô hiệu hóa các ngày trong tương lai
+                      if (current > dayjs().endOf('day')) {
+                        return true;
+                      }
+                      // Vô hiệu hóa các ngày sinh cho người dưới 18 tuổi
+                      return current > dayjs().subtract(18, 'year');
+                    }}
                   />
                 </Form.Item>
 

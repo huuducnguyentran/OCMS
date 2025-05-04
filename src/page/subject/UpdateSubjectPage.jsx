@@ -10,6 +10,7 @@ import {
   Col,
   Card,
   Select,
+  Alert,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -30,6 +31,7 @@ const UpdateSubjectPage = () => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
+  const [apiError, setApiError] = useState(null);
 
   useEffect(() => {
     const fetchSubject = async () => {
@@ -59,25 +61,62 @@ const UpdateSubjectPage = () => {
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
+      setApiError(null);
+      
       await applySubjectValidation({
         ...values,
         subjectId,
       });
 
-      await updateSubject(subjectId, {
-        ...values,
+      const subjectData = {
+        subjectId: subjectId,
+        courseId: values.courseId,
+        subjectName: values.subjectName.trim(),
+        description: values.description.trim(),
         credits: Number(values.credits),
         passingScore: Number(values.passingScore),
-        courseId: values.courseId,
-      });
+      };
 
+      console.log("Submitting subject data:", subjectData);
+      
+      const response = await updateSubject(subjectData);
+      console.log("Update response:", response);
+      
       message.success("Subject updated successfully!");
       navigate("/subject");
     } catch (error) {
-      if (error.name === "ValidationError") {
+      console.error("Error updating subject:", error);
+      
+      if (error.response && error.response.data) {
+        const errorData = error.response.data;
+        setApiError(errorData);
+        
+        if (errorData.message) {
+          message.error(errorData.message);
+        } else if (errorData.title) {
+          message.error(errorData.title);
+        } else if (errorData.errors) {
+          const errorMessages = [];
+          Object.entries(errorData.errors).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+              errorMessages.push(`${key}: ${value.join(', ')}`);
+            } else {
+              errorMessages.push(`${key}: ${value}`);
+            }
+          });
+          
+          if (errorMessages.length > 0) {
+            message.error(errorMessages.join('; '));
+          } else {
+            message.error("Validation failed. Please check your input.");
+          }
+        } else {
+          message.error("Failed to update subject. Please try again.");
+        }
+      } else if (error.name === "ValidationError") {
         message.error(error.message);
       } else {
-        message.error("Failed to update subject");
+        message.error("Failed to update subject. Please check your connection and try again.");
       }
     } finally {
       setLoading(false);
@@ -112,6 +151,41 @@ const UpdateSubjectPage = () => {
               Back to Subjects
             </Button>
           </div>
+
+          {/* Hiển thị thông báo lỗi từ API nếu có */}
+          {apiError && (
+            <Alert
+              message={apiError.message ? "Course Error" : "Failed to update subject"}
+              description={
+                <div>
+                  {apiError.message ? (
+                    <div className="font-semibold text-red-600">{apiError.message}</div>
+                  ) : (
+                    apiError.title || "An error occurred during the update."
+                  )}
+                  {apiError.errors && (
+                    <ul className="mt-2">
+                      {Object.entries(apiError.errors).map(([key, value]) => (
+                        <li key={key} className="text-red-600">
+                          {key}: {Array.isArray(value) ? value.join(', ') : value}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {apiError.traceId && (
+                    <p className="mt-2 text-xs">
+                      <span className="font-semibold">Trace ID:</span> {apiError.traceId}
+                    </p>
+                  )}
+                </div>
+              }
+              type="error"
+              showIcon
+              closable
+              onClose={() => setApiError(null)}
+              className="mb-6"
+            />
+          )}
 
           <Form
             form={form}

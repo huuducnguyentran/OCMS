@@ -37,10 +37,10 @@ export const createSubject = async (subjectData) => {
 };
 
 // Update a subject by ID
-export const updateSubject = async (id, subjectData) => {
+export const updateSubject = async ( subjectData) => {
   try {
     const response = await axiosInstance.put(
-      `/${API.UPDATE_SUBJECT}/${id}`,
+      `/${API.UPDATE_SUBJECT}`,
       subjectData
     );
     return response.data;

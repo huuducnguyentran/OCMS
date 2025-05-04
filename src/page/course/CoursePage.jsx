@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import {
+  Popconfirm,
   Layout,
   Card,
   Table,
@@ -31,6 +32,7 @@ import {
   EyeOutlined,
   SendOutlined,
   SearchOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import { courseService } from "../../services/courseService";
@@ -63,10 +65,15 @@ const CoursePage = () => {
   const [selectedCourseForRequest, setSelectedCourseForRequest] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
+  const isReviewer = userRole === "Reviewer";
 
   // Fetch data on mount and when refreshed
   useEffect(() => {
     fetchCourses();
+    // Lấy role người dùng từ sessionStorage
+    const role = sessionStorage.getItem("role");
+    setUserRole(role);
   }, []);
 
   useEffect(() => {
@@ -154,6 +161,33 @@ const CoursePage = () => {
   const handleChange = (pagination, filters, sorter) => {
     setSortedInfo(sorter);
   };
+  const handleDelete = async (courseId) => {
+    try {
+      await courseService.deleteCourse(courseId);
+      message.success("Course deleted successfully");
+      fetchCourses();
+    } catch (error) {
+      console.error("Failed to delete course:", error);
+      
+      // Hiển thị thông báo lỗi từ API
+      if (error.response && error.response.data) {
+        const errorData = error.response.data;
+        
+        if (errorData.message && errorData.error) {
+          message.error(`${errorData.message} ${errorData.error}`);
+        } else if (errorData.message) {
+          message.error(errorData.message);
+        } else if (errorData.error) {
+          message.error(errorData.error);
+        } else {
+          message.error("Failed to delete course");
+        }
+      } else {
+        message.error(`Failed to delete course: ${error.message || "Unknown error"}`);
+      }
+    }
+  };
+
 
   // Thêm hàm xử lý request
   const handleRequest = (course) => {
@@ -267,38 +301,75 @@ const CoursePage = () => {
       title: "Actions",
       key: "actions",
       width: 150,
-      render: (_, record) => (
-        <div className="flex space-x-2">
-          <Tooltip title="View Details">
-            <Button
-              type="primary"
-              size="small"
-              icon={<EyeOutlined />}
-              onClick={() => setSelectedCourse(record)}
-              className="bg-gray-600 hover:bg-gray-700 border-0"
-            />
-          </Tooltip>
-          <Tooltip title="Edit">
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => navigate(`/course/edit/${record.courseId}`)}
-              className="text-gray-600 hover:text-gray-700"
-            />
-          </Tooltip>
-          {/* Thêm nút Send Request chỉ khi status là Approved */}
-          {record.status === "Approved" && (
-            <Tooltip title="Send Request">
+      render: (_, record) => {
+        // Ẩn các nút hành động nếu là Reviewer
+        if (isReviewer) {
+          return (
+            <div className="flex space-x-2">
+              <Tooltip title="View Details">
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<EyeOutlined />}
+                  onClick={() => setSelectedCourse(record)}
+                  className="bg-gray-600 hover:bg-gray-700 border-0"
+                />
+              </Tooltip>
+            </div>
+          );
+        }
+        
+        return (
+          <div className="flex space-x-2">
+            <Tooltip title="View Details">
+              <Button
+                type="primary"
+                size="small"
+                icon={<EyeOutlined />}
+                onClick={() => setSelectedCourse(record)}
+                className="bg-gray-600 hover:bg-gray-700 border-0"
+              />
+            </Tooltip>
+            {record.status !== "Approved" && (
+            <Tooltip title="Edit">
               <Button
                 size="small"
-                icon={<SendOutlined />}
-                onClick={() => handleRequest(record)}
-                className="text-blue-600 hover:text-blue-700"
+                icon={<EditOutlined />}
+                onClick={() => navigate(`/course/edit/${record.courseId}`)}
+                className="text-gray-600 hover:text-gray-700"
               />
             </Tooltip>
           )}
-        </div>
-      ),
+          {record.status !== "Approved" && (
+            <Tooltip title="Delete">
+              <Popconfirm
+                title="Are you sure you want to delete this course?"
+                onConfirm={() => handleDelete(record.courseId)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <Button
+                  size="small"
+                  icon={<DeleteOutlined />}
+                  className="text-gray-600 hover:text-gray-700"
+                />
+              </Popconfirm>
+            </Tooltip>
+          )}
+            {/* Thêm nút Send Request chỉ khi status là Approved */}
+            {record.status === "Approved" && (
+              <Tooltip title="Send Request">
+                <Button
+                  size="small"
+                  icon={<SendOutlined />}
+                  onClick={() => handleRequest(record)}
+                  className="text-blue-600 hover:text-blue-700"
+                />
+              </Tooltip>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
@@ -327,26 +398,42 @@ const CoursePage = () => {
                   {selectedCourse.status}
                 </Tag>
               </div>
-              <div className="flex space-x-3">
-                <Button
-                  icon={<EditOutlined />}
-                  onClick={() => navigate(`/course/edit/${selectedCourse.courseId}`)}
-                  className="flex items-center"
-                >
-                  Edit
-                </Button>
-                {/* Chỉ hiển thị nút Send Request khi status là Approved */}
-                {selectedCourse.status === "Approved" && (
+              {!isReviewer && (
+                <div className="flex space-x-3">
+                {selectedCourse.status !== "Approved" && (
                   <Button
-                    type="primary"
-                    icon={<SendOutlined />}
-                    onClick={() => handleRequest(selectedCourse)}
-                    className="flex items-center bg-blue-600 hover:bg-blue-700"
+                  type="#"
+                    icon={<EditOutlined />}
+                    onClick={() => navigate(`/course/edit/${selectedCourse.courseId}`)}
+                    className="flex items-center  "
                   >
-                    Send Request
+                    Edit
                   </Button>
-                )}
-              </div>
+                  )}
+                  {selectedCourse.status !== "Approved" && (
+                  <Button
+                  type="#"
+                    icon={<DeleteOutlined />}
+                    onClick={() => handleDelete(selectedCourse.courseId)}
+                    className="flex items-center"
+                  >
+                    Delete
+                  </Button>         
+                  )}
+                  
+                  {/* Chỉ hiển thị nút Send Request khi status là Approved */}
+                  {selectedCourse.status === "Approved" && (
+                    <Button
+                      type="primary"
+                      icon={<SendOutlined />}
+                      onClick={() => handleRequest(selectedCourse)}
+                      className="flex items-center bg-blue-600 hover:bg-blue-700"
+                    >
+                      Send Request
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Statistics Grid */}
@@ -619,14 +706,16 @@ const CoursePage = () => {
             >
               Refresh
             </Button>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => navigate("/course/create")}
-              className="bg-gray-700 hover:bg-gray-800 border-0"
-            >
-              Create New Course
-            </Button>
+            {!isReviewer && (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => navigate("/course/create")}
+                className="bg-gray-700 hover:bg-gray-800 border-0"
+              >
+                Create New Course
+              </Button>
+            )}
           </div>
         </div>
 
@@ -693,20 +782,7 @@ const CoursePage = () => {
                       </Tag>
                     </div>
                   }
-                  className="shadow-md rounded-lg overflow-hidden"
-                  extra={
-                    <Button
-                      type="primary"
-                      icon={<EditOutlined />}
-                      size="small"
-                      onClick={() =>
-                        navigate(`/course/edit/${selectedCourse.courseId}`)
-                      }
-                      className="bg-gray-600 hover:bg-gray-700 border-0"
-                    >
-                      Edit
-                    </Button>
-                  }
+                  
                 >
                   {/* Thay đổi cách sử dụng Tabs để không dùng TabPane */}
                   <Tabs

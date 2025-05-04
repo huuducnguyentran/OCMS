@@ -72,7 +72,7 @@ export const API = {
   GET_COURSE_BY_ID: "Course",
   CREATE_COURSE: "Course/create",
   UPDATE_COURSE: "Course/update",
-  DELETE_COURSE: "Course",
+  DELETE_COURSE: "Course/delete",
   GET_COURSE_SUBJECTS: "Course/subjects",
   ASSIGN_TRAINEE_TO_COURSE: "Course/assign-trainee",
   ADD_SUBJECT_TO_COURSE: "Course/add-subject",
@@ -117,6 +117,9 @@ export const API = {
   UPDATE_CERTIFICATE: "Certificate",
   REVOKE_CERTIFICATE: "Certificate/revoke",
   MANUAL_CREATE_CERTIFICATE: "Certificate/manual-create",
+  GET_ALL_RENEWAL_CERTIFICATE_BY_ID: "Certificate/renewal",
+  GET_RENEWAL_CERTIFICATE_BY_USER_ID: "Certificate/renewal-history",
+  GET_RENEWAL_CERTIFICATE_BY_TRAINEE: "Certificate/my-renewal-history",
 
   // Specialty APIs
   GET_ALL_SPECIALTY: "Specialty",

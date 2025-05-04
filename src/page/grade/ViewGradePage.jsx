@@ -44,6 +44,7 @@ const ViewGradePage = () => {
     current: 1,
     pageSize: 10,
   });
+  const isInstructor = sessionStorage.getItem("role") === "Instructor";
   const navigate = useNavigate();
 
   const handleChange = (pagination, filters, sorter) => {
@@ -73,6 +74,18 @@ const ViewGradePage = () => {
       title: "Trainee",
       dataIndex: "fullname",
       key: "fullname",
+      width: 120,
+      sorter: (a, b) => a.fullname.localeCompare(b.fullname),
+      sortOrder: sortedInfo.columnKey === "fullname" ? sortedInfo.order : null,
+      // filteredValue: [searchText],
+      // onFilter: (value, record) => {
+      //   return record.subjectId.toLowerCase().includes(value.toLowerCase());
+      // },
+    },
+    {
+      title: "Subject ID",
+      dataIndex: "subjectId",
+      key: "subjectId",
       width: 120,
       sorter: (a, b) => a.fullname.localeCompare(b.fullname),
       sortOrder: sortedInfo.columnKey === "fullname" ? sortedInfo.order : null,
@@ -249,13 +262,19 @@ const ViewGradePage = () => {
       fixed: "right",
       width: 80,
       render: (_, record) => {
+        // Nếu người dùng là Reviewer, không hiển thị nút hành động
+        if (userRole === "Reviewer") {
+          return null;
+        }
+
         const items = [
-          {
+          isInstructor && {
             key: "edit",
             label: "Edit Grade",
             icon: <EditOutlined />,
             onClick: () => handleEdit(record),
           },
+
           {
             key: "delete",
             label: (
@@ -295,6 +314,15 @@ const ViewGradePage = () => {
       },
     },
   ];
+
+  // Hàm trả về danh sách cột dựa trên vai trò người dùng
+  const getTableColumns = () => {
+    // Nếu người dùng là Reviewer, không hiển thị cột Actions
+    if (userRole === "Reviewer") {
+      return columns.filter((col) => col.key !== "actions");
+    }
+    return columns;
+  };
 
   const getUniqueSubjects = (gradeData) => {
     const subjects = [...new Set(gradeData.map((grade) => grade.subjectId))];
@@ -385,8 +413,7 @@ const ViewGradePage = () => {
       message.success("Grade deleted successfully");
       await fetchGrades();
     } catch (error) {
-      console.error("Error deleting grade:", error);
-      message.error(error.response?.data?.message || "Failed to delete grade");
+      message.error(JSON.stringify(error, null, 2));
     } finally {
       setLoading(false);
     }
@@ -394,18 +421,18 @@ const ViewGradePage = () => {
   const handleExportCourseResults = async () => {
     try {
       message.loading({
-        content: "Đang chuẩn bị tải xuống...",
+        content: "Preparing to export...",
         key: "exportLoading",
       });
       await exportCourseResults();
       message.success({
-        content: "Tải xuống thành công",
+        content: "Exported successfully",
         key: "exportLoading",
       });
     } catch (error) {
       console.error("Error exporting trainee info:", error);
       message.error({
-        content: "Không thể tải xuống file. Vui lòng thử lại",
+        content: "Unable to export. Please try again",
         key: "exportLoading",
       });
     }
@@ -525,7 +552,7 @@ const ViewGradePage = () => {
 
         <Table
           loading={loading}
-          columns={columns}
+          columns={getTableColumns()}
           dataSource={filteredGrades}
           onChange={handleChange}
           pagination={{

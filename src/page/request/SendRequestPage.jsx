@@ -8,6 +8,7 @@ import {
   Form,
   Typography,
   Spin,
+  Alert,
 } from "antd";
 import { createRequest } from "../../services/requestService";
 import { getAllSubject } from "../../services/subjectService";
@@ -30,6 +31,7 @@ const SendRequestPage = () => {
   const [subjects, setSubjects] = useState([]);
   const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [userRole, setUserRole] = useState("");
+  const [apiError, setApiError] = useState(null);
 
   useEffect(() => {
     // Get user role from sessionStorage
@@ -171,6 +173,7 @@ const SendRequestPage = () => {
     }
 
     setLoading(true);
+    setApiError(null);
     try {
       let payload;
 
@@ -216,14 +219,73 @@ const SendRequestPage = () => {
       }
     } catch (error) {
       console.error("Request error:", error);
-      const errorMessage =
-        userRole === "AOC Manager"
-          ? "Failed to send plan request. Please try again."
-          : "Failed to send complaint. Please try again.";
-      message.error(errorMessage);
+      
+      // Xử lý lỗi API và lưu vào trạng thái
+      if (error.response && error.response.data) {
+        // Lưu thông tin lỗi từ API vào state
+        setApiError(error.response.data);
+      } else {
+        // Trường hợp không có response.data, vẫn hiển thị thông báo lỗi chung
+        const errorMessage =
+          userRole === "AOC Manager"
+            ? "Failed to send plan request. Please try again."
+            : "Failed to send complaint. Please try again.";
+        message.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  // Hàm hiển thị chi tiết lỗi từ API
+  const renderErrorDetails = () => {
+    if (!apiError) return null;
+
+    // Hàm tạo danh sách lỗi từ đối tượng errors
+    const formatErrors = (errors) => {
+      if (!errors) return [];
+      
+      const errorList = [];
+      Object.keys(errors).forEach(key => {
+        if (Array.isArray(errors[key])) {
+          errors[key].forEach(err => {
+            errorList.push(`${key}: ${err}`);
+          });
+        } else {
+          errorList.push(`${key}: ${errors[key]}`);
+        }
+      });
+      
+      return errorList;
+    };
+
+    const errorList = apiError.errors ? formatErrors(apiError.errors) : [`${apiError.title || 'Error'}: ${apiError.status || ''}`];
+
+    return (
+      <Alert
+        message={apiError.title || "Request Error"}
+        description={
+          <div>
+            <p>{apiError.detail || "One or more validation errors occurred."}</p>
+            <ul className="list-disc ml-5 mt-2">
+              {errorList.map((err, index) => (
+                <li key={index}>{err}</li>
+              ))}
+            </ul>
+            {apiError.traceId && (
+              <p className="mt-2 text-xs">
+                <span className="font-semibold">Trace ID:</span> {apiError.traceId}
+              </p>
+            )}
+          </div>
+        }
+        type="error"
+        showIcon
+        closable
+        onClose={() => setApiError(null)}
+        className="mb-4"
+      />
+    );
   };
 
   return (
@@ -234,6 +296,9 @@ const SendRequestPage = () => {
             ? "Request create plan"
             : "Send a Complaint"}
         </Title>
+
+        {/* Hiển thị chi tiết lỗi API nếu có */}
+        {renderErrorDetails()}
 
         <Form layout="vertical">
           {userRole === "AOC Manager" && (

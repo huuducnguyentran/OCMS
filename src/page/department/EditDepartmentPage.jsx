@@ -9,6 +9,7 @@ import {
   Typography,
   Select,
   Spin,
+  Alert,
 } from "antd";
 import {
   SaveOutlined,
@@ -35,6 +36,7 @@ const EditDepartmentPage = () => {
   const [users, setUsers] = useState([]);
   const isAdmin = sessionStorage.getItem("role") === "Admin";
   const [departmentStatus, setDepartmentStatus] = useState(0);
+  const [apiError, setApiError] = useState(null);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -48,12 +50,36 @@ const EditDepartmentPage = () => {
 
   const fetchUsers = async () => {
     try {
-      // Lọc users có role phù hợp (ví dụ: Manager, Admin, etc.)
-      const filteredUsers = await getAllUsers();
+      // Lấy tất cả users từ API 
+      const response = await getAllUsers();
+      console.log("API response for users:", response);
+      
+      // Kiểm tra cấu trúc dữ liệu trả về
+      let allUsers = [];
+      
+      if (Array.isArray(response)) {
+        allUsers = response;
+      } else if (response && response.data && Array.isArray(response.data)) {
+        allUsers = response.data;
+      } else if (response && Array.isArray(response.users)) {
+        allUsers = response.users;
+      } else if (response && response.data && Array.isArray(response.data.users)) {
+        allUsers = response.data.users;
+      } else {
+        console.error("Unexpected response format:", response);
+        message.error("Failed to parse users data");
+        return;
+      }
+      
+      // Lọc users có roleName là "AOC Manager"
+      const filteredUsers = allUsers.filter(user => 
+        user && user.roleName && user.roleName === "AOC Manager"
+      );
+      
       setUsers(filteredUsers);
-      console.log("Fetched users:", filteredUsers);
     } catch (error) {
-      message.error("Failed to fetch users list", error);
+      console.error("Error fetching users:", error);
+      message.error("Failed to fetch users list");
     }
   };
 
@@ -80,6 +106,8 @@ const EditDepartmentPage = () => {
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
+      setApiError(null); // Xóa lỗi trước đó (nếu có)
+      
       const updateData = {
         departmentName: values.departmentName,
         departmentDescription: values.departmentDescription,
@@ -90,7 +118,24 @@ const EditDepartmentPage = () => {
       message.success("Department updated successfully");
       navigate("/department");
     } catch (error) {
-      message.error("Failed to update department", error);
+      console.error("Failed to update department:", error);
+      
+      // Xử lý thông báo lỗi từ API
+      if (error.response && error.response.data) {
+        // Lưu thông tin lỗi API vào state
+        const errorData = error.response.data;
+        setApiError(errorData);
+        
+        // Nếu có thông báo lỗi cụ thể, hiển thị nó
+        if (errorData.message) {
+          message.error(errorData.message);
+        } else {
+          message.error("Failed to update department");
+        }
+      } else {
+        // Trường hợp không có error.response.data
+        message.error("Failed to update department");
+      }
     } finally {
       setLoading(false);
     }
@@ -139,6 +184,8 @@ const EditDepartmentPage = () => {
             </Text>
           </div>
 
+
+
           <Form form={form} layout="vertical" onFinish={handleSubmit}>
             <Form.Item
               name="departmentName"
@@ -177,36 +224,6 @@ const EditDepartmentPage = () => {
               </Select>
             </Form.Item>
 
-            {/* <Form.Item
-              label="Status"
-              className="mb-4"
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Tooltip title={
-                  departmentStatus === 0 
-                    ? "Switch off to delete department" 
-                    : "Switch on to activate department"
-                }>
-                  <Switch
-                    checked={departmentStatus === 0}
-                    onChange={handleStatusChange}
-                    checkedChildren="Active"
-                    unCheckedChildren="Inactive"
-                    style={{
-                      backgroundColor: departmentStatus === 0 ? '#52c41a' : '#ff4d4f',
-                      width: '90px',
-                      height: '28px'
-                    }}
-                    disabled={!isAdmin}
-                  />
-                </Tooltip>
-                {departmentStatus === 0 ? (
-                  <Tag color="success">Active</Tag>
-                ) : (
-                  <Tag color="error">Inactive</Tag>
-                )}
-              </div>
-            </Form.Item> */}
 
             <div className="flex justify-end mt-6">
               <Space>
