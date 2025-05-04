@@ -83,6 +83,18 @@ const ViewGradePage = () => {
       // },
     },
     {
+      title: "Subject ID",
+      dataIndex: "subjectId",
+      key: "subjectId",
+      width: 120,
+      sorter: (a, b) => a.fullname.localeCompare(b.fullname),
+      sortOrder: sortedInfo.columnKey === "fullname" ? sortedInfo.order : null,
+      // filteredValue: [searchText],
+      // onFilter: (value, record) => {
+      //   return record.subjectId.toLowerCase().includes(value.toLowerCase());
+      // },
+    },
+    {
       title: "Progress Scores",
       children: [
         {
@@ -307,7 +319,7 @@ const ViewGradePage = () => {
   const getTableColumns = () => {
     // Nếu người dùng là Reviewer, không hiển thị cột Actions
     if (userRole === "Reviewer") {
-      return columns.filter(col => col.key !== "actions");
+      return columns.filter((col) => col.key !== "actions");
     }
     return columns;
   };
@@ -409,18 +421,18 @@ const ViewGradePage = () => {
   const handleExportCourseResults = async () => {
     try {
       message.loading({
-        content: "Đang chuẩn bị tải xuống...",
+        content: "Preparing to export...",
         key: "exportLoading",
       });
       await exportCourseResults();
       message.success({
-        content: "Tải xuống thành công",
+        content: "Exported successfully",
         key: "exportLoading",
       });
     } catch (error) {
       console.error("Error exporting trainee info:", error);
       message.error({
-        content: "Không thể tải xuống file. Vui lòng thử lại",
+        content: "Unable to export. Please try again",
         key: "exportLoading",
       });
     }
