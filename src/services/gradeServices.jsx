@@ -1,6 +1,6 @@
 import axiosInstance from "../../utils/axiosInstance";
 import { API } from "../../api/apiUrl";
-
+const isInstructor = sessionStorage.getItem("role") === "Instructor";
 export const gradeServices = {
   importGrades: async (file) => {
     const formData = new FormData();
@@ -16,8 +16,12 @@ export const gradeServices = {
  
   
   getAllGrades: async () => {
-    const response = await axiosInstance.get(API.GET_ALL_GRADES);
+  if(isInstructor){
+    const response = await axiosInstance.get(API.GET_INSTRUCTOR_GRADES);
     return response.data;
+  }
+  const response = await axiosInstance.get(API.GET_ALL_GRADES);
+  return response.data;
   },
 
   getGradeById: async (traineeAssignID) => {

@@ -112,16 +112,13 @@ const EditCoursePage = () => {
         courseRelatedId: values.courseRelatedId || "",
       };
 
-      console.log("Sending update data:", formattedData);
 
       // Đảm bảo gọi đúng endpoint với đúng format
       await courseService.updateCourse(id, formattedData);
       message.success("Course updated successfully!");
       navigate("/all-courses", { state: { refresh: true } });
     } catch (error) {
-      console.error("Failed to update course:", error);
       
-      // Hiển thị thông báo lỗi từ API
       if (error.response && error.response.data) {
         const errorData = error.response.data;
         

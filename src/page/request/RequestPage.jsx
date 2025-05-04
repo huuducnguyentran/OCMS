@@ -1321,7 +1321,7 @@ const RequestList = () => {
                       <Button
                         type="primary"
                         className="bg-blue-500 hover:bg-blue-600"
-                        onClick={() => navigate(`/assigned-trainee/${traineesData[0].traineeId}`)}
+                        onClick={() => navigate(`/assigned-trainee/${traineesData[0].train}`)}
                       >
                         View Trainee Details
                       </Button>
