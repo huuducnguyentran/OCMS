@@ -22,7 +22,7 @@ const CandidateImportPage = () => {
       setError(null);
 
       if (!file.type.includes("sheet") && !file.type.includes("excel")) {
-        throw new Error("Chỉ chấp nhận file Excel (.xlsx, .xls)");
+        throw new Error("Only accept Excel (.xlsx, .xls) file.");
       }
 
       setSelectedFile(file);
@@ -32,10 +32,10 @@ const CandidateImportPage = () => {
 
       // Candidate Sheet
       const candidateSheet = workbook.Sheets["Candidate"];
-      if (!candidateSheet) throw new Error("Không tìm thấy sheet 'Candidate'");
+      if (!candidateSheet) throw new Error("Cannot find sheet 'Candidate'");
       const jsonCandidate = utils.sheet_to_json(candidateSheet);
       if (jsonCandidate.length === 0) {
-        throw new Error("Sheet 'Candidate' không có dữ liệu");
+        throw new Error("'Candidate' sheet has no data");
       }
       const candidateCols = Object.keys(jsonCandidate[0]).map((key) => ({
         title: key,
@@ -63,8 +63,8 @@ const CandidateImportPage = () => {
       setExternalCertifyData(jsonExternalCertify);
     } catch (err) {
       console.error(err);
-      setError("Lỗi: " + err.message);
-      message.error("Không thể đọc file");
+      setError("Error: " + err.message);
+      message.error("Cannot read file.");
     } finally {
       setLoading(false);
       setIsDragging(false);
@@ -74,6 +74,8 @@ const CandidateImportPage = () => {
   const handleSubmitToServer = async () => {
     try {
       setLoading(true);
+      setError(null);
+
       if (!selectedFile) {
         message.warning("Please select a file before uploading.");
         return;
@@ -86,7 +88,15 @@ const CandidateImportPage = () => {
         message.success("File uploaded successfully.");
       }
     } catch (error) {
-      message.error(error?.response?.data?.message || "Import failed.");
+      const apiMessage = error?.response?.data?.message || "Import failed.";
+      const detailedErrors = error?.response?.data?.result?.errors;
+      const fullMessage =
+        Array.isArray(detailedErrors) && detailedErrors.length
+          ? `${apiMessage}: ${detailedErrors.join(", ")}`
+          : apiMessage;
+
+      setError(fullMessage);
+      message.error(apiMessage);
     } finally {
       setLoading(false);
     }
@@ -149,8 +159,9 @@ const CandidateImportPage = () => {
             </div>
           )}
 
+          {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg
@@ -166,6 +177,9 @@ const CandidateImportPage = () => {
                   </svg>
                 </div>
                 <div className="ml-3">
+                  <p className="text-sm text-red-700 font-semibold mb-2">
+                    Error:
+                  </p>
                   <p className="text-sm text-red-700">{error}</p>
                 </div>
               </div>
