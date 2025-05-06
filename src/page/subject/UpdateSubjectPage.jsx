@@ -13,7 +13,7 @@ import {
   Alert,
 } from "antd";
 import {
-  ArrowLeftOutlined,
+  ArrowLeftOutlined,  
   BookOutlined,
   TrophyOutlined,
 } from "@ant-design/icons";
@@ -70,7 +70,6 @@ const UpdateSubjectPage = () => {
 
       const subjectData = {
         subjectId: subjectId,
-        courseId: values.courseId,
         subjectName: values.subjectName.trim(),
         description: values.description.trim(),
         credits: Number(values.credits),
@@ -193,32 +192,7 @@ const UpdateSubjectPage = () => {
             onFinish={handleSubmit}
             className="space-y-10 max-w-full"
           >
-            {/* Subject Name - Full width */}
-            <Form.Item
-              name="courseId"
-              label={
-                <span className="text-gray-700 font-medium text-xl">
-                  Course
-                </span>
-              }
-              rules={[{ required: true, message: "Course is required" }]}
-            >
-              <Select
-                placeholder="Select a course"
-                loading={loadingCourses}
-                showSearch
-                optionFilterProp="children"
-                size="large"
-                className="rounded-xl"
-              >
-                {courses.map((course) => (
-                  <Option key={course.courseId} value={course.courseId}>
-                    {course.courseName} ({course.courseId})
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-
+    
             {/* Subject Name - Full width */}
             <Form.Item
               name="subjectName"

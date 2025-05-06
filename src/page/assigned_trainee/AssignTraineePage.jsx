@@ -255,7 +255,7 @@ const AssignTraineePage = () => {
                   </button>
                   <button
                     onClick={handleSubmitToServer}
-                    className="px-4 py-2 text-sm bg-blue-500 text-white hover:bg-blue-700 rounded-lg transition-colors duration-200"
+                    className="px-4 py-2 text-sm bg-blue-500 text-black hover:bg-blue-700 rounded-lg transition-colors duration-200"
                   >
                     Submit to Server
                   </button>
