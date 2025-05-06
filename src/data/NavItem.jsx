@@ -279,7 +279,7 @@ const navItems = [
     label: "Specialty",
     icon: "ImportOutlined",
     path: "/specialty",
-    roles: ["Admin", "Training staff"],
+    roles: ["Admin", "Training staff", "HR"],
   },
   {
     key: "20",

@@ -71,9 +71,34 @@ const ViewGradePage = () => {
       },
     },
     {
+      title: "Trainee Assign ID",
+      dataIndex: "traineeAssignID",
+      key: "traineeAssignID",
+      width: 120,
+      sorter: (a, b) => a.traineeAssignID.localeCompare(b.traineeAssignID),
+      sortOrder:
+        sortedInfo.columnKey === "traineeAssignID" ? sortedInfo.order : null,
+      // filteredValue: [searchText],
+      // onFilter: (value, record) => {
+      //   return record.subjectId.toLowerCase().includes(value.toLowerCase());
+      // },
+    },
+    {
       title: "Trainee",
       dataIndex: "fullname",
       key: "fullname",
+      width: 120,
+      sorter: (a, b) => a.fullname.localeCompare(b.fullname),
+      sortOrder: sortedInfo.columnKey === "fullname" ? sortedInfo.order : null,
+      // filteredValue: [searchText],
+      // onFilter: (value, record) => {
+      //   return record.subjectId.toLowerCase().includes(value.toLowerCase());
+      // },
+    },
+    {
+      title: "Subject ID",
+      dataIndex: "subjectId",
+      key: "subjectId",
       width: 120,
       sorter: (a, b) => a.fullname.localeCompare(b.fullname),
       sortOrder: sortedInfo.columnKey === "fullname" ? sortedInfo.order : null,
@@ -307,7 +332,7 @@ const ViewGradePage = () => {
   const getTableColumns = () => {
     // Nếu người dùng là Reviewer, không hiển thị cột Actions
     if (userRole === "Reviewer") {
-      return columns.filter(col => col.key !== "actions");
+      return columns.filter((col) => col.key !== "actions");
     }
     return columns;
   };
@@ -363,7 +388,8 @@ const ViewGradePage = () => {
         (grade) =>
           grade.gradeId.toLowerCase().includes(search.toLowerCase()) ||
           grade.traineeAssignID.toLowerCase().includes(search.toLowerCase()) ||
-          grade.subjectId.toLowerCase().includes(search.toLowerCase())
+          grade.subjectId.toLowerCase().includes(search.toLowerCase()) ||
+          grade.fullname.toLowerCase().includes(search.toLowerCase())
       );
     }
 
@@ -409,18 +435,18 @@ const ViewGradePage = () => {
   const handleExportCourseResults = async () => {
     try {
       message.loading({
-        content: "Đang chuẩn bị tải xuống...",
+        content: "Preparing to export...",
         key: "exportLoading",
       });
       await exportCourseResults();
       message.success({
-        content: "Tải xuống thành công",
+        content: "Exported successfully",
         key: "exportLoading",
       });
     } catch (error) {
       console.error("Error exporting trainee info:", error);
       message.error({
-        content: "Không thể tải xuống file. Vui lòng thử lại",
+        content: "Unable to export. Please try again",
         key: "exportLoading",
       });
     }
@@ -498,7 +524,7 @@ const ViewGradePage = () => {
                 className="rounded-lg"
               />
               <Search
-                placeholder="Search by Grade ID, Trainee ID, or Subject ID"
+                placeholder="Search by Grade ID, Trainee ID, Full Name, or Subject ID"
                 allowClear
                 enterButton={<SearchOutlined />}
                 size="large"

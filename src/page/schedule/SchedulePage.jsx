@@ -607,13 +607,16 @@ const SchedulePage = () => {
           row[day] = (
             <div
               key={`schedule-${schedule.scheduleID}`}
-              onClick={() => navigate(`/course/${schedule.scheduleID}`)}
+              onClick={() => navigate(`/subject/${schedule.subjectID || schedule.subjectId}`)}
               className="space-y-2"
               schedule={schedule}
             >
               <div
                 className="font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
-                onClick={() => navigate(`/subject/${schedule.subjectID}`)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/subject/${schedule.subjectID || schedule.subjectId}`);
+                }}
               >
                 {schedule.subjectName}
               </div>
@@ -714,6 +717,12 @@ const SchedulePage = () => {
                 className="relative bg-white hover:bg-blue-50 p-4 rounded-xl shadow-sm 
                          border border-blue-100 transition-all duration-300
                            hover:shadow-md cursor-pointer group"
+                onClick={() => {
+                  if (content.props && content.props.schedule) {
+                    const schedule = content.props.schedule;
+                    navigate(`/subject/${schedule.subjectID || schedule.subjectId}`);
+                  }
+                }}
               >
                 {/* Active Indicator */}
                 {content.props &&

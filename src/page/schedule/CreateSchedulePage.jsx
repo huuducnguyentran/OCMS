@@ -187,6 +187,7 @@ const CreateSchedulePage = () => {
       // Create data according to API format
       const scheduleData = {
         subjectID: values.subjectID,
+        courseSubjectSpecialtyId: values.courseSubjectSpecialtyId,
         instructorID: values.instructorID,
         location: values.location,
         room: values.room,
@@ -278,14 +279,14 @@ const CreateSchedulePage = () => {
                   </Title>
 
                   <Form.Item
-                    name="subjectID"
-                    label="Subject"
+                    name="courseSubjectSpecialtyId"
+                    label="CourseSubjectSpecialtyId"
                     rules={[
-                      { required: true, message: "Please select a subject" },
+                      { required: true, message: "Please select a courseSubjectSpecialtyId" },
                     ]}
                   >
                     <Select
-                      placeholder="Select subject"
+                      placeholder="Select courseSubjectSpecialtyId"
                       loading={loading}
                       showSearch
                       optionFilterProp="children"

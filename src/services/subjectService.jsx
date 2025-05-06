@@ -60,3 +60,14 @@ export const deleteSubject = async (id) => {
     throw error;
   }
 };
+
+// Get trainees of a subject by subject ID
+export const getSubjectTrainees = async (id) => {
+  try {
+    const response = await axiosInstance.get(`/${API.GET_SUBJECT_TRAINEE}/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching subject trainees:", error?.response || error.message);
+    throw error;
+  }
+};

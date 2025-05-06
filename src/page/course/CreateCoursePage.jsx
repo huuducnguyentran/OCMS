@@ -67,6 +67,7 @@ const CreateCoursePage = () => {
 
       const formattedData = {
         courseId: values.courseId,
+        courseLevel: values.courseLevel,
         trainingPlanId: values.trainingPlanId,
         courseName: values.courseName,  
         description: values.description,
@@ -153,6 +154,21 @@ const CreateCoursePage = () => {
                 <Input 
                   placeholder="e.g., C-0001" 
                   className="rounded-lg py-3 px-4 text-lg" 
+                  size="large"
+                  maxLength={50}
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="courseLevel"
+                label={<Text strong className="text-lg">Course Level</Text>}
+                rules={[
+                  { required: true, message: "Course level is required" }
+                ]}
+              >
+                <Input
+                  placeholder="e.g., Initial"
+                  className="rounded-lg py-3 px-4 text-lg"
                   size="large"
                   maxLength={50}
                 />

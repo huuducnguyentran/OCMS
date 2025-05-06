@@ -100,16 +100,23 @@ const AssignTraineePage = () => {
       }
 
       const response = await assignTrainee(selectedFile);
-      
-      // Kiểm tra lỗi ngay cả khi status code là 200
-      if (response?.result?.failedCount > 0 || response?.result?.errors?.length > 0) {
-        // Hiển thị các lỗi từ response
-        const errorMessages = response?.result?.errors?.join(", ") || "Import completed with errors.";
-        message.error(errorMessages);
+
+      if (
+        response?.result?.failedCount > 0 ||
+        response?.result?.errors?.length > 0
+      ) {
+        const errorMessages = response?.result?.errors || [
+          "Import completed with errors.",
+        ];
+        setError(errorMessages);
+        message.error("Some trainees failed to be assigned.");
         return;
       }
-      
+
       message.success(response?.message || "File uploaded successfully.");
+      setTraineeData([]);
+      setSelectedFile(null);
+      setColumns([]);
     } catch (error) {
       message.error(error?.response?.data?.message || "Import failed.");
     } finally {
@@ -130,22 +137,30 @@ const AssignTraineePage = () => {
     };
 
     try {
+      setError(null); // Clear previous error
       const response = await assignTraineeManual(payload);
-      
-      // Kiểm tra lỗi ngay cả khi status code là 200
-      if (response?.result?.failedCount > 0 || response?.result?.errors?.length > 0) {
-        const errorMessages = response?.result?.errors?.join(", ") || "Assignment completed with errors.";
-        message.error(errorMessages);
+
+      const failed = response?.result?.failedCount > 0;
+      const errorMessages = response?.result?.errors;
+
+      if (failed || (errorMessages && errorMessages.length > 0)) {
+        const joinedMessage =
+          errorMessages?.join(", ") || "Assignment failed with errors.";
+        setError(joinedMessage); // Optional, if you still want to track the message internally
+        message.error(joinedMessage);
         return;
       }
-      
+
       message.success("Trainee assigned successfully!");
       setSelectedCourseId("");
       setSelectedTraineeId("");
       setNotes("");
-    } catch (error) {
-      message.error("Failed to assign Trainee.");
-      console.error(error);
+      setError(null);
+    } catch (err) {
+      const msg = err?.message || "Failed to assign Trainee.";
+      setError(msg); // Optional
+      message.error(msg);
+      console.error(err);
     }
   };
 
@@ -187,8 +202,28 @@ const AssignTraineePage = () => {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="h-5 w-5 text-red-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-700 font-semibold mb-2">
+                    Error:
+                  </p>
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              </div>
             </div>
           )}
 

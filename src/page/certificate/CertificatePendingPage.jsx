@@ -12,20 +12,16 @@ import {
   Checkbox,
   message,
   Tooltip,
-  Form,
-  Modal,
 } from "antd";
 import {
   getPendingCertificate,
   signCertificate,
-  revokeCertificate,
 } from "../../services/certificateService";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
-import { SearchOutlined, UndoOutlined } from "@ant-design/icons";
+import { SearchOutlined } from "@ant-design/icons";
 
-const { Title, Text } = Typography;
-const { TextArea } = Input;
+const { Title } = Typography;
 const { RangePicker } = DatePicker;
 
 const CertificatePendingPage = () => {
@@ -34,14 +30,9 @@ const CertificatePendingPage = () => {
   const [searchText, setSearchText] = useState("");
   const [filterDate, setFilterDate] = useState(null);
   const [selectedCertificates, setSelectedCertificates] = useState([]);
-  const [revokeModalVisible, setRevokeModalVisible] = useState(false);
-  const [currentCertificate, setCurrentCertificate] = useState(null);
-  const [revokingLoading, setRevokingLoading] = useState(false);
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
   const isHeadMaster = userRole === "HeadMaster";
-  const isTrainingStaff = userRole === "Training staff";
-  const [form] = Form.useForm();
 
   useEffect(() => {
     const fetchCertificates = async () => {
@@ -111,38 +102,6 @@ const CertificatePendingPage = () => {
     } catch (error) {
       console.error("Signing failed:", error);
       message.error("Failed to sign one or more certificates.");
-    }
-  };
-  const showRevokeModal = (e, certificate) => {
-    e.stopPropagation(); // Prevent clicking on the certificate card
-    setCurrentCertificate(certificate);
-    setRevokeModalVisible(true);
-  };
-
-  const handleRevoke = async () => {
-    try {
-      await form.validateFields();
-      const values = form.getFieldsValue();
-
-      setRevokingLoading(true);
-      await revokeCertificate(
-        currentCertificate.certificateId,
-        values.revokeReason
-      );
-
-      message.success("Certificate has been successfully revoked!");
-
-      // Refresh certificate list
-      const updatedData = await getPendingCertificate();
-      setCertificates(updatedData);
-
-      setRevokeModalVisible(false);
-      form.resetFields();
-    } catch (error) {
-      console.error("Error revoking certificate:", error);
-      message.error("Unable to revoke certificate. Please try again!");
-    } finally {
-      setRevokingLoading(false);
     }
   };
 
@@ -305,21 +264,6 @@ const CertificatePendingPage = () => {
                       className="w-full h-64 rounded-t-2xl"
                     />
                   }
-                  actions={
-                    isTrainingStaff
-                      ? [
-                          <Button
-                            key="revoke"
-                            danger
-                            type="text"
-                            icon={<UndoOutlined />}
-                            onClick={(e) => showRevokeModal(e, cert)}
-                          >
-                            Revoke
-                          </Button>,
-                        ]
-                      : undefined
-                  }
                 >
                   <div className="space-y-2 text-sm">
                     <p>
@@ -355,64 +299,6 @@ const CertificatePendingPage = () => {
           ))}
         </div>
       )}
-      {/* Revoke Certificate Modal */}
-      <Modal
-        title="Revoke Certificate"
-        open={revokeModalVisible}
-        onCancel={() => {
-          setRevokeModalVisible(false);
-          form.resetFields();
-        }}
-        footer={[
-          <Button
-            key="cancel"
-            onClick={() => {
-              setRevokeModalVisible(false);
-              form.resetFields();
-            }}
-          >
-            Cancel
-          </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            danger
-            loading={revokingLoading}
-            onClick={handleRevoke}
-          >
-            Revoke
-          </Button>,
-        ]}
-      >
-        {currentCertificate && (
-          <div className="mb-4">
-            <Text strong className="block mb-2">
-              Certificate: {currentCertificate.certificateCode}
-            </Text>
-            <Text className="block mb-4">
-              User ID: {currentCertificate.userId}
-            </Text>
-          </div>
-        )}
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="revokeReason"
-            label="Revocation Reason"
-            rules={[
-              {
-                required: true,
-                message:
-                  "Please enter the reason for revoking this certificate",
-              },
-            ]}
-          >
-            <TextArea
-              rows={4}
-              placeholder="Enter reason for certificate revocation..."
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
     </div>
   );
 };
