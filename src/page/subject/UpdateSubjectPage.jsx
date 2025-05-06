@@ -9,11 +9,10 @@ import {
   Row,
   Col,
   Card,
-  Select,
   Alert,
 } from "antd";
 import {
-  ArrowLeftOutlined,  
+  ArrowLeftOutlined,
   BookOutlined,
   TrophyOutlined,
 } from "@ant-design/icons";
@@ -23,7 +22,7 @@ import { applySubjectValidation } from "../../../utils/validationSchemas";
 import { courseService } from "../../services/courseService";
 const { TextArea } = Input;
 // const { Title, Paragraph, Text } = Typography;
-const { Option } = Select;
+// const { Option } = Select;
 const UpdateSubjectPage = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -62,7 +61,7 @@ const UpdateSubjectPage = () => {
     try {
       setLoading(true);
       setApiError(null);
-      
+
       await applySubjectValidation({
         ...values,
         subjectId,
@@ -77,19 +76,19 @@ const UpdateSubjectPage = () => {
       };
 
       console.log("Submitting subject data:", subjectData);
-      
+
       const response = await updateSubject(subjectData);
       console.log("Update response:", response);
-      
+
       message.success("Subject updated successfully!");
       navigate("/subject");
     } catch (error) {
       console.error("Error updating subject:", error);
-      
+
       if (error.response && error.response.data) {
         const errorData = error.response.data;
         setApiError(errorData);
-        
+
         if (errorData.message) {
           message.error(errorData.message);
         } else if (errorData.title) {
@@ -98,14 +97,14 @@ const UpdateSubjectPage = () => {
           const errorMessages = [];
           Object.entries(errorData.errors).forEach(([key, value]) => {
             if (Array.isArray(value)) {
-              errorMessages.push(`${key}: ${value.join(', ')}`);
+              errorMessages.push(`${key}: ${value.join(", ")}`);
             } else {
               errorMessages.push(`${key}: ${value}`);
             }
           });
-          
+
           if (errorMessages.length > 0) {
-            message.error(errorMessages.join('; '));
+            message.error(errorMessages.join("; "));
           } else {
             message.error("Validation failed. Please check your input.");
           }
@@ -115,7 +114,9 @@ const UpdateSubjectPage = () => {
       } else if (error.name === "ValidationError") {
         message.error(error.message);
       } else {
-        message.error("Failed to update subject. Please check your connection and try again.");
+        message.error(
+          "Failed to update subject. Please check your connection and try again."
+        );
       }
     } finally {
       setLoading(false);
@@ -154,11 +155,15 @@ const UpdateSubjectPage = () => {
           {/* Hiển thị thông báo lỗi từ API nếu có */}
           {apiError && (
             <Alert
-              message={apiError.message ? "Course Error" : "Failed to update subject"}
+              message={
+                apiError.message ? "Course Error" : "Failed to update subject"
+              }
               description={
                 <div>
                   {apiError.message ? (
-                    <div className="font-semibold text-red-600">{apiError.message}</div>
+                    <div className="font-semibold text-red-600">
+                      {apiError.message}
+                    </div>
                   ) : (
                     apiError.title || "An error occurred during the update."
                   )}
@@ -166,14 +171,16 @@ const UpdateSubjectPage = () => {
                     <ul className="mt-2">
                       {Object.entries(apiError.errors).map(([key, value]) => (
                         <li key={key} className="text-red-600">
-                          {key}: {Array.isArray(value) ? value.join(', ') : value}
+                          {key}:{" "}
+                          {Array.isArray(value) ? value.join(", ") : value}
                         </li>
                       ))}
                     </ul>
                   )}
                   {apiError.traceId && (
                     <p className="mt-2 text-xs">
-                      <span className="font-semibold">Trace ID:</span> {apiError.traceId}
+                      <span className="font-semibold">Trace ID:</span>{" "}
+                      {apiError.traceId}
                     </p>
                   )}
                 </div>
@@ -192,7 +199,6 @@ const UpdateSubjectPage = () => {
             onFinish={handleSubmit}
             className="space-y-10 max-w-full"
           >
-    
             {/* Subject Name - Full width */}
             <Form.Item
               name="subjectName"

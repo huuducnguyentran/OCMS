@@ -270,10 +270,10 @@ export const SubjectSchema = Yup.object({
     .max(50, "Subject ID must not exceed 50 characters")
     .trim(),
 
-  courseId: Yup.string()
-    .required("Course ID is required")
-    .max(50, "Course ID must not exceed 50 characters")
-    .trim(),
+  // courseId: Yup.string()
+  //   .required("Course ID is required")
+  //   .max(50, "Course ID must not exceed 50 characters")
+  //   .trim(),
 
   subjectName: Yup.string()
     .required("Subject name is required")
@@ -442,17 +442,17 @@ export const SchedulePageValidationSchema = {
 };
 
 // Add these helper functions at the top of validationSchemas.jsx
-const calculateAge = (birthDate) => {
-  const today = new Date();
-  const birth = new Date(birthDate);
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
+// const calculateAge = (birthDate) => {
+//   const today = new Date();
+//   const birth = new Date(birthDate);
+//   let age = today.getFullYear() - birth.getFullYear();
+//   const monthDiff = today.getMonth() - birth.getMonth();
 
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  return age;
-};
+//   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+//     age--;
+//   }
+//   return age;
+// };
 
 // Update the CreateAccountSchema validation messages to be more immediate
 export const CreateAccountSchema = Yup.object({

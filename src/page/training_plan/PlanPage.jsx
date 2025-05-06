@@ -1,5 +1,5 @@
 import {
-  Layout,
+  // Layout,
   Card,
   Button,
   Empty,
@@ -252,13 +252,13 @@ const PlanPage = () => {
   };
 
   // Add handleView function that was missing
-  const handleView = (planId) => {
-    if (planId) {
-      navigate(`/plan/view/${planId}`);
-    } else {
-      message.error("Invalid plan ID");
-    }
-  };
+  // const handleView = (planId) => {
+  //   if (planId) {
+  //     navigate(`/plan/view/${planId}`);
+  //   } else {
+  //     message.error("Invalid plan ID");
+  //   }
+  // };
 
   // Update useEffect to handle dependencies properly
   useEffect(() => {

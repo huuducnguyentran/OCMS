@@ -22,6 +22,7 @@ import dayjs from "dayjs";
 import { trainingPlanService } from "../../services/trainingPlanService";
 import { applyTrainingPlanValidation } from "../../../utils/validationSchemas";
 import axiosInstance from "../../../utils/axiosInstance";
+import { courseService } from "../../services/courseService";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -34,6 +35,8 @@ const EditPlanPage = () => {
   const [loading, setLoading] = useState(false);
   const [specialties, setSpecialties] = useState([]);
   const [loadingSpecialties, setLoadingSpecialties] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
 
   // Fetch specialties data
   useEffect(() => {
@@ -56,18 +59,43 @@ const EditPlanPage = () => {
   };
 
   useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoadingCourses(true);
+        const response = await courseService.getAllCourses();
+        if (response?.data) {
+          setCourses(response.data);
+        } else {
+          setCourses([]);
+          message.warning("No courses found. Please create a course first.");
+        }
+      } catch (error) {
+        message.error("Failed to load courses", error);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  useEffect(() => {
     const fetchPlanData = async () => {
       try {
         setLoading(true);
         const response = await trainingPlanService.getTrainingPlanById(planId);
 
+        console.log("Fetched training plan response:", response);
+
+        const data = response.plan; // FIXED: access the correct nested object
+
         form.setFieldsValue({
-          planName: response.planName,
-          description: response.desciption,
-          planLevel: response.planLevel,
-          startDate: dayjs(response.startDate),
-          endDate: dayjs(response.endDate),
-          specialtyId: response.specialtyId,
+          planName: data.planName,
+          description: data.description,
+          courseId: data.courseId,
+          startDate: dayjs(data.startDate),
+          endDate: dayjs(data.endDate),
+          specialtyId: data.specialtyId,
         });
       } catch (error) {
         console.error("Error fetching plan:", error);
@@ -79,6 +107,7 @@ const EditPlanPage = () => {
     };
 
     if (planId) {
+      console.log("Fetching plan for ID:", planId);
       fetchPlanData();
     }
   }, [planId, form]);
@@ -96,8 +125,8 @@ const EditPlanPage = () => {
       setLoading(true);
       const formattedData = {
         planName: values.planName.trim(),
-        Desciption: values.description.trim(),
-        planLevel: parseInt(values.planLevel),
+        description: values.description.trim(),
+        courseId: values.courseId,
         startDate: values.startDate.toISOString(),
         endDate: values.endDate.toISOString(),
         specialtyId: values.specialtyId,
@@ -145,6 +174,26 @@ const EditPlanPage = () => {
     });
   };
 
+  const renderCourseOptions = (courses) => {
+    return courses.map((course) => {
+      if (course.children && course.children.length > 0) {
+        return (
+          <Select.OptGroup key={course.courseId} label={course.courseName}>
+            <Option key={course.courseId} value={course.courseId}>
+              {course.courseName} ({course.courseId})
+            </Option>
+            {renderCourseOptions(course.children)}
+          </Select.OptGroup>
+        );
+      }
+      return (
+        <Option key={course.courseId} value={course.courseId}>
+          {course.courseName} ({course.courseId})
+        </Option>
+      );
+    });
+  };
+
   return (
     <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
       <Card
@@ -187,6 +236,7 @@ const EditPlanPage = () => {
               >
                 <Input
                   placeholder="Enter plan name"
+                  value="planName"
                   className="rounded-lg py-2 px-3 text-base"
                   maxLength={100}
                 />
@@ -213,18 +263,26 @@ const EditPlanPage = () => {
               </Form.Item>
 
               <Form.Item
-                name="planLevel"
-                label={<Text strong>Plan Level</Text>}
-                rules={[{ required: true, message: "Plan level is required" }]}
+                name="courseId"
+                label={<Text strong>Course</Text>}
+                rules={[{ required: true, message: "course Id is required" }]}
               >
                 <Select
-                  placeholder="Select level"
+                  placeholder="Select course"
+                  loading={loadingCourses}
+                  showSearch
+                  optionFilterProp="children"
                   className="rounded-lg"
                   dropdownClassName="rounded-lg shadow-md"
+                  notFoundContent={
+                    loadingCourses ? (
+                      <Spin size="small" />
+                    ) : (
+                      "No specialties found"
+                    )
+                  }
                 >
-                  <Option value={0}>Initial</Option>
-                  <Option value={1}>Recurrent</Option>
-                  <Option value={2}>Relearn</Option>
+                  {renderCourseOptions(courses)}
                 </Select>
               </Form.Item>
 
