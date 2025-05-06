@@ -98,11 +98,11 @@ const CreateTrainingPlanPage = () => {
       setLoading(true);
       const formattedData = {
         planName: values.planName.trim(),
-        Desciption: values.description.trim(),
-        // planLevel: parseInt(values.planLevel),
+        description: values.description.trim(),
         startDate: values.startDate.toISOString(),
         endDate: values.endDate.toISOString(),
-        // specialtyId: values.specialtyId,
+        courseId: values.courseId,
+        specialtyId: values.specialtyId,
       };
 
       await trainingPlanService.createTrainingPlan(formattedData);
@@ -256,22 +256,6 @@ const CreateTrainingPlanPage = () => {
                   ))}
                 </Select>
               </Form.Item>
-              <Form.Item
-                name="planLevel"
-                label={<Text strong>Plan Level</Text>}
-                rules={[{ required: true, message: "Plan level is required" }]}
-              >
-                <Select
-                  placeholder="Select level"
-                  className="rounded-lg"
-                  dropdownClassName="rounded-lg shadow-md"
-                >
-                  <Option value={0}>Initial</Option>
-                  <Option value={1}>Recurrent</Option>
-                  <Option value={2}>Relearn</Option>
-                </Select>
-              </Form.Item>
-
               <Form.Item
                 name="specialtyId"
                 label={<Text strong>Specialty</Text>}

@@ -172,13 +172,6 @@ export const TrainingPlanSchema = Yup.object({
     .max(1000, "Description must not exceed 1000 characters")
     .trim(),
 
-  planLevel: Yup.number()
-    .required("Plan level is required")
-    .oneOf(
-      [0, 1, 2],
-      "Plan level must be one of: Initial (0), Recurrent (1), Relearn (2)"
-    ),
-
   specialtyId: Yup.string().required("Specialty is required"),
 
   startDate: Yup.date()
