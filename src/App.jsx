@@ -80,6 +80,7 @@ import CertificateRevokedPage from "./page/certificate/CertificateRevokedPage";
 import DecisionDetailPage from "./page/decision/DecisionDetailPage";
 import AssignDepartmentPage from "./page/department/AssignDepartment";
 import TraineeGradePage from "./page/grade/TraineeGradePage";
+import EditSchedule from "./page/schedule/EditSchedule";
 
 function App() {
   return (
@@ -141,6 +142,10 @@ function App() {
                           <Route
                             path="/schedule/create"
                             element={<CreateSchedulePage />}
+                          />
+                          <Route
+                            path="/schedule/edit/:id"
+                            element={<EditSchedule />}
                           />
 
                           {/*  Training Plans */}

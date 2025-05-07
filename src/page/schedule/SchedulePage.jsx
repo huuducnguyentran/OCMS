@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Table, Spin, Empty, message, Select, Button } from "antd";
+import { Table, Spin, Empty, message, Select, Button, Tag, Tooltip, Popconfirm } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   CalendarOutlined,
@@ -11,6 +11,9 @@ import {
   TagsOutlined,
   CheckCircleOutlined,
   TagOutlined,
+  EnvironmentOutlined,
+  EditOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { trainingScheduleService } from "../../services/trainingScheduleService";
 import { SchedulePageValidationSchema } from "../../../utils/validationSchemas";
@@ -36,6 +39,7 @@ const SchedulePage = () => {
   // const [searchLoading, setSearchLoading] = useState(false);
   const searchTimeoutRef = useRef(null);
   const [columns, setColumns] = useState([]);
+  const [error, setError] = useState(null);
 
   // Initialize current week and generate week options when component mounts
   useEffect(() => {
@@ -148,7 +152,7 @@ const SchedulePage = () => {
         return;
       }
 
-      // Sử dụng response.schedules cho mọi role
+      // Sửa lại phần này để log response và kiểm tra cấu trúc dữ liệu
       let response;
       if (userRole === "Instructor") {
         response = await trainingScheduleService.getInstructorSubjects();
@@ -158,8 +162,12 @@ const SchedulePage = () => {
         response = await trainingScheduleService.getAllTrainingSchedules();
       }
 
+      console.log("API Response:", response); // Thêm log để kiểm tra
+
+      // Sửa lại cách set scheduleData
       if (response?.schedules && Array.isArray(response.schedules)) {
         setScheduleData(response.schedules);
+        console.log("Schedule Data after setting:", response.schedules); // Thêm log để kiểm tra
       } else {
         setScheduleData([]);
         message.info("No schedule data found");
@@ -192,6 +200,7 @@ const SchedulePage = () => {
       message.error("Cannot connect to server");
     }
     setScheduleData([]);
+    setError(error.message);
   };
 
   // Fetch data when selectedSubjectId changes
@@ -340,14 +349,12 @@ const SchedulePage = () => {
 
     let filteredData = scheduleData;
 
+    // Kiểm tra dữ liệu đầu vào
+    console.log("Filtered data before processing:", filteredData);
+
     // Lọc theo instructor nếu là Training Staff và có chọn instructor
-    if (
-      (userRole === "TrainingStaff" || userRole === "Training staff") &&
-      selectedInstructor
-    ) {
-      filteredData = scheduleData.filter(
-        (sch) => sch.instructorName === selectedInstructor
-      );
+    if ((userRole === "TrainingStaff" || userRole === "Training staff") && selectedInstructor) {
+      filteredData = scheduleData.filter(sch => sch.instructorName === selectedInstructor);
     }
 
     if (!Array.isArray(filteredData) || filteredData.length === 0) {
@@ -355,160 +362,143 @@ const SchedulePage = () => {
       return [];
     }
 
-    console.log("Filtered schedule data:", filteredData);
-
-    // Get all unique time slots and format them
-    const uniqueTimeSlots = [
-      ...new Set(filteredData.map((item) => item.classTime)),
-    ]
-      .filter(Boolean) // Filter out null/undefined
-      .map((time) => time.substring(0, 5)) // Normalize time format (remove seconds)
-      .sort()
-      .map((timeSlot) => {
-        // Find any schedule with this time to get duration info
-        const schedule = filteredData.find(
-          (s) => s.classTime && s.classTime.startsWith(timeSlot)
-        );
-        const duration = schedule?.subjectPeriod || "01:30:00";
-
-        // Calculate end time based on duration
-        const [startHour, startMinute] = timeSlot.split(":").map(Number);
-        const [durationHour, durationMinute] = duration.split(":").map(Number);
-
-        const totalMinutes = startMinute + durationMinute;
-        const endHour =
-          startHour + durationHour + Math.floor(totalMinutes / 60);
-        const endMinute = totalMinutes % 60;
-
-        const endTime = `${String(endHour).padStart(2, "0")}:${String(
-          endMinute
-        ).padStart(2, "0")}`;
-
-        return {
-          start: timeSlot,
-          end: endTime,
-          display: `${timeSlot} - ${endTime}`,
-        };
-      });
+    // Get unique time slots
+    const uniqueTimeSlots = [...new Set(filteredData.map(item => item.classTime))]
+      .filter(Boolean)
+      .map(time => time.substring(0, 5))
+      .sort();
 
     console.log("Unique time slots:", uniqueTimeSlots);
-
-    // Generate dates for the current/selected week
-    const weekDates = generateWeekDates(currentWeek);
-    console.log(
-      "Week dates:",
-      weekDates.map((d) => d.toDateString())
-    );
 
     return uniqueTimeSlots.map((timeSlot, timeIndex) => {
       const row = {
         key: `timeslot-${timeIndex}`,
-        timeFrame: timeSlot.display,
+        timeFrame: `${timeSlot} - ${addMinutesToTime(timeSlot, 90)}`, // Assuming 90 minutes duration
       };
 
-      const daysOfWeek = [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
-      ];
+      const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-      // For each day of the week
       daysOfWeek.forEach((day, dayIndex) => {
-        const currentDate = weekDates[dayIndex];
-
-        // Find schedules for this time slot and day
-        const matchingSchedules = filteredData.filter((schedule) => {
-          // Normalize time to remove seconds
-          const scheduleTime = schedule.classTime
-            ? schedule.classTime.substring(0, 5)
-            : "";
-
-          // Parse days of week
-          const scheduleDays = schedule.daysOfWeek
-            ? schedule.daysOfWeek.split(",").map((d) => d.trim())
-            : [];
-
-          const matchesDay = scheduleDays.includes(day);
-          const matchesTime = scheduleTime === timeSlot.start;
-          const isActive = isCourseActiveOnDate(schedule, currentDate);
-
-          console.log(
-            `Checking schedule: ${schedule.scheduleID}, day: ${day}, time: ${timeSlot.start}`,
-            {
-              matchesDay,
-              matchesTime,
-              isActive,
-              scheduleDays,
-              scheduleTime,
-            }
-          );
-
-          return matchesDay && matchesTime && isActive;
+        const matchingSchedules = filteredData.filter(schedule => {
+          const scheduleTime = schedule.classTime ? schedule.classTime.substring(0, 5) : "";
+          const scheduleDays = schedule.daysOfWeek ? schedule.daysOfWeek.split(",").map(d => d.trim()) : [];
+          return scheduleDays.includes(day) && scheduleTime === timeSlot;
         });
 
-        console.log(
-          `${day} at ${timeSlot.start} has ${matchingSchedules.length} matches`
-        );
-
         if (matchingSchedules.length > 0) {
-          // Tiếp tục phần code hiển thị lịch như cũ
           const schedule = matchingSchedules[0];
+          
+          // Chỉ hiển thị schedule có status Approved cho Instructor
+          if (userRole === "Instructor" && schedule.status !== "Approved") {
+            row[day] = (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center text-gray-400 p-4 bg-gray-50/50 rounded-xl border border-gray-100 
+                  hover:bg-gray-100/50 transition-colors">
+                  <ClockCircleOutlined className="text-2xl mb-2" />
+                  <div>No Class</div>
+                </div>
+              </div>
+            );
+            return;
+          }
+
           row[day] = (
             <div
               key={`schedule-${schedule.scheduleID}`}
-              onClick={() => navigate(`/subject/${schedule.subjectID || schedule.subjectId}`)}
-              className="space-y-2"
-              schedule={schedule}
+              onClick={() => navigate(`/subject/${schedule.subjectId}`)}
+              className="group cursor-pointer transform transition-all duration-300 hover:scale-[1.02]"
             >
-              <div
-                className="font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/subject/${schedule.subjectID || schedule.subjectId}`);
-                }}
+              <div className={`p-4 rounded-xl border transition-all duration-300
+                ${schedule.status === 'Approved' 
+                  ? 'border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-lg hover:border-green-300' 
+                  : userRole === "TrainingStaff" || userRole === "Training staff"
+                    ? 'border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50 hover:shadow-lg hover:border-yellow-300'
+                    : 'border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-lg hover:border-green-300'
+                }`}
               >
-                {schedule.subjectName}
-              </div>
-
-              <div className="text-xs font-medium text-indigo-600 bg-indigo-50 p-2 rounded">
-                <div className="flex items-center gap-2">
-                  <ClockCircleOutlined className="text-indigo-500" />
-                  <span>Time: {timeSlot.display}</span>
-                </div>
-                {schedule.subjectPeriod && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <ClockCircleOutlined className="text-indigo-500" />
-                    <span>
-                      Duration: {schedule.subjectPeriod.substring(0, 5)} hours
-                    </span>
+                {/* Status Badge - Chỉ hiển thị cho Training Staff hoặc status Approved */}
+                <div className="flex justify-between items-center mb-2">
+                  {(userRole === "TrainingStaff" || userRole === "Training staff" || schedule.status === "Approved") && (
+                    <Tag 
+                      className={`px-2 py-1 border-0 font-medium
+                        ${schedule.status === 'Approved' 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-yellow-100 text-yellow-700'
+                        }`}
+                    >
+                      {schedule.status}
+                    </Tag>
+                  )}
+                  
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {getCardActions(schedule)}
+                    <Tooltip title="View Subject Details">
+                      <BookOutlined className="text-blue-500" />
+                    </Tooltip>
                   </div>
-                )}
-              </div>
-
-              <div className="text-sm text-gray-500">
-                <div>{schedule.room || "N/A"}</div>
-                <div>{schedule.location || "N/A"}</div>
-                {schedule.courseId && <div>Course: {schedule.courseId}</div>}
-                <div className="flex items-center gap-2 mt-1">
-                  <UserSwitchOutlined className="text-gray-400" />
-                  <span>
-                    {schedule.instructorName} ({schedule.instructorID})
-                  </span>
                 </div>
+
+                {/* Subject Name */}
+                <div className="font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                  {schedule.subjectName}
+                </div>
+
+                {/* Schedule Details */}
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <ClockCircleOutlined className="text-gray-400" />
+                    <span>{timeSlot}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <CalendarOutlined className="text-gray-400" />
+                    <span>Room {schedule.room}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <UserSwitchOutlined className="text-gray-400" />
+                    <span>{schedule.instructorName}</span>
+                  </div>
+
+                  {/* Location with Tooltip */}
+                  <Tooltip title={schedule.location}>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <EnvironmentOutlined className="text-gray-400" />
+                      <span className="truncate">{schedule.location}</span>
+                    </div>
+                  </Tooltip>
+                </div>
+
+                {/* Hover Effect Indicator */}
+                <div className="h-1 w-0 group-hover:w-full bg-blue-500 mt-3 transition-all duration-300 rounded-full"></div>
               </div>
             </div>
           );
         } else {
-          row[day] = "No Class";
+          row[day] = (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center text-gray-400 p-4 bg-gray-50/50 rounded-xl border border-gray-100 
+                hover:bg-gray-100/50 transition-colors">
+                <ClockCircleOutlined className="text-2xl mb-2" />
+                <div>No Class</div>
+              </div>
+            </div>
+          );
         }
       });
 
       return row;
     });
+  };
+
+  // Helper function to add minutes to time
+  const addMinutesToTime = (time, minutes) => {
+    const [hours, mins] = time.split(':').map(Number);
+    const totalMinutes = hours * 60 + mins + minutes;
+    const newHours = Math.floor(totalMinutes / 60);
+    const newMins = totalMinutes % 60;
+    return `${String(newHours).padStart(2, '0')}:${String(newMins).padStart(2, '0')}`;
   };
 
   // Generate column headers with dates
@@ -517,173 +507,19 @@ const SchedulePage = () => {
 
     const columns = [
       {
-        title: (
-          <div className="flex items-center gap-2 text-indigo-700">
-            <ClockCircleOutlined />
-            <span>Time Slot</span>
-          </div>
-        ),
-        dataIndex: "timeFrame",
-        key: "timeFrame",
-        fixed: "left",
-        width: 180, // Tăng độ rộng để hiển thị đủ thời gian
-        render: (text) => (
-          <div className="font-medium text-gray-700 bg-gray-50 p-2 rounded-lg">
-            <div className="flex items-center gap-2">
-              <ClockCircleOutlined className="text-indigo-500" />
-              <span>{text}</span>
-            </div>
-          </div>
-        ),
+        title: 'Time',
+        dataIndex: 'timeFrame',
+        key: 'timeFrame',
+        width: 150,
+        fixed: 'left',
       },
-    ];
-
-    // Days of week with corresponding dates
-    const daysOfWeek = [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-      "Sunday",
-    ];
-
-    // Add column for each day with its date
-    daysOfWeek.forEach((day, index) => {
-      const date = weekDates[index];
-
-      columns.push({
-        title: (
-          <div className="text-center font-semibold text-indigo-700">
-            <div className="text-lg">{day}</div>
-            <div className="text-sm">{getFormattedDate(date)}</div>
-          </div>
-        ),
+      ...['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => ({
+        title: day,
         dataIndex: day,
         key: day,
         width: 200,
-        render: (content) => (
-          <div className="p-2">
-            {content !== "No Class" ? (
-              <div
-                className="relative bg-white hover:bg-blue-50 p-4 rounded-xl shadow-sm 
-                         border border-blue-100 transition-all duration-300
-                           hover:shadow-md cursor-pointer group"
-                onClick={() => {
-                  if (content.props && content.props.schedule) {
-                    const schedule = content.props.schedule;
-                    navigate(`/subject/${schedule.subjectID || schedule.subjectId}`);
-                  }
-                }}
-              >
-                {/* Active Indicator */}
-                {content.props &&
-                  content.props.schedule &&
-                  isCourseActiveOnDate(content.props.schedule, new Date()) && (
-                    <div className="absolute -top-1 -right-1">
-                      <div className="relative">
-                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                        <div className="absolute top-0 right-0">
-                          <div className="w-3 h-3 bg-green-400 rounded-full animate-ping"></div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                {/* Content */}
-                <div className="space-y-3">
-                  {/* Subject Name with Icon */}
-                  <div className="font-semibold text-blue-600 group-hover:text-blue-700 flex items-center gap-2">
-                    <BookOutlined className="text-lg" />
-                    <span>
-                      {content.props?.children[0]?.props?.children || "N/A"}
-                    </span>
-                  </div>
-
-                  {/* Date Range with Icons */}
-                  <div className="text-xs font-medium text-indigo-600 bg-indigo-50 p-2 rounded">
-                    <div className="flex items-center gap-2 mb-1">
-                      <CalendarOutlined className="text-indigo-500" />
-                      <span>
-                        Room:{" "}
-                        {
-                          content.props?.children[2]?.props?.children[0]?.props
-                            ?.children
-                        }
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CalendarOutlined className="text-indigo-500" />
-                      <span>
-                        Location:{" "}
-                        {
-                          content.props?.children[2]?.props?.children[1]?.props
-                            ?.children
-                        }
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Additional Details */}
-                  <div className="text-sm text-gray-500 space-y-1">
-                    {content.props?.children[4]?.props?.children[2] && (
-                      <div className="flex items-center gap-2">
-                        <TagOutlined className="text-gray-400" />
-                        <span>
-                          Course:{" "}
-                          {
-                            content.props?.children[4]?.props?.children[2]
-                              ?.props?.children[1]
-                          }
-                        </span>
-                      </div>
-                    )}
-                    {content.props?.children[4]?.props?.children[3] && (
-                      <div className="flex items-center gap-2">
-                        <ClockCircleOutlined className="text-gray-400" />
-                        <span>
-                          {
-                            content.props.children[4].props.children[3].props
-                              .children
-                          }
-                        </span>
-                      </div>
-                    )}
-                    {userRole === "TrainingStaff" &&
-                      content.props?.children[4]?.props?.children[4] && (
-                        <div className="flex items-center gap-2">
-                          <UserSwitchOutlined className="text-gray-400" />
-                          <span>
-                            {
-                              content.props.children[4].props.children[4].props
-                                .children
-                            }
-                          </span>
-                        </div>
-                      )}
-                    {userRole === "TrainingStaff" &&
-                      content.props?.children[4]?.props?.children[5] && (
-                        <div className="flex items-center gap-2">
-                          {
-                            content.props.children[4].props.children[5].props
-                              .children
-                          }
-                        </div>
-                      )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center text-gray-400 p-4 bg-gray-50/50 rounded-xl border border-gray-100">
-                <ClockCircleOutlined className="text-2xl mb-2" />
-                <div>No Class</div>
-              </div>
-            )}
-          </div>
-        ),
-      });
-    });
+      }))
+    ];
 
     return columns;
   };
@@ -915,6 +751,127 @@ const SchedulePage = () => {
   //   return true;
   // };
 
+  // Update the status legend section
+  const renderStatusLegend = () => (
+    <div className="space-y-4">
+      <h4 className="font-medium text-gray-700 flex items-center gap-2">
+        <TagsOutlined className="text-indigo-600" />
+        Schedule Status
+      </h4>
+      <div className="flex flex-wrap gap-4">
+        <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
+          <div className="w-3 h-3 rounded-full bg-green-500" />
+          <span className="text-sm text-gray-600">Approved</span>
+        </div>
+        
+        {/* Chỉ hiển thị Pending status cho Training Staff */}
+        {(userRole === "TrainingStaff" || userRole === "Training staff") && (
+          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
+            <div className="w-3 h-3 rounded-full bg-yellow-500" />
+            <span className="text-sm text-gray-600">Pending</span>
+          </div>
+        )}
+        
+        <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
+          <div className="w-3 h-3 rounded-full bg-yellow-500" />
+          <span className="text-sm text-gray-600">Pending</span>
+        </div>
+        <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
+          <div className="w-3 h-3 rounded-full bg-gray-300" />
+          <span className="text-sm text-gray-600">No Class</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Update the summary section
+  const renderScheduleSummary = () => {
+    const approvedCount = scheduleData.filter(s => s.status === 'Approved').length;
+    const pendingCount = scheduleData.filter(s => s.status === 'Pending').length;
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div className="bg-green-50 rounded-xl p-4 border border-green-100">
+          <div className="flex items-center gap-3">
+            <CheckCircleOutlined className="text-green-600 text-xl" />
+            <div>
+              <h4 className="font-medium text-green-700">Approved Classes</h4>
+              <p className="text-sm text-green-600">{approvedCount} classes</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-100">
+          <div className="flex items-center gap-3">
+            <ClockCircleOutlined className="text-yellow-600 text-xl" />
+            <div>
+              <h4 className="font-medium text-yellow-700">Pending Classes</h4>
+              <p className="text-sm text-yellow-600">{pendingCount} classes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const handleEditSchedule = (schedule) => {
+    navigate(`/schedule/edit/${schedule.scheduleID}`, {
+      state: { scheduleData: schedule }
+    });
+  };
+
+  // Thêm hàm getCardActions
+  const getCardActions = (schedule) => {
+    const actions = [];
+
+    // Chỉ hiển thị nút Edit và Delete cho Training Staff
+    if (userRole === "TrainingStaff" || userRole === "Training staff") {
+      actions.push(
+        <div className="flex items-center gap-2 mt-2">
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditSchedule(schedule);
+            }}
+            className="text-blue-500 hover:text-blue-700"
+          />
+          <Popconfirm
+            title="Are you sure you want to delete this schedule?"
+            onConfirm={(e) => {
+              e.stopPropagation();
+              handleDeleteSchedule(schedule.scheduleID);
+            }}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button
+              type="text"
+              icon={<DeleteOutlined />}
+              onClick={(e) => e.stopPropagation()}
+              className="text-red-500 hover:text-red-700"
+            />
+          </Popconfirm>
+        </div>
+      );
+    }
+
+    return actions;
+  };
+
+  // Thêm hàm xử lý delete
+  const handleDeleteSchedule = async (scheduleId) => {
+    try {
+      await trainingScheduleService.deleteSchedule(scheduleId);
+      message.success("Schedule deleted successfully");
+      fetchScheduleData(); // Refresh data after deletion
+    } catch (error) {
+      message.error("Failed to delete schedule");
+      console.error(error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
       <div className="max-w-[1500px] mx-auto">
@@ -991,6 +948,10 @@ const SchedulePage = () => {
                 Loading your schedule...
               </span>
             </div>
+          ) : error ? (
+            <div className="text-center text-red-500">
+              {error}
+            </div>
           ) : scheduleData.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-6">
               <div className="p-6 bg-indigo-50 rounded-full animate-pulse">
@@ -1059,81 +1020,23 @@ const SchedulePage = () => {
 
               {/* Status and Legend Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
-                {/* Legend */}
-                <div className="space-y-4">
-                  <h4 className="font-medium text-gray-700 flex items-center gap-2">
-                    <TagsOutlined className="text-indigo-600" />
-                    Schedule Status
-                  </h4>
-                  <div className="flex flex-wrap gap-4">
-                    <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
-                      <div className="relative">
-                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                        <div className="absolute -top-1 -right-1">
-                          <div className="w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
-                        </div>
-                      </div>
-                      <span className="text-sm text-gray-600">
-                        Active Class
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
-                      <div className="w-3 h-3 rounded-full bg-gray-300"></div>
-                      <span className="text-sm text-gray-600">No Class</span>
-                    </div>
-                    {userRole === "TrainingStaff" && (
-                      <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
-                        <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                        <span className="text-sm text-gray-600">
-                          Pending Schedule
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Quick Info */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <InfoCircleOutlined className="text-blue-600 text-lg" />
-                    </div>
-                    <div className="space-y-1">
-                      <h4 className="font-medium text-blue-700">
-                        Schedule Information
-                      </h4>
-                      <p className="text-sm text-blue-600/90">
-                        Click on any class card to view detailed information.
-                        Active classes are highlighted with a green indicator.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                {renderStatusLegend()}
+                {renderScheduleSummary()}
               </div>
 
-              {/* Active Classes Summary */}
-              <div className="bg-green-50 rounded-xl p-4 border border-green-100">
+              {/* Quick Info */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <CheckCircleOutlined className="text-green-600 text-lg" />
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <InfoCircleOutlined className="text-blue-600 text-lg" />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-medium text-green-700">
-                        Active Classes
-                      </h4>
-                      <div className="px-2 py-0.5 bg-green-100 rounded text-sm text-green-700">
-                        {
-                          scheduleData.filter((schedule) =>
-                            isCourseActiveOnDate(schedule, new Date())
-                          ).length
-                        }{" "}
-                        Classes
-                      </div>
-                    </div>
-                    <p className="text-sm text-green-600 mt-1">
-                      You have active classes scheduled for this week. Click on
-                      any class for more details.
+                  <div className="space-y-1">
+                    <h4 className="font-medium text-blue-700">
+                      Schedule Information
+                    </h4>
+                    <p className="text-sm text-blue-600/90">
+                      Click on any class card to view detailed information.
+                      Active classes are highlighted with a green indicator.
                     </p>
                   </div>
                 </div>
