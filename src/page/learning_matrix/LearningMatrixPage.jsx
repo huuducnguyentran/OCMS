@@ -54,6 +54,8 @@ const LearningMatrixPage = () => {
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState(null);
   const [distinctCourses, setDistinctCourses] = useState([]);
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [filteredSubjects, setFilteredSubjects] = useState([]);
+  const [filteredSpecialties, setFilteredSpecialties] = useState([]);
   const navigate = useNavigate();
 
   // Load initial data
@@ -142,6 +144,10 @@ const LearningMatrixPage = () => {
       });
       
       setMatrixData(matrix);
+      
+      // Initially set filtered subjects and specialties to all
+      setFilteredSubjects(subjects);
+      setFilteredSpecialties(specialties);
     }
   }, [learningMatrixData, subjects, specialties]);
 
@@ -290,6 +296,35 @@ const LearningMatrixPage = () => {
     });
   };
 
+  // Handle search
+  const handleSearch = (value) => {
+    setSearchText(value);
+    
+    if (!value.trim()) {
+      // If search text is empty, reset filters
+      setFilteredSubjects(subjects);
+      setFilteredSpecialties(specialties);
+      return;
+    }
+    
+    const searchLower = value.toLowerCase();
+    
+    // Filter subjects based on search
+    const matchedSubjects = subjects.filter(subject => 
+      subject.subjectName?.toLowerCase().includes(searchLower) || 
+      subject.subjectId?.toLowerCase().includes(searchLower)
+    );
+    
+    // Filter specialties based on search
+    const matchedSpecialties = specialties.filter(specialty => 
+      specialty.specialtyName?.toLowerCase().includes(searchLower) || 
+      specialty.specialtyId?.toLowerCase().includes(searchLower)
+    );
+    
+    setFilteredSubjects(matchedSubjects);
+    setFilteredSpecialties(matchedSpecialties);
+  };
+
   // Render matrix table for the selected course
   const renderMatrixTable = () => {
     if (!selectedCourseId || !matrixData[selectedCourseId]) {
@@ -300,10 +335,11 @@ const LearningMatrixPage = () => {
     
     // Count relationships for each subject
     const subjectCounts = {};
-    subjects.forEach(subject => {
+    filteredSubjects.forEach(subject => {
       subjectCounts[subject.subjectId] = 0;
-      specialties.forEach(specialty => {
-        if (courseMatrix[specialty.specialtyId][subject.subjectId]) {
+      filteredSpecialties.forEach(specialty => {
+        if (courseMatrix[specialty.specialtyId] && 
+            courseMatrix[specialty.specialtyId][subject.subjectId]) {
           subjectCounts[subject.subjectId]++;
         }
       });
@@ -311,22 +347,23 @@ const LearningMatrixPage = () => {
     
     // Count relationships for each specialty
     const specialtyCounts = {};
-    specialties.forEach(specialty => {
+    filteredSpecialties.forEach(specialty => {
       specialtyCounts[specialty.specialtyId] = 0;
-      subjects.forEach(subject => {
-        if (courseMatrix[specialty.specialtyId][subject.subjectId]) {
+      filteredSubjects.forEach(subject => {
+        if (courseMatrix[specialty.specialtyId] && 
+            courseMatrix[specialty.specialtyId][subject.subjectId]) {
           specialtyCounts[specialty.specialtyId]++;
         }
       });
     });
     
     // Sort subjects by relationship count (descending)
-    const sortedSubjects = [...subjects].sort((a, b) => {
+    const sortedSubjects = [...filteredSubjects].sort((a, b) => {
       return subjectCounts[b.subjectId] - subjectCounts[a.subjectId];
     });
     
     // Sort specialties by relationship count (descending)
-    const sortedSpecialties = [...specialties].sort((a, b) => {
+    const sortedSpecialties = [...filteredSpecialties].sort((a, b) => {
       return specialtyCounts[b.specialtyId] - specialtyCounts[a.specialtyId];
     });
     
@@ -373,6 +410,7 @@ const LearningMatrixPage = () => {
         width: 120,
         align: "center",
         render: (text, record) => {
+          if (!courseMatrix[record.specialtyId]) return null;
           const item = courseMatrix[record.specialtyId][subject.subjectId];
           return item ? (
             <Button 
@@ -412,7 +450,9 @@ const LearningMatrixPage = () => {
       specialtyName: specialty.specialtyName,
       specialty: specialty.specialtyName,
       ...subjects.reduce((acc, subject) => {
-        acc[subject.subjectId] = courseMatrix[specialty.specialtyId][subject.subjectId];
+        if (courseMatrix[specialty.specialtyId]) {
+          acc[subject.subjectId] = courseMatrix[specialty.specialtyId][subject.subjectId];
+        }
         return acc;
       }, {})
     }));
@@ -464,27 +504,55 @@ const LearningMatrixPage = () => {
           <Spin spinning={loading}>
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-                <div>
-                  <Text strong style={{ marginRight: 8 }}>Select Course:</Text>
-                  <Select
-                    style={{ width: 300 }}
-                    value={selectedCourseId}
-                    onChange={handleCourseChange}
-                  >
-                    {distinctCourses.map(course => (
-                      <Option key={course.courseId} value={course.courseId}>
-                        {course.courseName} ({course.courseId})
-                      </Option>
-                    ))}
-                  </Select>
+                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                  <div>
+                    <Text strong style={{ marginRight: 8 }}>Select Course:</Text>
+                    <Select
+                      style={{ width: 300 }}
+                      value={selectedCourseId}
+                      onChange={handleCourseChange}
+                    >
+                      {distinctCourses.map(course => (
+                        <Option key={course.courseId} value={course.courseId}>
+                          {course.courseName} ({course.courseId})
+                        </Option>
+                      ))}
+                    </Select>
+                  </div>
+                  
+                  <div style={{ width: "300px" }}>
+                    <Input.Search
+                      placeholder="Search by subject or specialty name/ID"
+                      allowClear
+                      enterButton={<SearchOutlined />}
+                      size="middle"
+                      value={searchText}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      onSearch={handleSearch}
+                    />
+                  </div>
                 </div>
-                <Button 
-                  icon={<ReloadOutlined />} 
-                  onClick={fetchData}
-                  style={{ borderRadius: "6px" }}
-                >
-                  Refresh Data
-                </Button>
+                
+                <Space>
+                  {searchText && (
+                    <div style={{ marginRight: "8px" }}>
+                      <Text type="secondary">
+                        Found: {filteredSubjects.length} subjects, {filteredSpecialties.length} specialties
+                      </Text>
+                    </div>
+                  )}
+                  <Button 
+                    icon={<ReloadOutlined />} 
+                    onClick={() => {
+                      fetchData();
+                      setSearchText('');
+                      handleSearch('');
+                    }}
+                    style={{ borderRadius: "6px" }}
+                  >
+                    Refresh Data
+                  </Button>
+                </Space>
               </div>
               
               {renderMatrixTable()}

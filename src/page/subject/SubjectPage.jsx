@@ -9,6 +9,7 @@ import {
   Typography,
   Tooltip,
   Select,
+  Pagination,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
@@ -38,6 +39,8 @@ const SubjectPage = () => {
   const [filteredSubjects, setFilteredSubjects] = useState([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
   const [scheduleData, setScheduleData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 9;
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -260,6 +263,23 @@ const SubjectPage = () => {
     );
   };
 
+  // Tính toán danh sách môn học hiển thị trên trang hiện tại
+  const getCurrentPageData = () => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredSubjects.slice(startIndex, endIndex);
+  };
+
+  // Xử lý khi thay đổi trang
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    // Cuộn lên đầu khi chuyển trang
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Hero Section */}
@@ -316,110 +336,126 @@ const SubjectPage = () => {
             }
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate__animated animate__fadeInUp">
-            {filteredSubjects.map((subject) => (
-              <Card
-                key={subject.subjectId}
-                
-                className="hover:shadow-xl transition-shadow duration-300 rounded-xl border-none bg-white overflow-hidden"
-                actions={[
-                  <Tooltip title="View Details" key="view-tooltip">
-                    <EyeOutlined
-                      key="view"
-                      className="text-blue-500 text-lg hover:text-blue-700"
-                      onClick={() => navigate(`/subject/${subject.subjectId}`)}
-                    />
-                  </Tooltip>,
-                  !["Trainee", "Instructor"].includes(
-                    sessionStorage.getItem("role")
-                  ) && (
-                    <Tooltip title="Edit Subject" key="edit-tooltip">
-                      <EditOutlined
-                        key="edit"
-                        className="text-green-500 text-lg hover:text-green-700"
-                        onClick={() =>
-                          navigate(`/subject-edit/${subject.subjectId}`)
-                        }
+          <div className="animate__animated animate__fadeInUp">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {getCurrentPageData().map((subject) => (
+                <Card
+                  key={subject.subjectId}
+                  className="hover:shadow-xl transition-shadow duration-300 rounded-xl border-none bg-white overflow-hidden"
+                  actions={[
+                    <Tooltip title="View Details" key="view-tooltip">
+                      <EyeOutlined
+                        key="view"
+                        className="text-blue-500 text-lg hover:text-blue-700"
+                        onClick={() => navigate(`/subject/${subject.subjectId}`)}
                       />
-                    </Tooltip>
-                  ),
-                  !["Trainee", "Instructor"].includes(
-                    sessionStorage.getItem("role")
-                  ) && (
-                    <Tooltip title="Delete Subject" key="delete-tooltip">
-                      <DeleteOutlined
-                        key="delete"
-                        className="text-red-500 text-lg hover:text-red-700"
-                        onClick={() => handleDelete(subject.subjectId)}
-                      />
-                    </Tooltip>
-                  ),
-                ].filter(Boolean)}
-              >
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <Title
-                        level={4}
-                        className="text-xl font-bold text-gray-800 mb-2"
-                        ellipsis={{ rows: 2, expandable: false, symbol: '...' }}
-                      >
-                        {subject.subjectName} 
-                      </Title>
-                      <div className="flex gap-2 mb-2">
-                        <Tag color="blue">
-                          {subject.subjectId}
-                        </Tag>
-                        {subject.specialtyId && (
-                          <Tag color="purple">
-                            {subject.specialtyId}
+                    </Tooltip>,
+                    !["Trainee", "Instructor"].includes(
+                      sessionStorage.getItem("role")
+                    ) && (
+                      <Tooltip title="Edit Subject" key="edit-tooltip">
+                        <EditOutlined
+                          key="edit"
+                          className="text-green-500 text-lg hover:text-green-700"
+                          onClick={() =>
+                            navigate(`/subject-edit/${subject.subjectId}`)
+                          }
+                        />
+                      </Tooltip>
+                    ),
+                    !["Trainee", "Instructor"].includes(
+                      sessionStorage.getItem("role")
+                    ) && (
+                      <Tooltip title="Delete Subject" key="delete-tooltip">
+                        <DeleteOutlined
+                          key="delete"
+                          className="text-red-500 text-lg hover:text-red-700"
+                          onClick={() => handleDelete(subject.subjectId)}
+                        />
+                      </Tooltip>
+                    ),
+                  ].filter(Boolean)}
+                >
+                  <div className="p-4">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <Title
+                          level={4}
+                          className="text-xl font-bold text-gray-800 mb-2"
+                          ellipsis={{ rows: 2, expandable: false, symbol: '...' }}
+                        >
+                          {subject.subjectName} 
+                        </Title>
+                        <div className="flex gap-2 mb-2">
+                          <Tag color="blue">
+                            {subject.subjectId}
                           </Tag>
-                        )}
+                          {subject.specialtyId && (
+                            <Tag color="purple">
+                              {subject.specialtyId}
+                            </Tag>
+                          )}
+                        </div>
                       </div>
+                      <BookOutlined className="text-2xl text-blue-500" />
                     </div>
-                    <BookOutlined className="text-2xl text-blue-500" />
-                  </div>
 
-                  <Paragraph
-                    ellipsis={{ rows: 2 }}
-                    className="text-gray-600 mb-4"
-                  >
-                    {subject.description || "No description provided"}
-                  </Paragraph>
+                    <Paragraph
+                      ellipsis={{ rows: 2 }}
+                      className="text-gray-600 mb-4"
+                    >
+                      {subject.description || "No description provided"}
+                    </Paragraph>
 
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                    <Tooltip title="Credits">
-                      <Tag
-                        color={
-                          subject.credits <= 3
-                            ? "success"
-                            : subject.credits <= 6
-                            ? "warning"
-                            : "error"
-                        }
-                        className="px-3 py-1 flex items-center gap-1"
-                      >
-                        <BookOutlined /> {subject.credits} Credits
-                      </Tag>
-                    </Tooltip>
-                    <Tooltip title="Passing Score">
-                      <Tag
-                        color={
-                          subject.passingScore <= 4
-                            ? "success"
-                            : subject.passingScore <= 7
-                            ? "warning"
-                            : "error"
-                        }
-                        className="px-3 py-1 flex items-center gap-1"
-                      >
-                        <TrophyOutlined /> Pass: {subject.passingScore}
-                      </Tag>
-                    </Tooltip>
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                      <Tooltip title="Credits">
+                        <Tag
+                          color={
+                            subject.credits <= 3
+                              ? "success"
+                              : subject.credits <= 6
+                              ? "warning"
+                              : "error"
+                          }
+                          className="px-3 py-1 flex items-center gap-1"
+                        >
+                          <BookOutlined /> {subject.credits} Credits
+                        </Tag>
+                      </Tooltip>
+                      <Tooltip title="Passing Score">
+                        <Tag
+                          color={
+                            subject.passingScore <= 4
+                              ? "success"
+                              : subject.passingScore <= 7
+                              ? "warning"
+                              : "error"
+                          }
+                          className="px-3 py-1 flex items-center gap-1"
+                        >
+                          <TrophyOutlined /> Pass: {subject.passingScore}
+                        </Tag>
+                      </Tooltip>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
+            </div>
+            
+            {/* Pagination */}
+            {filteredSubjects.length > pageSize && (
+              <div className="flex justify-center mt-8">
+                <Pagination
+                  current={currentPage}
+                  onChange={handlePageChange}
+                  total={filteredSubjects.length}
+                  pageSize={pageSize}
+                  showSizeChanger={false}
+                  showQuickJumper
+                  showTotal={(total) => `Tổng cộng ${total} môn học`}
+                />
+              </div>
+            )}
           </div>
         )}
 

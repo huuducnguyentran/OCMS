@@ -11,6 +11,8 @@ import {
   Typography,
   Divider,
   Form,
+  Table,
+  Empty,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -23,6 +25,7 @@ import { trainingPlanService } from "../../services/trainingPlanService";
 import { applyTrainingPlanValidation } from "../../../utils/validationSchemas";
 import axiosInstance from "../../../utils/axiosInstance";
 import { courseService } from "../../services/courseService";
+import { learningMatrixService } from "../../services/learningMatrixService";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -36,6 +39,8 @@ const CreateTrainingPlanPage = () => {
   const [courses, setCourses] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [loadingSpecialties, setLoadingSpecialties] = useState(false);
+  const [subjects, setSubjects] = useState([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const navigate = useNavigate();
 
   // Fetch specialties data
@@ -81,6 +86,99 @@ const CreateTrainingPlanPage = () => {
 
     fetchCourses();
   }, []); // <-- empty dependency array ensures it runs only once on mount
+
+  // Fetch subjects when both courseId and specialtyId are selected
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      const courseId = form.getFieldValue("courseId");
+      const specialtyId = form.getFieldValue("specialtyId");
+      
+      if (courseId && specialtyId) {
+        try {
+          setLoadingSubjects(true);
+          const response = await learningMatrixService.getSubjectsForCourseAndSpecialty(courseId, specialtyId);
+          if (response?.data) {
+            setSubjects(response.data);
+          } else {
+            setSubjects([]);
+            message.info("No subjects found for this course and specialty.");
+          }
+        } catch (error) {
+          setSubjects([]);
+        } finally {
+          setLoadingSubjects(false);
+        }
+      }
+    };
+
+    fetchSubjects();
+  }, [form.getFieldValue("courseId"), form.getFieldValue("specialtyId")]);
+
+  // Handle course and specialty selection changes
+  const handleCourseChange = (value) => {
+    form.setFieldsValue({ courseId: value });
+    // Reset subjects when course changes
+    setSubjects([]);
+  };
+
+  const handleSpecialtyChange = (value) => {
+    form.setFieldsValue({ specialtyId: value });
+    // Reset subjects when specialty changes
+    setSubjects([]);
+  };
+
+  // Trigger subject fetch when both fields are selected
+  const fetchSubjectsIfReady = () => {
+    const courseId = form.getFieldValue("courseId");
+    const specialtyId = form.getFieldValue("specialtyId");
+    
+    if (courseId && specialtyId) {
+      const fetchSubjects = async () => {
+        try {
+          setLoadingSubjects(true);
+          const response = await learningMatrixService.getSubjectsForCourseAndSpecialty(courseId, specialtyId);
+          if (response?.data) {
+            setSubjects(response.data);
+          } else {
+            setSubjects([]);
+            message.info("Không tìm thấy môn học nào cho khóa học và chuyên ngành này.");
+          }
+        } catch (error) {
+          console.error("Error fetching subjects:", error);
+          message.error("No subjects found for this course and specialty.");
+          setSubjects([]);
+        } finally {
+          setLoadingSubjects(false);
+        }
+      };
+      
+      fetchSubjects();
+    }
+  };
+
+  // Columns for subjects table
+  const subjectColumns = [
+    {
+      title: "Subject Code",
+      dataIndex: "subjectId",
+      key: "subjectId",
+      width: 150,
+      ellipsis: true,
+    },
+    {
+      title: "Subject Name",
+      dataIndex: "subjectName",
+      key: "subjectName",
+      width: 300,
+      ellipsis: true,
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+      ellipsis: true,
+    },
+  ];
 
   // Cập nhật hàm disablePastDates
   const disablePastDates = (current) => {
@@ -230,6 +328,10 @@ const CreateTrainingPlanPage = () => {
                   showSearch
                   allowClear
                   optionFilterProp="children"
+                  onChange={(value) => {
+                    handleCourseChange(value);
+                    fetchSubjectsIfReady();
+                  }}
                   notFoundContent={
                     loadingCourses ? (
                       <div className="text-center py-4">
@@ -268,6 +370,10 @@ const CreateTrainingPlanPage = () => {
                   optionFilterProp="children"
                   className="rounded-lg"
                   dropdownClassName="rounded-lg shadow-md"
+                  onChange={(value) => {
+                    handleSpecialtyChange(value);
+                    fetchSubjectsIfReady();
+                  }}
                   notFoundContent={
                     loadingSpecialties ? (
                       <Spin size="small" />
@@ -279,6 +385,38 @@ const CreateTrainingPlanPage = () => {
                   {renderSpecialtyOptions(specialties)}
                 </Select>
               </Form.Item>
+
+              {/* Subjects Table */}
+              <div className="col-span-2 mt-4">
+                <Card 
+                  title="Subjects List" 
+                  size="small"
+                  className="shadow-sm"
+                  extra={
+                    <Spin spinning={loadingSubjects} size="small" />
+                  }
+                >
+                  {subjects.length > 0 ? (
+                    <Table 
+                      dataSource={subjects} 
+                      columns={subjectColumns} 
+                      rowKey="subjectId"
+                      size="small"
+                      pagination={{ pageSize: 5 }}
+                      scroll={{ x: 'max-content' }}
+                    />
+                  ) : (
+                    <Empty 
+                      description={
+                        form.getFieldValue("courseId") && form.getFieldValue("specialtyId")
+                          ? "No subjects found"
+                          : "Please select a course and specialty"
+                      }
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    />
+                  )}
+                </Card>
+              </div>
 
               <Form.Item
                 name="startDate"
