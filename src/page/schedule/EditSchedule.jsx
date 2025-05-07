@@ -161,8 +161,8 @@ const EditSchedule = () => {
         daysOfWeek: daysOfWeekNumbers,
         classTime: values.classTime.format("HH:mm:ss"),
         subjectPeriod: values.subjectPeriod.format("HH:mm:ss"),
-        startDateTime: values.startDateTime.format("YYYY-MM-DDTHH:mm:ss.SSS"),
-        endDateTime: values.endDateTime.format("YYYY-MM-DDTHH:mm:ss.SSS"),
+        startDay: values.startDateTime.format("YYYY-MM-DDTHH:mm:ss.SSS"),
+        endDay: values.endDateTime.format("YYYY-MM-DDTHH:mm:ss.SSS"),
         status: initialSchedule?.status || "Pending"
       };
 

@@ -387,6 +387,21 @@ const SchedulePage = () => {
 
         if (matchingSchedules.length > 0) {
           const schedule = matchingSchedules[0];
+          
+          // Chỉ hiển thị schedule có status Approved cho Instructor
+          if (userRole === "Instructor" && schedule.status !== "Approved") {
+            row[day] = (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center text-gray-400 p-4 bg-gray-50/50 rounded-xl border border-gray-100 
+                  hover:bg-gray-100/50 transition-colors">
+                  <ClockCircleOutlined className="text-2xl mb-2" />
+                  <div>No Class</div>
+                </div>
+              </div>
+            );
+            return;
+          }
+
           row[day] = (
             <div
               key={`schedule-${schedule.scheduleID}`}
@@ -396,20 +411,24 @@ const SchedulePage = () => {
               <div className={`p-4 rounded-xl border transition-all duration-300
                 ${schedule.status === 'Approved' 
                   ? 'border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-lg hover:border-green-300' 
-                  : 'border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50 hover:shadow-lg hover:border-yellow-300'
+                  : userRole === "TrainingStaff" || userRole === "Training staff"
+                    ? 'border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50 hover:shadow-lg hover:border-yellow-300'
+                    : 'border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-lg hover:border-green-300'
                 }`}
               >
-                {/* Status Badge */}
+                {/* Status Badge - Chỉ hiển thị cho Training Staff hoặc status Approved */}
                 <div className="flex justify-between items-center mb-2">
-                  <Tag 
-                    className={`px-2 py-1 border-0 font-medium
-                      ${schedule.status === 'Approved' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-yellow-100 text-yellow-700'
-                      }`}
-                  >
-                    {schedule.status}
-                  </Tag>
+                  {(userRole === "TrainingStaff" || userRole === "Training staff" || schedule.status === "Approved") && (
+                    <Tag 
+                      className={`px-2 py-1 border-0 font-medium
+                        ${schedule.status === 'Approved' 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-yellow-100 text-yellow-700'
+                        }`}
+                    >
+                      {schedule.status}
+                    </Tag>
+                  )}
                   
                   {/* Action Buttons */}
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -744,6 +763,15 @@ const SchedulePage = () => {
           <div className="w-3 h-3 rounded-full bg-green-500" />
           <span className="text-sm text-gray-600">Approved</span>
         </div>
+        
+        {/* Chỉ hiển thị Pending status cho Training Staff */}
+        {(userRole === "TrainingStaff" || userRole === "Training staff") && (
+          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
+            <div className="w-3 h-3 rounded-full bg-yellow-500" />
+            <span className="text-sm text-gray-600">Pending</span>
+          </div>
+        )}
+        
         <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
           <div className="w-3 h-3 rounded-full bg-yellow-500" />
           <span className="text-sm text-gray-600">Pending</span>
