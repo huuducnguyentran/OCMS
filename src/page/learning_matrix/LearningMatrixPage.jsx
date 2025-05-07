@@ -16,6 +16,7 @@ import {
   Space,
   Breadcrumb,
   Tabs,
+  Empty,
 } from "antd";
 import {
   PlusOutlined,
@@ -132,8 +133,13 @@ const LearningMatrixPage = () => {
         });
       });
       
+      // Determine which data to process
+      const dataToProcess = selectedCourseId && selectedSpecialtyId && filteredData.length > 0
+        ? filteredData  // Use filtered data when course & specialty are selected
+        : learningMatrixData; // Otherwise use all data
+        
       // Fill matrix with data
-      learningMatrixData.forEach(item => {
+      dataToProcess.forEach(item => {
         if (
           matrix[item.courseId] && 
           matrix[item.courseId].matrix[item.specialtyId] &&
@@ -149,7 +155,7 @@ const LearningMatrixPage = () => {
       setFilteredSubjects(subjects);
       setFilteredSpecialties(specialties);
     }
-  }, [learningMatrixData, subjects, specialties]);
+  }, [learningMatrixData, subjects, specialties, filteredData, selectedCourseId, selectedSpecialtyId]);
 
   // Load learning matrix data
   const fetchData = async () => {
@@ -181,10 +187,107 @@ const LearningMatrixPage = () => {
     }
   };
 
+  // Fetch subjects for specific course and specialty
+  const fetchSubjectsForCourseAndSpecialty = async () => {
+    if (!selectedCourseId || !selectedSpecialtyId) return;
+    
+    try {
+      setLoading(true);
+      const response = await learningMatrixService.getSubjectsForCourseAndSpecialty(
+        selectedCourseId,
+        selectedSpecialtyId
+      );
+      
+      if (response && response.data && response.data.length > 0) {
+        // Chỉ hiển thị các môn học thuộc khóa học và chuyên ngành đã chọn
+        const subjectsFromApi = response.data.map(item => {
+          // Tìm thông tin chi tiết của môn học từ danh sách gốc
+          const subjectDetails = subjects.find(s => s.subjectId === item.subjectId) || {};
+          return {
+            ...subjectDetails,
+            ...item, // Ghi đè với thông tin từ API
+            isPartOfSpecialty: true // Tất cả đều thuộc chuyên ngành
+          };
+        });
+        
+        setFilteredSubjects(subjectsFromApi);
+        
+        // Lọc chỉ hiển thị chuyên ngành đã chọn
+        setFilteredSpecialties(specialties.filter(specialty => 
+          specialty.specialtyId === selectedSpecialtyId
+        ));
+        
+        // Cập nhật dữ liệu ma trận (giữ nguyên)
+        const filteredMatrixData = response.data.map(item => ({
+          ...item,
+          course: courses.find(c => c.courseId === selectedCourseId),
+          subject: subjects.find(s => s.subjectId === item.subjectId),
+          specialty: specialties.find(s => s.specialtyId === selectedSpecialtyId)
+        }));
+        
+        setFilteredData(filteredMatrixData);
+      } else {
+        // Nếu không có dữ liệu từ API, hiển thị danh sách rỗng
+        setFilteredSubjects([]);
+        
+        // Lọc chỉ hiển thị chuyên ngành đã chọn
+        setFilteredSpecialties(specialties.filter(specialty => 
+          specialty.specialtyId === selectedSpecialtyId
+        ));
+        
+        setFilteredData([]);
+      }
+    } catch (error) {
+      console.error("Error loading subjects for course and specialty:", error);
+      message.error("Cannot load subject list for this course and specialty");
+      
+      // Trong trường hợp lỗi, hiển thị danh sách rỗng
+      setFilteredSubjects([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle specialty change 
+  const handleSpecialtyChange = (value) => {
+    setSelectedSpecialtyId(value);
+    
+    // Nếu xóa chuyên ngành, đặt lại dữ liệu để hiển thị tất cả
+    if (!value) {
+      setFilteredSubjects(subjects);
+      setFilteredSpecialties(specialties);
+      setFilteredData(learningMatrixData);
+    } else if (selectedCourseId) {
+      // Nếu đã chọn cả khóa học và chuyên ngành, tải dữ liệu
+      fetchSubjectsForCourseAndSpecialty();
+    }
+  };
+
   // Handle course change
   const handleCourseChange = (courseId) => {
     setSelectedCourseId(courseId);
+    
+    // Khi thay đổi khóa học, nếu đã chọn chuyên ngành, tải lại dữ liệu
+    if (selectedSpecialtyId) {
+      // Đặt lại selectedSpecialtyId để trigger useEffect
+      const currentSpecialtyId = selectedSpecialtyId;
+      setSelectedSpecialtyId(null);
+      setTimeout(() => {
+        setSelectedSpecialtyId(currentSpecialtyId);
+      }, 0);
+    } else {
+      // Nếu chưa chọn chuyên ngành, hiển thị tất cả chuyên ngành
+      setFilteredSpecialties(specialties);
+      setFilteredSubjects(subjects);
+    }
   };
+
+  // Tự động tải dữ liệu khi cả khóa học và chuyên ngành được chọn
+  useEffect(() => {
+    if (selectedCourseId && selectedSpecialtyId) {
+      fetchSubjectsForCourseAndSpecialty();
+    }
+  }, [selectedCourseId, selectedSpecialtyId]);
 
   // Handle delete matrix item
   const handleDeleteMatrixItem = (item) => {
@@ -328,16 +431,111 @@ const LearningMatrixPage = () => {
   // Render matrix table for the selected course
   const renderMatrixTable = () => {
     if (!selectedCourseId || !matrixData[selectedCourseId]) {
-      return <div>No course selected or no data available.</div>;
+      return <div>Chưa chọn khóa học hoặc không có dữ liệu.</div>;
     }
 
     const courseMatrix = matrixData[selectedCourseId].matrix;
+    
+    // Filter specialties based on selection
+    let displaySpecialties = [...filteredSpecialties];
+    if (selectedSpecialtyId) {
+      displaySpecialties = displaySpecialties.filter(specialty => 
+        specialty.specialtyId === selectedSpecialtyId
+      );
+    }
+    
+    // Kiểm tra nếu không có môn học nào
+    if (filteredSubjects.length === 0 && selectedSpecialtyId) {
+      const selectedSpecialty = specialties.find(s => s.specialtyId === selectedSpecialtyId);
+      
+      return (
+        <div className="text-center p-8">
+          <Card
+            title={
+              <div>
+                <div className="text-lg font-bold">List of subjects in {selectedSpecialty?.specialtyName} ({selectedSpecialtyId})</div>
+                <div className="text-sm text-gray-500">Course: {matrixData[selectedCourseId].courseName} ({selectedCourseId})</div>
+              </div>
+            }
+            bordered={false}
+            className="mt-4"
+          >
+            <Empty 
+              description={
+                <span>No subjects found for course <b>{matrixData[selectedCourseId].courseName}</b> and specialty <b>{selectedSpecialtyId}</b></span>
+              }
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            />
+            <Button 
+              onClick={() => navigate('/learning-matrix/create')} 
+              type="primary" 
+              icon={<PlusOutlined />}
+              style={{ marginTop: 16 }}
+            >
+              Add new relationship
+            </Button>
+          </Card>
+        </div>
+      );
+    }
+    
+    // Hiển thị bảng danh sách môn học khi chọn chuyên ngành (tương tự như trong CreateTrainingPlanPage.jsx)
+    if (selectedSpecialtyId) {
+      const selectedSpecialty = specialties.find(s => s.specialtyId === selectedSpecialtyId);
+      
+      // Cấu hình cột cho bảng môn học
+      const subjectColumns = [
+        {
+          title: "Subject Code",
+          dataIndex: "subjectId",
+          key: "subjectId",
+          width: 150,
+          ellipsis: true,
+        },
+        {
+          title: "Subject Name",
+          dataIndex: "subjectName",
+          key: "subjectName",
+          width: 300,
+          ellipsis: true
+        },
+        {
+          title: "Description",
+          dataIndex: "description",
+          key: "description",
+          ellipsis: true,
+        }
+        
+      ];
+      
+      return (
+        <div>
+          <Card 
+            title={
+              <div>
+                <div className="text-lg font-bold">List of subjects in {selectedSpecialty?.specialtyName} ({selectedSpecialtyId})</div>
+                <div className="text-sm text-gray-500">Course: {matrixData[selectedCourseId].courseName} ({selectedCourseId})</div>
+              </div>
+            }
+            
+          >
+            <Table 
+              dataSource={filteredSubjects} 
+              columns={subjectColumns} 
+              rowKey="subjectId"
+              pagination={{ pageSize: 10 }}
+              scroll={{ x: 'max-content' }}
+            />
+          </Card>
+        </div>
+      );
+    }
     
     // Count relationships for each subject
     const subjectCounts = {};
     filteredSubjects.forEach(subject => {
       subjectCounts[subject.subjectId] = 0;
-      filteredSpecialties.forEach(specialty => {
+      displaySpecialties.forEach(specialty => {
         if (courseMatrix[specialty.specialtyId] && 
             courseMatrix[specialty.specialtyId][subject.subjectId]) {
           subjectCounts[subject.subjectId]++;
@@ -347,7 +545,7 @@ const LearningMatrixPage = () => {
     
     // Count relationships for each specialty
     const specialtyCounts = {};
-    filteredSpecialties.forEach(specialty => {
+    displaySpecialties.forEach(specialty => {
       specialtyCounts[specialty.specialtyId] = 0;
       filteredSubjects.forEach(subject => {
         if (courseMatrix[specialty.specialtyId] && 
@@ -363,7 +561,7 @@ const LearningMatrixPage = () => {
     });
     
     // Sort specialties by relationship count (descending)
-    const sortedSpecialties = [...filteredSpecialties].sort((a, b) => {
+    const sortedSpecialties = [...displaySpecialties].sort((a, b) => {
       return specialtyCounts[b.specialtyId] - specialtyCounts[a.specialtyId];
     });
     
@@ -384,7 +582,7 @@ const LearningMatrixPage = () => {
         ),
       },
       {
-        title: "Specialty",
+        title: "Specialty/Subject",
         dataIndex: "specialty",
         key: "specialty",
         fixed: "left",
@@ -515,6 +713,23 @@ const LearningMatrixPage = () => {
                       {distinctCourses.map(course => (
                         <Option key={course.courseId} value={course.courseId}>
                           {course.courseName} ({course.courseId})
+                        </Option>
+                      ))}
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Text strong style={{ marginRight: 8 }}>Select Specialty:</Text>
+                    <Select
+                      style={{ width: 300 }}
+                      value={selectedSpecialtyId}
+                      onChange={handleSpecialtyChange}
+                      allowClear
+                      placeholder="All specialties"
+                    >
+                      {specialties.map(specialty => (
+                        <Option key={specialty.specialtyId} value={specialty.specialtyId}>
+                          {specialty.specialtyName} ({specialty.specialtyId})
                         </Option>
                       ))}
                     </Select>

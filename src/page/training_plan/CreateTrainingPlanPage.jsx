@@ -141,7 +141,7 @@ const CreateTrainingPlanPage = () => {
             setSubjects(response.data);
           } else {
             setSubjects([]);
-            message.info("Không tìm thấy môn học nào cho khóa học và chuyên ngành này.");
+            message.info("No subjects found for this course and specialty.");
           }
         } catch (error) {
           console.error("Error fetching subjects:", error);
