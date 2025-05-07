@@ -23,6 +23,7 @@ import {
 import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
 import dayjs from "dayjs";
+import { learningMatrixService } from "../../services/learningMatrixService";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -35,11 +36,13 @@ const CreateSchedulePage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [subjects, setSubjects] = useState([]);
   const [instructors, setInstructors] = useState([]);
+  const [courseSubjectSpecialties, setCourseSubjectSpecialties] = useState([]);
 
   // Fetch subjects and instructors when component mounts
   useEffect(() => {
     fetchSubjects();
     fetchInstructors();
+    fetchCourseSubjectSpecialties();
   }, []);
 
   // Fetch subjects from API
@@ -156,6 +159,25 @@ const CreateSchedulePage = () => {
       console.error("Error fetching instructors:", error);
       message.error("Unable to load instructor list");
       setInstructors([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch CourseSubjectSpecialtyId list
+  const fetchCourseSubjectSpecialties = async () => {
+    try {
+      setLoading(true);
+      const response = await learningMatrixService.getAllCourseSubjectSpecialties();
+      if (response && response.data) {
+        setCourseSubjectSpecialties(response.data);
+      } else {
+        setCourseSubjectSpecialties([]);
+      }
+    } catch (error) {
+      console.error("Error fetching CourseSubjectSpecialty list:", error);
+      message.error("Unable to load Course-Subject-Specialty list");
+      setCourseSubjectSpecialties([]);
     } finally {
       setLoading(false);
     }
@@ -291,12 +313,9 @@ const CreateSchedulePage = () => {
                       showSearch
                       optionFilterProp="children"
                     >
-                      {subjects.map((subject) => (
-                        <Option key={subject.id} value={subject.id}>
-                          {subject.name}{" "}
-                          {subject.specialtyId
-                            ? `(${subject.specialtyId})`
-                            : ""}
+                      {courseSubjectSpecialties.map((item) => (
+                        <Option key={item.id} value={item.id}>
+                          {item.course?.courseName || item.courseId} / {item.subject?.subjectName || item.subjectId} / {item.specialty?.specialtyName || item.specialtyId}
                         </Option>
                       ))}
                     </Select>

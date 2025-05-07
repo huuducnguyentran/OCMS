@@ -445,8 +445,8 @@ const CoursePage = () => {
                   className="bg-gray-50 p-4 rounded-lg"
                 />
                 <Statistic
-                  title="Training Plan"
-                  value={selectedCourse.trainingPlanId}
+                  title="Course Related ID"
+                  value={selectedCourse.courseRelatedId}
                   className="bg-gray-50 p-4 rounded-lg"
                 />
                 <Statistic

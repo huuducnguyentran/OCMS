@@ -362,8 +362,9 @@ const SubjectPage = () => {
                       <Title
                         level={4}
                         className="text-xl font-bold text-gray-800 mb-2"
+                        ellipsis={{ rows: 2, expandable: false, symbol: '...' }}
                       >
-                        {subject.subjectName}
+                        {subject.subjectName} 
                       </Title>
                       <div className="flex gap-2 mb-2">
                         <Tag color="blue">

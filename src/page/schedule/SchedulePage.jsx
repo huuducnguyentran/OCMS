@@ -148,172 +148,25 @@ const SchedulePage = () => {
         return;
       }
 
+      // Sử dụng response.schedules cho mọi role
+      let response;
       if (userRole === "Instructor") {
-        try {
-          const response =
-            await trainingScheduleService.getInstructorSubjects();
-          console.log("Raw instructor response:", response);
-
-          // In ra đầy đủ cấu trúc để debug
-          console.log("Response type:", typeof response);
-          console.log("Has message:", Boolean(response?.message));
-          console.log("Has subscheldule:", Boolean(response?.subscheldule));
-
-          // Kiểm tra thông báo không có khóa học được gán
-          if (
-            response?.message ===
-            "No subject assignments found for this instructor."
-          ) {
-            console.log("Instructor has no assignments");
-            setScheduleData([]);
-            message.info("You have no assigned courses");
-            return;
-          }
-
-          // Kiểm tra nếu data là subscheldule array
-          if (response?.subscheldule && Array.isArray(response.subscheldule)) {
-            console.log(
-              "Found subscheldule array with length:",
-              response.subscheldule.length
-            );
-
-            // Xử lý dữ liệu
-            const processedData = [];
-            response.subscheldule.forEach((subject) => {
-              console.log(
-                `Processing subject: ${subject.subjectId} - ${subject.subjectName}`,
-                subject
-              );
-
-              if (subject.schedules && Array.isArray(subject.schedules)) {
-                console.log(
-                  `Subject has ${subject.schedules.length} schedules`
-                );
-
-                subject.schedules.forEach((schedule) => {
-                  console.log("Schedule item:", schedule);
-
-                  // Đảm bảo kết quả cuối cùng có định dạng đúng
-                  processedData.push({
-                    ...schedule,
-                    subjectId: subject.subjectId,
-                    subjectName: subject.subjectName || "Unknown Subject",
-                    instructorID: sessionStorage.getItem("userId"),
-                    // Đảm bảo các trường quan trọng có giá trị
-                    daysOfWeek: schedule.daysOfWeek || "",
-                    classTime: schedule.classTime || "17:00:00",
-                    room: schedule.room || "N/A",
-                    location: schedule.location || "N/A",
-                  });
-                });
-              } else {
-                console.log("Subject has no schedules array");
-              }
-            });
-
-            console.log("Final processed data:", processedData);
-            setScheduleData(processedData);
-          } else {
-            // Kiểm tra xem có cấu trúc khác không
-            console.log(
-              "No valid subscheldule array found, checking alternative structures"
-            );
-
-            // Kiểm tra cấu trúc schedules nếu có
-            if (response?.schedules && Array.isArray(response.schedules)) {
-              console.log("Found schedules array directly in response");
-              setScheduleData(response.schedules);
-              return;
-            }
-
-            // Kiểm tra cấu trúc data nếu có
-            if (response?.data) {
-              console.log("Found data property:", response.data);
-
-              if (Array.isArray(response.data)) {
-                console.log(
-                  "Data is an array with length:",
-                  response.data.length
-                );
-                setScheduleData(response.data);
-                return;
-              }
-
-              if (
-                response.data.schedules &&
-                Array.isArray(response.data.schedules)
-              ) {
-                console.log("Found schedules array in data property");
-                setScheduleData(response.data.schedules);
-                return;
-              }
-            }
-
-            console.log("No recognizable data structure found");
-            setScheduleData([]);
-          }
-        } catch (error) {
-          console.error("Error fetching instructor schedule:", error);
-
-          if (error.response?.status === 401) {
-            message.error("Session expired");
-            navigate("/login");
-          } else if (error.response?.status === 404) {
-            console.log("404 error - no data found");
-            setScheduleData([]);
-          } else {
-            message.error(
-              "Error loading schedule: " + (error.message || "Unknown error")
-            );
-            setScheduleData([]);
-          }
-        } finally {
-          setLoading(false);
-        }
-        return; // Quan trọng: dừng xử lý ngay tại đây cho Instructor
+        response = await trainingScheduleService.getInstructorSubjects();
       } else if (userRole === "Trainee") {
-        try {
-          const response = await trainingScheduleService.getTraineeSubjects();
-          console.log("Trainee schedule response:", response);
-
-          if (response?.schedules && Array.isArray(response.schedules)) {
-            setScheduleData(response.schedules);
-          } else if (response?.data && Array.isArray(response.data)) {
-            setScheduleData(response.data);
-          } else {
-            console.log("No schedule data found for trainee");
-            setScheduleData([]);
-            message.info("No schedule found for your account");
-          }
-        } catch (error) {
-          console.error("Error fetching trainee schedule:", error);
-          handleError(error);
-        }
-      } else if (
-        userRole === "TrainingStaff" ||
-        userRole === "Training staff"
-      ) {
-        try {
-          const response =
-            await trainingScheduleService.getAllTrainingSchedules();
-          console.log("Trainee schedule response:", response);
-
-          if (response?.schedules && Array.isArray(response.schedules)) {
-            setScheduleData(response.schedules);
-          } else if (response?.data && Array.isArray(response.data)) {
-            setScheduleData(response.data);
-          } else {
-            console.log("No schedule data found for trainee");
-            setScheduleData([]);
-            message.info("No schedule found for your account");
-          }
-        } catch (error) {
-          console.error("Error fetching trainee schedule:", error);
-          handleError(error);
-        }
+        response = await trainingScheduleService.getTraineeSubjects();
+      } else if (userRole === "TrainingStaff" || userRole === "Training staff") {
+        response = await trainingScheduleService.getAllTrainingSchedules();
       }
 
-      // Các phần code cho các role khác không thay đổi
+      if (response?.schedules && Array.isArray(response.schedules)) {
+        setScheduleData(response.schedules);
+      } else {
+        setScheduleData([]);
+        message.info("No schedule data found");
+      }
+    } catch (error) {
+      console.error("Error fetching schedule:", error);
+      handleError(error);
     } finally {
       setLoading(false);
     }
