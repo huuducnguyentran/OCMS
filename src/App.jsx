@@ -63,7 +63,8 @@ import CreateExCertificatePage from "./page/candidate/CreateExCertificatePage";
 import ImportDecisionPage from "./page/decision/ImportDecisionPage";
 import DecisionTemplateListPage from "./page/decision/DecisionTemplatePage";
 import CreateAccountPage from "./page/user/CreateAccountPage";
-
+import LearningMatrixPage from "./page/learning_matrix/LearningMatrixPage";
+import CreateLearningMatrixPage from "./page/learning_matrix/CreateLearningMatrixPage";
 import UpdateAccountPage from "./page/user/UpdateAccountPage";
 import ExportCertificatePage from "./page/report/ExportCertificatePage";
 
@@ -79,6 +80,7 @@ import CertificateRevokedPage from "./page/certificate/CertificateRevokedPage";
 import DecisionDetailPage from "./page/decision/DecisionDetailPage";
 import AssignDepartmentPage from "./page/department/AssignDepartment";
 import TraineeGradePage from "./page/grade/TraineeGradePage";
+import EditSchedule from "./page/schedule/EditSchedule";
 
 function App() {
   return (
@@ -140,6 +142,10 @@ function App() {
                           <Route
                             path="/schedule/create"
                             element={<CreateSchedulePage />}
+                          />
+                          <Route
+                            path="/schedule/edit/:id"
+                            element={<EditSchedule />}
                           />
 
                           {/*  Training Plans */}
@@ -211,7 +217,14 @@ function App() {
                             path="/assigned-trainee-courses"
                             element={<AssignedTraineeCoursePage />}
                           />
-
+                          <Route
+                            path="/learning-matrix"
+                            element={<LearningMatrixPage />}
+                          />
+                          <Route
+                            path="/learning-matrix/create"
+                            element={<CreateLearningMatrixPage />}
+                          />
                           {/*  Accomplishments & Grades */}
                           <Route
                             path="/accomplishments"

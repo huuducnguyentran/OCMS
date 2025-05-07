@@ -23,6 +23,7 @@ import {
 import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
 import dayjs from "dayjs";
+import { learningMatrixService } from "../../services/learningMatrixService";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -35,11 +36,13 @@ const CreateSchedulePage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [subjects, setSubjects] = useState([]);
   const [instructors, setInstructors] = useState([]);
+  const [courseSubjectSpecialties, setCourseSubjectSpecialties] = useState([]);
 
   // Fetch subjects and instructors when component mounts
   useEffect(() => {
     fetchSubjects();
     fetchInstructors();
+    fetchCourseSubjectSpecialties();
   }, []);
 
   // Fetch subjects from API
@@ -161,6 +164,25 @@ const CreateSchedulePage = () => {
     }
   };
 
+  // Fetch CourseSubjectSpecialtyId list
+  const fetchCourseSubjectSpecialties = async () => {
+    try {
+      setLoading(true);
+      const response = await learningMatrixService.getAllCourseSubjectSpecialties();
+      if (response && response.data) {
+        setCourseSubjectSpecialties(response.data);
+      } else {
+        setCourseSubjectSpecialties([]);
+      }
+    } catch (error) {
+      console.error("Error fetching CourseSubjectSpecialty list:", error);
+      message.error("Unable to load Course-Subject-Specialty list");
+      setCourseSubjectSpecialties([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Handle form submission
   const handleSubmit = async (values) => {
     try {
@@ -187,6 +209,7 @@ const CreateSchedulePage = () => {
       // Create data according to API format
       const scheduleData = {
         subjectID: values.subjectID,
+        courseSubjectSpecialtyId: values.courseSubjectSpecialtyId,
         instructorID: values.instructorID,
         location: values.location,
         room: values.room,
@@ -278,24 +301,21 @@ const CreateSchedulePage = () => {
                   </Title>
 
                   <Form.Item
-                    name="subjectID"
-                    label="Subject"
+                    name="courseSubjectSpecialtyId"
+                    label="CourseSubjectSpecialtyId"
                     rules={[
-                      { required: true, message: "Please select a subject" },
+                      { required: true, message: "Please select a courseSubjectSpecialtyId" },
                     ]}
                   >
                     <Select
-                      placeholder="Select subject"
+                      placeholder="Select courseSubjectSpecialtyId"
                       loading={loading}
                       showSearch
                       optionFilterProp="children"
                     >
-                      {subjects.map((subject) => (
-                        <Option key={subject.id} value={subject.id}>
-                          {subject.name}{" "}
-                          {subject.specialtyId
-                            ? `(${subject.specialtyId})`
-                            : ""}
+                      {courseSubjectSpecialties.map((item) => (
+                        <Option key={item.id} value={item.id}>
+                          {item.course?.courseName || item.courseId} / {item.subject?.subjectName || item.subjectId} / {item.specialty?.specialtyName || item.specialtyId}
                         </Option>
                       ))}
                     </Select>

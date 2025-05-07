@@ -172,13 +172,6 @@ export const TrainingPlanSchema = Yup.object({
     .max(1000, "Description must not exceed 1000 characters")
     .trim(),
 
-  planLevel: Yup.number()
-    .required("Plan level is required")
-    .oneOf(
-      [0, 1, 2],
-      "Plan level must be one of: Initial (0), Recurrent (1), Relearn (2)"
-    ),
-
   specialtyId: Yup.string().required("Specialty is required"),
 
   startDate: Yup.date()
@@ -277,15 +270,15 @@ export const SubjectSchema = Yup.object({
     .max(50, "Subject ID must not exceed 50 characters")
     .trim(),
 
-  courseId: Yup.string()
-    .required("Course ID is required")
-    .max(50, "Course ID must not exceed 50 characters")
-    .trim(),
+  // courseId: Yup.string()
+  //   .required("Course ID is required")
+  //   .max(50, "Course ID must not exceed 50 characters")
+  //   .trim(),
 
   subjectName: Yup.string()
     .required("Subject name is required")
     .min(3, "Subject name must be at least 3 characters")
-    .max(100, "Subject name must not exceed 100 characters")
+    .max(255, "Subject name must not exceed 255 characters")
     .trim(),
 
   description: Yup.string()
@@ -449,17 +442,17 @@ export const SchedulePageValidationSchema = {
 };
 
 // Add these helper functions at the top of validationSchemas.jsx
-const calculateAge = (birthDate) => {
-  const today = new Date();
-  const birth = new Date(birthDate);
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
+// const calculateAge = (birthDate) => {
+//   const today = new Date();
+//   const birth = new Date(birthDate);
+//   let age = today.getFullYear() - birth.getFullYear();
+//   const monthDiff = today.getMonth() - birth.getMonth();
 
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  return age;
-};
+//   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+//     age--;
+//   }
+//   return age;
+// };
 
 // Update the CreateAccountSchema validation messages to be more immediate
 export const CreateAccountSchema = Yup.object({

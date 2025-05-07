@@ -1,12 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Layout,
   Input,
   Button,
   message,
   Form,
-  Select,
-  Spin,
   Card,
   Row,
   Col,
@@ -14,7 +12,6 @@ import {
   Typography,
 } from "antd";
 import { createSubject } from "../../services/subjectService";
-import { courseService } from "../../services/courseService";
 import {
   ArrowLeftOutlined,
   BookOutlined,
@@ -24,36 +21,12 @@ import { useNavigate } from "react-router-dom";
 import { applySubjectValidation } from "../../../utils/validationSchemas";
 
 const { TextArea } = Input;
-const { Option } = Select;
 const { Title } = Typography;
 
 const CreateSubjectPage = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [courses, setCourses] = useState([]);
-  const [loadingCourses, setLoadingCourses] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchCourses();
-  }, []);
-
-  const fetchCourses = async () => {
-    try {
-      setLoadingCourses(true);
-      const response = await courseService.getAllCourses();
-      if (response?.data) {
-        setCourses(response.data);
-      } else {
-        setCourses([]);
-        message.warning("No courses found. Please create a course first.");
-      }
-    } catch (error) {
-      message.error("Failed to load courses", error);
-    } finally {
-      setLoadingCourses(false);
-    }
-  };
 
   const handleCreateSubject = async (values) => {
     try {
@@ -81,8 +54,7 @@ const CreateSubjectPage = () => {
 
   return (
     <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {/* Header Section */}
+      <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="bg-white rounded-xl shadow-md p-8 mb-8">
           <div className="flex justify-between items-start mb-6">
             <div>
@@ -112,7 +84,6 @@ const CreateSubjectPage = () => {
             </Button>
           </div>
 
-          {/* Form Section */}
           <Form
             form={form}
             layout="vertical"
@@ -123,17 +94,10 @@ const CreateSubjectPage = () => {
               <Col xs={24} md={12}>
                 <Form.Item
                   name="subjectId"
-                  label={
-                    <span className="text-gray-700 font-medium">
-                      Subject ID
-                    </span>
-                  }
+                  label="Subject ID"
                   rules={[
                     { required: true, message: "Subject ID is required" },
-                    {
-                      max: 100,
-                      message: "Subject ID must not exceed 100 characters",
-                    },
+                    { max: 20, message: "Max 20 characters" },
                   ]}
                 >
                   <Input
@@ -141,75 +105,23 @@ const CreateSubjectPage = () => {
                     placeholder="Enter subject ID"
                     className="rounded-lg"
                     size="large"
-                    maxLength={100}
+                    maxLength={20}
                   />
                 </Form.Item>
               </Col>
+
               <Col xs={24} md={12}>
                 <Form.Item
-                  name="courseId"
-                  label={
-                    <span className="text-gray-700 font-medium">Course</span>
-                  }
-                  rules={[{ required: true, message: "Course is required" }]}
-                >
-                  <Select
-                    placeholder="Select a course"
-                    loading={loadingCourses}
-                    className="rounded-lg"
-                    size="large"
-                    showSearch
-                    allowClear
-                    optionFilterProp="children"
-                    notFoundContent={
-                      loadingCourses ? (
-                        <div className="text-center py-4">
-                          <Spin size="small" />
-                          <div className="mt-2">Loading courses...</div>
-                        </div>
-                      ) : (
-                        <div className="text-center py-4">
-                          <div>No courses found</div>
-                          <Button
-                            type="link"
-                            onClick={() => navigate("/course/create")}
-                          >
-                            Create a new course
-                          </Button>
-                        </div>
-                      )
-                    }
-                  >
-                    {courses.map((course) => (
-                      <Option key={course.courseId} value={course.courseId}>
-                        {course.courseName} ({course.courseId})
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </Col>
-
-              <Col span={24}>
-                <Form.Item
                   name="subjectName"
-                  label={
-                    <span className="text-gray-700 font-medium">
-                      Subject Name
-                    </span>
-                  }
+                  label="Subject Name"
                   rules={[
                     { required: true, message: "Subject name is required" },
-                    {
-                      max: 100,
-                      message: "Subject name must not exceed 100 characters",
-                    },
                   ]}
                 >
                   <Input
                     placeholder="Enter subject name"
                     className="rounded-lg"
                     size="large"
-                    maxLength={100}
                   />
                 </Form.Item>
               </Col>
@@ -217,48 +129,38 @@ const CreateSubjectPage = () => {
               <Col span={24}>
                 <Form.Item
                   name="description"
-                  label={
-                    <span className="text-gray-700 font-medium">
-                      Description
-                    </span>
-                  }
+                  label="Description"
                   rules={[
                     { required: true, message: "Description is required" },
-                    {
-                      max: 100,
-                      message: "Description must not exceed 100 characters",
-                    },
+                    { max: 255, message: "Max 255 characters" },
                   ]}
                 >
                   <TextArea
-                    rows={6}
+                    rows={4}
                     placeholder="Enter subject description"
                     className="rounded-lg"
                     size="large"
-                    maxLength={100}
+                    maxLength={255}
                   />
                 </Form.Item>
               </Col>
-            </Row>
 
-            {/* Stats Cards */}
-            <Row gutter={16} className="mt-8">
               <Col xs={24} sm={12}>
-                <Card className="rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                <Card className="rounded-xl shadow-md">
                   <Form.Item
                     name="credits"
-                    label={
-                      <span className="text-gray-700 font-medium">
-                        Credits (1-10)
-                      </span>
-                    }
+                    label="Credits (1-10)"
                     rules={[
                       { required: true, message: "Credits are required" },
                       () => ({
                         validator(_, value) {
-                          if (!value) return Promise.resolve();
                           const num = Number(value);
-                          if (num < 1 || num > 10 || !Number.isInteger(num)) {
+                          if (
+                            !value ||
+                            num < 1 ||
+                            num > 10 ||
+                            !Number.isInteger(num)
+                          ) {
                             return Promise.reject(
                               "Credits must be between 1 and 10"
                             );
@@ -281,22 +183,18 @@ const CreateSubjectPage = () => {
                   </Form.Item>
                 </Card>
               </Col>
+
               <Col xs={24} sm={12}>
-                <Card className="rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                <Card className="rounded-xl shadow-md">
                   <Form.Item
                     name="passingScore"
-                    label={
-                      <span className="text-gray-700 font-medium">
-                        Passing Score (0-10)
-                      </span>
-                    }
+                    label="Passing Score (0-10)"
                     rules={[
                       { required: true, message: "Passing score is required" },
                       () => ({
                         validator(_, value) {
-                          if (!value) return Promise.resolve();
                           const num = Number(value);
-                          if (num < 0 || num > 10) {
+                          if ((!value && value !== 0) || num < 0 || num > 10) {
                             return Promise.reject(
                               "Passing score must be between 0 and 10"
                             );
@@ -321,14 +219,12 @@ const CreateSubjectPage = () => {
               </Col>
             </Row>
 
-            {/* Submit Button */}
             <Form.Item className="mt-8">
               <Button
                 type="primary"
                 htmlType="submit"
                 loading={loading}
-                disabled={loadingCourses}
-                className="w-full h-12 text-lg bg-blue-600 hover:bg-blue-700 border-0 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+                className="w-full h-12 text-lg bg-blue-600 hover:bg-blue-700 border-0 rounded-lg shadow-md"
               >
                 {loading ? "Creating..." : "Create Subject"}
               </Button>

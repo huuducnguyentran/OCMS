@@ -10,6 +10,9 @@ import {
   Popconfirm,
   Dropdown,
   Select,
+  Modal,
+  Form,
+  InputNumber,
 } from "antd";
 import {
   ReloadOutlined,
@@ -20,6 +23,7 @@ import {
   MoreOutlined,
   FilterOutlined,
   DownloadOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import {
   gradeServices,
@@ -46,6 +50,9 @@ const ViewGradePage = () => {
   });
   const isInstructor = sessionStorage.getItem("role") === "Instructor";
   const navigate = useNavigate();
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [createForm] = Form.useForm();
+  const [creating, setCreating] = useState(false);
 
   const handleChange = (pagination, filters, sorter) => {
     setPagination(pagination);
@@ -497,6 +504,136 @@ const ViewGradePage = () => {
     }
   };
 
+  const handleCreate = async (values) => {
+    try {
+      setCreating(true);
+      const gradeData = {
+        traineeAssignID: values.traineeAssignID,
+        subjectId: values.subjectId,
+        participantScore: values.participantScore,
+        assignmentScore: values.assignmentScore,
+        finalExamScore: values.finalExamScore,
+        finalResitScore: values.finalResitScore || 0,
+        remarks: values.remarks || "",
+      };
+
+      await gradeServices.createGrade(gradeData);
+      message.success("Grade created successfully");
+      setIsModalVisible(false);
+      createForm.resetFields();
+      fetchGrades(); // Refresh data
+    } catch (error) {
+      message.error(error.message || "Failed to create grade");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const CreateGradeModal = () => (
+    <Modal
+      title={
+        <div className="flex items-center gap-2">
+          <PlusOutlined className="text-green-600" />
+          <span>Create New Grade</span>
+        </div>
+      }
+      open={isModalVisible}
+      onCancel={() => setIsModalVisible(false)}
+      footer={null}
+      width={700}
+    >
+      <Form
+        form={createForm}
+        layout="vertical"
+        onFinish={handleCreate}
+        className="mt-4"
+      >
+        <div className="grid grid-cols-2 gap-4">
+          <Form.Item
+            name="traineeAssignID"
+            label="Trainee Assign ID"
+            rules={[{ required: true, message: "Please input trainee assign ID!" }]}
+          >
+            <Input placeholder="Enter trainee assign ID" />
+          </Form.Item>
+
+          <Form.Item
+            name="subjectId"
+            label="Subject"
+            rules={[{ required: true, message: "Please select subject!" }]}
+          >
+            <Select
+              placeholder="Select subject"
+              options={subjectList}
+              showSearch
+              filterOption={(input, option) =>
+                option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }
+            />
+          </Form.Item>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Form.Item
+            name="participantScore"
+            label="Participation Score"
+            rules={[
+              { required: true, message: "Please input participation score!" },
+              { type: 'number', min: 0, max: 10, message: 'Score must be between 0 and 10!' }
+            ]}
+          >
+            <InputNumber min={0} max={10} step={0.1} className="w-full" />
+          </Form.Item>
+
+          <Form.Item
+            name="assignmentScore"
+            label="Assignment Score"
+            rules={[
+              { required: true, message: "Please input assignment score!" },
+              { type: 'number', min: 0, max: 10, message: 'Score must be between 0 and 10!' }
+            ]}
+          >
+            <InputNumber min={0} max={10} step={0.1} className="w-full" />
+          </Form.Item>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Form.Item
+            name="finalExamScore"
+            label="Final Exam Score"
+            rules={[
+              { required: true, message: "Please input final exam score!" },
+              { type: 'number', min: 0, max: 10, message: 'Score must be between 0 and 10!' }
+            ]}
+          >
+            <InputNumber min={0} max={10} step={0.1} className="w-full" />
+          </Form.Item>
+
+          <Form.Item
+            name="finalResitScore"
+            label="Resit Score"
+            rules={[
+              { type: 'number', min: 0, max: 10, message: 'Score must be between 0 and 10!' }
+            ]}
+          >
+            <InputNumber min={0} max={10} step={0.1} className="w-full" />
+          </Form.Item>
+        </div>
+
+        <Form.Item name="remarks" label="Remarks">
+          <Input.TextArea rows={4} placeholder="Enter remarks" />
+        </Form.Item>
+
+        <Form.Item className="mb-0 flex justify-end gap-2">
+          <Button onClick={() => setIsModalVisible(false)}>Cancel</Button>
+          <Button type="primary" htmlType="submit" loading={creating} className="bg-blue-500">
+            Create Grade
+          </Button>
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+
   useEffect(() => {
     fetchGrades();
   }, []);
@@ -511,6 +648,17 @@ const ViewGradePage = () => {
               Grade List
             </Title>
             <Space size="large">
+              {isInstructor && (
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => setIsModalVisible(true)}
+                  className="bg-green-600 hover:bg-green-700"
+                  size="large"
+                >
+                  Create Grade
+                </Button>
+              )}
               <Select
                 placeholder="Filter by Subject"
                 onChange={handleSubjectChange}
@@ -607,6 +755,8 @@ const ViewGradePage = () => {
             </div>
           </div>
         )}
+
+        <CreateGradeModal />
       </div>
     </div>
   );

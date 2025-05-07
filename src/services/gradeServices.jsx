@@ -76,6 +76,16 @@ export const gradeServices = {
       throw error.response?.data?.message || "Failed to delete grade";
     }
   },
+
+  createGrade: async (gradeData) => {
+    try {
+      const response = await axiosInstance.post(API.CREATE_GRADE, gradeData);
+      return response.data;
+    } catch (error) {
+      console.error("API Error:", error.response?.data);
+      throw error.response?.data?.message || "Failed to create grade";
+    }
+  },
 };
 export const exportCourseResults = async () => {
   try {

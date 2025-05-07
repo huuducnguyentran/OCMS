@@ -22,6 +22,7 @@ import dayjs from "dayjs";
 import { trainingPlanService } from "../../services/trainingPlanService";
 import { applyTrainingPlanValidation } from "../../../utils/validationSchemas";
 import axiosInstance from "../../../utils/axiosInstance";
+import { courseService } from "../../services/courseService";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -32,6 +33,8 @@ const CreateTrainingPlanPage = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [specialties, setSpecialties] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
   const [loadingSpecialties, setLoadingSpecialties] = useState(false);
   const navigate = useNavigate();
 
@@ -58,6 +61,27 @@ const CreateTrainingPlanPage = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoadingCourses(true);
+        const response = await courseService.getAllCourses();
+        if (response?.data) {
+          setCourses(response.data);
+        } else {
+          setCourses([]);
+          message.warning("No courses found. Please create a course first.");
+        }
+      } catch (error) {
+        message.error("Failed to load courses", error);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    fetchCourses();
+  }, []); // <-- empty dependency array ensures it runs only once on mount
+
   // Cập nhật hàm disablePastDates
   const disablePastDates = (current) => {
     // Allow current minute and future, disable past
@@ -74,10 +98,10 @@ const CreateTrainingPlanPage = () => {
       setLoading(true);
       const formattedData = {
         planName: values.planName.trim(),
-        Desciption: values.description.trim(),
-        planLevel: parseInt(values.planLevel),
+        description: values.description.trim(),
         startDate: values.startDate.toISOString(),
         endDate: values.endDate.toISOString(),
+        courseId: values.courseId,
         specialtyId: values.specialtyId,
       };
 
@@ -191,23 +215,47 @@ const CreateTrainingPlanPage = () => {
                   maxLength={100}
                 />
               </Form.Item>
-
               <Form.Item
-                name="planLevel"
-                label={<Text strong>Plan Level</Text>}
-                rules={[{ required: true, message: "Plan level is required" }]}
+                name="courseId"
+                label={
+                  <span className="text-gray-700 font-medium">Course</span>
+                }
+                rules={[{ required: true, message: "Course is required" }]}
               >
                 <Select
-                  placeholder="Select level"
+                  placeholder="Select a course"
+                  loading={loadingCourses}
                   className="rounded-lg"
-                  dropdownClassName="rounded-lg shadow-md"
+                  size="large"
+                  showSearch
+                  allowClear
+                  optionFilterProp="children"
+                  notFoundContent={
+                    loadingCourses ? (
+                      <div className="text-center py-4">
+                        <Spin size="small" />
+                        <div className="mt-2">Loading courses...</div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <div>No courses found</div>
+                        <Button
+                          type="link"
+                          onClick={() => navigate("/course/create")}
+                        >
+                          Create a new course
+                        </Button>
+                      </div>
+                    )
+                  }
                 >
-                  <Option value={0}>Initial</Option>
-                  <Option value={1}>Recurrent</Option>
-                  <Option value={2}>Relearn</Option>
+                  {courses.map((course) => (
+                    <Option key={course.courseId} value={course.courseId}>
+                      {course.courseName} ({course.courseId})
+                    </Option>
+                  ))}
                 </Select>
               </Form.Item>
-
               <Form.Item
                 name="specialtyId"
                 label={<Text strong>Specialty</Text>}
