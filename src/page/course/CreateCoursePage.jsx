@@ -10,6 +10,7 @@ import {
   Typography,
   Divider,
   AutoComplete,
+  Select,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -135,7 +136,7 @@ const CreateCoursePage = () => {
             form={form}
             layout="vertical"
             onFinish={handleCreateCourse}
-            initialValues={{ courseLevel: 0 }}
+            initialValues={{ courseLevel: "Initial" }}
             className="p-2"
             size="large"
           >
@@ -150,8 +151,8 @@ const CreateCoursePage = () => {
                 rules={[
                   { required: true, message: "Course ID is required" },
                   {
-                    max: 50,
-                    message: "Course ID must not exceed 50 characters",
+                    max: 20,
+                    message: "Course ID must not exceed 20 characters",
                   },
                 ]}
               >
@@ -159,10 +160,34 @@ const CreateCoursePage = () => {
                   placeholder="e.g., C-0001"
                   className="rounded-lg py-3 px-4 text-lg"
                   size="large"
-                  maxLength={50}
+                  maxLength={20}
                 />
               </Form.Item>
 
+             
+              <Form.Item
+                name="courseName"
+                label={
+                  <Text strong className="text-lg">
+                    Course Name
+                  </Text>
+                }
+                rules={[
+                  { required: true, message: "Course name is required" },
+                  {
+                    max: 255,
+                    message: "Course name must not exceed 255 characters",
+                  },
+                ]}
+              >
+              
+                <Input
+                  placeholder="Enter course name"
+                  className="rounded-lg py-3 px-4 text-lg"
+                  size="large"
+                  maxLength={255}
+                />
+              </Form.Item>
               <Form.Item
                 name="courseLevel"
                 label={
@@ -174,34 +199,16 @@ const CreateCoursePage = () => {
                   { required: true, message: "Course level is required" },
                 ]}
               >
-                <Input
-                  placeholder="e.g., Initial"
-                  className="rounded-lg py-3 px-4 text-lg"
+                <Select
+                  placeholder="Select course level"
+                  className="rounded-lg text-lg"
                   size="large"
-                  maxLength={50}
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="courseName"
-                label={
-                  <Text strong className="text-lg">
-                    Course Name
-                  </Text>
-                }
-                rules={[
-                  { required: true, message: "Course name is required" },
-                  {
-                    max: 100,
-                    message: "Course name must not exceed 100 characters",
-                  },
-                ]}
-              >
-                <Input
-                  placeholder="Enter course name"
-                  className="rounded-lg py-3 px-4 text-lg"
-                  size="large"
-                  maxLength={100}
+                  options={[
+                    { value: "Initial", label: "Initial" },
+                    { value: "Recurrent", label: "Recurrent" },
+                    { value: "Relearn", label: "Relearn" },
+                    { value: "Professional", label: "Professional" },
+                  ]}
                 />
               </Form.Item>
 
@@ -227,8 +234,8 @@ const CreateCoursePage = () => {
                     },
                   }),
                   {
-                    max: 100,
-                    message: "Course Related ID must not exceed 100 characters",
+                    max: 20,
+                    message: "Course Related ID must not exceed 20 characters",
                   },
                 ]}
               >
@@ -267,8 +274,8 @@ const CreateCoursePage = () => {
                 rules={[
                   { required: true, message: "Description is required" },
                   {
-                    max: 100,
-                    message: "Description must not exceed 100 characters",
+                    max: 255,
+                    message: "Description must not exceed 255 characters",
                   },
                 ]}
               >
@@ -276,7 +283,7 @@ const CreateCoursePage = () => {
                   placeholder="Enter course description"
                   className="rounded-lg py-3 px-4 text-lg"
                   size="large"
-                  maxLength={100}
+                  maxLength={255}
                 />
               </Form.Item>
             </div>

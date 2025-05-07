@@ -97,7 +97,7 @@ const CreateSubjectPage = () => {
                   label="Subject ID"
                   rules={[
                     { required: true, message: "Subject ID is required" },
-                    { max: 100, message: "Max 100 characters" },
+                    { max: 20, message: "Max 20 characters" },
                   ]}
                 >
                   <Input
@@ -105,7 +105,7 @@ const CreateSubjectPage = () => {
                     placeholder="Enter subject ID"
                     className="rounded-lg"
                     size="large"
-                    maxLength={100}
+                    maxLength={20}
                   />
                 </Form.Item>
               </Col>
@@ -116,14 +116,12 @@ const CreateSubjectPage = () => {
                   label="Subject Name"
                   rules={[
                     { required: true, message: "Subject name is required" },
-                    { max: 100, message: "Max 100 characters" },
                   ]}
                 >
                   <Input
                     placeholder="Enter subject name"
                     className="rounded-lg"
                     size="large"
-                    maxLength={100}
                   />
                 </Form.Item>
               </Col>
@@ -134,7 +132,7 @@ const CreateSubjectPage = () => {
                   label="Description"
                   rules={[
                     { required: true, message: "Description is required" },
-                    { max: 100, message: "Max 100 characters" },
+                    { max: 255, message: "Max 255 characters" },
                   ]}
                 >
                   <TextArea
@@ -142,7 +140,7 @@ const CreateSubjectPage = () => {
                     placeholder="Enter subject description"
                     className="rounded-lg"
                     size="large"
-                    maxLength={100}
+                    maxLength={255}
                   />
                 </Form.Item>
               </Col>

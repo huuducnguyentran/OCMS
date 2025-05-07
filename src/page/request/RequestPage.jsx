@@ -839,8 +839,8 @@ const RequestList = () => {
                 </Title>
                 <p className="text-gray-600">
                   {storedRole === "Training staff"
-                    ? "Requests submitted by Education Officers"
-                    : "All submitted requests and their statuses"}
+                    ? "Requests submitted to Training Staff"
+                    : "Requests submitted to Head Master"}
                 </p>
               </div>
             </div>

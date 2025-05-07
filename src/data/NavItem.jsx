@@ -303,6 +303,13 @@ const navItems = [
     icon: "FileExcelOutlined",
     path: "/export-certificate",
   },
+  {
+    key: "22",
+    label: "Learning Matrix",
+    icon: "BookOutlined",
+    path: "/learning-matrix",
+    roles: ["Admin", "Training staff", "HR", "Instructor", "Reviewer"],
+  },
 ];
 
 export default navItems;

@@ -278,7 +278,7 @@ export const SubjectSchema = Yup.object({
   subjectName: Yup.string()
     .required("Subject name is required")
     .min(3, "Subject name must be at least 3 characters")
-    .max(100, "Subject name must not exceed 100 characters")
+    .max(255, "Subject name must not exceed 255 characters")
     .trim(),
 
   description: Yup.string()

@@ -210,8 +210,8 @@ const UpdateSubjectPage = () => {
               rules={[
                 { required: true, message: "Subject name is required" },
                 {
-                  max: 100,
-                  message: "Subject name must not exceed 100 characters",
+                  max: 255,
+                  message: "Subject name must not exceed 255 characters",
                 },
               ]}
             >
@@ -219,7 +219,6 @@ const UpdateSubjectPage = () => {
                 placeholder="Enter subject name"
                 className="rounded-xl py-4 text-lg"
                 size="large"
-                maxLength={100}
               />
             </Form.Item>
 
@@ -234,8 +233,8 @@ const UpdateSubjectPage = () => {
               rules={[
                 { required: true, message: "Description is required" },
                 {
-                  max: 100,
-                  message: "Description must not exceed 100 characters",
+                  max: 255,
+                  message: "Description must not exceed 255 characters",
                 },
               ]}
             >
@@ -244,7 +243,7 @@ const UpdateSubjectPage = () => {
                 placeholder="Enter subject description"
                 className="rounded-xl text-lg"
                 size="large"
-                maxLength={100}
+                maxLength={255}
               />
             </Form.Item>
 
