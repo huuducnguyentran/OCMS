@@ -36,33 +36,26 @@ const navItems = [
   // 2. Learning Activities
   {
     key: "3",
-    label: "Plan",
-    icon: "AccountBookOutlined",
-    path: "/plan",
-    roles: ["Training staff", "Trainee", "Reviewer"],
+    label: "Specialty",
+    icon: "ImportOutlined",
+    path: "/specialty",
+    roles: ["Admin", "Training staff", "HR"],
   },
   {
     key: "4",
-    label: "Subject",
-    icon: "ReadOutlined",
-    path: "/subject",
-    roles: ["Training staff", "user", "Instructor"],
-  },
-  {
-    key: "5",
     label: "Course",
     icon: "BookOutlined",
     path: "/course",
     roles: ["Training staff", "Trainee", "Reviewer"],
     children: [
       {
-        key: "5-1",
+        key: "4-1",
         label: "All Courses",
         path: "/all-courses",
         roles: ["Training staff", "Reviewer"],
       },
       {
-        key: "5-2",
+        key: "4-2",
         label: "Trainee Courses",
         path: "/assigned-trainee-courses",
         roles: ["Trainee"],
@@ -70,14 +63,29 @@ const navItems = [
     ],
   },
   {
+    key: "5",
+    label: "Learning Matrix",
+    icon: "BookOutlined",
+    path: "/learning-matrix",
+    roles: ["Admin", "Training staff", "HR", "Instructor", "Reviewer"],
+  },
+  {
     key: "6",
+    label: "Subject",
+    icon: "ReadOutlined",
+    path: "/subject",
+    roles: ["Training staff", "user", "Instructor"],
+  },
+ 
+  {
+    key: "7",
     label: "Schedule",
     icon: "ScheduleOutlined",
     path: "/schedule",
     roles: ["Training staff", "Trainee", "Instructor"],
     children: [
       {
-        key: "6-1",
+        key: "7-1",
         label: "All Schedule",
         path: "/schedule",
         roles: ["Training staff", "Instructor", "Trainee"],
@@ -85,7 +93,14 @@ const navItems = [
     ],
   },
   {
-    key: "7",
+    key: "8",
+    label: "Plan",
+    icon: "AccountBookOutlined",
+    path: "/plan",
+    roles: ["Training staff", "Trainee", "Reviewer"],
+  },
+  {
+    key: "9",
     label: "Accomplishments",
     icon: "FileDoneOutlined",
     path: "/accomplishments",
@@ -94,26 +109,26 @@ const navItems = [
 
   // 3. Assessment & Grades
   {
-    key: "8",
+    key: "10",
     label: "Grade",
     icon: "FileExcelOutlined",
     path: "/grade-view",
     roles: ["Instructor", "Training staff", "Reviewer", "Trainee"],
     children: [
       {
-        key: "8-1",
+        key: "10-1",
         label: "Import Grade",
         path: "/grade",
         roles: ["Instructor"],
       },
       {
-        key: "8-2",
+        key: "10-2",
         label: "View Grade",
         path: "/grade-view",
         roles: ["Instructor", "Training staff", "Reviewer"],
       },
       {
-        key: "8-3",
+        key: "10-3",
         label: "My Grades",
         path: "/trainee-grade",
         roles: ["Trainee"],
@@ -123,14 +138,14 @@ const navItems = [
 
   // 4. Requests
   {
-    key: "9",
+    key: "11",
     label: "Request",
     icon: "SelectOutlined",
     path: "/request",
     roles: ["Training staff", "HeadMaster"],
   },
   {
-    key: "10",
+    key: "12",
     label: "Send Request",
     icon: "FileAddOutlined",
     path: "/send-request",
@@ -139,26 +154,26 @@ const navItems = [
 
   // 5. Certification & Decisions
   {
-    key: "11",
+    key: "13",
     label: "Certificate",
     icon: "FileProtectOutlined",
     path: "/certificate",
     roles: ["Admin", "AOC Manager", "Training staff", "HeadMaster"],
     children: [
       {
-        key: "11-1",
+        key: "13-1",
         label: "Certificate Pending",
         path: "/certificate-pending",
         roles: ["Admin", "HR", "Training staff", "HeadMaster"],
       },
       {
-        key: "11-2",
+        key: "13-2",
         label: "Certificate Active",
         path: "/certificate-active",
         roles: ["Admin", "AOC Manager", "Training staff", "HeadMaster"],
       },
       {
-        key: "11-3",
+        key: "13-3",
         label: "Certificate Revoked",
         path: "/certificate-revoked",
         roles: ["Admin", "Training staff", "HeadMaster"],
@@ -166,27 +181,27 @@ const navItems = [
     ],
   },
   {
-    key: "12",
+    key: "14",
     label: "Certificate Template",
     icon: "FileProtectOutlined",
     path: "/certificate-template",
     roles: ["Admin"],
   },
   {
-    key: "13",
+    key: "15",
     label: "Decision",
     icon: "FileProtectOutlined",
     path: "/decision",
     roles: ["Admin", "HR", "Training staff", "HeadMaster"],
     children: [
       {
-        key: "13-1",
+        key: "15-1",
         label: "Decision Pending",
         path: "/decision-pending",
         roles: ["Admin", "HR", "Training staff", "HeadMaster"],
       },
       {
-        key: "13-2",
+        key: "15-2",
         label: "Decision Active",
         path: "/decision-active",
         roles: ["Admin", "HR", "Training staff", "HeadMaster"],
@@ -194,7 +209,7 @@ const navItems = [
     ],
   },
   {
-    key: "14",
+    key: "16",
     label: "Decision Template",
     icon: "FileProtectOutlined",
     path: "/decision-template",
@@ -203,20 +218,20 @@ const navItems = [
 
   // 6. Admin & HR
   {
-    key: "15",
+    key: "17",
     label: "Accounts",
     icon: "TeamOutlined",
     path: "/accounts",
     roles: ["Admin", "Reviewer"],
     children: [
       {
-        key: "15-1",
+        key: "17-1",
         label: "View Accounts",
         path: "/accounts",
         roles: ["Admin", "Reviewer"],
       },
       {
-        key: "15-2",
+        key: "17-2",
         label: "Create Account",
         path: "/create-account",
         roles: ["Admin"],
@@ -224,20 +239,20 @@ const navItems = [
     ],
   },
   {
-    key: "16",
+    key: "18",
     label: "Candidates",
     icon: "SolutionOutlined",
     path: "/candidates",
     roles: ["Admin", "HR", "Reviewer"],
     children: [
       {
-        key: "16-1",
+        key: "18-1",
         label: "View Candidates",
         path: "/candidates-view",
         roles: ["Admin", "HR", "Reviewer"],
       },
       {
-        key: "16-2",
+        key: "18-2",
         label: "Import Candidates",
         path: "/candidates-import",
         roles: ["Admin", "HR"],
@@ -245,20 +260,20 @@ const navItems = [
     ],
   },
   {
-    key: "17",
+    key: "19",
     label: "Assign Trainee",
     icon: "DeploymentUnitOutlined",
     path: "/assign-trainee",
     roles: ["Training staff"],
     children: [
       {
-        key: "17-1",
+        key: "19-1",
         label: "Import Assign Trainee",
         path: "/import-assign-trainee",
         roles: ["Training staff"],
       },
       {
-        key: "17-2",
+        key: "19-2",
         label: "Assigned Trainee",
         path: "/assigned-trainee",
         roles: ["Training staff"],
@@ -266,7 +281,7 @@ const navItems = [
     ],
   },
   {
-    key: "18",
+    key: "20",
     label: "Department",
     icon: "FileProtectOutlined",
     path: "/department",
@@ -274,15 +289,9 @@ const navItems = [
   },
 
   // 7. System/Other
+ 
   {
-    key: "19",
-    label: "Specialty",
-    icon: "ImportOutlined",
-    path: "/specialty",
-    roles: ["Admin", "Training staff", "HR"],
-  },
-  {
-    key: "20",
+    key: "21",
     label: "Regulations",
     icon: "FileProtectOutlined",
     path: "/regulations",
@@ -298,18 +307,12 @@ const navItems = [
     ],
   },
   {
-    key: "21",
+    key: "22",
     label: "Reports",
     icon: "FileExcelOutlined",
     path: "/export-certificate",
   },
-  {
-    key: "22",
-    label: "Learning Matrix",
-    icon: "BookOutlined",
-    path: "/learning-matrix",
-    roles: ["Admin", "Training staff", "HR", "Instructor", "Reviewer"],
-  },
+  
 ];
 
 export default navItems;

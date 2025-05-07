@@ -38,11 +38,11 @@ export const trainingScheduleService = {
     }
   },
 
-  updateTrainingSchedule: async (id, scheduleData) => {
+  updateTrainingSchedule: async (id, data) => {
     try {
       const response = await axiosInstance.put(
         `${API.UPDATE_TRAINING_SCHEDULE}/${id}`,
-        scheduleData
+        data
       );
       return response.data;
     } catch (error) {
@@ -246,5 +246,12 @@ export const trainingScheduleService = {
       console.error("Error fetching subjects from API:", error);
       throw error; // Ném lỗi ra để component xử lý
     }
+  },
+
+  getAllInstructors: async () => {
+    const response = await axiosInstance.get(`${API.GET_ALL_USER}`, {
+      params: { roleName: "Instructor" }
+    });
+    return response.data;
   },
 };

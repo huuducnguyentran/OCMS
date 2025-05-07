@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Table, Spin, Empty, message, Select, Button, Tag, Tooltip } from "antd";
+import { Table, Spin, Empty, message, Select, Button, Tag, Tooltip, Popconfirm } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   CalendarOutlined,
@@ -12,6 +12,8 @@ import {
   CheckCircleOutlined,
   TagOutlined,
   EnvironmentOutlined,
+  EditOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { trainingScheduleService } from "../../services/trainingScheduleService";
 import { SchedulePageValidationSchema } from "../../../utils/validationSchemas";
@@ -408,9 +410,14 @@ const SchedulePage = () => {
                   >
                     {schedule.status}
                   </Tag>
-                  <Tooltip title="View Subject Details">
-                    <BookOutlined className="text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </Tooltip>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {getCardActions(schedule)}
+                    <Tooltip title="View Subject Details">
+                      <BookOutlined className="text-blue-500" />
+                    </Tooltip>
+                  </div>
                 </div>
 
                 {/* Subject Name */}
@@ -777,6 +784,64 @@ const SchedulePage = () => {
         </div>
       </div>
     );
+  };
+
+  const handleEditSchedule = (schedule) => {
+    navigate(`/schedule/edit/${schedule.scheduleID}`, {
+      state: { scheduleData: schedule }
+    });
+  };
+
+  // Thêm hàm getCardActions
+  const getCardActions = (schedule) => {
+    const actions = [];
+
+    // Chỉ hiển thị nút Edit và Delete cho Training Staff
+    if (userRole === "TrainingStaff" || userRole === "Training staff") {
+      actions.push(
+        <div className="flex items-center gap-2 mt-2">
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditSchedule(schedule);
+            }}
+            className="text-blue-500 hover:text-blue-700"
+          />
+          <Popconfirm
+            title="Are you sure you want to delete this schedule?"
+            onConfirm={(e) => {
+              e.stopPropagation();
+              handleDeleteSchedule(schedule.scheduleID);
+            }}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button
+              type="text"
+              icon={<DeleteOutlined />}
+              onClick={(e) => e.stopPropagation()}
+              className="text-red-500 hover:text-red-700"
+            />
+          </Popconfirm>
+        </div>
+      );
+    }
+
+    return actions;
+  };
+
+  // Thêm hàm xử lý delete
+  const handleDeleteSchedule = async (scheduleId) => {
+    try {
+      await trainingScheduleService.deleteSchedule(scheduleId);
+      message.success("Schedule deleted successfully");
+      fetchScheduleData(); // Refresh data after deletion
+    } catch (error) {
+      message.error("Failed to delete schedule");
+      console.error(error);
+    }
   };
 
   return (

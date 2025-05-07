@@ -56,22 +56,28 @@ const PlanLevelEnum = {
   Relearn: 2,
 };
 
+// Update StatusEnum to match new API values
 const StatusEnum = {
-  Pending: 0,
-  Approved: 1,
-  Rejected: 2,
-  Completed: 3,
+  Draft: "Draft",
+  Pending: "Pending",
+  Approved: "Approved",
+  Rejected: "Rejected"
 };
 
-// Cập nhật lại các options với giá trị enum
+// Update status options
 const statusOptions = [
-  { label: "Pending", value: 0 },
-  { label: "Approved", value: 1 },
-  { label: "Rejected", value: 2 },
-  { label: "Completed", value: 3 },
+  { label: "Draft", value: "Draft" },
+  { label: "Pending", value: "Pending" },
+  { label: "Approved", value: "Approved" },
+  { label: "Rejected", value: "Rejected" }
 ];
 
-
+// Cập nhật lại các options với giá trị enum
+const planLevelOptions = [
+  { label: "Initial", value: PlanLevelEnum.Initial },
+  { label: "Recurrent", value: PlanLevelEnum.Recurrent },
+  { label: "Relearn", value: PlanLevelEnum.Relearn },
+];
 
 const PlanPage = () => {
   const navigate = useNavigate();
@@ -111,35 +117,26 @@ const PlanPage = () => {
   const fetchTrainingPlans = async () => {
     try {
       setLoading(true);
-      console.log("Fetching all training plans...");
-
       const response = await trainingPlanService.getAllTrainingPlans();
 
-      // Kiểm tra và xử lý dữ liệu response
-      let plans = [];
-      if (response) {
-        plans = Array.isArray(response) ? response : response.plans || [];
-
-        // Kiểm tra và log dữ liệu
-        console.log("API response data:", plans);
-
-        // Nếu là trainee, chỉ hiển thị các kế hoạch có trạng thái "Approved"
+      if (response?.plans && Array.isArray(response.plans)) {
+        let plans = response.plans;
+        
+        // If trainee, only show approved plans
         if (isTrainee) {
-          plans = plans.filter((plan) =>
-            isApprovedStatus(plan.trainingPlanStatus)
-          );
-          console.log("Filtered plans for trainee:", plans);
+          plans = plans.filter(plan => plan.trainingPlanStatus === "Approved");
         }
+        
+        setTrainingPlans(plans);
+        applyFilters(plans);
+      } else {
+        setTrainingPlans([]);
+        setFilteredPlans([]);
+        message.info("No plans available");
       }
-
-      setTrainingPlans(plans);
-      applyFilters(plans);
     } catch (error) {
       console.error("Failed to fetch training plans:", error);
-      console.error("Error details:", error.message, error.stack);
-      message.error(
-        "Failed to load training plans: " + (error.message || "Unknown error")
-      );
+      message.error("Failed to load training plans: " + (error.message || "Unknown error"));
       setTrainingPlans([]);
       setFilteredPlans([]);
     } finally {
@@ -171,46 +168,18 @@ const PlanPage = () => {
       const lowerSearchText = searchText.toLowerCase().trim();
       result = result.filter(
         (plan) =>
-          (plan.planName &&
-            plan.planName.toLowerCase().includes(lowerSearchText)) ||
-          (plan.planId &&
-            plan.planId.toLowerCase().includes(lowerSearchText)) ||
-          (plan.specialtyId &&
-            plan.specialtyId.toLowerCase().includes(lowerSearchText))
+          (plan.planName && plan.planName.toLowerCase().includes(lowerSearchText)) ||
+          (plan.planId && plan.planId.toLowerCase().includes(lowerSearchText)) ||
+          (plan.courseId && plan.courseId.toLowerCase().includes(lowerSearchText)) ||
+          (plan.specialtyId && plan.specialtyId.toLowerCase().includes(lowerSearchText))
       );
     }
 
-    // Filter by status using enum values or string values
+    // Filter by status
     if (selectedStatusValues.length > 0) {
-      result = result.filter((plan) => {
-        // Nếu status là chuỗi, chuyển đổi thành giá trị enum tương ứng
-        let statusValue = plan.trainingPlanStatus;
-        if (typeof plan.trainingPlanStatus === "string") {
-          if (plan.trainingPlanStatus === "Approved")
-            statusValue = StatusEnum.Approved;
-          else if (plan.trainingPlanStatus === "Pending")
-            statusValue = StatusEnum.Pending;
-          else if (plan.trainingPlanStatus === "Rejected")
-            statusValue = StatusEnum.Rejected;
-        }
-        return selectedStatusValues.includes(statusValue);
-      });
-    }
-
-    // Filter by plan level using enum values or string values
-    if (selectedLevelValues.length > 0) {
-      result = result.filter((plan) => {
-        // Nếu planLevel là chuỗi, chuyển đổi thành giá trị enum tương ứng
-        let levelValue = plan.planLevel;
-        if (typeof plan.planLevel === "string") {
-          if (plan.planLevel === "Initial") levelValue = PlanLevelEnum.Initial;
-          else if (plan.planLevel === "Recurrent")
-            levelValue = PlanLevelEnum.Recurrent;
-          else if (plan.planLevel === "Relearn")
-            levelValue = PlanLevelEnum.Relearn;
-        }
-        return selectedLevelValues.includes(levelValue);
-      });
+      result = result.filter((plan) => 
+        selectedStatusValues.includes(plan.trainingPlanStatus)
+      );
     }
 
     // Filter by specialty
@@ -266,20 +235,17 @@ const PlanPage = () => {
     specialtySort,
   ]);
 
+  // Update getStatusColor function
   const getStatusColor = (status) => {
-    if (!status) return "default";
-
     switch (status) {
       case "Draft":
         return "blue";
       case "Pending":
-        return "orange";
+        return "orange";  
       case "Approved":
         return "green";
       case "Rejected":
         return "red";
-      case "Completed":
-        return "navy";
       default:
         return "default";
     }
@@ -815,9 +781,8 @@ const PlanPage = () => {
                         {plan.planId}
                       </Tag>
                       <div className="mt-2">
-                        <Tag color="cyan">
-                          Specialty: {plan.specialtyId || "N/A"}
-                        </Tag>
+                        <Tag color="cyan">Course: {plan.courseId || "N/A"}</Tag>
+                        <Tag color="purple" className="ml-2">Specialty: {plan.specialtyId || "N/A"}</Tag>
                       </div>
                     </div>
                     <CalendarOutlined className="text-2xl text-blue-500" />
@@ -827,7 +792,7 @@ const PlanPage = () => {
                     ellipsis={{ rows: 2 }}
                     className="text-gray-600 mb-4"
                   >
-                    {plan.desciption || "No description provided"}
+                    {plan.description || "No description provided"}
                   </Paragraph>
 
                   <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t">
@@ -835,10 +800,10 @@ const PlanPage = () => {
                       color={getStatusColor(plan.trainingPlanStatus)}
                       className="text-center"
                     >
-                      {plan.trainingPlanStatus || "No Status"}
+                      {plan.trainingPlanStatus}
                     </Tag>
-                    <Tag color="purple" className="text-center">
-                      {getPlanLevelText(plan.planLevel)}
+                    <Tag color="geekblue" className="text-center">
+                      Created by: {plan.createByUserId}
                     </Tag>
                   </div>
 
