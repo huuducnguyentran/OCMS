@@ -39,18 +39,14 @@ const { Title, Paragraph } = Typography;
 
 const RequestTypeEnum = {
   NewPlan: 0,
-  RecurrentPlan: 1,
-  RelearnPlan: 2,
-  PlanChange: 4,
-  PlanDelete: 5,
+  Update: 10,
+  Delete: 11,
 };
 
 const RequestTypeLabels = {
   [RequestTypeEnum.NewPlan]: "New Plan",
-  [RequestTypeEnum.RecurrentPlan]: "Recurrent Plan",
-  [RequestTypeEnum.RelearnPlan]: "Relearn Plan",
-  [RequestTypeEnum.PlanChange]: "Plan Change",
-  [RequestTypeEnum.PlanDelete]: "Plan Delete",
+  [RequestTypeEnum.Update]: "Plan Change",
+  [RequestTypeEnum.Delete]: "Plan Delete",
 };
 
 // Thêm các enum và options mới
@@ -75,11 +71,7 @@ const statusOptions = [
   { label: "Completed", value: 3 },
 ];
 
-const planLevelOptions = [
-  { label: "Initial", value: 0 },
-  { label: "Recurrent", value: 1 },
-  { label: "Relearn", value: 2 },
-];
+
 
 const PlanPage = () => {
   const navigate = useNavigate();
