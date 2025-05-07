@@ -14,6 +14,7 @@ import {
   List,
   Empty,
   message,
+  Tooltip,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -24,12 +25,15 @@ import {
   UserOutlined,
   MailOutlined,
   IdcardOutlined,
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { getSubjectById, getSubjectTrainees } from "../../services/subjectService";
 import moment from "moment";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 const SubjectDetailPage = () => {
   const { subjectId } = useParams();
