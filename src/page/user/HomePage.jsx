@@ -275,46 +275,15 @@ const HomePage = () => {
         </motion.div>
 
         {/* Statistics based on role */}
-        {role === "Trainee" ? (
+        {role === "HeadMaster" ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+          </div>
+        ) : role === "Trainee" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <StatisticCard
-              icon={<BookOutlined className="text-2xl text-white" />}
-              title="My Courses"
-              value={stats.ongoingSchedules}
-              color="bg-blue-500"
-              onClick={() => navigate("/assigned-trainee-courses")}
-            />
-            <StatisticCard
-              icon={<TrophyOutlined className="text-2xl text-white" />}
-              title="Completed Courses"
-              value={stats.completedCourses}
-              color="bg-green-500"
-              onClick={() => navigate("/trainee-grade")}
-            />
           </div>
         ) : role === "Instructor" ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatisticCard
-              icon={<CalendarOutlined className="text-2xl text-white" />}
-              title="Current Schedules"
-              value={stats.ongoingSchedules}
-              color="bg-blue-500"
-              onClick={() => navigate("/schedule")}
-            />
-            <StatisticCard
-              icon={<TeamOutlined className="text-2xl text-white" />}
-              title="Active Trainees"
-              value={stats.activeTrainees}
-              color="bg-green-500"
-              onClick={() => navigate("/grade")}
-            />
-            <StatisticCard
-              icon={<FileTextOutlined className="text-2xl text-white" />}
-              title="Pending Grades"
-              value={stats.pendingGrades}
-              color="bg-orange-500"
-              onClick={() => navigate("/grade")}
-            />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -356,7 +325,32 @@ const HomePage = () => {
             Quick Access
           </Title>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {role === "Instructor" ? (
+            {role === "HeadMaster" ? (
+              <>
+                <QuickAccessCard
+                  icon={<CalendarOutlined className="text-2xl text-white" />}
+                  title="Pending Requests"
+                  description="Review and approve pending training plans"
+                  path="/request"
+                  color="bg-orange-500"
+                  badge={stats.pendingRequests}
+                />
+                <QuickAccessCard
+                  icon={<SafetyCertificateOutlined className="text-2xl text-white" />}
+                  title="Certificates"
+                  description="View and manage training certificates"
+                  path="/certificate"
+                  color="bg-green-500"
+                />
+                <QuickAccessCard
+                  icon={<FileTextOutlined className="text-2xl text-white" />}
+                  title="Decisions"
+                  description="View and manage training decisions"
+                  path="/decision"
+                  color="bg-blue-500"
+                />
+              </>
+            ) : role === "Instructor" ? (
               <>
                 <QuickAccessCard
                   icon={<CalendarOutlined className="text-2xl text-white" />}
@@ -387,8 +381,8 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* Recent Activities for Instructor */}
-        {role === "Instructor" && (
+        {/* Recent Activities for HeadMaster */}
+        {role === "HeadMaster" && (
           <Card className="shadow-md">
             <Title level={4} className="mb-4">
               Recent Activities
@@ -399,14 +393,14 @@ const HomePage = () => {
               </div>
             ) : (
               <Timeline>
-                <Timeline.Item color="blue">
-                  Upcoming class: Advanced Training (Tomorrow, 9:00 AM)
-                </Timeline.Item>
                 <Timeline.Item color="orange">
-                  5 pending grades need review
+                  {stats.pendingRequests} new training plans need review
                 </Timeline.Item>
                 <Timeline.Item color="green">
-                  Completed teaching schedule for Basic Training
+                  {stats.certificatesIssued} certificates issued
+                </Timeline.Item>
+                <Timeline.Item color="blue">
+                  {stats.completedCourses} decisions made
                 </Timeline.Item>
               </Timeline>
             )}

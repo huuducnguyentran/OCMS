@@ -70,7 +70,7 @@ const SubjectPage = () => {
                 courseId: subject.courseId,
               }))
             );
-            setScheduleData(traineeSchedules);
+            setScheduleData(traineeSchedules);z
           }
         } else if (role === "Instructor") {
           const response = await getAllSubject();

@@ -33,7 +33,24 @@ const CandidateImportPage = () => {
       // Candidate Sheet
       const candidateSheet = workbook.Sheets["Candidate"];
       if (!candidateSheet) throw new Error("Cannot find sheet 'Candidate'");
-      const jsonCandidate = utils.sheet_to_json(candidateSheet);
+
+      const excelDateToJSDate = (serial) => {
+        const utc_days = Math.floor(serial - 25569);
+        const utc_value = utc_days * 86400;
+        const date_info = new Date(utc_value * 1000);
+        const day = String(date_info.getDate()).padStart(2, "0");
+        const month = String(date_info.getMonth() + 1).padStart(2, "0");
+        const year = date_info.getFullYear();
+        return `${day}/${month}/${year}`;
+      };
+
+      const jsonCandidate = utils.sheet_to_json(candidateSheet).map((row) => ({
+        ...row,
+        DateOfBirth:
+          typeof row.DateOfBirth === "number"
+            ? excelDateToJSDate(row.DateOfBirth)
+            : row.DateOfBirth,
+      }));
       if (jsonCandidate.length === 0) {
         throw new Error("'Candidate' sheet has no data");
       }

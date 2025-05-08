@@ -523,7 +523,11 @@ const ViewGradePage = () => {
       createForm.resetFields();
       fetchGrades(); // Refresh data
     } catch (error) {
-      message.error(error.message || "Failed to create grade");
+      const errMsg =
+        error?.response?.data?.message ||
+        error.message ||
+        "Failed to create grade";
+      message.error(errMsg);
     } finally {
       setCreating(false);
     }

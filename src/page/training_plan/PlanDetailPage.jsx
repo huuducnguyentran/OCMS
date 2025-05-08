@@ -56,14 +56,8 @@ const PlanDetailPage = () => {
 
   useEffect(() => {
     fetchPlanDetails();
-
-    // Kiểm tra và log role người dùng trong useEffect
     const role = sessionStorage.getItem("role");
-    console.log("User role from sessionStorage in useEffect:", role);
-
-    // Nếu role khác với state hiện tại, cập nhật lại state
     if (role !== userRole) {
-      console.log("Updating userRole state from", userRole, "to", role);
       setUserRole(role);
     }
   }, [planId, userRole]);
@@ -72,8 +66,6 @@ const PlanDetailPage = () => {
     try {
       setLoading(true);
       const response = await trainingPlanService.getTrainingPlanById(planId);
-      console.log("Plan details response:", response);
-
       if (response && response.plan) {
         setPlanDetails(response.plan);
       } else {
@@ -454,7 +446,7 @@ const PlanDetailPage = () => {
                 </Breadcrumb.Item>
               </Breadcrumb>
             </div>
-            {(isReviewer) && (
+            {isReviewer && (
               <Tooltip title="Export PDF">
                 <Button
                   type="primary"
@@ -480,59 +472,7 @@ const PlanDetailPage = () => {
         ref={contentRef}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
       >
-        {/* Statistics Cards */}
-        <Row gutter={[16, 16]} className="mb-8">
-          <Col xs={24} sm={12} md={6}>
-            <Card
-              bordered={false}
-              className="h-full shadow-sm hover:shadow-md transition-shadow"
-            >
-              <Statistic
-                title="Total Courses"
-                value={planDetails?.courses?.length || 0}
-                prefix={<BookOutlined className="text-blue-500" />}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card
-              bordered={false}
-              className="h-full shadow-sm hover:shadow-md transition-shadow"
-            >
-              <Statistic
-                title="Total Subjects"
-                value={getAllSubjects().length}
-                prefix={<TeamOutlined className="text-green-500" />}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card
-              bordered={false}
-              className="h-full shadow-sm hover:shadow-md transition-shadow"
-            >
-              <Statistic
-                title="Total Schedules"
-                value={getAllSchedules().length}
-                prefix={<ClockCircleOutlined className="text-purple-500" />}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card
-              bordered={false}
-              className="h-full shadow-sm hover:shadow-md transition-shadow"
-            >
-              <Statistic
-                title="Specialty"
-                value={planDetails?.specialtyId || "N/A"}
-                prefix={<TagOutlined className="text-indigo-500" />}
-              />
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Basic Information */}
+        {/* Basic Information Card */}
         <Card
           title={
             <div className="flex items-center space-x-2">
@@ -546,9 +486,15 @@ const PlanDetailPage = () => {
             <Col xs={24} md={12}>
               <div className="space-y-4">
                 <div>
-                  <Text className="text-gray-500 block">Plan Level</Text>
+                  <Text className="text-gray-500 block">Plan Name</Text>
+                  <Text strong className="text-base">
+                    {planDetails?.planName}
+                  </Text>
+                </div>
+                <div>
+                  <Text className="text-gray-500 block">Course ID</Text>
                   <Tag color="blue" className="mt-1 text-base px-3 py-1">
-                    {planDetails?.planLevel || "N/A"}
+                    {planDetails?.courseId}
                   </Tag>
                 </div>
                 <div>
@@ -560,9 +506,9 @@ const PlanDetailPage = () => {
                   </Text>
                 </div>
                 <div>
-                  <Text className="text-gray-500 block">Specialty ID</Text>
+                  <Text className="text-gray-500 block">Created By</Text>
                   <Tag color="cyan" className="mt-1 text-base px-3 py-1">
-                    {planDetails?.specialtyId || "N/A"}
+                    {planDetails?.createByUserId}
                   </Tag>
                 </div>
               </div>
@@ -579,7 +525,13 @@ const PlanDetailPage = () => {
                     }
                     className="mt-1 text-base px-3 py-1"
                   >
-                    {planDetails?.trainingPlanStatus || "N/A"}
+                    {planDetails?.trainingPlanStatus}
+                  </Tag>
+                </div>
+                <div>
+                  <Text className="text-gray-500 block">Specialty ID</Text>
+                  <Tag color="purple" className="mt-1 text-base px-3 py-1">
+                    {planDetails?.specialtyId}
                   </Tag>
                 </div>
                 <div>
@@ -590,24 +542,18 @@ const PlanDetailPage = () => {
                       : "N/A"}
                   </Text>
                 </div>
-                <div>
-                  <Text className="text-gray-500 block">Created By</Text>
-                  <Text strong className="text-base">
-                    {planDetails?.createByUserId || "N/A"}
-                  </Text>
-                </div>
               </div>
             </Col>
             <Col span={24}>
               <Divider orientation="left">Description</Divider>
               <Text className="text-base">
-                {planDetails?.desciption || "No description available"}
+                {planDetails?.description || "No description available"}
               </Text>
             </Col>
           </Row>
         </Card>
 
-        {/* Courses Section */}
+        {/* Courses Section - Empty State */}
         <Card
           title={
             <div className="flex items-center space-x-2">
@@ -617,243 +563,7 @@ const PlanDetailPage = () => {
           }
           className="mb-8 shadow-sm hover:shadow-md transition-shadow"
         >
-          {planDetails?.courses?.length > 0 ? (
-            <Table
-              dataSource={planDetails.courses}
-              columns={[
-                {
-                  title: "Course ID",
-                  dataIndex: "courseId",
-                  key: "courseId",
-                  width: "15%",
-                  render: (text) => <Text strong>{text}</Text>,
-                },
-                {
-                  title: "Course Name",
-                  dataIndex: "courseName",
-                  key: "courseName",
-                  width: "25%",
-                },
-                {
-                  title: "Level",
-                  dataIndex: "courseLevel",
-                  key: "courseLevel",
-                  width: "15%",
-                  render: (level) => <Tag color="blue">{level || "N/A"}</Tag>,
-                },
-                {
-                  title: "Status",
-                  dataIndex: "status",
-                  key: "status",
-                  render: (status) => (
-                    <Tag color={status === "Approved" ? "green" : "default"}>
-                      {status || "N/A"}
-                    </Tag>
-                  ),
-                },
-                {
-                  title: "Progress",
-                  dataIndex: "progress",
-                  key: "progress",
-                  render: (progress) => (
-                    <Tag color={progress === "NotYet" ? "orange" : "green"}>
-                      {progress || "N/A"}
-                    </Tag>
-                  ),
-                },
-              ]}
-              expandable={{
-                expandedRowRender: (record) => (
-                  <Table
-                    dataSource={record.subjects || []}
-                    columns={[
-                      {
-                        title: "Subject ID",
-                        dataIndex: "subjectId",
-                        key: "subjectId",
-                        width: "15%",
-                        render: (text) => <Text strong>{text}</Text>,
-                      },
-                      {
-                        title: "Subject Name",
-                        dataIndex: "subjectName",
-                        key: "subjectName",
-                        width: "25%",
-                      },
-                      {
-                        title: "Credits",
-                        dataIndex: "credits",
-                        key: "credits",
-                        width: "10%",
-                        render: (credits) => (
-                          <Tag color="blue">{credits || "N/A"}</Tag>
-                        ),
-                      },
-                      {
-                        title: "Passing Score",
-                        dataIndex: "passingScore",
-                        key: "passingScore",
-                        width: "15%",
-                        render: (score) => (
-                          <Tag color="green">{score || "N/A"}</Tag>
-                        ),
-                      },
-                      {
-                        title: "Instructor",
-                        key: "instructor",
-                        width: "15%",
-                        render: (_, record) => {
-                          const instructor = record.instructors?.[0];
-                          return instructor ? (
-                            <Tag color="purple">{instructor.instructorId}</Tag>
-                          ) : (
-                            <Tag color="default">No Instructor</Tag>
-                          );
-                        },
-                      },
-                      {
-                        title: "Schedules",
-                        key: "schedules",
-                        width: "20%",
-                        render: (_, record) => (
-                          <div className="space-y-1">
-                            {record.trainingSchedules?.map(
-                              (schedule, index) => (
-                                <Tag key={index} color="cyan">
-                                  {schedule.classTime} - {schedule.daysOfWeek}
-                                </Tag>
-                              )
-                            ) || <Tag color="default">No Schedule</Tag>}
-                          </div>
-                        ),
-                      },
-                    ]}
-                    pagination={false}
-                    size="small"
-                    rowKey="subjectId"
-                    className="bg-gray-50 rounded-lg"
-                  />
-                ),
-                expandIcon: ({ expanded, onExpand, record }) =>
-                  expanded ? (
-                    <Button
-                      icon={<MinusOutlined />}
-                      onClick={(e) => onExpand(record, e)}
-                      type="text"
-                      className="text-blue-500"
-                    ></Button>
-                  ) : (
-                    <Button
-                      icon={<PlusOutlined />}
-                      onClick={(e) => onExpand(record, e)}
-                      type="text"
-                      className="text-gray-500 hover:text-blue-500"
-                    ></Button>
-                  ),
-              }}
-              size="middle"
-              pagination={false}
-              rowKey="courseId"
-              className="shadow-sm"
-            />
-          ) : (
-            <Empty description="No courses assigned" />
-          )}
-        </Card>
-
-        {/* Training Schedules Section */}
-        <Card
-          title={
-            <div className="flex items-center space-x-2">
-              <ScheduleOutlined className="text-indigo-500" />
-              <span>Training Schedules</span>
-            </div>
-          }
-          className="shadow-sm hover:shadow-md transition-shadow"
-        >
-          {getAllSchedules().length > 0 ? (
-            <Table
-              dataSource={getAllSchedules()}
-              columns={[
-                {
-                  title: "Schedule ID",
-                  dataIndex: "scheduleID",
-                  key: "scheduleID",
-                  width: "15%",
-                  render: (text) => <Text strong>{text}</Text>,
-                },
-                {
-                  title: "Subject",
-                  key: "subject",
-                  width: "25%",
-                  render: (_, record) => (
-                    <div>
-                      <Text strong>{record.subjectName}</Text>
-                      <Text className="block text-xs text-gray-500">
-                        {record.subjectId}
-                      </Text>
-                    </div>
-                  ),
-                },
-                {
-                  title: "Time",
-                  key: "time",
-                  width: "20%",
-                  render: (_, record) => (
-                    <div className="space-y-1">
-                      <Text strong>{record.classTime}</Text>
-                      <Tag color="blue" className="block w-fit">
-                        {record.daysOfWeek}
-                      </Tag>
-                      <Text className="block text-xs text-gray-500">
-                        Duration: {record.subjectPeriod}
-                      </Text>
-                    </div>
-                  ),
-                },
-                {
-                  title: "Location",
-                  key: "location",
-                  width: "20%",
-                  render: (_, record) => (
-                    <div>
-                      <Text strong>Room: {record.room}</Text>
-                      <Text className="block text-xs text-gray-500">
-                        {record.location}
-                      </Text>
-                    </div>
-                  ),
-                },
-                {
-                  title: "Status",
-                  key: "status",
-                  width: "10%",
-                  render: (_, record) => (
-                    <Tag
-                      color={record.status === "Incoming" ? "blue" : "default"}
-                    >
-                      {record.status}
-                    </Tag>
-                  ),
-                },
-                {
-                  title: "Instructor",
-                  dataIndex: "instructorID",
-                  key: "instructor",
-                  width: "10%",
-                  render: (instructorId) => (
-                    <Tag color="purple">{instructorId || "N/A"}</Tag>
-                  ),
-                },
-              ]}
-              size="middle"
-              pagination={false}
-              rowKey="scheduleID"
-              className="shadow-sm"
-            />
-          ) : (
-            <Empty description="No schedules assigned" />
-          )}
+          <Empty description="No courses assigned to this training plan" />
         </Card>
       </div>
     </div>

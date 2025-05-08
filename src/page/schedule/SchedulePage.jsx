@@ -349,10 +349,7 @@ const SchedulePage = () => {
 
     let filteredData = scheduleData;
 
-    // Kiểm tra dữ liệu đầu vào
-    console.log("Filtered data before processing:", filteredData);
-
-    // Lọc theo instructor nếu là Training Staff và có chọn instructor
+    // Chỉ lọc theo instructor nếu là Training Staff
     if ((userRole === "TrainingStaff" || userRole === "Training staff") && selectedInstructor) {
       filteredData = scheduleData.filter(sch => sch.instructorName === selectedInstructor);
     }
@@ -373,7 +370,7 @@ const SchedulePage = () => {
     return uniqueTimeSlots.map((timeSlot, timeIndex) => {
       const row = {
         key: `timeslot-${timeIndex}`,
-        timeFrame: `${timeSlot} - ${addMinutesToTime(timeSlot, 90)}`, // Assuming 90 minutes duration
+        timeFrame: `${timeSlot} - ${addMinutesToTime(timeSlot, 90)}`,
       };
 
       const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -408,23 +405,12 @@ const SchedulePage = () => {
               onClick={() => navigate(`/subject/${schedule.subjectId}`)}
               className="group cursor-pointer transform transition-all duration-300 hover:scale-[1.02]"
             >
-              <div className={`p-4 rounded-xl border transition-all duration-300
-                ${schedule.status === 'Approved' 
-                  ? 'border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-lg hover:border-green-300' 
-                  : userRole === "TrainingStaff" || userRole === "Training staff"
-                    ? 'border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50 hover:shadow-lg hover:border-yellow-300'
-                    : 'border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-lg hover:border-green-300'
-                }`}
-              >
+              <div className="p-4 rounded-xl border transition-all duration-300 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-lg hover:border-green-300">
                 {/* Status Badge - Chỉ hiển thị cho Training Staff hoặc status Approved */}
                 <div className="flex justify-between items-center mb-2">
                   {(userRole === "TrainingStaff" || userRole === "Training staff" || schedule.status === "Approved") && (
                     <Tag 
-                      className={`px-2 py-1 border-0 font-medium
-                        ${schedule.status === 'Approved' 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-yellow-100 text-yellow-700'
-                        }`}
+                      className="px-2 py-1 border-0 font-medium bg-green-100 text-green-700"
                     >
                       {schedule.status}
                     </Tag>
@@ -441,25 +427,28 @@ const SchedulePage = () => {
 
                 {/* Subject Name */}
                 <div className="font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                  {schedule.subjectName}
-                </div>
+                {schedule.subjectName}
+              </div>
 
                 {/* Schedule Details */}
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2 text-gray-600">
                     <ClockCircleOutlined className="text-gray-400" />
                     <span>{timeSlot}</span>
-                  </div>
+                </div>
                   
                   <div className="flex items-center gap-2 text-gray-600">
                     <CalendarOutlined className="text-gray-400" />
                     <span>Room {schedule.room}</span>
-                  </div>
+              </div>
 
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <UserSwitchOutlined className="text-gray-400" />
-                    <span>{schedule.instructorName}</span>
-                  </div>
+                  {/* Chỉ hiển thị instructor name khi không phải role Instructor */}
+                  {userRole !== "Instructor" && (
+                    <div className="flex items-center gap-2 text-gray-600">
+                  <UserSwitchOutlined className="text-gray-400" />
+                      <span>{schedule.instructorName}</span>
+                </div>
+                  )}
 
                   {/* Location with Tooltip */}
                   <Tooltip title={schedule.location}>
@@ -1022,21 +1011,21 @@ const SchedulePage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
                 {renderStatusLegend()}
                 {renderScheduleSummary()}
-              </div>
+                </div>
 
-              {/* Quick Info */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <InfoCircleOutlined className="text-blue-600 text-lg" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="font-medium text-blue-700">
-                      Schedule Information
-                    </h4>
-                    <p className="text-sm text-blue-600/90">
-                      Click on any class card to view detailed information.
-                      Active classes are highlighted with a green indicator.
+                {/* Quick Info */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <InfoCircleOutlined className="text-blue-600 text-lg" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="font-medium text-blue-700">
+                        Schedule Information
+                      </h4>
+                      <p className="text-sm text-blue-600/90">
+                        Click on any class card to view detailed information.
+                        Active classes are highlighted with a green indicator.
                     </p>
                   </div>
                 </div>

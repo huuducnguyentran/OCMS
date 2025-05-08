@@ -70,7 +70,21 @@ const AssignTraineePage = () => {
 
       const traineeSheet = workbook.Sheets["TraineeAssign"];
       if (!traineeSheet) throw new Error("Sheet 'TraineeAssign' not found.");
-      const jsonTrainee = utils.sheet_to_json(traineeSheet);
+      const rawData = utils.sheet_to_json(traineeSheet, {
+        header: 1,
+        defval: "",
+      });
+      const [header1, header2, ...dataRows] = rawData;
+      const mergedHeaders = header1.map((h1, idx) => h1 || header2[idx] || "");
+
+      const jsonTrainee = dataRows.map((row) => {
+        const rowObj = {};
+        mergedHeaders.forEach((key, idx) => {
+          rowObj[key] = row[idx];
+        });
+        return rowObj;
+      });
+
       if (jsonTrainee.length === 0) {
         throw new Error("Sheet 'TraineeAssign' contains no data.");
       }
@@ -256,13 +270,13 @@ const AssignTraineePage = () => {
                       setSelectedFile(null);
                       setError(null);
                     }}
-                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                    className="px-4 py-2 text-sm text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors duration-200"
                   >
                     Re-import
                   </button>
                   <button
                     onClick={handleSubmitToServer}
-                    className="px-4 py-2 text-sm bg-blue-500 text-black hover:bg-blue-700 rounded-lg transition-colors duration-200"
+                    className="px-4 py-2 text-sm bg-blue-500 text-white hover:bg-blue-700 rounded-lg transition-colors duration-200"
                   >
                     Submit to Server
                   </button>
