@@ -34,13 +34,11 @@ const CreateSchedulePage = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [subjects, setSubjects] = useState([]);
   const [instructors, setInstructors] = useState([]);
   const [courseSubjectSpecialties, setCourseSubjectSpecialties] = useState([]);
 
   // Fetch subjects and instructors when component mounts
   useEffect(() => {
-    fetchSubjects();
     fetchInstructors();
     fetchCourseSubjectSpecialties();
   }, []);
