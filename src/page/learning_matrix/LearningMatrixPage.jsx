@@ -71,8 +71,10 @@ const LearningMatrixPage = () => {
   const fetchSubjects = async () => {
     try {
       const response = await getAllSubject();
-      if (response && response.subjects) {
-        setSubjects(response.subjects);
+      if (response && response.allSubjects) {
+        setSubjects(response.allSubjects);
+      } else if (Array.isArray(response)) {
+        setSubjects(response);
       }
     } catch (error) {
       console.error("Error fetching subjects:", error);
@@ -95,13 +97,15 @@ const LearningMatrixPage = () => {
 
   // Extract distinct courses and organize data when raw data changes
   useEffect(() => {
-    if (learningMatrixData.length > 0 && subjects.length > 0 && specialties.length > 0) {
+    if (learningMatrixData.length > 0) {
+      console.log("Learning matrix data:", learningMatrixData);
+      
       // Extract distinct courses
       const uniqueCourses = Array.from(
         new Set(
           learningMatrixData.map(item => JSON.stringify({
             courseId: item.courseId,
-            courseName: item.course?.courseName || item.courseId
+            courseName: item.courseName || item.courseId
           }))
         )
       ).map(item => JSON.parse(item));
@@ -113,47 +117,53 @@ const LearningMatrixPage = () => {
         setSelectedCourseId(uniqueCourses[0].courseId);
       }
       
-      // Organize data in matrix format
-      const matrix = {};
-      
-      // Group by courseId
-      uniqueCourses.forEach(course => {
-        matrix[course.courseId] = {
-          courseName: course.courseName,
-          matrix: {}
-        };
+      // Organize data in matrix format only if subjects and specialties are loaded
+      if (subjects.length > 0 && specialties.length > 0) {
+        const matrix = {};
         
-        // Initialize matrix for this course
-        specialties.forEach(specialty => {
-          matrix[course.courseId].matrix[specialty.specialtyId] = {};
+        // Group by courseId
+        uniqueCourses.forEach(course => {
+          matrix[course.courseId] = {
+            courseName: course.courseName,
+            matrix: {}
+          };
           
-          subjects.forEach(subject => {
-            matrix[course.courseId].matrix[specialty.specialtyId][subject.subjectId] = null;
+          // Initialize matrix for this course
+          specialties.forEach(specialty => {
+            matrix[course.courseId].matrix[specialty.specialtyId] = {};
+            
+            subjects.forEach(subject => {
+              matrix[course.courseId].matrix[specialty.specialtyId][subject.subjectId] = null;
+            });
           });
         });
-      });
-      
-      // Determine which data to process
-      const dataToProcess = selectedCourseId && selectedSpecialtyId && filteredData.length > 0
-        ? filteredData  // Use filtered data when course & specialty are selected
-        : learningMatrixData; // Otherwise use all data
         
-      // Fill matrix with data
-      dataToProcess.forEach(item => {
-        if (
-          matrix[item.courseId] && 
-          matrix[item.courseId].matrix[item.specialtyId] &&
-          matrix[item.courseId].matrix[item.specialtyId][item.subjectId] !== undefined
-        ) {
-          matrix[item.courseId].matrix[item.specialtyId][item.subjectId] = item;
+        // Determine which data to process
+        const dataToProcess = selectedCourseId && selectedSpecialtyId && filteredData.length > 0
+          ? filteredData  // Use filtered data when course & specialty are selected
+          : learningMatrixData; // Otherwise use all data
+        
+        console.log("Data to process for matrix:", dataToProcess);
+          
+        // Fill matrix with data
+        dataToProcess.forEach(item => {
+          if (
+            matrix[item.courseId] && 
+            matrix[item.courseId].matrix[item.specialtyId] &&
+            matrix[item.courseId].matrix[item.specialtyId][item.subjectId] !== undefined
+          ) {
+            matrix[item.courseId].matrix[item.specialtyId][item.subjectId] = item;
+          }
+        });
+        
+        setMatrixData(matrix);
+        
+        // Initially set filtered subjects and specialties to all
+        if (!selectedCourseId || !selectedSpecialtyId) {
+          setFilteredSubjects(subjects);
+          setFilteredSpecialties(specialties);
         }
-      });
-      
-      setMatrixData(matrix);
-      
-      // Initially set filtered subjects and specialties to all
-      setFilteredSubjects(subjects);
-      setFilteredSpecialties(specialties);
+      }
     }
   }, [learningMatrixData, subjects, specialties, filteredData, selectedCourseId, selectedSpecialtyId]);
 
@@ -162,9 +172,22 @@ const LearningMatrixPage = () => {
     try {
       setLoading(true);
       const response = await learningMatrixService.getAllCourseSubjectSpecialties();
+      
+      console.log("API Response:", response);
+      
       if (response && response.data) {
+        // Cấu trúc API mới
+        console.log("Setting matrix data from response:", response.data);
         setLearningMatrixData(response.data);
         setFilteredData(response.data);
+      } else if (Array.isArray(response)) {
+        // Trường hợp API trả về mảng trực tiếp
+        console.log("Setting matrix data from array response");
+        setLearningMatrixData(response);
+        setFilteredData(response);
+      } else {
+        console.error("Unexpected API response format:", response);
+        message.error("Unexpected API response format");
       }
     } catch (error) {
       console.error("Error fetching learning matrix data:", error);
@@ -198,51 +221,76 @@ const LearningMatrixPage = () => {
         selectedSpecialtyId
       );
       
+      console.log("Subjects for course and specialty response:", response);
+      
       if (response && response.data && response.data.length > 0) {
-        // Chỉ hiển thị các môn học thuộc khóa học và chuyên ngành đã chọn
+        // Map subjects from API response
         const subjectsFromApi = response.data.map(item => {
-          // Tìm thông tin chi tiết của môn học từ danh sách gốc
+          // Find detailed subject info from original list or use API info
           const subjectDetails = subjects.find(s => s.subjectId === item.subjectId) || {};
           return {
             ...subjectDetails,
-            ...item, // Ghi đè với thông tin từ API
-            isPartOfSpecialty: true // Tất cả đều thuộc chuyên ngành
+            subjectId: item.subjectId,
+            subjectName: item.subjectName || subjectDetails.subjectName,
+            description: item.description || subjectDetails.description,
+            isPartOfSpecialty: true
           };
         });
         
         setFilteredSubjects(subjectsFromApi);
         
-        // Lọc chỉ hiển thị chuyên ngành đã chọn
-        setFilteredSpecialties(specialties.filter(specialty => 
+        // Find specialty details and use API name if available
+        const selectedSpecialtyData = specialties.find(specialty => 
           specialty.specialtyId === selectedSpecialtyId
-        ));
+        );
         
-        // Cập nhật dữ liệu ma trận (giữ nguyên)
-        const filteredMatrixData = response.data.map(item => ({
-          ...item,
-          course: courses.find(c => c.courseId === selectedCourseId),
-          subject: subjects.find(s => s.subjectId === item.subjectId),
-          specialty: specialties.find(s => s.specialtyId === selectedSpecialtyId)
-        }));
+        if (selectedSpecialtyData) {
+          const specialtyWithApiName = {
+            ...selectedSpecialtyData,
+            specialtyName: response.data[0]?.specialtyName || selectedSpecialtyData.specialtyName
+          };
+          
+          setFilteredSpecialties([specialtyWithApiName]);
+        } else {
+          // If specialty not found in list, create one from API data
+          const firstItem = response.data[0];
+          if (firstItem) {
+            setFilteredSpecialties([{
+              specialtyId: firstItem.specialtyId,
+              specialtyName: firstItem.specialtyName
+            }]);
+          }
+        }
         
-        setFilteredData(filteredMatrixData);
+        // Use the API response directly for filtered data
+        setFilteredData(response.data);
+        
+        console.log("Updated filtered subjects:", subjectsFromApi);
+        console.log("Updated filtered specialties:", filteredSpecialties);
       } else {
-        // Nếu không có dữ liệu từ API, hiển thị danh sách rỗng
+        // No data from API
         setFilteredSubjects([]);
         
-        // Lọc chỉ hiển thị chuyên ngành đã chọn
-        setFilteredSpecialties(specialties.filter(specialty => 
+        // Still show selected specialty
+        const selectedSpecialtyData = specialties.find(specialty => 
           specialty.specialtyId === selectedSpecialtyId
-        ));
+        );
+        
+        if (selectedSpecialtyData) {
+          setFilteredSpecialties([selectedSpecialtyData]);
+        } else {
+          setFilteredSpecialties([]);
+        }
         
         setFilteredData([]);
       }
     } catch (error) {
       console.error("Error loading subjects for course and specialty:", error);
-      message.error("Cannot load subject list for this course and specialty");
+      message.error("Không thể tải danh sách môn học cho khóa học và chuyên ngành này");
       
-      // Trong trường hợp lỗi, hiển thị danh sách rỗng
+      // Show empty lists in case of error
       setFilteredSubjects([]);
+      setFilteredSpecialties([]);
     } finally {
       setLoading(false);
     }
@@ -252,13 +300,13 @@ const LearningMatrixPage = () => {
   const handleSpecialtyChange = (value) => {
     setSelectedSpecialtyId(value);
     
-    // Nếu xóa chuyên ngành, đặt lại dữ liệu để hiển thị tất cả
+    // If specialty is cleared, reset data
     if (!value) {
       setFilteredSubjects(subjects);
       setFilteredSpecialties(specialties);
       setFilteredData(learningMatrixData);
     } else if (selectedCourseId) {
-      // Nếu đã chọn cả khóa học và chuyên ngành, tải dữ liệu
+      // If both course and specialty are selected, load specific data
       fetchSubjectsForCourseAndSpecialty();
     }
   };
@@ -267,16 +315,16 @@ const LearningMatrixPage = () => {
   const handleCourseChange = (courseId) => {
     setSelectedCourseId(courseId);
     
-    // Khi thay đổi khóa học, nếu đã chọn chuyên ngành, tải lại dữ liệu
+    // When course changes, reload data if specialty is selected
     if (selectedSpecialtyId) {
-      // Đặt lại selectedSpecialtyId để trigger useEffect
+      // Reset specialty to trigger useEffect
       const currentSpecialtyId = selectedSpecialtyId;
       setSelectedSpecialtyId(null);
       setTimeout(() => {
         setSelectedSpecialtyId(currentSpecialtyId);
       }, 0);
     } else {
-      // Nếu chưa chọn chuyên ngành, hiển thị tất cả chuyên ngành
+      // If no specialty selected, show all specialties
       setFilteredSpecialties(specialties);
       setFilteredSubjects(subjects);
     }

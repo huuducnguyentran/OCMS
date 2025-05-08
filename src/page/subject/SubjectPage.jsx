@@ -74,9 +74,9 @@ const SubjectPage = () => {
           }
         } else if (role === "Instructor") {
           const response = await getAllSubject();
-          if (response && response.subjects) {
-            const instructorSubjects = response.subjects.filter((subject) =>
-              subject.instructors.some(
+          if (response && response.allSubjects) {
+            const instructorSubjects = response.allSubjects.filter((subject) =>
+              subject.instructors && subject.instructors.some(
                 (instructor) => instructor.instructorId === userId
               )
             );
@@ -85,9 +85,9 @@ const SubjectPage = () => {
           }
         } else {
           const response = await getAllSubject();
-          if (response && response.subjects) {
-            setSubjects(response.subjects);
-            setFilteredSubjects(response.subjects);
+          if (response && response.allSubjects) {
+            setSubjects(response.allSubjects);
+            setFilteredSubjects(response.allSubjects);
           } else if (Array.isArray(response)) {
             setSubjects(response);
             setFilteredSubjects(response);
@@ -129,9 +129,23 @@ const SubjectPage = () => {
       },
       onOk: async () => {
         try {
-          await deleteSubject(id);
-          setSubjects(subjects.filter((subject) => subject.subjectId !== id));
-          message.success("Subject deleted successfully!");
+          const response = await deleteSubject(id);
+          
+          if (response && response.message) {
+            // Nếu API trả về danh sách môn học mới
+            if (response.allSubjects) {
+              setSubjects(response.allSubjects);
+              message.success(response.message);
+            } else {
+              // Nếu API không trả về danh sách mới, xóa môn học khỏi danh sách hiện tại
+              setSubjects(subjects.filter((subject) => subject.subjectId !== id));
+              message.success(response.message || "Subject deleted successfully!");
+            }
+          } else {
+            // Trường hợp API không trả về message
+            setSubjects(subjects.filter((subject) => subject.subjectId !== id));
+            message.success("Subject deleted successfully!");
+          }
         } catch (error) {
           console.error("Error deleting subject:", error);
           
