@@ -50,10 +50,18 @@ const CreateLearningMatrixPage = () => {
           setCourses(courseResponse.data);
         }
 
-        // Get subject list
+        // Get subject list - Cập nhật theo response mới
         const subjectResponse = await getAllSubject();
-        if (subjectResponse && subjectResponse.subjects) {
-          setSubjects(subjectResponse.subjects);
+        if (subjectResponse && subjectResponse.allSubjects) {
+          // Map dữ liệu theo cấu trúc mới
+          const formattedSubjects = subjectResponse.allSubjects.map(subject => ({
+            subjectId: subject.subjectId,
+            subjectName: subject.subjectName,
+            description: subject.description,
+            credits: subject.credits,
+            passingScore: subject.passingScore
+          }));
+          setSubjects(formattedSubjects);
         }
 
         // Get specialty list
@@ -184,8 +192,17 @@ const CreateLearningMatrixPage = () => {
                   style={{ width: "100%" }}
                 >
                   {subjects.map((subject) => (
-                    <Option key={subject.subjectId} value={subject.subjectId}>
-                      {subject.subjectName} ({subject.subjectId})
+                    <Option 
+                      key={subject.subjectId} 
+                      value={subject.subjectId}
+                      title={subject.description}
+                    >
+                      <div>
+                        <div>{subject.subjectName}</div>
+                        <div className="text-xs text-gray-500">
+                          Credits: {subject.credits} | Passing Score: {subject.passingScore}
+                        </div>
+                      </div>
                     </Option>
                   ))}
                 </Select>
