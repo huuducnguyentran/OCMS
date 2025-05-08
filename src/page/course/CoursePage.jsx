@@ -85,10 +85,28 @@ const CoursePage = () => {
     }
   }, [location.state, navigate, location.pathname]);
 
+  // Thêm hàm để lọc bỏ các khóa học trùng lặp
+  const removeDuplicateCourses = (courses) => {
+    const uniqueCourses = [];
+    const seen = new Set();
+    
+    courses.forEach(course => {
+      // Sử dụng courseName làm key để kiểm tra trùng lặp
+      if (!seen.has(course.courseName)) {
+        seen.add(course.courseName);
+        uniqueCourses.push(course);
+      }
+    });
+    
+    return uniqueCourses;
+  };
+
   // Effect để lọc khóa học khi có thay đổi về dữ liệu hoặc từ khóa tìm kiếm
   useEffect(() => {
     if (!searchText) {
-      setFilteredCourses(courses);
+      // Lọc bỏ trùng lặp trước khi set vào state
+      const uniqueCourses = removeDuplicateCourses(courses);
+      setFilteredCourses(uniqueCourses);
     } else {
       const searchLower = searchText.toLowerCase();
       const filtered = courses.filter(
@@ -97,7 +115,9 @@ const CoursePage = () => {
           course.courseId.toLowerCase().includes(searchLower) ||
           (course.status && course.status.toLowerCase().includes(searchLower))
       );
-      setFilteredCourses(filtered);
+      // Lọc bỏ trùng lặp sau khi search
+      const uniqueFiltered = removeDuplicateCourses(filtered);
+      setFilteredCourses(uniqueFiltered);
     }
   }, [courses, searchText]);
 
@@ -108,11 +128,13 @@ const CoursePage = () => {
       const response = await courseService.getAllCourses();
       console.log("Courses data:", response);
       const coursesData = response.data || [];
-      setCourses(coursesData);
-      setFilteredCourses(coursesData);
+      // Lọc bỏ trùng lặp trước khi set vào state
+      const uniqueCoursesData = removeDuplicateCourses(coursesData);
+      setCourses(uniqueCoursesData);
+      setFilteredCourses(uniqueCoursesData);
 
-      if (coursesData.length > 0) {
-        setSelectedCourse(coursesData[0]);
+      if (uniqueCoursesData.length > 0) {
+        setSelectedCourse(uniqueCoursesData[0]);
       }
     } catch (error) {
       console.error("Failed to fetch courses:", error);
@@ -376,6 +398,27 @@ const CoursePage = () => {
   const getTabItems = () => {
     if (!selectedCourse) return [];
 
+    // Thêm hàm lọc subjects trùng lặp
+    const removeDuplicateSubjects = (subjects) => {
+      if (!subjects) return [];
+      const uniqueSubjects = [];
+      const seen = new Set();
+      
+      subjects.forEach(subject => {
+        // Sử dụng subjectName và subjectId để kiểm tra trùng lặp
+        const key = `${subject.subjectName}-${subject.subjectId}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueSubjects.push(subject);
+        }
+      });
+      
+      return uniqueSubjects;
+    };
+
+    // Lọc bỏ subjects trùng lặp
+    const uniqueSubjects = removeDuplicateSubjects(selectedCourse.subjects);
+
     return [
       {
         key: "1",
@@ -491,18 +534,18 @@ const CoursePage = () => {
             <BookOutlined className="mr-1" />
             Subjects
             <span className="ml-2 text-gray-500">
-              ({selectedCourse.subjects?.length || 0})
+              ({uniqueSubjects.length || 0})
             </span>
           </span>
         ),
         children:
-          selectedCourse.subjects?.length > 0 ? (
+          uniqueSubjects.length > 0 ? (
             <Collapse
               accordion
               bordered={false}
               className="bg-white custom-collapse"
             >
-              {selectedCourse.subjects.map((subject) => (
+              {uniqueSubjects.map((subject) => (
                 <Panel
                   header={
                     <div className="flex justify-between items-center">
@@ -744,9 +787,9 @@ const CoursePage = () => {
                     )}
                     dataSource={filteredCourses}
                     rowKey="courseId"
-                    pagination={{ pageSize: 5 }} // limit to 5 items per page
+                    pagination={{ pageSize: 5 }}
                     size="small"
-                    scroll={{ x: "max-content" }} // enable horizontal scroll
+                    scroll={{ x: "max-content" }}
                     onRow={(record) => ({
                       onClick: () => setSelectedCourse(record),
                       className: `cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -778,9 +821,7 @@ const CoursePage = () => {
                       </Tag>
                     </div>
                   }
-                  
                 >
-                  {/* Thay đổi cách sử dụng Tabs để không dùng TabPane */}
                   <Tabs
                     defaultActiveKey="1"
                     type="card"
@@ -797,58 +838,9 @@ const CoursePage = () => {
               )}
             </div>
           </div>
-
-          <Card
-            title={
-              <Title level={4} className="m-0">
-                All Courses
-              </Title>
-            }
-            className="!mt-6 shadow-md rounded-lg overflow-hidden"
-            extra={
-              <div className="flex items-center space-x-3">
-                <Button
-                  onClick={() => setSortedInfo({})}
-                  size="small"
-                  className="border-gray-300 text-gray-600"
-                >
-                  Clear Sorting
-                </Button>
-                <Text className="mr-2">Total: {filteredCourses.length}</Text>
-                <Button
-                  icon={<ReloadOutlined />}
-                  size="small"
-                  onClick={fetchCourses}
-                  loading={loading}
-                  className="border-gray-300 text-gray-600"
-                />
-              </div>
-            }
-          >
-            {renderSearchBox()}
-            
-            <Table
-              columns={columns}
-              dataSource={filteredCourses}
-              rowKey="courseId"
-              pagination={{ pageSize: 10 }}
-              onChange={handleChange}
-              rowClassName={(record) =>
-                `hover:bg-gray-50 transition-colors ${
-                  selectedCourse?.courseId === record.courseId
-                    ? "bg-gray-100"
-                    : ""
-                }`
-              }
-              scroll={{ x: true }}
-              bordered
-              className="custom-table"
-            />
-          </Card>
         </Spin>
       </Layout.Content>
 
-      {/* Thêm Modal vào cuối component */}
       {renderRequestModal()}
     </Layout>
   );
