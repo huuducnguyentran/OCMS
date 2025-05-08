@@ -219,7 +219,7 @@ const SendRequestPage = () => {
       }
     } catch (error) {
       console.error("Request error:", error);
-      
+
       // Xử lý lỗi API và lưu vào trạng thái
       if (error.response && error.response.data) {
         // Lưu thông tin lỗi từ API vào state
@@ -244,29 +244,33 @@ const SendRequestPage = () => {
     // Hàm tạo danh sách lỗi từ đối tượng errors
     const formatErrors = (errors) => {
       if (!errors) return [];
-      
+
       const errorList = [];
-      Object.keys(errors).forEach(key => {
+      Object.keys(errors).forEach((key) => {
         if (Array.isArray(errors[key])) {
-          errors[key].forEach(err => {
+          errors[key].forEach((err) => {
             errorList.push(`${key}: ${err}`);
           });
         } else {
           errorList.push(`${key}: ${errors[key]}`);
         }
       });
-      
+
       return errorList;
     };
 
-    const errorList = apiError.errors ? formatErrors(apiError.errors) : [`${apiError.title || 'Error'}: ${apiError.status || ''}`];
+    const errorList = apiError.errors
+      ? formatErrors(apiError.errors)
+      : [`${apiError.title || "Error"}: ${apiError.status || ""}`];
 
     return (
       <Alert
         message={apiError.title || "Request Error"}
         description={
           <div>
-            <p>{apiError.detail || "One or more validation errors occurred."}</p>
+            <p>
+              {apiError.detail || "One or more validation errors occurred."}
+            </p>
             <ul className="list-disc ml-5 mt-2">
               {errorList.map((err, index) => (
                 <li key={index}>{err}</li>
@@ -274,7 +278,8 @@ const SendRequestPage = () => {
             </ul>
             {apiError.traceId && (
               <p className="mt-2 text-xs">
-                <span className="font-semibold">Trace ID:</span> {apiError.traceId}
+                <span className="font-semibold">Trace ID:</span>{" "}
+                {apiError.traceId}
               </p>
             )}
           </div>
@@ -339,16 +344,20 @@ const SendRequestPage = () => {
                   className="w-full"
                   size="large"
                   showSearch
-                  optionFilterProp="children"
+                  optionFilterProp="label"
                   filterOption={(input, option) =>
-                    (option?.children?.toLowerCase() ?? "").includes(
+                    (option?.label?.toLowerCase() ?? "").includes(
                       input.toLowerCase()
                     )
                   }
                 >
                   {subjects.length > 0 ? (
                     subjects.map((subject) => (
-                      <Option key={subject.subjectId} value={subject.subjectId}>
+                      <Option
+                        key={subject.subjectId}
+                        value={subject.subjectId}
+                        label={`${subject.subjectName} (${subject.subjectId})`}
+                      >
                         {subject.subjectName} ({subject.subjectId})
                       </Option>
                     ))

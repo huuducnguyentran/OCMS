@@ -83,7 +83,7 @@ export const gradeServices = {
       return response.data;
     } catch (error) {
       console.error("API Error:", error.response?.data);
-      throw error.response?.data?.message || "Failed to create grade";
+      throw error; // throw full error object
     }
   },
 };
