@@ -67,14 +67,14 @@ const navItems = [
     label: "Learning Matrix",
     icon: "BookOutlined",
     path: "/learning-matrix",
-    roles: ["Admin", "Training staff", "HR", "Instructor", "Reviewer"],
+    roles: ["Admin", "Training staff", "HR", "Reviewer"],
   },
   {
     key: "6",
     label: "Subject",
     icon: "ReadOutlined",
     path: "/subject",
-    roles: ["Training staff", "user", "Instructor"],
+    roles: ["Training staff", "user"],
   },
  
   {

@@ -28,6 +28,8 @@ import {
   EyeOutlined,
   EditOutlined,
   DeleteOutlined,
+  TagOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { getSubjectById, getSubjectTrainees } from "../../services/subjectService";
@@ -44,6 +46,7 @@ const SubjectDetailPage = () => {
   const [loadingTrainees, setLoadingTrainees] = useState(false);
   const isTrainee = sessionStorage.getItem("role") === "Trainee";
   const isInstructor = sessionStorage.getItem("role") === "Instructor";
+  const shouldNavigateToSchedule = isTrainee || isInstructor;
 
   useEffect(() => {
     const fetchSubject = async () => {
@@ -52,6 +55,7 @@ const SubjectDetailPage = () => {
         setSubject(response.subject);
       } catch (error) {
         console.error("Error fetching subject:", error);
+        message.error("Could not load subject details");
       } finally {
         setLoading(false);
       }
@@ -102,16 +106,19 @@ const SubjectDetailPage = () => {
           <div className="flex items-center space-x-4 mb-4">
             <Button
               icon={<ArrowLeftOutlined />}
-              onClick={() => navigate(isTrainee ? "/schedule" : "/subject")}
+              onClick={() => navigate(shouldNavigateToSchedule ? "/schedule" : "/subject")}
               className="flex items-center bg-white/10 border-white/20 text-white hover:bg-white/20"
               ghost
             >
-              {isTrainee ? "Back to schedule" : "Back to Subjects"}
+              {shouldNavigateToSchedule ? "Back to Schedule" : "Back to Subjects"}
             </Button>
             <Breadcrumb className="text-white/60">
               <Breadcrumb.Item>
-                <a href="/subject" className="text-white/60 hover:text-white">
-                  Subjects
+                <a 
+                  href={shouldNavigateToSchedule ? "/schedule" : "/subject"} 
+                  className="text-white/60 hover:text-white"
+                >
+                  {shouldNavigateToSchedule ? "Schedule" : "Subjects"}
                 </a>
               </Breadcrumb.Item>
               <Breadcrumb.Item className="text-white">Details</Breadcrumb.Item>
@@ -160,9 +167,9 @@ const SubjectDetailPage = () => {
               className="h-full shadow-sm hover:shadow-md transition-shadow"
             >
               <Statistic
-                title="Total Schedules"
-                value={subject?.trainingSchedules?.length || 0}
-                prefix={<CalendarOutlined className="text-purple-500" />}
+                title="Course Specialties"
+                value={subject?.courseSubjectSpecialties?.length || 0}
+                prefix={<TagOutlined className="text-purple-500" />}
               />
             </Card>
           </Col>
@@ -172,9 +179,9 @@ const SubjectDetailPage = () => {
               className="h-full shadow-sm hover:shadow-md transition-shadow"
             >
               <Statistic
-                title="Instructors"
-                value={subject?.instructors?.length || 0}
-                prefix={<TeamOutlined className="text-indigo-500" />}
+                title="Last Updated"
+                value={moment(subject?.updatedAt).format("DD/MM/YYYY")}
+                prefix={<ClockCircleOutlined className="text-indigo-500" />}
               />
             </Card>
           </Col>
@@ -205,20 +212,26 @@ const SubjectDetailPage = () => {
                     {subject?.passingScore || "N/A"}
                   </Tag>
                 </div>
+                <div>
+                  <Text className="text-gray-500 block">Created By</Text>
+                  <Tag color="cyan" className="mt-1 text-base px-3 py-1">
+                    {subject?.createByUserId || "N/A"}
+                  </Tag>
+                </div>
               </div>
             </Col>
             <Col xs={24} md={12}>
               <div className="space-y-4">
                 <div>
-                  <Text className="text-gray-500 block">Status</Text>
-                  <Tag color="green" className="mt-1 text-base px-3 py-1">
-                    Active
-                  </Tag>
+                  <Text className="text-gray-500 block">Created At</Text>
+                  <Text strong className="text-base">
+                    {moment(subject?.createdAt).format("DD/MM/YYYY HH:mm")}
+                  </Text>
                 </div>
                 <div>
-                  <Text className="text-gray-500 block">Department</Text>
+                  <Text className="text-gray-500 block">Last Updated</Text>
                   <Text strong className="text-base">
-                    {subject?.department || "N/A"}
+                    {moment(subject?.updatedAt).format("DD/MM/YYYY HH:mm")}
                   </Text>
                 </div>
               </div>
@@ -230,6 +243,71 @@ const SubjectDetailPage = () => {
               </Text>
             </Col>
           </Row>
+        </Card>
+
+        {/* Course Subject Specialties Section */}
+        <Card
+          title={
+            <div className="flex items-center space-x-2">
+              <TeamOutlined className="text-indigo-500" />
+              <span>Course Subject Specialties</span>
+            </div>
+          }
+          className="shadow-sm hover:shadow-md transition-shadow"
+        >
+          {subject?.courseSubjectSpecialties?.length > 0 ? (
+            <Table
+              dataSource={subject.courseSubjectSpecialties}
+              rowKey="id"
+              pagination={false}
+              className="shadow-sm"
+              columns={[
+                {
+                  title: "Course ID",
+                  dataIndex: "courseId",
+                  key: "courseId",
+                  width: "15%",
+                  render: (text) => <Text strong>{text}</Text>,
+                },
+                {
+                  title: "Specialty",
+                  key: "specialty",
+                  width: "25%",
+                  render: (_, record) => (
+                    <div>
+                      <Text strong>{record.specialty?.specialtyName}</Text>
+                      <Text className="block text-xs text-gray-500">
+                        {record.specialty?.specialtyId}
+                      </Text>
+                    </div>
+                  ),
+                },
+                {
+                  title: "Created At",
+                  dataIndex: "createdAt",
+                  key: "createdAt",
+                  width: "20%",
+                  render: (date) => moment(date).format("DD/MM/YYYY HH:mm"),
+                },
+                {
+                  title: "Created By",
+                  dataIndex: "createdByUserId",
+                  key: "createdByUserId",
+                  width: "15%",
+                  render: (text) => <Tag color="blue">{text}</Tag>,
+                },
+                {
+                  title: "Notes",
+                  dataIndex: "notes",
+                  key: "notes",
+                  width: "25%",
+                  render: (notes) => notes || "-",
+                },
+              ]}
+            />
+          ) : (
+            <Empty description="No course subject specialties assigned" />
+          )}
         </Card>
 
         {/* Training Schedules Section */}
