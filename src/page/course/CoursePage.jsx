@@ -42,11 +42,13 @@ const { Panel } = Collapse;
 const { Title, Text, Paragraph } = Typography;
 
 const RequestTypeEnum = {
-  UpdateCourse: 10,
-  DeleteCourse: 11
+  NewCourse: 1,
+  UpdateCourse: 2,
+  DeleteCourse: 18
 };
 
 const RequestTypeLabels = {
+  [RequestTypeEnum.NewCourse]: "New Course",
   [RequestTypeEnum.UpdateCourse]: "Update Course",
   [RequestTypeEnum.DeleteCourse]: "Delete Course"
 };
@@ -203,7 +205,7 @@ const CoursePage = () => {
 
       // Tạo dữ liệu cho request
       const requestData = {
-        requestEntityId: selectedCourseForRequest.trainingPlanId,
+        requestEntityId: selectedCourseForRequest.courseId,
         requestType: values.requestType,
         description: values.description,
         notes: values.notes
@@ -356,17 +358,14 @@ const CoursePage = () => {
               </Popconfirm>
             </Tooltip>
           )}
-            {/* Thêm nút Send Request chỉ khi status là Approved */}
-            {record.status === "Approved" && (
-              <Tooltip title="Send Request">
-                <Button
-                  size="small"
-                  icon={<SendOutlined />}
-                  onClick={() => handleRequest(record)}
-                  className="text-blue-600 hover:text-blue-700"
-                />
-              </Tooltip>
-            )}
+            <Tooltip title="Send Request">
+              <Button
+                size="small"
+                icon={<SendOutlined />}
+                onClick={() => handleRequest(record)}
+                className="text-blue-600 hover:text-blue-700"
+              />
+            </Tooltip>
           </div>
         );
       },
@@ -421,17 +420,14 @@ const CoursePage = () => {
                   </Button>         
                   )}
                   
-                  {/* Chỉ hiển thị nút Send Request khi status là Approved */}
-                  {selectedCourse.status === "Approved" && (
-                    <Button
-                      type="primary"
-                      icon={<SendOutlined />}
-                      onClick={() => handleRequest(selectedCourse)}
-                      className="flex items-center bg-blue-600 hover:bg-blue-700"
-                    >
-                      Send Request
-                    </Button>
-                  )}
+                  <Button
+                    type="primary"
+                    icon={<SendOutlined />}
+                    onClick={() => handleRequest(selectedCourse)}
+                    className="flex items-center bg-blue-600 hover:bg-blue-700"
+                  >
+                    Send Request
+                  </Button>
                 </div>
               )}
             </div>

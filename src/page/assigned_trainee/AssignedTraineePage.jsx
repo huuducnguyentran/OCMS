@@ -62,13 +62,17 @@ const AssignedTraineePage = () => {
       ),
     },
     {
-      title: "Course ID",
-      dataIndex: "courseId",
-      key: "courseId",
+      title: "Training Matrix ID",
+      dataIndex: "courseSubjectSpecialtyId",
+      key: "courseSubjectSpecialtyId",
       width: 110,
       ellipsis: true,
-      sorter: (a, b) => a.courseId.localeCompare(b.courseId),
-      sortOrder: sortedInfo.columnKey === "courseId" ? sortedInfo.order : null,
+      sorter: (a, b) =>
+        a.courseSubjectSpecialtyId.localeCompare(b.courseSubjectSpecialtyId),
+      sortOrder:
+        sortedInfo.columnKey === "courseSubjectSpecialtyId"
+          ? sortedInfo.order
+          : null,
     },
     {
       title: "Assigned By",

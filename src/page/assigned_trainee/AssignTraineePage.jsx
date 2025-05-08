@@ -41,7 +41,8 @@ const AssignTraineePage = () => {
 
     const fetchCourseSubjectSpecialties = async () => {
       try {
-        const response = await learningMatrixService.getAllCourseSubjectSpecialties();
+        const response =
+          await learningMatrixService.getAllCourseSubjectSpecialties();
         const arr = response.data || response.courses || response;
         setCourseSubjectSpecialties(arr);
       } catch {
@@ -157,7 +158,10 @@ const AssignTraineePage = () => {
       setNotes("");
       setError(null);
     } catch (err) {
-      let msg = err?.response?.data?.message || err?.message || "Failed to assign Trainee.";
+      let msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to assign Trainee.";
       if (msg.includes("already assigned")) {
         msg = "Trainee này đã được gán vào Course-Subject-Specialty này.";
       }
@@ -316,7 +320,9 @@ const AssignTraineePage = () => {
                 onChange={(value) => setSelectedCourseId(value)}
                 value={selectedCourseId || undefined}
                 filterOption={(input, option) =>
-                  (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                  (option?.label ?? "")
+                    .toLowerCase()
+                    .includes(input.toLowerCase())
                 }
               >
                 {Array.isArray(courseSubjectSpecialties) &&
@@ -324,9 +330,13 @@ const AssignTraineePage = () => {
                     <Option
                       key={item.id}
                       value={item.id}
-                      label={`${item.course?.courseName || item.courseId} / ${item.subject?.subjectName || item.subjectId} / ${item.specialtyId}`}
+                      label={`${item.course?.courseName || item.courseId} / ${
+                        item.subject?.subjectName || item.subjectId
+                      } / ${item.specialtyId}`}
                     >
-                      {item.course?.courseName || item.courseId} / {item.subject?.subjectName || item.subjectId} / {item.specialtyId}
+                      {item.course?.courseName || item.courseId} /{" "}
+                      {item.subject?.subjectName || item.subjectId} /{" "}
+                      {item.specialtyId}
                     </Option>
                   ))}
               </Select>
