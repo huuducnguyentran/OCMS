@@ -11,8 +11,8 @@ import {
   getAssignedTraineeById,
   UpdateAssignedTrainee,
 } from "../../services/traineeService";
-import { courseService } from "../../services/courseService";
 import { getAllUsers } from "../../services/userService";
+import { learningMatrixService } from "../../services/learningMatrixService";
 
 const AssignedTraineeDetailPage = () => {
   const { id } = useParams();
@@ -21,7 +21,7 @@ const AssignedTraineeDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState("");
-  const [courses, setCourses] = useState([]);
+  const [courseSubjectSpecialties, setCourseSubjectSpecialties] = useState([]);
   const [trainees, setTrainees] = useState([]);
 
   useEffect(() => {
@@ -36,20 +36,24 @@ const AssignedTraineeDetailPage = () => {
         setLoading(false);
       }
     };
-    const fetchCourses = async () => {
+
+    const fetchCourseSubjectSpecialties = async () => {
       try {
-        const response = await courseService.getAllCourses();
-        const coursesArray = response.courses || response.data || response;
-        setCourses(coursesArray);
+        const response =
+          await learningMatrixService.getAllCourseSubjectSpecialties();
+        const arr = response.data || response.courses || response;
+        setCourseSubjectSpecialties(arr);
       } catch {
-        message.error("Failed to load courses");
+        message.error("Failed to load course-subject-specialties");
       }
     };
-    
+
     const fetchTrainees = async () => {
       try {
         const response = await getAllUsers();
-        const traineeList = response.filter((user) => user.roleName === "Trainee");
+        const traineeList = response.filter(
+          (user) => user.roleName === "Trainee"
+        );
         setTrainees(traineeList);
       } catch (error) {
         message.error("Failed to load trainees");
@@ -58,7 +62,7 @@ const AssignedTraineeDetailPage = () => {
     };
 
     fetchTrainees();
-    fetchCourses();
+    fetchCourseSubjectSpecialties();
     fetchAssignment();
   }, [id]);
 
@@ -79,8 +83,10 @@ const AssignedTraineeDetailPage = () => {
       const updatedData = {
         traineeId:
           editingField === "traineeId" ? cleanedValue : assignment.traineeId,
-        courseId:
-          editingField === "courseId" ? cleanedValue : assignment.courseId,
+        courseSubjectSpecialtyId:
+          editingField === "courseSubjectSpecialtyId"
+            ? cleanedValue
+            : assignment.courseSubjectSpecialtyId,
         notes: editingField === "notes" ? cleanedValue : assignment.notes,
       };
 
@@ -129,13 +135,13 @@ const AssignedTraineeDetailPage = () => {
     >
       {editingField === field ? (
         <div className="flex items-center gap-2">
-          {field === "courseId" ? (
+          {field === "courseSubjectSpecialtyId" ? (
             <Select
               showSearch
-              placeholder="Select a Course"
+              placeholder="Select a Course-Subject-Specialty"
               optionFilterProp="label"
               onChange={(value) => setEditValue(value)}
-              value={editValue || undefined}
+              value={editValue ?? undefined}
               style={{ width: 240 }}
               filterOption={(input, option) =>
                 (option?.label ?? "")
@@ -143,16 +149,25 @@ const AssignedTraineeDetailPage = () => {
                   .includes(input.toLowerCase())
               }
             >
-              {Array.isArray(courses) &&
-                courses.map((course) => (
-                  <Select.Option
-                    key={course.courseId}
-                    value={course.courseId}
-                    label={`${course.courseName} (${course.courseId})`}
-                  >
-                    {course.courseName} ({course.courseId})
-                  </Select.Option>
-                ))}
+              {Array.isArray(courseSubjectSpecialties) &&
+                courseSubjectSpecialties
+                  .filter((item) => item?.id != null) // Avoid null/undefined ids
+                  .map((item) => {
+                    const label = `${
+                      item.course?.courseName || item.courseId
+                    } / ${item.subject?.subjectName || item.subjectId} / ${
+                      item.specialtyId
+                    }`;
+                    return (
+                      <Select.Option
+                        key={item.id}
+                        value={item.id}
+                        label={label}
+                      >
+                        {label}
+                      </Select.Option>
+                    );
+                  })}
             </Select>
           ) : field === "traineeId" ? (
             <Select
@@ -230,7 +245,7 @@ const AssignedTraineeDetailPage = () => {
           </Descriptions.Item>
 
           {renderEditableItem("Trainee ID", "traineeId")}
-          {renderEditableItem("Course ID", "courseId")}
+          {renderEditableItem("Trainee Matrix ID", "courseSubjectSpecialtyId")}
           {renderEditableItem("Notes", "notes")}
 
           <Descriptions.Item label="Request Status">

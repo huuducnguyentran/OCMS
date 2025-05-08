@@ -102,7 +102,7 @@ const isTrainingPlanType = (requestType) => {
 const isComplaintType = (requestType) => {
   if (typeof requestType === "string") {
     if (requestType === "Complaint") return true;
-    
+
     // Thử chuyển về số nếu không khớp với tên
     const type = parseInt(requestType, 10);
     if (!isNaN(type)) {
@@ -110,7 +110,7 @@ const isComplaintType = (requestType) => {
     }
     return false;
   }
-  
+
   // Trường hợp requestType là số
   return Number(requestType) === 3;
 };
@@ -118,8 +118,12 @@ const isComplaintType = (requestType) => {
 // Hàm helper để kiểm tra xem request type có phải loại Certificate Template không
 const isCertificateTemplateType = (requestType) => {
   if (typeof requestType === "string") {
-    if (requestType === "CertificateTemplate" || requestType === "Certificate Template") return true;
-    
+    if (
+      requestType === "CertificateTemplate" ||
+      requestType === "Certificate Template"
+    )
+      return true;
+
     // Thử chuyển về số nếu không khớp với tên
     const type = parseInt(requestType, 10);
     if (!isNaN(type)) {
@@ -127,7 +131,7 @@ const isCertificateTemplateType = (requestType) => {
     }
     return false;
   }
-  
+
   // Trường hợp requestType là số
   return Number(requestType) === 14;
 };
@@ -135,8 +139,12 @@ const isCertificateTemplateType = (requestType) => {
 // Hàm helper để kiểm tra xem request type có phải loại Decision Template không
 const isDecisionTemplateType = (requestType) => {
   if (typeof requestType === "string") {
-    if (requestType === "DecisionTemplate" || requestType === "Decision Template") return true;
-    
+    if (
+      requestType === "DecisionTemplate" ||
+      requestType === "Decision Template"
+    )
+      return true;
+
     // Thử chuyển về số nếu không khớp với tên
     const type = parseInt(requestType, 10);
     if (!isNaN(type)) {
@@ -144,7 +152,7 @@ const isDecisionTemplateType = (requestType) => {
     }
     return false;
   }
-  
+
   // Trường hợp requestType là số
   return Number(requestType) === 16;
 };
@@ -152,9 +160,14 @@ const isDecisionTemplateType = (requestType) => {
 // Hàm helper để kiểm tra xem request type có phải loại Assign Trainee không
 const isTraineeAssignType = (requestType) => {
   if (typeof requestType === "string") {
-    if (requestType === "AssignTrainee" || requestType === "Assign Trainee") return true;
-    if (requestType === "AddTraineeAssign" || requestType === "Add Trainee Assign") return true;
-    
+    if (requestType === "AssignTrainee" || requestType === "Assign Trainee")
+      return true;
+    if (
+      requestType === "AddTraineeAssign" ||
+      requestType === "Add Trainee Assign"
+    )
+      return true;
+
     // Thử chuyển về số nếu không khớp với tên
     const type = parseInt(requestType, 10);
     if (!isNaN(type)) {
@@ -162,7 +175,7 @@ const isTraineeAssignType = (requestType) => {
     }
     return false;
   }
-  
+
   // Trường hợp requestType là số
   return Number(requestType) === 12 || Number(requestType) === 13;
 };
@@ -249,7 +262,6 @@ const RequestList = () => {
 
   const applyFilters = (data) => {
     let filtered = [...data];
-
 
     if (searchText) {
       filtered = filtered.filter(
@@ -435,7 +447,9 @@ const RequestList = () => {
         );
         setTraineesLoading(true);
         try {
-          const { getTraineesByRequestId } = await import('../../services/requestService');
+          const { getTraineesByRequestId } = await import(
+            "../../services/requestService"
+          );
           const traineesResult = await getTraineesByRequestId(record.requestId);
           console.log("Trainees Data:", traineesResult);
           setTraineesData(traineesResult || []);
@@ -608,14 +622,18 @@ const RequestList = () => {
     templateLoadingTimeoutRef.current = setTimeout(() => {
       if (templatePreviewLoading) {
         setTemplatePreviewLoading(false);
-        setTemplatePreviewError("Preview loading timeout. The server took too long to respond.");
+        setTemplatePreviewError(
+          "Preview loading timeout. The server took too long to respond."
+        );
       }
     }, 15000);
 
     try {
-      const { fetchCertificateTemplatebyId } = await import("../../services/certificateService");
+      const { fetchCertificateTemplatebyId } = await import(
+        "../../services/certificateService"
+      );
       const data = await fetchCertificateTemplatebyId(templateId);
-      
+
       if (data?.templateFileWithSas) {
         setTemplatePreviewUrl(data.templateFileWithSas);
       } else {
@@ -623,7 +641,9 @@ const RequestList = () => {
       }
     } catch (error) {
       console.error("Failed to fetch certificate template:", error);
-      setTemplatePreviewError(`Error loading template: ${error.message || "Unknown error"}`);
+      setTemplatePreviewError(
+        `Error loading template: ${error.message || "Unknown error"}`
+      );
     } finally {
       if (templateLoadingTimeoutRef.current) {
         clearTimeout(templateLoadingTimeoutRef.current);
@@ -644,14 +664,18 @@ const RequestList = () => {
     templateLoadingTimeoutRef.current = setTimeout(() => {
       if (templatePreviewLoading) {
         setTemplatePreviewLoading(false);
-        setTemplatePreviewError("Preview loading timeout. The server took too long to respond.");
+        setTemplatePreviewError(
+          "Preview loading timeout. The server took too long to respond."
+        );
       }
     }, 15000);
 
     try {
-      const { fetchDecisionTemplatebyId } = await import("../../services/decisionService");
+      const { fetchDecisionTemplatebyId } = await import(
+        "../../services/decisionService"
+      );
       const data = await fetchDecisionTemplatebyId(templateId);
-      
+
       if (data?.templateContentWithSas) {
         setTemplatePreviewUrl(data.templateContentWithSas);
       } else {
@@ -659,7 +683,9 @@ const RequestList = () => {
       }
     } catch (error) {
       console.error("Failed to fetch decision template:", error);
-      setTemplatePreviewError(`Error loading template: ${error.message || "Unknown error"}`);
+      setTemplatePreviewError(
+        `Error loading template: ${error.message || "Unknown error"}`
+      );
     } finally {
       if (templateLoadingTimeoutRef.current) {
         clearTimeout(templateLoadingTimeoutRef.current);
@@ -811,12 +837,12 @@ const RequestList = () => {
               cancelText="No"
               okButtonProps={{ danger: true }}
             >
-          <Button
-            type="text"
-            danger
-            icon={<DeleteOutlined />}
-            title="Delete"
-          />
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                title="Delete"
+              />
             </Popconfirm>
           )}
         </Space>
@@ -1088,13 +1114,13 @@ const RequestList = () => {
                                     <div>
                                       <span
                                         className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
-                                        onClick={() => navigate(`/assigned-trainee/${trainee.traineeId}`)}
+                                        onClick={() =>
+                                          navigate(
+                                            `/assigned-trainee/${trainee.traineeAssignId}`
+                                          )
+                                        }
                                       >
-                                        {trainee.traineeId}
-                                      </span>
-                                      <span className="mx-2">-</span>
-                                      <span className="font-medium">
-                                        Course: {trainee.courseId}
+                                        {trainee.traineeAssignId}
                                       </span>
                                     </div>
                                     <div>
@@ -1134,61 +1160,79 @@ const RequestList = () => {
                         currentRequest.requestType === "CandidateImport" ||
                         currentRequest.requestType === "Candidate Import"
                       ) && (
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <ProfileOutlined className="text-indigo-500" />
-                        <span className="text-sm font-medium">
-                          {isTrainingPlanType(currentRequest.requestType)
-                            ? "Training Plan ID: "
-                            : isComplaintType(currentRequest.requestType)
-                            ? "Subject ID: "
-                            : isCertificateTemplateType(currentRequest.requestType)
-                            ? "Certificate Template ID: "
-                            : isDecisionTemplateType(currentRequest.requestType)
-                            ? "Decision Template ID: "
-                            : "Entity ID: "}
-                          {
-                            // Nếu là các loại request về training plan thì hiển thị link
-                            isTrainingPlanType(currentRequest.requestType) ? (
-                              <Link
-                                to={`/plan/details/${currentRequest.requestEntityId}`}
-                                className="text-blue-600 hover:text-blue-800 hover:underline"
-                                title="Click to view Training Plan details"
-                              >
-                                {currentRequest.requestEntityId}
-                              </Link>
-                            ) : isComplaintType(currentRequest.requestType) ? (
-                              <Link
-                                to={`/subject/${currentRequest.requestEntityId}`}
-                                className="text-blue-600 hover:text-blue-800 hover:underline"
-                                title="Click to view Subject details"
-                              >
-                                {currentRequest.requestEntityId}
-                              </Link>
-                            ) : isCertificateTemplateType(currentRequest.requestType) ? (
-                              <Button 
-                                type="link" 
-                                className="text-blue-600 hover:text-blue-800 hover:underline p-0"
-                                onClick={() => handleViewCertificateTemplate(currentRequest.requestEntityId)}
-                                title="Click to preview Certificate Template"
-                              >
-                                {currentRequest.requestEntityId}
-                              </Button>
-                            ) : isDecisionTemplateType(currentRequest.requestType) ? (
-                              <Button 
-                                type="link" 
-                                className="text-blue-600 hover:text-blue-800 hover:underline p-0"
-                                onClick={() => handleViewDecisionTemplate(currentRequest.requestEntityId)}
-                                title="Click to preview Decision Template"
-                              >
-                                {currentRequest.requestEntityId}
-                              </Button>
-                            ) : (
-                              currentRequest.requestEntityId
-                            )
-                          }
-                        </span>
-                      </div>
-                    )}
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <ProfileOutlined className="text-indigo-500" />
+                          <span className="text-sm font-medium">
+                            {isTrainingPlanType(currentRequest.requestType)
+                              ? "Training Plan ID: "
+                              : isComplaintType(currentRequest.requestType)
+                              ? "Subject ID: "
+                              : isCertificateTemplateType(
+                                  currentRequest.requestType
+                                )
+                              ? "Certificate Template ID: "
+                              : isDecisionTemplateType(
+                                  currentRequest.requestType
+                                )
+                              ? "Decision Template ID: "
+                              : "Entity ID: "}
+                            {
+                              // Nếu là các loại request về training plan thì hiển thị link
+                              isTrainingPlanType(currentRequest.requestType) ? (
+                                <Link
+                                  to={`/plan/details/${currentRequest.requestEntityId}`}
+                                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                                  title="Click to view Training Plan details"
+                                >
+                                  {currentRequest.requestEntityId}
+                                </Link>
+                              ) : isComplaintType(
+                                  currentRequest.requestType
+                                ) ? (
+                                <Link
+                                  to={`/subject/${currentRequest.requestEntityId}`}
+                                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                                  title="Click to view Subject details"
+                                >
+                                  {currentRequest.requestEntityId}
+                                </Link>
+                              ) : isCertificateTemplateType(
+                                  currentRequest.requestType
+                                ) ? (
+                                <Button
+                                  type="link"
+                                  className="text-blue-600 hover:text-blue-800 hover:underline p-0"
+                                  onClick={() =>
+                                    handleViewCertificateTemplate(
+                                      currentRequest.requestEntityId
+                                    )
+                                  }
+                                  title="Click to preview Certificate Template"
+                                >
+                                  {currentRequest.requestEntityId}
+                                </Button>
+                              ) : isDecisionTemplateType(
+                                  currentRequest.requestType
+                                ) ? (
+                                <Button
+                                  type="link"
+                                  className="text-blue-600 hover:text-blue-800 hover:underline p-0"
+                                  onClick={() =>
+                                    handleViewDecisionTemplate(
+                                      currentRequest.requestEntityId
+                                    )
+                                  }
+                                  title="Click to preview Decision Template"
+                                >
+                                  {currentRequest.requestEntityId}
+                                </Button>
+                              ) : (
+                                currentRequest.requestEntityId
+                              )
+                            }
+                          </span>
+                        </div>
+                      )}
 
                     <div className="flex items-center gap-2 text-gray-600">
                       <FileTextOutlined className="text-indigo-500" />
@@ -1321,7 +1365,9 @@ const RequestList = () => {
                       <Button
                         type="primary"
                         className="bg-blue-500 hover:bg-blue-600"
-                        onClick={() => navigate(`/assigned-trainee/${traineesData[0].train}`)}
+                        onClick={() =>
+                          navigate(`/assigned-trainee/${traineesData[0].train}`)
+                        }
                       >
                         View Trainee Details
                       </Button>
@@ -1329,7 +1375,7 @@ const RequestList = () => {
                       <Button
                         type="primary"
                         className="bg-blue-500 hover:bg-blue-600"
-                        onClick={() => navigate('/assigned-trainee')}
+                        onClick={() => navigate("/assigned-trainee")}
                       >
                         {`View All Trainees`}
                       </Button>
@@ -1353,9 +1399,7 @@ const RequestList = () => {
                   {/* Thêm nút view subject nếu là request liên quan đến complaint */}
                   {currentRequest.requestEntityId &&
                     isComplaintType(currentRequest.requestType) && (
-                      <Link
-                        to={`/subject/${currentRequest.requestEntityId}`}
-                      >
+                      <Link to={`/subject/${currentRequest.requestEntityId}`}>
                         <Button
                           type="primary"
                           className="bg-blue-500 hover:bg-blue-600"
@@ -1371,18 +1415,26 @@ const RequestList = () => {
                       <Button
                         type="primary"
                         className="bg-blue-500 hover:bg-blue-600"
-                        onClick={() => handleViewCertificateTemplate(currentRequest.requestEntityId)}
+                        onClick={() =>
+                          handleViewCertificateTemplate(
+                            currentRequest.requestEntityId
+                          )
+                        }
                       >
                         Preview Certificate Template
                       </Button>
                     )}
-                    
+
                   {currentRequest.requestEntityId &&
                     isDecisionTemplateType(currentRequest.requestType) && (
                       <Button
                         type="primary"
                         className="bg-blue-500 hover:bg-blue-600"
-                        onClick={() => handleViewDecisionTemplate(currentRequest.requestEntityId)}
+                        onClick={() =>
+                          handleViewDecisionTemplate(
+                            currentRequest.requestEntityId
+                          )
+                        }
                       >
                         Preview Decision Template
                       </Button>
@@ -1445,7 +1497,11 @@ const RequestList = () => {
                 description={
                   <Space direction="vertical">
                     <div>{templatePreviewError}</div>
-                    <Button type="primary" danger onClick={closeTemplatePreview}>
+                    <Button
+                      type="primary"
+                      danger
+                      onClick={closeTemplatePreview}
+                    >
                       <CloseCircleOutlined /> Close Preview
                     </Button>
                   </Space>

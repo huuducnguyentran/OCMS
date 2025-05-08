@@ -79,12 +79,12 @@ const ViewGradePage = () => {
     },
     {
       title: "Trainee Assign ID",
-      dataIndex: "traineeAssignID",
-      key: "traineeAssignID",
+      dataIndex: "traineeAssignId",
+      key: "traineeAssignId",
       width: 120,
       sorter: (a, b) => a.traineeAssignID.localeCompare(b.traineeAssignID),
       sortOrder:
-        sortedInfo.columnKey === "traineeAssignID" ? sortedInfo.order : null,
+        sortedInfo.columnKey === "traineeAssignId" ? sortedInfo.order : null,
       // filteredValue: [searchText],
       // onFilter: (value, record) => {
       //   return record.subjectId.toLowerCase().includes(value.toLowerCase());
@@ -552,7 +552,9 @@ const ViewGradePage = () => {
           <Form.Item
             name="traineeAssignID"
             label="Trainee Assign ID"
-            rules={[{ required: true, message: "Please input trainee assign ID!" }]}
+            rules={[
+              { required: true, message: "Please input trainee assign ID!" },
+            ]}
           >
             <Input placeholder="Enter trainee assign ID" />
           </Form.Item>
@@ -579,7 +581,12 @@ const ViewGradePage = () => {
             label="Participation Score"
             rules={[
               { required: true, message: "Please input participation score!" },
-              { type: 'number', min: 0, max: 10, message: 'Score must be between 0 and 10!' }
+              {
+                type: "number",
+                min: 0,
+                max: 10,
+                message: "Score must be between 0 and 10!",
+              },
             ]}
           >
             <InputNumber min={0} max={10} step={0.1} className="w-full" />
@@ -590,7 +597,12 @@ const ViewGradePage = () => {
             label="Assignment Score"
             rules={[
               { required: true, message: "Please input assignment score!" },
-              { type: 'number', min: 0, max: 10, message: 'Score must be between 0 and 10!' }
+              {
+                type: "number",
+                min: 0,
+                max: 10,
+                message: "Score must be between 0 and 10!",
+              },
             ]}
           >
             <InputNumber min={0} max={10} step={0.1} className="w-full" />
@@ -603,7 +615,12 @@ const ViewGradePage = () => {
             label="Final Exam Score"
             rules={[
               { required: true, message: "Please input final exam score!" },
-              { type: 'number', min: 0, max: 10, message: 'Score must be between 0 and 10!' }
+              {
+                type: "number",
+                min: 0,
+                max: 10,
+                message: "Score must be between 0 and 10!",
+              },
             ]}
           >
             <InputNumber min={0} max={10} step={0.1} className="w-full" />
@@ -613,7 +630,12 @@ const ViewGradePage = () => {
             name="finalResitScore"
             label="Resit Score"
             rules={[
-              { type: 'number', min: 0, max: 10, message: 'Score must be between 0 and 10!' }
+              {
+                type: "number",
+                min: 0,
+                max: 10,
+                message: "Score must be between 0 and 10!",
+              },
             ]}
           >
             <InputNumber min={0} max={10} step={0.1} className="w-full" />
@@ -626,7 +648,12 @@ const ViewGradePage = () => {
 
         <Form.Item className="mb-0 flex justify-end gap-2">
           <Button onClick={() => setIsModalVisible(false)}>Cancel</Button>
-          <Button type="primary" htmlType="submit" loading={creating} className="bg-blue-500">
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={creating}
+            className="bg-blue-500"
+          >
             Create Grade
           </Button>
         </Form.Item>
