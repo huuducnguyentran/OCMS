@@ -46,75 +46,6 @@ const CreateSchedulePage = () => {
   }, []);
 
   // Fetch subjects from API
-  const fetchSubjects = async () => {
-    try {
-      setLoading(true);
-      // Call API to get list of subjects
-      const token = sessionStorage.getItem("token");
-      const response = await axiosInstance.get(API.GET_ALL_SUBJECTS, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      console.log("Subject API response:", response.data);
-
-      if (response.data && response.data.subjects) {
-        // Process data according to API structure
-        const subjectData = response.data.subjects;
-
-        // Filter out subjects with subjectId as "string" (invalid data)
-        const filteredSubjects = subjectData.filter(
-          (subject) =>
-            subject.subjectId !== "string" && subject.subjectName !== "string"
-        );
-
-        setSubjects(
-          filteredSubjects.map((subject) => ({
-            id: subject.subjectId,
-            name: subject.subjectName,
-            description: subject.description,
-            courseId: subject.courseId,
-            specialtyId: subject.specialtyId,
-          }))
-        );
-
-        console.log("Processed subjects:", subjects);
-      } else if (response.data && Array.isArray(response.data)) {
-        // In case API returns array directly
-        setSubjects(
-          response.data.map((subject) => ({
-            id: subject.subjectId || subject.id,
-            name: subject.subjectName || subject.name,
-            specialtyId: subject.specialtyId,
-          }))
-        );
-      } else {
-        console.warn("Unexpected subject data format:", response.data);
-        setSubjects([]);
-      }
-    } catch (error) {
-      console.error("Error fetching subjects:", error);
-      message.error("Unable to load subject list");
-
-      // Sample data based on actual API
-      setSubjects([
-        {
-          id: "S-0002",
-          name: "Air plane daily journey",
-          specialtyId: "Airplane",
-        },
-        { id: "S-0003", name: "Air plane basic rule", specialtyId: "Airplane" },
-        {
-          id: "S-0004",
-          name: "Air plane daily journey 2",
-          specialtyId: "Airplane",
-        },
-        { id: "Sb-00001", name: "basic step fr dummy", specialtyId: "Basic" },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Fetch instructors from API
   const fetchInstructors = async () => {
     try {
@@ -202,9 +133,6 @@ const CreateSchedulePage = () => {
 
       // Convert daysOfWeek to array of integers
       const daysOfWeek = values.daysOfWeek.map((day) => parseInt(day));
-
-      // Find selected subject information
-      const selectedSubject = subjects.find((s) => s.id === values.subjectID);
 
       // Create data according to API format
       const scheduleData = {

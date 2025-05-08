@@ -9,7 +9,7 @@ export const learningMatrixService = {
       return response.data;
     } catch (error) {
       console.error("API Error:", error.response?.data);
-      throw error.response?.data?.message || "Không thể tải danh sách ma trận học tập";
+      throw error.response?.data?.message || "cannot load learning matrix list";
     }
   },
 
@@ -20,7 +20,7 @@ export const learningMatrixService = {
       return response.data;
     } catch (error) {
       console.error("API Error:", error.response?.data);
-      throw error.response?.data?.message || "Không thể tìm thấy ma trận học tập";
+      throw error.response?.data?.message || "cannot find learning matrix";
     }
   },
 
@@ -66,7 +66,7 @@ export const learningMatrixService = {
       return response.data;
     } catch (error) {
       console.error("API Error:", error.response?.data);
-      throw error.response?.data?.message || "Không thể xóa tất cả ma trận học tập";
+      throw error.response?.data?.message || "cannot delete all subject specialties";
     }
   },
 
@@ -79,7 +79,7 @@ export const learningMatrixService = {
       return response.data;
     } catch (error) {
       console.error("API Error:", error.response?.data);
-      throw error.response?.data?.message || "Không thể tải danh sách môn học";
+      throw error.response?.data?.message || "cannot load subject list";
     }
   },
 
@@ -90,7 +90,7 @@ export const learningMatrixService = {
       return response.data;
     } catch (error) {
       console.error("API Error:", error.response?.data);
-      throw error.response?.data?.message || "Không thể tải ma trận học tập cho khóa học này";
+      throw error.response?.data?.message || "cannot load learning matrix for this course";
     }
   },
 }; 
