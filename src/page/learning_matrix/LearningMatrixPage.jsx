@@ -16,6 +16,7 @@ import {
   Space,
   Breadcrumb,
   Tabs,
+  Empty,
 } from "antd";
 import {
   PlusOutlined,
@@ -54,6 +55,8 @@ const LearningMatrixPage = () => {
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState(null);
   const [distinctCourses, setDistinctCourses] = useState([]);
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [filteredSubjects, setFilteredSubjects] = useState([]);
+  const [filteredSpecialties, setFilteredSpecialties] = useState([]);
   const navigate = useNavigate();
 
   // Load initial data
@@ -68,8 +71,10 @@ const LearningMatrixPage = () => {
   const fetchSubjects = async () => {
     try {
       const response = await getAllSubject();
-      if (response && response.subjects) {
-        setSubjects(response.subjects);
+      if (response && response.allSubjects) {
+        setSubjects(response.allSubjects);
+      } else if (Array.isArray(response)) {
+        setSubjects(response);
       }
     } catch (error) {
       console.error("Error fetching subjects:", error);
@@ -92,13 +97,15 @@ const LearningMatrixPage = () => {
 
   // Extract distinct courses and organize data when raw data changes
   useEffect(() => {
-    if (learningMatrixData.length > 0 && subjects.length > 0 && specialties.length > 0) {
+    if (learningMatrixData.length > 0) {
+      console.log("Learning matrix data:", learningMatrixData);
+      
       // Extract distinct courses
       const uniqueCourses = Array.from(
         new Set(
           learningMatrixData.map(item => JSON.stringify({
             courseId: item.courseId,
-            courseName: item.course?.courseName || item.courseId
+            courseName: item.courseName || item.courseId
           }))
         )
       ).map(item => JSON.parse(item));
@@ -110,49 +117,77 @@ const LearningMatrixPage = () => {
         setSelectedCourseId(uniqueCourses[0].courseId);
       }
       
-      // Organize data in matrix format
-      const matrix = {};
-      
-      // Group by courseId
-      uniqueCourses.forEach(course => {
-        matrix[course.courseId] = {
-          courseName: course.courseName,
-          matrix: {}
-        };
+      // Organize data in matrix format only if subjects and specialties are loaded
+      if (subjects.length > 0 && specialties.length > 0) {
+        const matrix = {};
         
-        // Initialize matrix for this course
-        specialties.forEach(specialty => {
-          matrix[course.courseId].matrix[specialty.specialtyId] = {};
+        // Group by courseId
+        uniqueCourses.forEach(course => {
+          matrix[course.courseId] = {
+            courseName: course.courseName,
+            matrix: {}
+          };
           
-          subjects.forEach(subject => {
-            matrix[course.courseId].matrix[specialty.specialtyId][subject.subjectId] = null;
+          // Initialize matrix for this course
+          specialties.forEach(specialty => {
+            matrix[course.courseId].matrix[specialty.specialtyId] = {};
+            
+            subjects.forEach(subject => {
+              matrix[course.courseId].matrix[specialty.specialtyId][subject.subjectId] = null;
+            });
           });
         });
-      });
-      
-      // Fill matrix with data
-      learningMatrixData.forEach(item => {
-        if (
-          matrix[item.courseId] && 
-          matrix[item.courseId].matrix[item.specialtyId] &&
-          matrix[item.courseId].matrix[item.specialtyId][item.subjectId] !== undefined
-        ) {
-          matrix[item.courseId].matrix[item.specialtyId][item.subjectId] = item;
+        
+        // Determine which data to process
+        const dataToProcess = selectedCourseId && selectedSpecialtyId && filteredData.length > 0
+          ? filteredData  // Use filtered data when course & specialty are selected
+          : learningMatrixData; // Otherwise use all data
+        
+        console.log("Data to process for matrix:", dataToProcess);
+          
+        // Fill matrix with data
+        dataToProcess.forEach(item => {
+          if (
+            matrix[item.courseId] && 
+            matrix[item.courseId].matrix[item.specialtyId] &&
+            matrix[item.courseId].matrix[item.specialtyId][item.subjectId] !== undefined
+          ) {
+            matrix[item.courseId].matrix[item.specialtyId][item.subjectId] = item;
+          }
+        });
+        
+        setMatrixData(matrix);
+        
+        // Initially set filtered subjects and specialties to all
+        if (!selectedCourseId || !selectedSpecialtyId) {
+          setFilteredSubjects(subjects);
+          setFilteredSpecialties(specialties);
         }
-      });
-      
-      setMatrixData(matrix);
+      }
     }
-  }, [learningMatrixData, subjects, specialties]);
+  }, [learningMatrixData, subjects, specialties, filteredData, selectedCourseId, selectedSpecialtyId]);
 
   // Load learning matrix data
   const fetchData = async () => {
     try {
       setLoading(true);
       const response = await learningMatrixService.getAllCourseSubjectSpecialties();
+      
+      console.log("API Response:", response);
+      
       if (response && response.data) {
+        // Cấu trúc API mới
+        console.log("Setting matrix data from response:", response.data);
         setLearningMatrixData(response.data);
         setFilteredData(response.data);
+      } else if (Array.isArray(response)) {
+        // Trường hợp API trả về mảng trực tiếp
+        console.log("Setting matrix data from array response");
+        setLearningMatrixData(response);
+        setFilteredData(response);
+      } else {
+        console.error("Unexpected API response format:", response);
+        message.error("Unexpected API response format");
       }
     } catch (error) {
       console.error("Error fetching learning matrix data:", error);
@@ -175,10 +210,132 @@ const LearningMatrixPage = () => {
     }
   };
 
+  // Fetch subjects for specific course and specialty
+  const fetchSubjectsForCourseAndSpecialty = async () => {
+    if (!selectedCourseId || !selectedSpecialtyId) return;
+    
+    try {
+      setLoading(true);
+      const response = await learningMatrixService.getSubjectsForCourseAndSpecialty(
+        selectedCourseId,
+        selectedSpecialtyId
+      );
+      
+      console.log("Subjects for course and specialty response:", response);
+      
+      if (response && response.data && response.data.length > 0) {
+        // Map subjects from API response
+        const subjectsFromApi = response.data.map(item => {
+          // Find detailed subject info from original list or use API info
+          const subjectDetails = subjects.find(s => s.subjectId === item.subjectId) || {};
+          return {
+            ...subjectDetails,
+            subjectId: item.subjectId,
+            subjectName: item.subjectName || subjectDetails.subjectName,
+            description: item.description || subjectDetails.description,
+            isPartOfSpecialty: true
+          };
+        });
+        
+        setFilteredSubjects(subjectsFromApi);
+        
+        // Find specialty details and use API name if available
+        const selectedSpecialtyData = specialties.find(specialty => 
+          specialty.specialtyId === selectedSpecialtyId
+        );
+        
+        if (selectedSpecialtyData) {
+          const specialtyWithApiName = {
+            ...selectedSpecialtyData,
+            specialtyName: response.data[0]?.specialtyName || selectedSpecialtyData.specialtyName
+          };
+          
+          setFilteredSpecialties([specialtyWithApiName]);
+        } else {
+          // If specialty not found in list, create one from API data
+          const firstItem = response.data[0];
+          if (firstItem) {
+            setFilteredSpecialties([{
+              specialtyId: firstItem.specialtyId,
+              specialtyName: firstItem.specialtyName
+            }]);
+          }
+        }
+        
+        // Use the API response directly for filtered data
+        setFilteredData(response.data);
+        
+        console.log("Updated filtered subjects:", subjectsFromApi);
+        console.log("Updated filtered specialties:", filteredSpecialties);
+      } else {
+        // No data from API
+        setFilteredSubjects([]);
+        
+        // Still show selected specialty
+        const selectedSpecialtyData = specialties.find(specialty => 
+          specialty.specialtyId === selectedSpecialtyId
+        );
+        
+        if (selectedSpecialtyData) {
+          setFilteredSpecialties([selectedSpecialtyData]);
+        } else {
+          setFilteredSpecialties([]);
+        }
+        
+        setFilteredData([]);
+      }
+    } catch (error) {
+      console.error("Error loading subjects for course and specialty:", error);
+      message.error("Không thể tải danh sách môn học cho khóa học và chuyên ngành này");
+      
+      // Show empty lists in case of error
+      setFilteredSubjects([]);
+      setFilteredSpecialties([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle specialty change 
+  const handleSpecialtyChange = (value) => {
+    setSelectedSpecialtyId(value);
+    
+    // If specialty is cleared, reset data
+    if (!value) {
+      setFilteredSubjects(subjects);
+      setFilteredSpecialties(specialties);
+      setFilteredData(learningMatrixData);
+    } else if (selectedCourseId) {
+      // If both course and specialty are selected, load specific data
+      fetchSubjectsForCourseAndSpecialty();
+    }
+  };
+
   // Handle course change
   const handleCourseChange = (courseId) => {
     setSelectedCourseId(courseId);
+    
+    // When course changes, reload data if specialty is selected
+    if (selectedSpecialtyId) {
+      // Reset specialty to trigger useEffect
+      const currentSpecialtyId = selectedSpecialtyId;
+      setSelectedSpecialtyId(null);
+      setTimeout(() => {
+        setSelectedSpecialtyId(currentSpecialtyId);
+      }, 0);
+    } else {
+      // If no specialty selected, show all specialties
+      setFilteredSpecialties(specialties);
+      setFilteredSubjects(subjects);
+    }
   };
+
+  // Tự động tải dữ liệu khi cả khóa học và chuyên ngành được chọn
+  useEffect(() => {
+    if (selectedCourseId && selectedSpecialtyId) {
+      fetchSubjectsForCourseAndSpecialty();
+    }
+  }, [selectedCourseId, selectedSpecialtyId]);
 
   // Handle delete matrix item
   const handleDeleteMatrixItem = (item) => {
@@ -290,20 +447,145 @@ const LearningMatrixPage = () => {
     });
   };
 
+  // Handle search
+  const handleSearch = (value) => {
+    setSearchText(value);
+    
+    if (!value.trim()) {
+      // If search text is empty, reset filters
+      setFilteredSubjects(subjects);
+      setFilteredSpecialties(specialties);
+      return;
+    }
+    
+    const searchLower = value.toLowerCase();
+    
+    // Filter subjects based on search
+    const matchedSubjects = subjects.filter(subject => 
+      subject.subjectName?.toLowerCase().includes(searchLower) || 
+      subject.subjectId?.toLowerCase().includes(searchLower)
+    );
+    
+    // Filter specialties based on search
+    const matchedSpecialties = specialties.filter(specialty => 
+      specialty.specialtyName?.toLowerCase().includes(searchLower) || 
+      specialty.specialtyId?.toLowerCase().includes(searchLower)
+    );
+    
+    setFilteredSubjects(matchedSubjects);
+    setFilteredSpecialties(matchedSpecialties);
+  };
+
   // Render matrix table for the selected course
   const renderMatrixTable = () => {
     if (!selectedCourseId || !matrixData[selectedCourseId]) {
-      return <div>No course selected or no data available.</div>;
+      return <div>Chưa chọn khóa học hoặc không có dữ liệu.</div>;
     }
 
     const courseMatrix = matrixData[selectedCourseId].matrix;
     
+    // Filter specialties based on selection
+    let displaySpecialties = [...filteredSpecialties];
+    if (selectedSpecialtyId) {
+      displaySpecialties = displaySpecialties.filter(specialty => 
+        specialty.specialtyId === selectedSpecialtyId
+      );
+    }
+    
+    // Kiểm tra nếu không có môn học nào
+    if (filteredSubjects.length === 0 && selectedSpecialtyId) {
+      const selectedSpecialty = specialties.find(s => s.specialtyId === selectedSpecialtyId);
+      
+      return (
+        <div className="text-center p-8">
+          <Card
+            title={
+              <div>
+                <div className="text-lg font-bold">List of subjects in {selectedSpecialty?.specialtyName} ({selectedSpecialtyId})</div>
+                <div className="text-sm text-gray-500">Course: {matrixData[selectedCourseId].courseName} ({selectedCourseId})</div>
+              </div>
+            }
+            bordered={false}
+            className="mt-4"
+          >
+            <Empty 
+              description={
+                <span>No subjects found for course <b>{matrixData[selectedCourseId].courseName}</b> and specialty <b>{selectedSpecialtyId}</b></span>
+              }
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            />
+            <Button 
+              onClick={() => navigate('/learning-matrix/create')} 
+              type="primary" 
+              icon={<PlusOutlined />}
+              style={{ marginTop: 16 }}
+            >
+              Add new relationship
+            </Button>
+          </Card>
+        </div>
+      );
+    }
+    
+    // Hiển thị bảng danh sách môn học khi chọn chuyên ngành (tương tự như trong CreateTrainingPlanPage.jsx)
+    if (selectedSpecialtyId) {
+      const selectedSpecialty = specialties.find(s => s.specialtyId === selectedSpecialtyId);
+      
+      // Cấu hình cột cho bảng môn học
+      const subjectColumns = [
+        {
+          title: "Subject Code",
+          dataIndex: "subjectId",
+          key: "subjectId",
+          width: 150,
+          ellipsis: true,
+        },
+        {
+          title: "Subject Name",
+          dataIndex: "subjectName",
+          key: "subjectName",
+          width: 300,
+          ellipsis: true
+        },
+        {
+          title: "Description",
+          dataIndex: "description",
+          key: "description",
+          ellipsis: true,
+        }
+        
+      ];
+      
+      return (
+        <div>
+          <Card 
+            title={
+              <div>
+                <div className="text-lg font-bold">List of subjects in {selectedSpecialty?.specialtyName} ({selectedSpecialtyId})</div>
+                <div className="text-sm text-gray-500">Course: {matrixData[selectedCourseId].courseName} ({selectedCourseId})</div>
+              </div>
+            }
+            
+          >
+            <Table 
+              dataSource={filteredSubjects} 
+              columns={subjectColumns} 
+              rowKey="subjectId"
+              pagination={{ pageSize: 10 }}
+              scroll={{ x: 'max-content' }}
+            />
+          </Card>
+        </div>
+      );
+    }
+    
     // Count relationships for each subject
     const subjectCounts = {};
-    subjects.forEach(subject => {
+    filteredSubjects.forEach(subject => {
       subjectCounts[subject.subjectId] = 0;
-      specialties.forEach(specialty => {
-        if (courseMatrix[specialty.specialtyId][subject.subjectId]) {
+      displaySpecialties.forEach(specialty => {
+        if (courseMatrix[specialty.specialtyId] && 
+            courseMatrix[specialty.specialtyId][subject.subjectId]) {
           subjectCounts[subject.subjectId]++;
         }
       });
@@ -311,22 +593,23 @@ const LearningMatrixPage = () => {
     
     // Count relationships for each specialty
     const specialtyCounts = {};
-    specialties.forEach(specialty => {
+    displaySpecialties.forEach(specialty => {
       specialtyCounts[specialty.specialtyId] = 0;
-      subjects.forEach(subject => {
-        if (courseMatrix[specialty.specialtyId][subject.subjectId]) {
+      filteredSubjects.forEach(subject => {
+        if (courseMatrix[specialty.specialtyId] && 
+            courseMatrix[specialty.specialtyId][subject.subjectId]) {
           specialtyCounts[specialty.specialtyId]++;
         }
       });
     });
     
     // Sort subjects by relationship count (descending)
-    const sortedSubjects = [...subjects].sort((a, b) => {
+    const sortedSubjects = [...filteredSubjects].sort((a, b) => {
       return subjectCounts[b.subjectId] - subjectCounts[a.subjectId];
     });
     
     // Sort specialties by relationship count (descending)
-    const sortedSpecialties = [...specialties].sort((a, b) => {
+    const sortedSpecialties = [...displaySpecialties].sort((a, b) => {
       return specialtyCounts[b.specialtyId] - specialtyCounts[a.specialtyId];
     });
     
@@ -347,7 +630,7 @@ const LearningMatrixPage = () => {
         ),
       },
       {
-        title: "Specialty",
+        title: "Specialty/Subject",
         dataIndex: "specialty",
         key: "specialty",
         fixed: "left",
@@ -373,6 +656,7 @@ const LearningMatrixPage = () => {
         width: 120,
         align: "center",
         render: (text, record) => {
+          if (!courseMatrix[record.specialtyId]) return null;
           const item = courseMatrix[record.specialtyId][subject.subjectId];
           return item ? (
             <Button 
@@ -412,7 +696,9 @@ const LearningMatrixPage = () => {
       specialtyName: specialty.specialtyName,
       specialty: specialty.specialtyName,
       ...subjects.reduce((acc, subject) => {
-        acc[subject.subjectId] = courseMatrix[specialty.specialtyId][subject.subjectId];
+        if (courseMatrix[specialty.specialtyId]) {
+          acc[subject.subjectId] = courseMatrix[specialty.specialtyId][subject.subjectId];
+        }
         return acc;
       }, {})
     }));
@@ -464,27 +750,72 @@ const LearningMatrixPage = () => {
           <Spin spinning={loading}>
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-                <div>
-                  <Text strong style={{ marginRight: 8 }}>Select Course:</Text>
-                  <Select
-                    style={{ width: 300 }}
-                    value={selectedCourseId}
-                    onChange={handleCourseChange}
-                  >
-                    {distinctCourses.map(course => (
-                      <Option key={course.courseId} value={course.courseId}>
-                        {course.courseName} ({course.courseId})
-                      </Option>
-                    ))}
-                  </Select>
+                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                  <div>
+                    <Text strong style={{ marginRight: 8 }}>Select Course:</Text>
+                    <Select
+                      style={{ width: 300 }}
+                      value={selectedCourseId}
+                      onChange={handleCourseChange}
+                    >
+                      {distinctCourses.map(course => (
+                        <Option key={course.courseId} value={course.courseId}>
+                          {course.courseName} ({course.courseId})
+                        </Option>
+                      ))}
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Text strong style={{ marginRight: 8 }}>Select Specialty:</Text>
+                    <Select
+                      style={{ width: 300 }}
+                      value={selectedSpecialtyId}
+                      onChange={handleSpecialtyChange}
+                      allowClear
+                      placeholder="All specialties"
+                    >
+                      {specialties.map(specialty => (
+                        <Option key={specialty.specialtyId} value={specialty.specialtyId}>
+                          {specialty.specialtyName} ({specialty.specialtyId})
+                        </Option>
+                      ))}
+                    </Select>
+                  </div>
+                  
+                  <div style={{ width: "300px" }}>
+                    <Input.Search
+                      placeholder="Search by subject or specialty name/ID"
+                      allowClear
+                      enterButton={<SearchOutlined />}
+                      size="middle"
+                      value={searchText}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      onSearch={handleSearch}
+                    />
+                  </div>
                 </div>
-                <Button 
-                  icon={<ReloadOutlined />} 
-                  onClick={fetchData}
-                  style={{ borderRadius: "6px" }}
-                >
-                  Refresh Data
-                </Button>
+                
+                <Space>
+                  {searchText && (
+                    <div style={{ marginRight: "8px" }}>
+                      <Text type="secondary">
+                        Found: {filteredSubjects.length} subjects, {filteredSpecialties.length} specialties
+                      </Text>
+                    </div>
+                  )}
+                  <Button 
+                    icon={<ReloadOutlined />} 
+                    onClick={() => {
+                      fetchData();
+                      setSearchText('');
+                      handleSearch('');
+                    }}
+                    style={{ borderRadius: "6px" }}
+                  >
+                    Refresh Data
+                  </Button>
+                </Space>
               </div>
               
               {renderMatrixTable()}

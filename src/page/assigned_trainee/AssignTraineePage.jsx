@@ -1,14 +1,14 @@
 // src/pages/AssignTraineePage.jsx
 import { useState, useEffect } from "react";
 import { read, utils } from "xlsx";
-import { message, Input, Button, Select } from "antd";
+import { message, Input, Button, Select, Form } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import {
   assignTrainee,
   assignTraineeManual,
 } from "../../services/traineeService";
 import { getAllUsers } from "../../services/userService";
-import { courseService } from "../../services/courseService";
+import { learningMatrixService } from "../../services/learningMatrixService";
 
 const { Option } = Select;
 
@@ -24,10 +24,10 @@ const AssignTraineePage = () => {
   const [notes, setNotes] = useState("");
   const [trainees, setTrainees] = useState([]);
   const [selectedTraineeId, setSelectedTraineeId] = useState("");
-  const [courses, setCourses] = useState([]);
+  const [courseSubjectSpecialties, setCourseSubjectSpecialties] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState("");
 
-  // Fetch trainee and course
+  // Fetch trainee and courseSubjectSpecialty
   useEffect(() => {
     const fetchTrainee = async () => {
       try {
@@ -39,18 +39,18 @@ const AssignTraineePage = () => {
       }
     };
 
-    const fetchCourses = async () => {
+    const fetchCourseSubjectSpecialties = async () => {
       try {
-        const response = await courseService.getAllCourses();
-        const coursesArray = response.courses || response.data || response;
-        setCourses(coursesArray);
+        const response = await learningMatrixService.getAllCourseSubjectSpecialties();
+        const arr = response.data || response.courses || response;
+        setCourseSubjectSpecialties(arr);
       } catch {
-        message.error("Failed to load courses");
+        message.error("Failed to load course-subject-specialties");
       }
     };
 
     fetchTrainee();
-    fetchCourses();
+    fetchCourseSubjectSpecialties();
   }, []);
 
   const handleFileUpload = async (file) => {
@@ -126,13 +126,13 @@ const AssignTraineePage = () => {
 
   const handleAssignTrainee = async () => {
     if (!selectedCourseId || !selectedTraineeId) {
-      message.error("Please select a course and a trainee.");
+      message.error("Please select a course-subject-specialty and a trainee.");
       return;
     }
 
     const payload = {
       traineeId: selectedTraineeId,
-      courseId: selectedCourseId,
+      courseSubjectSpecialtyId: selectedCourseId,
       notes,
     };
 
@@ -157,7 +157,10 @@ const AssignTraineePage = () => {
       setNotes("");
       setError(null);
     } catch (err) {
-      const msg = err?.message || "Failed to assign Trainee.";
+      let msg = err?.response?.data?.message || err?.message || "Failed to assign Trainee.";
+      if (msg.includes("already assigned")) {
+        msg = "Trainee này đã được gán vào Course-Subject-Specialty này.";
+      }
       setError(msg); // Optional
       message.error(msg);
       console.error(err);
@@ -305,29 +308,29 @@ const AssignTraineePage = () => {
             Assign Trainee to Course
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <Select
-              showSearch
-              placeholder="Select a Course"
-              optionFilterProp="label"
-              onChange={(value) => setSelectedCourseId(value)}
-              value={selectedCourseId || undefined}
-              filterOption={(input, option) =>
-                (option?.label ?? "")
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              }
-            >
-              {Array.isArray(courses) &&
-                courses.map((course) => (
-                  <Option
-                    key={course.courseId}
-                    value={course.courseId}
-                    label={`${course.courseName} (${course.courseId})`}
-                  >
-                    {course.courseName} ({course.courseId})
-                  </Option>
-                ))}
-            </Select>
+            <Form.Item>
+              <Select
+                showSearch
+                placeholder="Select a Course-Subject-Specialty"
+                optionFilterProp="label"
+                onChange={(value) => setSelectedCourseId(value)}
+                value={selectedCourseId || undefined}
+                filterOption={(input, option) =>
+                  (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                }
+              >
+                {Array.isArray(courseSubjectSpecialties) &&
+                  courseSubjectSpecialties.map((item) => (
+                    <Option
+                      key={item.id}
+                      value={item.id}
+                      label={`${item.course?.courseName || item.courseId} / ${item.subject?.subjectName || item.subjectId} / ${item.specialtyId}`}
+                    >
+                      {item.course?.courseName || item.courseId} / {item.subject?.subjectName || item.subjectId} / {item.specialtyId}
+                    </Option>
+                  ))}
+              </Select>
+            </Form.Item>
 
             <Select
               showSearch
@@ -345,9 +348,9 @@ const AssignTraineePage = () => {
                 <Option
                   key={inst.userId}
                   value={inst.userId}
-                  label={`${inst.fullName} (${inst.userId})`}
+                  label={`${inst.fullName} (${inst.userId}) (${inst.specialtyId})`}
                 >
-                  {inst.fullName} ({inst.userId})
+                  {inst.fullName} ({inst.userId})({inst.specialtyId})
                 </Option>
               ))}
             </Select>
