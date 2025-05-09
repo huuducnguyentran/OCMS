@@ -44,7 +44,7 @@ const AssignedTraineeDetailPage = () => {
         const arr = response.data || response.courses || response;
         setCourseSubjectSpecialties(arr);
       } catch {
-        message.error("Failed to load course-subject-specialties");
+        console.error("Failed to load course-subject-specialties");
       }
     };
 
