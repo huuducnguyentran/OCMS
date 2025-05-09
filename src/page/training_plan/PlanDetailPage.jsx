@@ -15,6 +15,7 @@ import {
   Divider,
   message,
   Tooltip,
+  Collapse,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -29,10 +30,12 @@ import {
   FilePdfOutlined,
 } from "@ant-design/icons";
 import { trainingPlanService } from "../../services/trainingPlanService";
+import { courseService } from "../../services/courseService";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 const { Title, Text } = Typography;
+const { Panel } = Collapse;
 
 const PlanDetailPage = () => {
   const { planId } = useParams();
@@ -44,6 +47,7 @@ const PlanDetailPage = () => {
   const isHeadMaster = userRole === "HeadMaster";
   const isReviewer = userRole === "Reviewer";
   const contentRef = useRef(null);
+  const [courseDetails, setCourseDetails] = useState(null);
 
   // Log role để debug
   console.log("Current user role on PlanDetailPage:", userRole);
@@ -68,6 +72,10 @@ const PlanDetailPage = () => {
       const response = await trainingPlanService.getTrainingPlanById(planId);
       if (response && response.plan) {
         setPlanDetails(response.plan);
+        // Fetch course details if courseId exists
+        if (response.plan.courseId) {
+          await fetchCourseDetails(response.plan.courseId);
+        }
       } else {
         message.error("Could not load plan details");
       }
@@ -76,6 +84,18 @@ const PlanDetailPage = () => {
       message.error("Could not load plan details");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCourseDetails = async (courseId) => {
+    try {
+      const response = await courseService.getCourseById(courseId);
+      if (response && response.data) {
+        setCourseDetails(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch course details:", error);
+      message.error("Could not load course details");
     }
   };
 
@@ -107,6 +127,32 @@ const PlanDetailPage = () => {
             })) || []
         ) || []
     );
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Approved":
+        return "green";
+      case "Pending":
+        return "gold";
+      case "Rejected":
+        return "red";
+      default:
+        return "default";
+    }
+  };
+
+  const getProgressColor = (progress) => {
+    switch (progress) {
+      case "Completed":
+        return "green";
+      case "Ongoing":
+        return "processing";
+      case "NotStarted":
+        return "default";
+      default:
+        return "default";
+    }
   };
 
   // Hàm xuất PDF
@@ -553,17 +599,125 @@ const PlanDetailPage = () => {
           </Row>
         </Card>
 
-        {/* Courses Section - Empty State */}
+        {/* Course Details Card */}
         <Card
           title={
             <div className="flex items-center space-x-2">
               <BookOutlined className="text-green-500" />
-              <span>Courses</span>
+              <span>Course Details</span>
             </div>
           }
           className="mb-8 shadow-sm hover:shadow-md transition-shadow"
         >
-          <Empty description="No courses assigned to this training plan" />
+          {courseDetails ? (
+            <div className="space-y-6">
+              {/* Course Status and Info */}
+              <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <Tag
+                    color={getStatusColor(courseDetails.status)}
+                    className="px-4 py-2 text-base"
+                  >
+                    {courseDetails.status}
+                  </Tag>
+                  <Tag
+                    color={getProgressColor(courseDetails.progress)}
+                    className="px-4 py-2 text-base"
+                  >
+                    {courseDetails.progress}
+                  </Tag>
+                </div>
+              </div>
+
+              {/* Course Statistics */}
+              <Row gutter={[24, 24]}>
+                <Col xs={24} md={12}>
+                  <div className="space-y-4">
+                    <Statistic
+                      title="Course ID"
+                      value={courseDetails.courseId}
+                      className="bg-gray-50 p-4 rounded-lg"
+                    />
+                    <Statistic
+                      title="Course Related ID"
+                      value={courseDetails.courseRelatedId || 'N/A'}
+                      className="bg-gray-50 p-4 rounded-lg"
+                    />
+                    <Statistic
+                      title="Level"
+                      value={
+                        ["Initial", "Recurrent", "Relearn"][
+                          courseDetails.courseLevel
+                        ] || courseDetails.courseLevel
+                      }
+                      className="bg-gray-50 p-4 rounded-lg"
+                    />
+                  </div>
+                </Col>
+                <Col xs={24} md={12}>
+                  <div className="space-y-4">
+                    <Statistic
+                      title="Created By"
+                      value={courseDetails.createdByUserId || "N/A"}
+                      className="bg-gray-50 p-4 rounded-lg"
+                    />
+                    <Statistic
+                      title="Created At"
+                      value={new Date(courseDetails.createdAt).toLocaleString()}
+                      className="bg-gray-50 p-4 rounded-lg"
+                    />
+                  </div>
+                </Col>
+              </Row>
+
+              {/* Course Subjects */}
+              {courseDetails.subjects && courseDetails.subjects.length > 0 ? (
+                <div className="mt-6">
+                  <Title level={5} className="mb-4">Subjects</Title>
+                  <Collapse
+                    accordion
+                    bordered={false}
+                    className="bg-white custom-collapse"
+                  >
+                    {courseDetails.subjects.map((subject) => (
+                      <Panel
+                        header={
+                          <div className="flex justify-between items-center">
+                            <Text strong>{subject.subjectName}</Text>
+                            <Tag color="default" className="rounded-full px-3 py-1">
+                              {subject.credits} Credits
+                            </Tag>
+                          </div>
+                        }
+                        key={subject.subjectId}
+                        className="mb-2 border border-gray-200 rounded-lg overflow-hidden"
+                      >
+                        <div className="space-y-3 p-2">
+                          <Paragraph>
+                            <Text strong>ID:</Text> {subject.subjectId}
+                          </Paragraph>
+                          <Paragraph>
+                            <Text strong>Description:</Text> {subject.description}
+                          </Paragraph>
+                          <Paragraph>
+                            <Text strong>Passing Score:</Text> {subject.passingScore}
+                          </Paragraph>
+                          <Paragraph>
+                            <Text strong>Created:</Text>{" "}
+                            {new Date(subject.createdAt).toLocaleString()}
+                          </Paragraph>
+                        </div>
+                      </Panel>
+                    ))}
+                  </Collapse>
+                </div>
+              ) : (
+                <Empty description="No subjects available for this course" />
+              )}
+            </div>
+          ) : (
+            <Empty description="No course details available" />
+          )}
         </Card>
       </div>
     </div>
