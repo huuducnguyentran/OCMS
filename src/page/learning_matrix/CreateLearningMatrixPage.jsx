@@ -188,24 +188,18 @@ const CreateLearningMatrixPage = () => {
                 <Select
                   placeholder="Select subject"
                   showSearch
-                  optionFilterProp="children"
+                  optionFilterProp="label"
+                  filterOption={(input, option) => {
+                    const subjectText = option.label.toLowerCase();
+                    return subjectText.includes(input.toLowerCase());
+                  }}
                   style={{ width: "100%" }}
-                >
-                  {subjects.map((subject) => (
-                    <Option 
-                      key={subject.subjectId} 
-                      value={subject.subjectId}
-                      title={subject.description}
-                    >
-                      <div>
-                        <div>{subject.subjectName}</div>
-                        <div className="text-xs text-gray-500">
-                          Credits: {subject.credits} | Passing Score: {subject.passingScore}
-                        </div>
-                      </div>
-                    </Option>
-                  ))}
-                </Select>
+                  options={subjects.map(subject => ({
+                    value: subject.subjectId,
+                    label: `${subject.subjectName} (${subject.subjectId})`,
+                    title: subject.description || ''
+                  }))}
+                />
               </Form.Item>
 
               <Form.Item
@@ -229,6 +223,7 @@ const CreateLearningMatrixPage = () => {
 
               <Form.Item
                 name="notes"
+                rules={[{ required: true, message: "Please enter notes" }]}
                 label={<Text strong>Notes</Text>}
               >
                 <TextArea
