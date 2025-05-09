@@ -14,12 +14,14 @@ import {
   Alert,
   Popconfirm,
   Checkbox,
+  Tooltip,
 } from "antd";
 import {
   UserSwitchOutlined,
   TeamOutlined,
   CheckCircleOutlined,
   DeleteOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -40,7 +42,6 @@ const AssignDepartment = () => {
   const [department, setDepartment] = useState(null);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
-  // const [searchValue, setSearchValue] = useState("");
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectedUsersToRemove, setSelectedUsersToRemove] = useState([]);
 
@@ -55,13 +56,21 @@ const AssignDepartment = () => {
         ]);
         setDepartment(deptData);
 
-        // Lấy tất cả users có cùng specialtyId
-        const filteredUsers = usersData.filter(
-          (user) => user.specialtyId === deptData.specialtyId
+        // Filter out users with roleId 8 (AOC Manager)
+        const nonAocUsers = usersData.filter(user => user.roleId !== 8);
+        
+        // Filter users by matching specialty, and only show users with:
+        // - No department assigned, OR
+        // - Same department as current page
+        const filteredUsers = nonAocUsers.filter(
+          (user) => 
+            user.specialtyId === deptData.specialtyId && 
+            (!user.departmentId || user.departmentId === departmentId)
         );
+        
         setUsers(filteredUsers);
         console.log("Department:", deptData);
-        console.log("Filtered Users:", filteredUsers);
+        console.log("Filtered Users (excluding AOC role, only from this department):", filteredUsers);
       } catch (error) {
         console.error("Error fetching data:", error);
         message.error("Failed to fetch data");
@@ -93,23 +102,35 @@ const AssignDepartment = () => {
       return;
     }
 
+    // Check if user already has a department that's different from current
+    if (selectedUser.departmentId && selectedUser.departmentId !== departmentId) {
+      message.error("User is already assigned to another department");
+      return;
+    }
+
     try {
       setLoading(true);
       await assignToDepartment(departmentId, values.userId);
       message.success("User assigned successfully");
 
-      // Thay đổi từ navigate('/department') thành load lại data
+      // Reload data after assignment
       const [deptData, usersData] = await Promise.all([
         getDepartmentById(departmentId),
         getAllUsers(),
       ]);
       setDepartment(deptData);
-      const filteredUsers = usersData.filter(
-        (user) => user.specialtyId === deptData.specialtyId
+      
+      // Filter out AOC users and apply specialty & department filters
+      const nonAocUsers = usersData.filter(user => user.roleId !== 8);
+      const filteredUsers = nonAocUsers.filter(
+        (user) => 
+          user.specialtyId === deptData.specialtyId && 
+          (!user.departmentId || user.departmentId === departmentId)
       );
+      
       setUsers(filteredUsers);
 
-      // Reset form và selected user
+      // Reset form and selected user
       form.resetFields();
       setSelectedUser(null);
     } catch (error) {
@@ -121,20 +142,35 @@ const AssignDepartment = () => {
   };
 
   const handleRemoveUser = async (userId) => {
+    // Find the user object
+    const user = users.find(u => u.userId === userId);
+    
+    // Check if user belongs to this department
+    if (user.departmentId !== departmentId) {
+      message.error("Cannot remove user from a different department");
+      return;
+    }
+    
     try {
       setLoading(true);
       await removeFromDepartment(userId);
       message.success("User removed from department successfully");
 
-      // Load lại data thay vì navigate
+      // Reload data after removal
       const [deptData, usersData] = await Promise.all([
         getDepartmentById(departmentId),
         getAllUsers(),
       ]);
       setDepartment(deptData);
-      const filteredUsers = usersData.filter(
-        (user) => user.specialtyId === deptData.specialtyId
+      
+      // Filter out AOC users and apply specialty & department filters
+      const nonAocUsers = usersData.filter(user => user.roleId !== 8);
+      const filteredUsers = nonAocUsers.filter(
+        (user) => 
+          user.specialtyId === deptData.specialtyId && 
+          (!user.departmentId || user.departmentId === departmentId)
       );
+      
       setUsers(filteredUsers);
     } catch (error) {
       console.error("Error removing user:", error);
@@ -145,23 +181,41 @@ const AssignDepartment = () => {
   };
 
   const handleMultipleAssign = async () => {
+    // Check if any selected users are already assigned to a different department
+    const invalidUsers = users.filter(user => 
+      selectedUsers.includes(user.userId) && 
+      user.departmentId && 
+      user.departmentId !== departmentId
+    );
+    
+    if (invalidUsers.length > 0) {
+      message.error("Some selected users are already assigned to other departments");
+      return;
+    }
+    
     try {
       setLoading(true);
-      // Thực hiện assign lần lượt cho từng user
+      // Assign multiple users
       await Promise.all(
         selectedUsers.map((userId) => assignToDepartment(departmentId, userId))
       );
       message.success("Users assigned successfully");
 
-      // Load lại data
+      // Reload data
       const [deptData, usersData] = await Promise.all([
         getDepartmentById(departmentId),
         getAllUsers(),
       ]);
       setDepartment(deptData);
-      const filteredUsers = usersData.filter(
-        (user) => user.specialtyId === deptData.specialtyId
+      
+      // Filter out AOC users and apply specialty & department filters
+      const nonAocUsers = usersData.filter(user => user.roleId !== 8);
+      const filteredUsers = nonAocUsers.filter(
+        (user) => 
+          user.specialtyId === deptData.specialtyId && 
+          (!user.departmentId || user.departmentId === departmentId)
       );
+      
       setUsers(filteredUsers);
       setSelectedUsers([]); // Reset selection
     } catch (error) {
@@ -173,6 +227,17 @@ const AssignDepartment = () => {
   };
 
   const handleMultipleRemove = async () => {
+    // Check if any selected users belong to a different department
+    const invalidUsers = users.filter(user => 
+      selectedUsersToRemove.includes(user.userId) && 
+      user.departmentId !== departmentId
+    );
+    
+    if (invalidUsers.length > 0) {
+      message.error("Cannot remove users from a different department");
+      return;
+    }
+    
     try {
       setLoading(true);
       await Promise.all(
@@ -180,15 +245,21 @@ const AssignDepartment = () => {
       );
       message.success("Users removed successfully");
 
-      // Load lại data
+      // Reload data
       const [deptData, usersData] = await Promise.all([
         getDepartmentById(departmentId),
         getAllUsers(),
       ]);
       setDepartment(deptData);
-      const filteredUsers = usersData.filter(
-        (user) => user.specialtyId === deptData.specialtyId
+      
+      // Filter out AOC users and apply specialty & department filters
+      const nonAocUsers = usersData.filter(user => user.roleId !== 8);
+      const filteredUsers = nonAocUsers.filter(
+        (user) => 
+          user.specialtyId === deptData.specialtyId && 
+          (!user.departmentId || user.departmentId === departmentId)
       );
+      
       setUsers(filteredUsers);
       setSelectedUsersToRemove([]); // Reset selection
     } catch (error) {
@@ -198,16 +269,6 @@ const AssignDepartment = () => {
       setLoading(false);
     }
   };
-
-  // const handleSelectAllChange = (type, checked) => {
-  //   if (type === 'assign') {
-  //     const availableUsers = users.filter(user => !user.departmentId).map(user => user.userId);
-  //     setSelectedUsers(checked ? availableUsers : []);
-  //   } else {
-  //     const assignedUsers = users.filter(user => user.departmentId).map(user => user.userId);
-  //     setSelectedUsersToRemove(checked ? assignedUsers : []);
-  //   }
-  // };
 
   const columns = [
     {
@@ -233,17 +294,17 @@ const AssignDepartment = () => {
             onChange={(e) => {
               const checked = e.target.checked;
               if (checked) {
-                // Select tất cả
+                // Select all
                 const availableUsers = users
                   .filter((u) => !u.departmentId)
                   .map((u) => u.userId);
                 const assignedUsers = users
-                  .filter((u) => u.departmentId)
+                  .filter((u) => u.departmentId === departmentId)
                   .map((u) => u.userId);
                 setSelectedUsers(availableUsers);
                 setSelectedUsersToRemove(assignedUsers);
               } else {
-                // Bỏ chọn tất cả
+                // Deselect all
                 setSelectedUsers([]);
                 setSelectedUsersToRemove([]);
               }
@@ -263,7 +324,13 @@ const AssignDepartment = () => {
           }
           onChange={(e) => {
             if (record.departmentId) {
-              // Xử lý cho remove
+              // Only allow removal if department matches
+              if (record.departmentId !== departmentId) {
+                message.warning("Cannot remove user from a different department");
+                return;
+              }
+              
+              // Handle for remove
               if (e.target.checked) {
                 setSelectedUsersToRemove((prev) => [...prev, record.userId]);
               } else {
@@ -272,7 +339,7 @@ const AssignDepartment = () => {
                 );
               }
             } else {
-              // Xử lý cho assign
+              // Handle for assign
               if (e.target.checked) {
                 setSelectedUsers((prev) => [...prev, record.userId]);
               } else {
@@ -282,6 +349,7 @@ const AssignDepartment = () => {
               }
             }
           }}
+          disabled={record.departmentId && record.departmentId !== departmentId}
         />
       ),
     },
@@ -307,10 +375,22 @@ const AssignDepartment = () => {
       sorter: (a, b) => a.email.localeCompare(b.email),
     },
     {
+      title: "Role",
+      dataIndex: "roleName",
+      key: "roleName",
+      width: "12%",
+      sorter: (a, b) => a.roleName.localeCompare(b.roleName),
+      render: (roleName) => (
+        <Tag color="purple">
+          {roleName}
+        </Tag>
+      ),
+    },
+    {
       title: "Specialty",
       dataIndex: "specialtyId",
       key: "specialtyId",
-      width: "18%",
+      width: "12%",
       sorter: (a, b) => a.specialtyId.localeCompare(b.specialtyId),
       render: (specialtyId) => (
         <Tag color={specialtyId === department?.specialtyId ? "green" : "red"}>
@@ -324,11 +404,13 @@ const AssignDepartment = () => {
     {
       title: "Status",
       key: "departmentStatus",
-      width: "12%",
+      width: "10%",
       sorter: (a, b) => (a.departmentId ? 1 : 0) - (b.departmentId ? 1 : 0),
       render: (_, record) => (
         <Tag color={record.departmentId ? "blue" : "orange"}>
-          {record.departmentId ? "Assigned" : "Available"}
+          {record.departmentId ? 
+            (record.departmentId === departmentId ? "Assigned" : "Other Dept") 
+            : "Available"}
         </Tag>
       ),
     },
@@ -350,7 +432,7 @@ const AssignDepartment = () => {
             >
               Assign
             </Button>
-          ) : (
+          ) : record.departmentId === departmentId ? (
             <Popconfirm
               title="Remove from Department"
               description="Are you sure you want to remove this user?"
@@ -363,6 +445,12 @@ const AssignDepartment = () => {
                 Remove
               </Button>
             </Popconfirm>
+          ) : (
+            <Tooltip title="User belongs to another department">
+              <Button disabled icon={<InfoCircleOutlined />} size="middle">
+                Cannot Remove
+              </Button>
+            </Tooltip>
           )}
         </Space>
       ),
@@ -411,7 +499,10 @@ const AssignDepartment = () => {
                         Specialty ID: <strong>{department.specialtyId}</strong>
                       </Text>
                       <Text type="secondary">
-                        Only users with matching specialty can be assigned
+                        Only users with matching specialty can be assigned (AOC Manager excluded)
+                      </Text>
+                      <Text type="secondary">
+                        Users can only be removed from the current department
                       </Text>
                     </Space>
                   }
@@ -445,11 +536,14 @@ const AssignDepartment = () => {
                       return childrenText.includes(searchText);
                     }}
                   >
-                    {users.map((user) => (
-                      <Option key={user.userId} value={user.userId}>
-                        {user.fullName} - {user.email}
-                      </Option>
-                    ))}
+                    {users
+                      .filter(user => !user.departmentId || user.departmentId === departmentId)
+                      .map((user) => (
+                        <Option key={user.userId} value={user.userId}>
+                          {user.fullName} - {user.email} ({user.roleName})
+                        </Option>
+                      ))
+                    }
                   </Select>
                 </Form.Item>
 
@@ -474,7 +568,7 @@ const AssignDepartment = () => {
               {/* Users Table */}
               <div className="mt-4">
                 <div className="flex justify-between items-center mb-4">
-                  <Title level={4}>Available Users</Title>
+                  <Title level={4}>Available Users (Excluding AOC Manager)</Title>
                   <Space>
                     {selectedUsersToRemove.length > 0 && (
                       <Button
@@ -518,6 +612,9 @@ const AssignDepartment = () => {
                   scroll={{ x: 1200 }}
                   rowClassName={(record) => {
                     if (record.departmentId) {
+                      if (record.departmentId !== departmentId) {
+                        return "bg-gray-200"; // Different department
+                      }
                       return selectedUsersToRemove.includes(record.userId)
                         ? "bg-red-50"
                         : "bg-gray-50";
@@ -525,13 +622,6 @@ const AssignDepartment = () => {
                     return selectedUsers.includes(record.userId)
                       ? "bg-blue-50"
                       : "";
-                  }}
-                  onChange={(pagination, filters, sorter) => {
-                    console.log("Table change:", {
-                      pagination,
-                      filters,
-                      sorter,
-                    });
                   }}
                 />
               </div>

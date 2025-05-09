@@ -14,6 +14,9 @@ import {
   Switch,
   Statistic,
   Avatar,
+  Dropdown,
+  Menu,
+  List,
 } from "antd";
 import {
   PlusOutlined,
@@ -27,6 +30,10 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   DownloadOutlined,
+  DownOutlined,
+  FileExcelOutlined,
+  ExportOutlined,
+  FilePdfOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import {
@@ -34,6 +41,8 @@ import {
   deleteDepartment,
   activateDepartment,
 } from "../../services/departmentServices";
+import { getAllUsers, exportTraineeInfo } from "../../services/userService";
+import { exportExpiredCertificates, exportCertificate } from "../../services/reportService";
 
 const { Title, Text } = Typography;
 
@@ -41,6 +50,9 @@ const DepartmentPage = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [departmentUsers, setDepartmentUsers] = useState({});
+  const [expandedRowKeys, setExpandedRowKeys] = useState([]);
+  const [downloadLoading, setDownloadLoading] = useState({});
   const navigate = useNavigate();
   const isAdmin = sessionStorage.getItem("role") === "Admin";
   const isReviewer = sessionStorage.getItem("role") === "Reviewer";
@@ -51,10 +63,80 @@ const DepartmentPage = () => {
       setLoading(true);
       const data = await getAllDepartments();
       setDepartments(data);
+      
+      // Fetch users for each department
+      await fetchDepartmentUsers(data);
     } catch (error) {
       message.error("Failed to fetch departments", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // New function to fetch users for each department
+  const fetchDepartmentUsers = async (departments) => {
+    try {
+      const allUsers = await getAllUsers();
+      
+      // Create a mapping of departmentId to users
+      const usersByDepartment = {};
+      
+      departments.forEach(dept => {
+        // Filter users who belong to this department and are not AOC (roleId 8)
+        const deptUsers = allUsers.filter(user => 
+          user.departmentId === dept.departmentId && 
+          user.roleId !== 8
+        );
+        
+        usersByDepartment[dept.departmentId] = deptUsers;
+      });
+      
+      setDepartmentUsers(usersByDepartment);
+    } catch (error) {
+      console.error("Error fetching department users:", error);
+      message.error("Failed to load department users");
+    }
+  };
+
+  // Handle trainee info export
+  const handleExportTraineeInfo = async (userId) => {
+    try {
+      setDownloadLoading(prev => ({ ...prev, [userId]: true }));
+      await exportTraineeInfo(userId);
+      message.success("Trainee information exported successfully");
+    } catch (error) {
+      console.error("Error exporting trainee info:", error);
+      message.error("Failed to export trainee information");
+    } finally {
+      setDownloadLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  // Handle expired certificates export
+  const handleExportExpiredCertificates = async () => {
+    try {
+      setDownloadLoading(prev => ({ ...prev, expiredCerts: true }));
+      await exportExpiredCertificates();
+      message.success("Expired certificates exported successfully");
+    } catch (error) {
+      console.error("Error exporting expired certificates:", error);
+      message.error("No expired certificates found");
+    } finally {
+      setDownloadLoading(prev => ({ ...prev, expiredCerts: false }));
+    }
+  };
+
+  // Handle certificates export
+  const handleExportCertificates = async () => {
+    try {
+      setDownloadLoading(prev => ({ ...prev, allCerts: true }));
+      await exportCertificate();
+      message.success("Certificates exported successfully");
+    } catch (error) {
+      console.error("Error exporting certificates:", error);
+      message.error("Failed to export certificates");
+    } finally {
+      setDownloadLoading(prev => ({ ...prev, allCerts: false }));
     }
   };
 
@@ -102,6 +184,7 @@ const DepartmentPage = () => {
       )
     );
   };
+  
   //export data
   const handleExport = () => {
     const data = getFilteredData();
@@ -140,6 +223,77 @@ const DepartmentPage = () => {
   const activeCount = departments.filter((dept) => dept.status === 0).length;
   const inactiveCount = departments.filter((dept) => dept.status === 1).length;
 
+  // Handling expanded rows
+  const handleExpandRow = (expanded, record) => {
+    setExpandedRowKeys(expanded ? [record.departmentId] : []);
+  };
+
+  // Expandable row render function
+  const expandedRowRender = (record) => {
+    const users = departmentUsers[record.departmentId] || [];
+    
+    return (
+      <Card className="bg-gray-50 border-0">
+        <div className="py-2">
+          <div className="flex justify-between items-center mb-3">
+            <Text strong className="text-blue-700">
+              Department Users ({users.length})
+            </Text>
+           
+          </div>
+          
+          {users.length > 0 ? (
+            <List
+              size="small"
+              dataSource={users}
+              renderItem={user => (
+                <List.Item className="py-2 px-3 hover:bg-blue-50 rounded-lg">
+                  <List.Item.Meta
+                    avatar={
+                      <Avatar 
+                        size="small" 
+                        style={{ backgroundColor: '#1890ff' }} 
+                        icon={<UserOutlined />}
+                      />
+                    }
+                    title={
+                      <div className="flex items-center justify-between">
+                        <Text strong>{user.fullName || user.username}</Text>
+                        <Tooltip title="Export Trainee Information">
+                          <Button
+                            type="text"
+                            size="small"
+                            icon={<DownloadOutlined />}
+                            loading={downloadLoading[user.userId]}
+                            onClick={() => handleExportTraineeInfo(user.userId)}
+                            className="text-blue-600 hover:text-blue-800"
+                          />
+                        </Tooltip>
+                      </div>
+                    }
+                    description={
+                      <Space size="small" className="text-xs">
+                        <Tag color="blue">{user.userId}</Tag>
+                        <Tag color="green">{user.roleName}</Tag>
+                        <Text type="secondary">{user.email}</Text>
+                      </Space>
+                    }
+                  />
+                </List.Item>
+              )}
+              pagination={users.length > 5 ? { pageSize: 5 } : false}
+              className="bg-white rounded-lg shadow-sm"
+            />
+          ) : (
+            <div className="text-center py-4 bg-white rounded-lg shadow-sm">
+              <Text type="secondary">No users found in this department</Text>
+            </div>
+          )}
+        </div>
+      </Card>
+    );
+  };
+
   const columns = [
     {
       title: "Department ID",
@@ -162,10 +316,26 @@ const DepartmentPage = () => {
       title: "Department Name",
       dataIndex: "departmentName",
       key: "departmentName",
-      render: (text) => (
-        <Text strong className="text-blue-800">
-          {text}
-        </Text>
+      render: (text, record) => (
+        <div className="flex items-center">
+          <Text strong className="text-blue-800 mr-2">
+            {text}
+          </Text>
+          {/* Add dropdown trigger button */}
+          <Button 
+            type="text" 
+            size="small"
+            icon={<TeamOutlined />} 
+            onClick={(e) => {
+              e.stopPropagation();
+              const expanded = expandedRowKeys.includes(record.departmentId);
+              handleExpandRow(!expanded, record);
+            }}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            <DownOutlined style={{ fontSize: '10px' }} />
+          </Button>
+        </div>
       ),
       width: "18%",
       ellipsis: true,
@@ -388,17 +558,28 @@ const DepartmentPage = () => {
               Department List
             </Text>
 
-            {isReviewer && (
+            <Space>
+              <Button
+                icon={<ExportOutlined />}
+                type="default"
+                size="small"
+                className="!bg-green-600 !text-white !border-0 hover:!bg-green-700"
+                onClick={handleExportExpiredCertificates}
+                loading={downloadLoading.expiredCerts}
+              >
+                Export Expired Certificates
+              </Button>
+              
               <Button
                 icon={<DownloadOutlined />}
                 type="default"
                 size="small"
-                className="!bg-orange-600 !text-white !border-0 hover:bg-gray-100"
+                className="!bg-orange-600 !text-white !border-0 hover:!bg-orange-700"
                 onClick={handleExport}
               >
-                Export
+                Export Departments
               </Button>
-            )}
+            </Space>
           </div>
 
           <Table
@@ -420,6 +601,11 @@ const DepartmentPage = () => {
                 ? "bg-white hover:bg-blue-50"
                 : "bg-gray-50 hover:bg-gray-100"
             }
+            expandable={{
+              expandedRowRender,
+              expandedRowKeys,
+              onExpand: handleExpandRow,
+            }}
           />
         </Card>
       </Card>

@@ -260,8 +260,6 @@ const SpecialtyPage = () => {
               scroll={{ x: true }}
               pagination={{
                 pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total) => `Total ${total} items`,
               }}
               className="border rounded-lg"
             />

@@ -35,14 +35,14 @@ const HomePage = () => {
   const [roleName, setRoleName] = useState("");
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalCourses: 0,
-    activeTrainees: 0,
-    ongoingSchedules: 0,
-    certificatesIssued: 0,
-    pendingRequests: 0,
-    completedCourses: 0,
-    pendingCertificates: 0,
-    pendingDecisions: 0,
+    totalCourses: "-",
+    activeTrainees: "-",
+    ongoingSchedules: "-",
+    certificatesIssued: "-",
+    pendingRequests: "-",
+    completedCourses: "-",
+    pendingCertificates: "-",
+    pendingDecisions: "-"
   });
   const [userData, setUserData] = useState(null);
   const [allowedNavs, setAllowedNavs] = useState([]);
@@ -69,176 +69,42 @@ const HomePage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        // Fetch data based on role permissions
+        // Simplified data fetching without counting
         if (["Admin", "Training staff", "HeadMaster"].includes(storedRole)) {
-          // Lấy tổng số khóa học
           const coursesResponse = await courseService.getAllCourses();
-          const courses = coursesResponse.data || [];
-          const totalCourses = courses.length;
-          
-          // Lấy số khóa học đã hoàn thành
-          const completedCourses = courses.filter(course => 
-            course.progress === "Completed"
-          ).length;
-          
-          // Lấy tổng số học viên đang hoạt động
           const assignedTraineesResponse = await getAllAssignedTrainee();
-          const activeTrainees = assignedTraineesResponse?.length || 0;
           
-          // Lấy số lịch học đang diễn ra
-          let ongoingSchedules = 0;
-          courses.forEach(course => {
-            if (course.subjects) {
-              course.subjects.forEach(subject => {
-                if (subject.courseSubjectSpecialties) {
-                  subject.courseSubjectSpecialties.forEach(specialty => {
-                    if (specialty.schedules) {
-                      ongoingSchedules += specialty.schedules.filter(
-                        schedule => schedule.status === "Approved"
-                      ).length;
-                    }
-                  });
-                }
-              });
-            }
-          });
-          
-          // Lấy số yêu cầu đang chờ xử lý
-          const pendingRequests = courses.filter(course =>
-            course.status === "Pending"
-          ).length;
-          
-          // Lấy số chứng chỉ đã cấp
-          let certificatesIssued = 0;
-          if (assignedTraineesResponse) {
-            certificatesIssued = assignedTraineesResponse.filter(
-              trainee => trainee.requestStatus === "Approved" && trainee.certificateIssued === true
-            ).length || 0;
-          }
-          
-          // Dành cho HeadMaster: Lấy số chứng chỉ đang chờ phê duyệt và số quyết định đang chờ phê duyệt
-          let pendingCertificates = 0;
-          let pendingDecisions = 0;
-          
-          if (storedRole === "HeadMaster") {
-            try {
-              // Lấy số chứng chỉ đang chờ phê duyệt từ CertificatePendingPage
-              const pendingCertificateResponse = await getPendingCertificate();
-              pendingCertificates = Array.isArray(pendingCertificateResponse) ? pendingCertificateResponse.length : 0;
-              
-              // Lấy số quyết định đang chờ phê duyệt
-              const decisionResponse = await fetch("/api/decisions/pending").then(res => res.json()).catch(() => []);
-              pendingDecisions = Array.isArray(decisionResponse) ? decisionResponse.length : 0;
-              
-              // Nếu không có API riêng, dùng các phương pháp thay thế để ước tính
-              if (pendingDecisions === 0) {
-                // Dùng số khóa học đang chờ quyết định làm ước tính
-                pendingDecisions = Math.floor(pendingRequests * 0.7); // Giả định 70% yêu cầu cần quyết định
-              }
-            } catch (error) {
-              console.error("Error fetching HeadMaster data:", error);
-              // Fallback: đặt giá trị mặc định
-              pendingCertificates = 0; // Giả định có 0 chứng chỉ đang chờ
-              pendingDecisions = 0; // Giả định có 0 quyết định đang chờ
-            }
-          }
-
           setStats({
-            totalCourses,
-            activeTrainees,
-            ongoingSchedules,
-            certificatesIssued,
-            pendingRequests,
-            completedCourses,
-            pendingCertificates,
-            pendingDecisions,
+            totalCourses: "",  
+            activeTrainees: "",
+            ongoingSchedules: "",
+            certificatesIssued: "",
+            pendingRequests: "",
+            completedCourses: "",
+            pendingCertificates: "",
+            pendingDecisions: "",
           });
         } else if (storedRole === "Trainee") {
-          const storedUserID = sessionStorage.getItem("userID");
-          
-          // Lấy các khóa học đã gán cho trainee
-          const traineeCoursesResponse = await courseService.getAssignedTraineeCourse(storedUserID);
-          const traineeCourses = Array.isArray(traineeCoursesResponse) 
-            ? traineeCoursesResponse.filter(course => course.status === "Approved")
-            : [];
-            
-          // Số khóa học đang tham gia và đã hoàn thành
-          const completedCourses = traineeCourses.filter(
-            course => course.progress?.toLowerCase() === "completed"
-          ).length;
-          
-          const ongoingCourses = traineeCourses.filter(
-            course => course.progress?.toLowerCase() === "ongoing"
-          ).length;
-          
-          // Lấy chứng chỉ của trainee
-          const certificateResponse = await getUserProfile(); // Hoặc gọi API lấy chứng chỉ
-          let certificatesIssued = 0;
-          
-          try {
-            // Nếu có API riêng cho chứng chỉ, sử dụng API đó
-            const certificateData = await fetch("/api/trainee/certificates").then(res => res.json());
-            certificatesIssued = certificateData.filter(cert => cert.status === "Active").length;
-          } catch (e) {
-            // Fallback nếu API không tồn tại
-            certificatesIssued = certificateResponse?.certificates?.length || 0;
-          }
-          
-          // Lấy lịch học
-          let ongoingSchedules = 0;
-          // Đếm lịch học từ tất cả các khóa học được gán
-          traineeCourses.forEach(course => {
-            if (course.subjects) {
-              course.subjects.forEach(subject => {
-                if (subject.courseSubjectSpecialties) {
-                  subject.courseSubjectSpecialties.forEach(specialty => {
-                    if (specialty.schedules) {
-                      ongoingSchedules += specialty.schedules.filter(
-                        schedule => schedule.status === "Approved"
-                      ).length;
-                    }
-                  });
-                }
-              });
-            }
-          });
-
-          // Lấy các yêu cầu đang chờ xử lý
-          const pendingRequests = traineeCourses.filter(
-            course => course.status === "Pending"
-          ).length;
-          
           setStats({
-            totalCourses: traineeCourses.length,
-            completedCourses,
-            ongoingCourses,
-            ongoingSchedules,
-            pendingRequests,
-            certificatesIssued,
-            pendingCertificates: 0,
-            pendingDecisions: 0,
+            totalCourses: "",
+            completedCourses: "",
+            ongoingCourses: "",
+            ongoingSchedules: "",
+            pendingRequests: "",
+            certificatesIssued: "",
+            pendingCertificates: "",
+            pendingDecisions: "",
           });
         } else if (storedRole === "Instructor") {
-          // TODO: Cập nhật API để lấy thông tin khóa học của instructor
-          const instructorResponse = await getUserProfile();
-          
-          const totalCourses = instructorResponse?.teachingCourses?.length || 0;
-          const activeTrainees = instructorResponse?.activeTrainees || 0;
-          const ongoingSchedules = instructorResponse?.ongoingSchedules || 0;
-          const completedCourses = instructorResponse?.completedCourses || 0;
-          const upcomingSchedules = instructorResponse?.upcomingSchedules || 0;
-          const pendingGrades = instructorResponse?.pendingGrades || 0;
-          
           setStats({
-            totalCourses,
-            activeTrainees,
-            ongoingSchedules,
-            completedCourses,
-            upcomingSchedules,
-            pendingGrades,
-            pendingCertificates: 0,
-            pendingDecisions: 0,
+            totalCourses: "",
+            activeTrainees: "",
+            ongoingSchedules: "",
+            completedCourses: "",
+            upcomingSchedules: "",
+            pendingGrades: "",
+            pendingCertificates: "",
+            pendingDecisions: "",
           });
         }
       } catch (error) {
@@ -464,27 +330,7 @@ const HomePage = () => {
         {/* Statistics based on role */}
         {role === "HeadMaster" ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatisticCard
-              icon={<CalendarOutlined className="text-2xl text-white" />}
-              title="Pending Requests"
-              value={stats.pendingRequests}
-              color="bg-orange-500"
-              onClick={() => navigate("/request")}
-            />
-            <StatisticCard
-              icon={<SafetyCertificateOutlined className="text-2xl text-white" />}
-              title="Pending Certificates"
-              value={stats.pendingCertificates}
-              color="bg-green-500"
-              onClick={() => navigate("/certificate-pending")}
-            />
-            <StatisticCard
-              icon={<FileTextOutlined className="text-2xl text-white" />}
-              title="Pending Decisions"
-              value={stats.pendingDecisions}
-              color="bg-blue-500"
-              onClick={() => navigate("/decision")}
-            />
+         
           </div>
         ) : role === "Trainee" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -503,15 +349,7 @@ const HomePage = () => {
                 onClick={() => navigate("/assigned-trainee")}
               />
             )}
-            {["Admin", "Training staff"].includes(role) && (
-              <StatisticCard
-                icon={<BookOutlined className="text-2xl text-white" />}
-                title="Total Courses"
-                value={stats.totalCourses}
-                color="bg-blue-500"
-                onClick={() => navigate("/course")}
-              />
-            )}
+
             {["Admin", "HR", "AOC Manager"].includes(role) && (
               <StatisticCard
                 icon={
@@ -554,7 +392,7 @@ const HomePage = () => {
                   icon={<FileTextOutlined className="text-2xl text-white" />}
                   title="Pending Decisions"
                   description="Review and approve training decisions"
-                  path="/decision"
+                  path="/decision-pending"
                   color="bg-blue-500"
                   badge={stats.pendingDecisions}
                 />
@@ -602,13 +440,13 @@ const HomePage = () => {
             ) : (
               <Timeline>
                 <Timeline.Item color="orange">
-                  {stats.pendingRequests} new training plans need review
+                  New training plans need review
                 </Timeline.Item>
                 <Timeline.Item color="green">
-                  {stats.pendingCertificates} certificates waiting for approval
+                  Certificates waiting for approval
                 </Timeline.Item>
                 <Timeline.Item color="blue">
-                  {stats.pendingDecisions} decisions need to be made
+                  Decisions need to be made
                 </Timeline.Item>
               </Timeline>
             )}
