@@ -75,8 +75,8 @@ const SubjectDetailPage = () => {
             setTrainees([]);
           }
         } catch (error) {
-          console.error("Error fetching trainees:", error);
-          message.error("Error fetching trainees");
+          console.log("Note: Trainees data not available", error);
+          setTrainees([]);
         } finally {
           setLoadingTrainees(false);
         }
