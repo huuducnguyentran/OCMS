@@ -56,8 +56,21 @@ const SendRequestPage = () => {
       const response = await getAllSubject();
       console.log("Subjects API response:", response);
 
-      // Kiểm tra cấu trúc response
-      if (response && response.subjects && Array.isArray(response.subjects)) {
+      // Kiểm tra cấu trúc response theo cách mới như trong CreateLearningMatrixPage
+      if (response && response.allSubjects && Array.isArray(response.allSubjects)) {
+        console.log("Using response.allSubjects array");
+        // Map dữ liệu theo cấu trúc mới
+        const formattedSubjects = response.allSubjects.map(subject => ({
+          subjectId: subject.subjectId,
+          subjectName: subject.subjectName,
+          description: subject.description,
+          credits: subject.credits,
+          passingScore: subject.passingScore
+        }));
+        setSubjects(formattedSubjects);
+      }
+      // Duy trì các kiểm tra cũ cho các trường hợp khác
+      else if (response && response.subjects && Array.isArray(response.subjects)) {
         console.log("Using response.subjects array");
         setSubjects(response.subjects);
       } else if (response && Array.isArray(response)) {
@@ -74,6 +87,21 @@ const SendRequestPage = () => {
       ) {
         console.log("Using response.data.subjects as subjects list");
         setSubjects(response.data.subjects);
+      } else if (
+        response &&
+        response.data &&
+        response.data.allSubjects &&
+        Array.isArray(response.data.allSubjects)
+      ) {
+        console.log("Using response.data.allSubjects as subjects list");
+        const formattedSubjects = response.data.allSubjects.map(subject => ({
+          subjectId: subject.subjectId,
+          subjectName: subject.subjectName,
+          description: subject.description,
+          credits: subject.credits,
+          passingScore: subject.passingScore
+        }));
+        setSubjects(formattedSubjects);
       } else {
         console.error("Unexpected response format for subjects:", response);
         // Thử gọi API trực tiếp nếu cách thông thường không hoạt động
@@ -118,6 +146,33 @@ const SendRequestPage = () => {
             "Setting subjects from direct API call (data.data.subjects)"
           );
           setSubjects(response.data.data.subjects);
+        } else if (
+          response.data.allSubjects &&
+          Array.isArray(response.data.allSubjects)
+        ) {
+          console.log("Setting subjects from direct API call (data.allSubjects)");
+          const formattedSubjects = response.data.allSubjects.map(subject => ({
+            subjectId: subject.subjectId,
+            subjectName: subject.subjectName,
+            description: subject.description,
+            credits: subject.credits,
+            passingScore: subject.passingScore
+          }));
+          setSubjects(formattedSubjects);
+        } else if (
+          response.data.data &&
+          response.data.data.allSubjects &&
+          Array.isArray(response.data.data.allSubjects)
+        ) {
+          console.log("Setting subjects from direct API call (data.data.allSubjects)");
+          const formattedSubjects = response.data.data.allSubjects.map(subject => ({
+            subjectId: subject.subjectId,
+            subjectName: subject.subjectName,
+            description: subject.description,
+            credits: subject.credits,
+            passingScore: subject.passingScore
+          }));
+          setSubjects(formattedSubjects);
         } else {
           console.error("Unexpected direct response format:", response.data);
           setSubjects([]);

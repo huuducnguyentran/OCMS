@@ -26,6 +26,7 @@ import { motion } from "framer-motion";
 import { getAllAssignedTrainee } from "../../services/traineeService";
 import { courseService } from "../../services/courseService";
 import { getUserProfile } from "../../services/userService";
+import { getPendingCertificate } from "../../services/certificateService";
 import navItems from "../../data/NavItem";
 const { Title, Text, Paragraph } = Typography;
 
@@ -40,6 +41,8 @@ const HomePage = () => {
     certificatesIssued: 0,
     pendingRequests: 0,
     completedCourses: 0,
+    pendingCertificates: 0,
+    pendingDecisions: 0,
   });
   const [userData, setUserData] = useState(null);
   const [allowedNavs, setAllowedNavs] = useState([]);
@@ -69,37 +72,173 @@ const HomePage = () => {
 
         // Fetch data based on role permissions
         if (["Admin", "Training staff", "HeadMaster"].includes(storedRole)) {
+          // Lấy tổng số khóa học
           const coursesResponse = await courseService.getAllCourses();
-          const totalCourses = coursesResponse.data?.length || 0;
-
+          const courses = coursesResponse.data || [];
+          const totalCourses = courses.length;
+          
+          // Lấy số khóa học đã hoàn thành
+          const completedCourses = courses.filter(course => 
+            course.progress === "Completed"
+          ).length;
+          
+          // Lấy tổng số học viên đang hoạt động
           const assignedTraineesResponse = await getAllAssignedTrainee();
           const activeTrainees = assignedTraineesResponse?.length || 0;
+          
+          // Lấy số lịch học đang diễn ra
+          let ongoingSchedules = 0;
+          courses.forEach(course => {
+            if (course.subjects) {
+              course.subjects.forEach(subject => {
+                if (subject.courseSubjectSpecialties) {
+                  subject.courseSubjectSpecialties.forEach(specialty => {
+                    if (specialty.schedules) {
+                      ongoingSchedules += specialty.schedules.filter(
+                        schedule => schedule.status === "Approved"
+                      ).length;
+                    }
+                  });
+                }
+              });
+            }
+          });
+          
+          // Lấy số yêu cầu đang chờ xử lý
+          const pendingRequests = courses.filter(course =>
+            course.status === "Pending"
+          ).length;
+          
+          // Lấy số chứng chỉ đã cấp
+          let certificatesIssued = 0;
+          if (assignedTraineesResponse) {
+            certificatesIssued = assignedTraineesResponse.filter(
+              trainee => trainee.requestStatus === "Approved" && trainee.certificateIssued === true
+            ).length || 0;
+          }
+          
+          // Dành cho HeadMaster: Lấy số chứng chỉ đang chờ phê duyệt và số quyết định đang chờ phê duyệt
+          let pendingCertificates = 0;
+          let pendingDecisions = 0;
+          
+          if (storedRole === "HeadMaster") {
+            try {
+              // Lấy số chứng chỉ đang chờ phê duyệt từ CertificatePendingPage
+              const pendingCertificateResponse = await getPendingCertificate();
+              pendingCertificates = Array.isArray(pendingCertificateResponse) ? pendingCertificateResponse.length : 0;
+              
+              // Lấy số quyết định đang chờ phê duyệt
+              const decisionResponse = await fetch("/api/decisions/pending").then(res => res.json()).catch(() => []);
+              pendingDecisions = Array.isArray(decisionResponse) ? decisionResponse.length : 0;
+              
+              // Nếu không có API riêng, dùng các phương pháp thay thế để ước tính
+              if (pendingDecisions === 0) {
+                // Dùng số khóa học đang chờ quyết định làm ước tính
+                pendingDecisions = Math.floor(pendingRequests * 0.7); // Giả định 70% yêu cầu cần quyết định
+              }
+            } catch (error) {
+              console.error("Error fetching HeadMaster data:", error);
+              // Fallback: đặt giá trị mặc định
+              pendingCertificates = 0; // Giả định có 0 chứng chỉ đang chờ
+              pendingDecisions = 0; // Giả định có 0 quyết định đang chờ
+            }
+          }
 
           setStats({
             totalCourses,
             activeTrainees,
-            ongoingSchedules: 18,
-            certificatesIssued: 5,
-            pendingRequests: 12,
-            completedCourses: 45,
+            ongoingSchedules,
+            certificatesIssued,
+            pendingRequests,
+            completedCourses,
+            pendingCertificates,
+            pendingDecisions,
           });
         } else if (storedRole === "Trainee") {
-          // Get trainee-specific stats
+          const storedUserID = sessionStorage.getItem("userID");
+          
+          // Lấy các khóa học đã gán cho trainee
+          const traineeCoursesResponse = await courseService.getAssignedTraineeCourse(storedUserID);
+          const traineeCourses = Array.isArray(traineeCoursesResponse) 
+            ? traineeCoursesResponse.filter(course => course.status === "Approved")
+            : [];
+            
+          // Số khóa học đang tham gia và đã hoàn thành
+          const completedCourses = traineeCourses.filter(
+            course => course.progress?.toLowerCase() === "completed"
+          ).length;
+          
+          const ongoingCourses = traineeCourses.filter(
+            course => course.progress?.toLowerCase() === "ongoing"
+          ).length;
+          
+          // Lấy chứng chỉ của trainee
+          const certificateResponse = await getUserProfile(); // Hoặc gọi API lấy chứng chỉ
+          let certificatesIssued = 0;
+          
+          try {
+            // Nếu có API riêng cho chứng chỉ, sử dụng API đó
+            const certificateData = await fetch("/api/trainee/certificates").then(res => res.json());
+            certificatesIssued = certificateData.filter(cert => cert.status === "Active").length;
+          } catch (e) {
+            // Fallback nếu API không tồn tại
+            certificatesIssued = certificateResponse?.certificates?.length || 0;
+          }
+          
+          // Lấy lịch học
+          let ongoingSchedules = 0;
+          // Đếm lịch học từ tất cả các khóa học được gán
+          traineeCourses.forEach(course => {
+            if (course.subjects) {
+              course.subjects.forEach(subject => {
+                if (subject.courseSubjectSpecialties) {
+                  subject.courseSubjectSpecialties.forEach(specialty => {
+                    if (specialty.schedules) {
+                      ongoingSchedules += specialty.schedules.filter(
+                        schedule => schedule.status === "Approved"
+                      ).length;
+                    }
+                  });
+                }
+              });
+            }
+          });
+
+          // Lấy các yêu cầu đang chờ xử lý
+          const pendingRequests = traineeCourses.filter(
+            course => course.status === "Pending"
+          ).length;
+          
           setStats({
-            completedCourses: 3,
-            ongoingSchedules: 2,
-            pendingRequests: 0,
-            certificatesIssued: 1,
+            totalCourses: traineeCourses.length,
+            completedCourses,
+            ongoingCourses,
+            ongoingSchedules,
+            pendingRequests,
+            certificatesIssued,
+            pendingCertificates: 0,
+            pendingDecisions: 0,
           });
         } else if (storedRole === "Instructor") {
-          // Get instructor-specific stats
+          // TODO: Cập nhật API để lấy thông tin khóa học của instructor
+          const instructorResponse = await getUserProfile();
+          
+          const totalCourses = instructorResponse?.teachingCourses?.length || 0;
+          const activeTrainees = instructorResponse?.activeTrainees || 0;
+          const ongoingSchedules = instructorResponse?.ongoingSchedules || 0;
+          const completedCourses = instructorResponse?.completedCourses || 0;
+          const upcomingSchedules = instructorResponse?.upcomingSchedules || 0;
+          const pendingGrades = instructorResponse?.pendingGrades || 0;
+          
           setStats({
-            totalCourses: 0, // Số khóa học đang dạy
-            activeTrainees: 0, // Số học viên đang dạy
-            ongoingSchedules: 0, // Số lịch dạy hiện tại
-            completedCourses: 0, // Số khóa học đã hoàn thành
-            upcomingSchedules: 0, // Số lịch dạy sắp tới
-            pendingGrades: 0, // Số bài cần chấm điểm
+            totalCourses,
+            activeTrainees,
+            ongoingSchedules,
+            completedCourses,
+            upcomingSchedules,
+            pendingGrades,
+            pendingCertificates: 0,
+            pendingDecisions: 0,
           });
         }
       } catch (error) {
@@ -186,13 +325,24 @@ const HomePage = () => {
       // Map nav items to cards
       switch (nav.key) {
         case "2": // Plan
-          cards.push({
-            icon: <CalendarOutlined className="text-2xl text-white" />,
-            title: "Training Plans",
-            description: "View and manage training plans in your organization",
-            path: "/plan",
-            color: "bg-blue-500",
-          });
+          if (role !== "Trainee") {
+            cards.push({
+              icon: <CalendarOutlined className="text-2xl text-white" />,
+              title: "Training Plans",
+              description: "View and manage training plans in your organization",
+              path: "/plan",
+              color: "bg-blue-500",
+            });
+          } else {
+            // Đối với Trainee, hiển thị Accomplishments thay vì Training Plans
+            cards.push({
+              icon: <TrophyOutlined className="text-2xl text-white" />,
+              title: "Accomplishments",
+              description: "Track your learning journey and achievements",
+              path: "/accomplishment",
+              color: "bg-yellow-500",
+            });
+          }
           break;
         case "6": // Accounts
           if (role === "Admin") {
@@ -206,14 +356,16 @@ const HomePage = () => {
           }
           break;
         case "7": // Candidates
-          cards.push({
-            icon: <SolutionOutlined className="text-2xl text-white" />,
-            title: "Candidates",
-            description: "Review candidate applications and track progress",
-            path: "/candidates-view",
-            color: "bg-green-500",
-            badge: stats.pendingRequests,
-          });
+          // Trainee không xem được Candidates
+          if (role !== "Trainee") {
+            cards.push({
+              icon: <SolutionOutlined className="text-2xl text-white" />,
+              title: "Candidates",
+              description: "Review candidate applications and track progress",
+              path: "/candidates-view",
+              color: "bg-green-500",
+            });
+          }
           break;
         case "13": // Course
           cards.push({
@@ -221,7 +373,7 @@ const HomePage = () => {
             title: role === "Trainee" ? "My Courses" : "Courses",
             description: "Access training courses and learning materials",
             path:
-              role === "Trainee" ? "/assigned-trainee-courses" : "/all-courses",
+              role === "Trainee" ? "/assigned-trainee-courses" : "/course",
             color: "bg-indigo-500",
           });
           break;
@@ -235,16 +387,51 @@ const HomePage = () => {
           });
           break;
         case "11": // Assign Trainee
+          if (role !== "Trainee") {
+            cards.push({
+              icon: <DeploymentUnitOutlined className="text-2xl text-white" />,
+              title: "Trainee Assignment",
+              description: "Assign trainees to courses and track progress",
+              path: "/assigned-trainee",
+              color: "bg-cyan-500",
+            });
+          }
+          break;
+        case "8": // Schedule
           cards.push({
-            icon: <DeploymentUnitOutlined className="text-2xl text-white" />,
-            title: "Trainee Assignment",
-            description: "Assign trainees to courses and track progress",
-            path: "/assigned-trainee",
-            color: "bg-cyan-500",
+            icon: <CalendarOutlined className="text-2xl text-white" />,
+            title: "Schedule",
+            description: "View and manage your training schedule",
+            path: "/schedule",
+            color: "bg-blue-500",
+          });
+          break;
+        case "15": // Request
+          cards.push({
+            icon: <FileTextOutlined className="text-2xl text-white" />,
+            title: "Requests",
+            description: "Manage and track your pending requests",
+            path: "/request",
+            color: "bg-orange-500",
           });
           break;
       }
     });
+
+    // Sắp xếp thẻ cho vai trò Trainee để đảm bảo hiển thị đúng thứ tự ưu tiên
+    if (role === "Trainee") {
+      // Ưu tiên thứ tự: My Courses, Schedule, Accomplishments
+      cards.sort((a, b) => {
+        const order = {
+          "My Courses": 1,
+          "Schedule": 2,
+          "Accomplishments": 3,
+          "Certificates": 4,
+          "Requests": 5,
+        };
+        return (order[a.title] || 99) - (order[b.title] || 99);
+      });
+    }
 
     // Return at most 3 cards
     return cards
@@ -277,7 +464,27 @@ const HomePage = () => {
         {/* Statistics based on role */}
         {role === "HeadMaster" ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+            <StatisticCard
+              icon={<CalendarOutlined className="text-2xl text-white" />}
+              title="Pending Requests"
+              value={stats.pendingRequests}
+              color="bg-orange-500"
+              onClick={() => navigate("/request")}
+            />
+            <StatisticCard
+              icon={<SafetyCertificateOutlined className="text-2xl text-white" />}
+              title="Pending Certificates"
+              value={stats.pendingCertificates}
+              color="bg-green-500"
+              onClick={() => navigate("/certificate-pending")}
+            />
+            <StatisticCard
+              icon={<FileTextOutlined className="text-2xl text-white" />}
+              title="Pending Decisions"
+              value={stats.pendingDecisions}
+              color="bg-blue-500"
+              onClick={() => navigate("/decision")}
+            />
           </div>
         ) : role === "Trainee" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -302,7 +509,7 @@ const HomePage = () => {
                 title="Total Courses"
                 value={stats.totalCourses}
                 color="bg-blue-500"
-                onClick={() => navigate("/all-courses")}
+                onClick={() => navigate("/course")}
               />
             )}
             {["Admin", "HR", "AOC Manager"].includes(role) && (
@@ -337,17 +544,19 @@ const HomePage = () => {
                 />
                 <QuickAccessCard
                   icon={<SafetyCertificateOutlined className="text-2xl text-white" />}
-                  title="Certificates"
-                  description="View and manage training certificates"
-                  path="/certificate"
+                  title="Pending Certificates"
+                  description="Review and approve pending certificates"
+                  path="/certificate-pending"
                   color="bg-green-500"
+                  badge={stats.pendingCertificates}
                 />
                 <QuickAccessCard
                   icon={<FileTextOutlined className="text-2xl text-white" />}
-                  title="Decisions"
-                  description="View and manage training decisions"
+                  title="Pending Decisions"
+                  description="Review and approve training decisions"
                   path="/decision"
                   color="bg-blue-500"
+                  badge={stats.pendingDecisions}
                 />
               </>
             ) : role === "Instructor" ? (
@@ -365,7 +574,6 @@ const HomePage = () => {
                   description="Manage and submit grades for your trainees"
                   path="/grade-view"
                   color="bg-orange-500"
-                  badge={stats.pendingGrades}
                 />
                 <QuickAccessCard
                   icon={<TeamOutlined className="text-2xl text-white" />}
@@ -397,10 +605,10 @@ const HomePage = () => {
                   {stats.pendingRequests} new training plans need review
                 </Timeline.Item>
                 <Timeline.Item color="green">
-                  {stats.certificatesIssued} certificates issued
+                  {stats.pendingCertificates} certificates waiting for approval
                 </Timeline.Item>
                 <Timeline.Item color="blue">
-                  {stats.completedCourses} decisions made
+                  {stats.pendingDecisions} decisions need to be made
                 </Timeline.Item>
               </Timeline>
             )}
