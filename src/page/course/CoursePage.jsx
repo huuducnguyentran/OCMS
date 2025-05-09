@@ -272,18 +272,6 @@ const CoursePage = () => {
       ),
     },
     {
-      title: "Level",
-      dataIndex: "courseLevel",
-      key: "courseLevel",
-      width: 120,
-      sorter: (a, b) => a.courseLevel - b.courseLevel,
-      sortOrder: sortedInfo.columnKey === 'courseLevel' && sortedInfo.order,
-      render: (level) => {
-        const levels = ["Initial", "Recurrent", "Relearn"];
-        return levels[level] || level;
-      },
-    },
-    {
       title: "Status",
       dataIndex: "status",
       key: "status",
@@ -572,11 +560,62 @@ const CoursePage = () => {
                       <Text strong>Created:</Text>{" "}
                       {new Date(subject.createdAt).toLocaleString()}
                     </Paragraph>
+                    
+                    {/* Hiển thị danh sách trainees cho từng subject */}
+                    {subject.courseSubjectSpecialties && subject.courseSubjectSpecialties.map((specialty) => (
+                      <div key={specialty.id} className="mt-4 bg-gray-50 p-3 rounded-lg">
+                        <Title level={5} className="mb-2">
+                          Specialty: {specialty.specialty?.specialtyName || specialty.specialtyId}
+                        </Title>
+                        
+                        {/* Hiển thị danh sách trainees của specialty */}
+                        {specialty.trainees && specialty.trainees.length > 0 ? (
+                          <div className="mb-2">
+                            <Text strong className="block mb-2">Trainees ({specialty.trainees.length}):</Text>
+                            <List
+                              size="small"
+                              itemLayout="horizontal"
+                              dataSource={specialty.trainees}
+                              renderItem={(trainee) => (
+                                <List.Item
+                                  actions={[
+                                    <Tag
+                                      key="requestStatus"
+                                      color={getStatusColor(trainee.requestStatus)}
+                                      className="rounded-full px-2 py-0.5"
+                                    >
+                                      {trainee.requestStatus}
+                                    </Tag>,
+                                  ]}
+                                  className="py-1 px-2"
+                                >
+                                  <List.Item.Meta
+                                    avatar={
+                                      <Avatar size="small" icon={<TeamOutlined />} className="bg-gray-400" />
+                                    }
+                                    title={<Text strong>{trainee.traineeId}</Text>}
+                                    description={`Assigned: ${new Date(trainee.assignDate).toLocaleDateString()}`}
+                                  />
+                                </List.Item>
+                              )}
+                            />
+                          </div>
+                        ) : (
+                          <Empty
+                            description="No trainees assigned"
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            className="my-2"
+                          />
+                        )}
+                      </div>
+                    ))}
+                    
                     <div className="flex justify-end mt-4">
                       <Button
                         type="primary"
                         size="small"
                         className="bg-gray-600 hover:bg-gray-700 border-0"
+                        onClick={() => navigate(`/subject/${subject.subjectId}`)}
                       >
                         View Subject
                       </Button>
@@ -593,56 +632,7 @@ const CoursePage = () => {
             />
           ),
       },
-      {
-        key: "3",
-        label: (
-          <span className="flex items-center">
-            <TeamOutlined className="mr-1" />
-            Trainees
-            <span className="ml-2 text-gray-500">
-              ({selectedCourse.trainees?.length || 0})
-            </span>
-          </span>
-        ),
-        children:
-          selectedCourse.trainees?.length > 0 ? (
-            <List
-              itemLayout="horizontal"
-              dataSource={selectedCourse.trainees}
-              renderItem={(trainee) => (
-                <List.Item
-                  actions={[
-                    <Tag
-                      key="requestStatus"
-                      color={getStatusColor(trainee.requestStatus)}
-                      className="rounded-full px-3 py-1"
-                    >
-                      {trainee.requestStatus}
-                    </Tag>,
-                  ]}
-                  className="hover:bg-gray-50 p-2 rounded-lg transition-colors"
-                >
-                  <List.Item.Meta
-                    avatar={
-                      <Avatar icon={<TeamOutlined />} className="bg-gray-400" />
-                    }
-                    title={<Text strong>{trainee.traineeId}</Text>}
-                    description={`Assigned on: ${new Date(
-                      trainee.assignDate
-                    ).toLocaleDateString()}`}
-                  />
-                </List.Item>
-              )}
-              className="custom-list"
-            />
-          ) : (
-            <Empty
-              description="No trainees assigned to this course"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              className="py-12"
-            />
-          ),
-      },
+     
     ];
   };
 

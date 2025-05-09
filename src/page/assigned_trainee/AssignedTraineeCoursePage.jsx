@@ -727,16 +727,6 @@ const AssignedTraineeCoursePage = () => {
                                 />
                               </Card>
                             </Col>
-                            <Col span={8}>
-                              <Card className="bg-white border border-gray-200 shadow-sm">
-                                <Statistic 
-                                  title={<span className="text-gray-500">Plan ID</span>} 
-                                  value={details?.trainingPlanId || "N/A"} 
-                                  prefix={<InfoCircleOutlined className="text-purple-500" />}
-                                  valueStyle={{ color: '#722ed1', fontSize: '16px' }}
-                                />
-                              </Card>
-                            </Col>
                           </Row>
 
                           {/* Subjects */}
