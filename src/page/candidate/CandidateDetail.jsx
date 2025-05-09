@@ -68,6 +68,7 @@ const CandidateDetailPage = () => {
   // Kiểm tra có phải HeadMaster không
   const isHeadMaster = userRole === "HeadMaster";
   const isTrainingStaff = userRole === "Training staff";
+  const isAdmin = userRole === "Admin";
   // Kiểm tra xem người dùng đến từ trang request hay không
   const isFromRequest =
     location.state?.fromRequest || isHeadMaster || isTrainingStaff;
@@ -268,69 +269,75 @@ const CandidateDetailPage = () => {
     setEditValue("");
   };
 
-  const renderEditableItem = (label, field) => (
-    <Descriptions.Item
-      label={
-        <div className="flex items-center justify-between">
-          <span>{label}</span>
-          {canEdit && editingField !== field && (
-            <EditOutlined
-              className="text-blue-500 ml-2 cursor-pointer"
-              onClick={() => handleEditClick(field)}
+  const renderEditableItem = (label, field) => {
+    const isApproved = candidate?.candidateStatus === 1;
+
+    return (
+      <Descriptions.Item
+        label={
+          <div className="flex items-center justify-between">
+            <span>{label}</span>
+            {!isApproved && canEdit && editingField !== field && (
+              <EditOutlined
+                className="text-blue-500 ml-2 cursor-pointer"
+                onClick={() => handleEditClick(field)}
+              />
+            )}
+          </div>
+        }
+      >
+        {editingField === field && canEdit && !isApproved ? (
+          <div className="flex items-center gap-2">
+            {field === "gender" ? (
+              <Select
+                value={editValue}
+                onChange={(value) => setEditValue(value)}
+                size="small"
+                style={{ minWidth: 100 }}
+                options={[
+                  { label: "Male", value: "Male" },
+                  { label: "Female", value: "Female" },
+                  { label: "Other", value: "Other" },
+                ]}
+              />
+            ) : field === "dateOfBirth" ? (
+              <DatePicker
+                value={dayjs(editValue)}
+                onChange={(date) =>
+                  setEditValue(date ? date.toISOString() : "")
+                }
+                size="small"
+                allowClear={false}
+                inputReadOnly
+              />
+            ) : (
+              <Input
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                size="small"
+              />
+            )}
+            <CheckOutlined
+              className="text-green-600 cursor-pointer"
+              onClick={handleSaveEdit}
             />
-          )}
-        </div>
-      }
-    >
-      {editingField === field && canEdit ? (
-        <div className="flex items-center gap-2">
-          {field === "gender" ? (
-            <Select
-              value={editValue}
-              onChange={(value) => setEditValue(value)}
-              size="small"
-              style={{ minWidth: 100 }}
-              options={[
-                { label: "Male", value: "Male" },
-                { label: "Female", value: "Female" },
-                { label: "Other", value: "Other" },
-              ]}
+            <CloseOutlined
+              className="text-red-500 cursor-pointer"
+              onClick={handleCancelEdit}
             />
-          ) : field === "dateOfBirth" ? (
-            <DatePicker
-              value={dayjs(editValue)}
-              onChange={(date) => setEditValue(date ? date.toISOString() : "")}
-              size="small"
-              allowClear={false}
-              inputReadOnly
-            />
+          </div>
+        ) : field === "dateOfBirth" ? (
+          candidate[field] ? (
+            new Date(candidate[field]).toLocaleDateString()
           ) : (
-            <Input
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              size="small"
-            />
-          )}
-          <CheckOutlined
-            className="text-green-600 cursor-pointer"
-            onClick={handleSaveEdit}
-          />
-          <CloseOutlined
-            className="text-red-500 cursor-pointer"
-            onClick={handleCancelEdit}
-          />
-        </div>
-      ) : field === "dateOfBirth" ? (
-        candidate[field] ? (
-          new Date(candidate[field]).toLocaleDateString()
+            "-"
+          )
         ) : (
-          "-"
-        )
-      ) : (
-        candidate[field] || "-"
-      )}
-    </Descriptions.Item>
-  );
+          candidate[field] || "-"
+        )}
+      </Descriptions.Item>
+    );
+  };
 
   const renderEditModal = () => (
     <Modal
@@ -457,7 +464,7 @@ const CandidateDetailPage = () => {
               </Title>
               <Text type="secondary">ID: {candidate?.candidateId}</Text>
             </div>
-            {!isHeadMaster && !isTrainingStaff && (
+            {isAdmin && (
               <Space>
                 <Button
                   onClick={handleCreateAccount}
