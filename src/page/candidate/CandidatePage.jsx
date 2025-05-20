@@ -15,6 +15,7 @@ import {
 import {
   getCandidates,
   deleteCandidate,
+  createCandidateAccount,
 } from "../../services/candidateService";
 import { useNavigate } from "react-router-dom";
 import {
@@ -25,6 +26,7 @@ import {
   MoreOutlined,
   DownloadOutlined,
   ReloadOutlined,
+  UserAddOutlined,
 } from "@ant-design/icons";
 import * as XLSX from "xlsx";
 
@@ -32,12 +34,13 @@ const { Title } = Typography;
 
 const CandidatePage = () => {
   const [candidates, setCandidates] = useState([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [userRole, setUserRole] = useState("");
+  const [sortField, setSortField] = useState("candidateId");
+  const [sortOrder, setSortOrder] = useState("ascend");
   const navigate = useNavigate();
-  const [sortField, setSortField] = useState('candidateId');
-  const [sortOrder, setSortOrder] = useState('ascend');
 
   useEffect(() => {
     const role = sessionStorage.getItem("role");
@@ -89,19 +92,6 @@ const CandidatePage = () => {
       console.error("Error exporting data:", error);
       message.error("Failed to export data. Please try again.");
     }
-  };
-
-  const getStatusTag = (status) => {
-    const statusMap = {
-      0: { color: "orange", text: "Pending" },
-      1: { color: "green", text: "Approved" },
-      2: { color: "red", text: "Rejected" },
-    };
-    const { color, text } = statusMap[status] || {
-      color: "default",
-      text: "Unknown",
-    };
-    return <Tag color={color}>{text}</Tag>;
   };
 
   const handleDelete = (record) => {
@@ -156,6 +146,34 @@ const CandidatePage = () => {
     });
   };
 
+  const handleCreateAccounts = async () => {
+    try {
+      setLoading(true);
+      await createCandidateAccount(selectedRowKeys);
+      message.success("Accounts created for selected candidates");
+      setSelectedRowKeys([]);
+      fetchCandidates();
+    } catch (error) {
+      console.error("Error creating accounts:", error);
+      message.error("Failed to create accounts. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusTag = (status) => {
+    const statusMap = {
+      0: { color: "orange", text: "Pending" },
+      1: { color: "green", text: "Approved" },
+      2: { color: "red", text: "Rejected" },
+    };
+    const { color, text } = statusMap[status] || {
+      color: "default",
+      text: "Unknown",
+    };
+    return <Tag color={color}>{text}</Tag>;
+  };
+
   const getActionItems = (record) => ({
     items: [
       {
@@ -180,39 +198,36 @@ const CandidatePage = () => {
   const handleTableChange = (pagination, filters, sorter) => {
     if (sorter) {
       setSortField(sorter.field);
-      setSortOrder(sorter.order || 'ascend');
+      setSortOrder(sorter.order || "ascend");
     }
   };
 
   const getSortedData = (data) => {
-    if (!sortField || !sortOrder) {
-      return data;
-    }
+    if (!sortField || !sortOrder) return data;
 
     return [...data].sort((a, b) => {
       let compareResult = 0;
-
       switch (sortField) {
-        case 'candidateId':
+        case "candidateId":
           compareResult = a.candidateId.localeCompare(b.candidateId);
           break;
-        case 'fullName':
+        case "fullName":
           compareResult = a.fullName.localeCompare(b.fullName);
           break;
-        case 'candidateStatus':
+        case "candidateStatus":
           compareResult = a.candidateStatus - b.candidateStatus;
           break;
-        case 'gender':
-          compareResult = (a.gender || '').localeCompare(b.gender || '');
+        case "gender":
+          compareResult = (a.gender || "").localeCompare(b.gender || "");
           break;
-        case 'dateOfBirth':
-          compareResult = new Date(a.dateOfBirth || '') - new Date(b.dateOfBirth || '');
+        case "dateOfBirth":
+          compareResult =
+            new Date(a.dateOfBirth || "") - new Date(b.dateOfBirth || "");
           break;
         default:
           return 0;
       }
-
-      return sortOrder === 'ascend' ? compareResult : -compareResult;
+      return sortOrder === "ascend" ? compareResult : -compareResult;
     });
   };
 
@@ -224,8 +239,8 @@ const CandidatePage = () => {
       width: 100,
       fixed: "left",
       sorter: true,
-      sortOrder: sortField === 'candidateId' ? sortOrder : null,
-      render: (text) => <span className="font-medium">{text}</span>,
+      sortOrder: sortField === "candidateId" ? sortOrder : null,
+      render: (text) => <span className="font-semibold">{text}</span>,
     },
     {
       title: "Full Name",
@@ -234,7 +249,7 @@ const CandidatePage = () => {
       fixed: "left",
       width: 200,
       sorter: true,
-      sortOrder: sortField === 'fullName' ? sortOrder : null,
+      sortOrder: sortField === "fullName" ? sortOrder : null,
       render: (text, record) => (
         <a
           className="text-blue-600 hover:text-blue-800 font-medium"
@@ -250,7 +265,7 @@ const CandidatePage = () => {
       key: "status",
       width: 120,
       sorter: true,
-      sortOrder: sortField === 'candidateStatus' ? sortOrder : null,
+      sortOrder: sortField === "candidateStatus" ? sortOrder : null,
       render: getStatusTag,
     },
     {
@@ -259,7 +274,7 @@ const CandidatePage = () => {
       key: "gender",
       width: 100,
       sorter: true,
-      sortOrder: sortField === 'gender' ? sortOrder : null,
+      sortOrder: sortField === "gender" ? sortOrder : null,
     },
     {
       title: "Date of Birth",
@@ -267,8 +282,8 @@ const CandidatePage = () => {
       key: "dateOfBirth",
       width: 150,
       sorter: true,
-      sortOrder: sortField === 'dateOfBirth' ? sortOrder : null,
-      render: (date) => date ? new Date(date).toLocaleDateString() : '-',
+      sortOrder: sortField === "dateOfBirth" ? sortOrder : null,
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "-"),
     },
     {
       title: "Contact",
@@ -299,24 +314,19 @@ const CandidatePage = () => {
       fixed: "right",
       width: 80,
       render: (_, record) => {
-        if (userRole === "Reviewer") {
-          return null;
-        }
-        
+        if (userRole === "Reviewer") return null;
         return (
-          <Space size="small">
-            <Dropdown
-              menu={getActionItems(record)}
-              placement="bottomRight"
-              trigger={["click"]}
-            >
-              <Button
-                type="text"
-                icon={<MoreOutlined />}
-                className="text-gray-600 hover:text-blue-600"
-              />
-            </Dropdown>
-          </Space>
+          <Dropdown
+            menu={getActionItems(record)}
+            placement="bottomRight"
+            trigger={["click"]}
+          >
+            <Button
+              type="text"
+              icon={<MoreOutlined />}
+              className="text-gray-600 hover:text-blue-600"
+            />
+          </Dropdown>
         );
       },
     },
@@ -324,9 +334,14 @@ const CandidatePage = () => {
 
   const getTableColumns = () => {
     if (userRole === "Reviewer") {
-      return columns.filter(col => col.key !== "actions");
+      return columns.filter((col) => col.key !== "actions");
     }
     return columns;
+  };
+
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (selectedKeys) => setSelectedRowKeys(selectedKeys),
   };
 
   const filteredCandidates = candidates.filter((candidate) =>
@@ -337,19 +352,19 @@ const CandidatePage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <Card className="max-w-7xl mx-auto shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-indigo-100 p-6">
+      <Card className="max-w-7xl mx-auto shadow-xl rounded-xl">
         <div className="flex justify-between items-center mb-6">
-          <Title level={2} className="mb-0">
+          <Title level={2} className="!mb-0 !text-indigo-700">
             <UserOutlined className="mr-2" />
-            Candidate Management
+            Candidate
           </Title>
           <Space>
             <Input
               placeholder="Search candidates..."
               prefix={<SearchOutlined />}
               onChange={(e) => setSearchText(e.target.value)}
-              className="min-w-[300px]"
+              className="min-w-[280px]"
             />
             <Button
               icon={<ReloadOutlined />}
@@ -363,6 +378,7 @@ const CandidatePage = () => {
         </div>
 
         <Table
+          rowSelection={rowSelection}
           columns={getTableColumns()}
           dataSource={getSortedData(filteredCandidates).map((item) => ({
             ...item,
@@ -377,9 +393,27 @@ const CandidatePage = () => {
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} candidates`,
           }}
-          className="shadow-sm"
+          className="shadow"
+          style={{
+            scrollbarWidth: "none", // Firefox
+            msOverflowStyle: "none", // IE 10+
+          }}
         />
 
+        {userRole !== "Reviewer" && (
+          <div className="mt-6 flex justify-between items-center">
+            <Button
+              type="primary"
+              icon={<UserAddOutlined />}
+              size="large"
+              disabled={selectedRowKeys.length === 0}
+              onClick={handleCreateAccounts}
+              className="bg-blue-600 hover:bg-blue-700 border-0"
+            >
+              Create Accounts for Selected
+            </Button>
+          </div>
+        )}
         {userRole === "Reviewer" && (
           <div className="mt-6 flex justify-end">
             <Button

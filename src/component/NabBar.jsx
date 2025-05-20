@@ -141,14 +141,16 @@ const Navbar = () => {
 
   return (
     <Sider theme="dark" style={{ overflow: "auto", height: "auto" }}>
-      <div className="text-xl font-bold text-white p-4">
-        <span className="text-red-500">F</span>
-        <span className="text-green-500">l</span>
-        <span className="text-blue-500">i</span>
-        <span className="text-yellow-500">g</span>
-        <span className="text-white">ht</span>
-        <span className="text-white font-bold">Vault</span>
-        <div className="text-sm text-gray-300 mt-1 capitalize">
+      <div className="p-4 text-center border-b border-gray-700">
+        <div className="text-2xl font-extrabold text-white tracking-wide">
+          <span className="text-red-500">F</span>
+          <span className="text-green-500">l</span>
+          <span className="text-blue-500">i</span>
+          <span className="text-yellow-500">g</span>
+          <span className="text-white">ht</span>
+          <span className="text-white">Vault</span>
+        </div>
+        <div className="text-xs text-gray-400 mt-1 capitalize">
           {storedRole}
         </div>
       </div>
@@ -156,7 +158,9 @@ const Navbar = () => {
       <Menu
         theme="dark"
         mode="inline"
-        defaultSelectedKeys={["1"]}
+        selectedKeys={[window.location.pathname]}
+        defaultOpenKeys={filteredNavItems.map((i) => i.key)}
+        style={{ borderRight: 0 }}
         items={filteredNavItems}
       />
     </Sider>
