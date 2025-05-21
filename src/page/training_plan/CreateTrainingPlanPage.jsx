@@ -25,7 +25,6 @@ import { trainingPlanService } from "../../services/trainingPlanService";
 import { applyTrainingPlanValidation } from "../../../utils/validationSchemas";
 import axiosInstance from "../../../utils/axiosInstance";
 import { courseService } from "../../services/courseService";
-import { learningMatrixService } from "../../services/learningMatrixService";
 
 const { TextArea } = Input;
 const { Option } = Select;

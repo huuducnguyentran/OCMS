@@ -24,7 +24,6 @@ import { trainingScheduleService } from "../../services/trainingScheduleService"
 import dayjs from "dayjs";
 import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
-import { learningMatrixService } from "../../services/learningMatrixService";
 
 const { Title } = Typography;
 const { TextArea } = Input;

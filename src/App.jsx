@@ -62,12 +62,8 @@ import RegulationsPage from "./page/Regulations/RegulationsPage";
 import CreateExCertificatePage from "./page/candidate/CreateExCertificatePage";
 import ImportDecisionPage from "./page/decision/ImportDecisionPage";
 import DecisionTemplateListPage from "./page/decision/DecisionTemplatePage";
-import CreateAccountPage from "./page/user/CreateAccountPage";
-import LearningMatrixPage from "./page/learning_matrix/LearningMatrixPage";
-import CreateLearningMatrixPage from "./page/learning_matrix/CreateLearningMatrixPage";
 import UpdateAccountPage from "./page/user/UpdateAccountPage";
 import ExportCertificatePage from "./page/report/ExportCertificatePage";
-
 import DecisionTemplateDetailPage from "./page/decision/DecisionTemplateDetailPage";
 import UpdateDecisionTemplatePage from "./page/decision/UpdateDecisionTemplatePage";
 import DecisionActivePage from "./page/decision/DecisionActivePage";
@@ -82,6 +78,9 @@ import AssignDepartmentPage from "./page/department/AssignDepartment";
 import TraineeGradePage from "./page/grade/TraineeGradePage";
 import EditSchedule from "./page/schedule/EditSchedule";
 import ClassroomPage from "./page/classroom/ClassroomPage";
+import CRUD_instructor from "./page/instructor_assignment/CRUD_instructor";
+import InstructorAssPage from "./page/instructor_assignment/instructor_assPage";
+import CreateAccountPage from "./page/user/CreateAccountPage";
 
 function App() {
   return (
@@ -185,7 +184,15 @@ function App() {
                             path="/external-certificate/edit/:id"
                             element={<EditExternalCertiPage />}
                           />
-
+                          {/*  Instructor Assignment */}
+                          <Route
+                            path="/instructor-assignment"
+                            element={<InstructorAssPage />}
+                          />
+                          <Route
+                            path="/instructor-assignment/create"
+                            element={<CRUD_instructor />}
+                          />
                           {/*  Subjects */}
                           <Route path="/subject" element={<SubjectPage />} />
                           <Route
@@ -217,14 +224,6 @@ function App() {
                           <Route
                             path="/assigned-trainee-courses"
                             element={<AssignedTraineeCoursePage />}
-                          />
-                          <Route
-                            path="/learning-matrix"
-                            element={<LearningMatrixPage />}
-                          />
-                          <Route
-                            path="/learning-matrix/create"
-                            element={<CreateLearningMatrixPage />}
                           />
                           {/*  Accomplishments & Grades */}
                           <Route
