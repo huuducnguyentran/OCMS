@@ -387,6 +387,7 @@ const CandidatePage = () => {
               onClick={fetchCandidates}
               loading={loading}
               type="primary"
+              className="!bg-cyan-600 hover:!bg-cyan-700"
             >
               Refresh
             </Button>
