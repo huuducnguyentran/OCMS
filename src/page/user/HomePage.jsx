@@ -42,7 +42,7 @@ const HomePage = () => {
     pendingRequests: "-",
     completedCourses: "-",
     pendingCertificates: "-",
-    pendingDecisions: "-"
+    pendingDecisions: "-",
   });
   const [userData, setUserData] = useState(null);
   const [allowedNavs, setAllowedNavs] = useState([]);
@@ -73,9 +73,9 @@ const HomePage = () => {
         if (["Admin", "Training staff", "HeadMaster"].includes(storedRole)) {
           const coursesResponse = await courseService.getAllCourses();
           const assignedTraineesResponse = await getAllAssignedTrainee();
-          
+
           setStats({
-            totalCourses: "",  
+            totalCourses: "",
             activeTrainees: "",
             ongoingSchedules: "",
             certificatesIssued: "",
@@ -173,7 +173,7 @@ const HomePage = () => {
           <div className="mt-4">
             <Button
               type="primary"
-              className={`${color} border-none hover:opacity-90`}
+              className={`${color} !bg-gradient-to-r from-cyan-950 to-cyan-800 !border-cyan-950 hover:opacity-90`}
             >
               Access Now →
             </Button>
@@ -195,9 +195,10 @@ const HomePage = () => {
             cards.push({
               icon: <CalendarOutlined className="text-2xl text-white" />,
               title: "Training Plans",
-              description: "View and manage training plans in your organization",
+              description:
+                "View and manage training plans in your organization",
               path: "/plan",
-              color: "bg-blue-500",
+              color: "bg-green-500",
             });
           } else {
             // Đối với Trainee, hiển thị Accomplishments thay vì Training Plans
@@ -238,8 +239,7 @@ const HomePage = () => {
             icon: <BookOutlined className="text-2xl text-white" />,
             title: role === "Trainee" ? "My Courses" : "Courses",
             description: "Access training courses and learning materials",
-            path:
-              role === "Trainee" ? "/assigned-trainee-courses" : "/course",
+            path: role === "Trainee" ? "/assigned-trainee-courses" : "/course",
             color: "bg-indigo-500",
           });
           break;
@@ -269,7 +269,7 @@ const HomePage = () => {
             title: "Schedule",
             description: "View and manage your training schedule",
             path: "/schedule",
-            color: "bg-blue-500",
+            color: "bg-green-500",
           });
           break;
         case "15": // Request
@@ -290,10 +290,10 @@ const HomePage = () => {
       cards.sort((a, b) => {
         const order = {
           "My Courses": 1,
-          "Schedule": 2,
-          "Accomplishments": 3,
-          "Certificates": 4,
-          "Requests": 5,
+          Schedule: 2,
+          Accomplishments: 3,
+          Certificates: 4,
+          Requests: 5,
         };
         return (order[a.title] || 99) - (order[b.title] || 99);
       });
@@ -313,14 +313,14 @@ const HomePage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-8 text-white mb-8"
+          className="bg-gradient-to-r from-cyan-950 to-cyan-800 rounded-xl p-8 text-white mb-8"
         >
           <Row gutter={[24, 24]} align="middle">
             <Col xs={24} md={16}>
               <Title level={2} className="!text-white !mb-2">
                 Welcome back, {userData?.fullName || roleName}
               </Title>
-              <Text className="text-blue-100 text-lg">
+              <Text className="text-gray-100 text-lg">
                 Here is what happening in your training system today
               </Text>
             </Col>
@@ -329,15 +329,11 @@ const HomePage = () => {
 
         {/* Statistics based on role */}
         {role === "HeadMaster" ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
         ) : role === "Trainee" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         ) : role === "Instructor" ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {role === "Admin" && (
@@ -381,7 +377,9 @@ const HomePage = () => {
                   badge={stats.pendingRequests}
                 />
                 <QuickAccessCard
-                  icon={<SafetyCertificateOutlined className="text-2xl text-white" />}
+                  icon={
+                    <SafetyCertificateOutlined className="text-2xl text-white" />
+                  }
                   title="Pending Certificates"
                   description="Review and approve pending certificates"
                   path="/certificate-pending"
@@ -393,7 +391,7 @@ const HomePage = () => {
                   title="Pending Decisions"
                   description="Review and approve training decisions"
                   path="/decision-pending"
-                  color="bg-blue-500"
+                  color="bg-gray-500"
                   badge={stats.pendingDecisions}
                 />
               </>
@@ -404,7 +402,7 @@ const HomePage = () => {
                   title="Teaching Schedule"
                   description="View and manage your teaching schedules"
                   path="/schedule"
-                  color="bg-blue-500"
+                  color="bg-gray-500"
                 />
                 <QuickAccessCard
                   icon={<FileTextOutlined className="text-2xl text-white" />}
@@ -445,7 +443,7 @@ const HomePage = () => {
                 <Timeline.Item color="green">
                   Certificates waiting for approval
                 </Timeline.Item>
-                <Timeline.Item color="blue">
+                <Timeline.Item color="gray">
                   Decisions need to be made
                 </Timeline.Item>
               </Timeline>
@@ -457,7 +455,7 @@ const HomePage = () => {
   };
 
   return (
-    <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <Layout className="min-h-screen">
       <Layout.Content className="p-8">
         <div className="max-w-7xl mx-auto">
           {loading ? (

@@ -76,6 +76,7 @@ export const API = {
   GET_COURSE_SUBJECTS: "Course/subjects",
   ASSIGN_TRAINEE_TO_COURSE: "Course/assign-trainee",
   ADD_SUBJECT_TO_COURSE: "Course/add-subject",
+  IMPORT_COURSE: "Course/import",
 
   // Training Schedule
   GET_ALL_TRAINING_SCHEDULE: "TrainingSchedule",

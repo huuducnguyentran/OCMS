@@ -29,6 +29,7 @@ import {
   UserAddOutlined,
 } from "@ant-design/icons";
 import * as XLSX from "xlsx";
+import { getAllUsers } from "../../services/userService";
 
 const { Title } = Typography;
 
@@ -40,6 +41,7 @@ const CandidatePage = () => {
   const [userRole, setUserRole] = useState("");
   const [sortField, setSortField] = useState("candidateId");
   const [sortOrder, setSortOrder] = useState("ascend");
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,11 +53,25 @@ const CandidatePage = () => {
   const fetchCandidates = async () => {
     try {
       setLoading(true);
-      const data = await getCandidates();
-      setCandidates(data || []);
+
+      const [candidatesData, accountsData] = await Promise.all([
+        getCandidates(),
+        getAllUsers(),
+      ]);
+
+      const accountEmails = new Set(
+        (accountsData || []).map((user) => user.email?.toLowerCase())
+      );
+
+      const filteredCandidates = (candidatesData || []).filter(
+        (candidate) => !accountEmails.has(candidate.email?.toLowerCase())
+      );
+
+      // no need to store accounts in state
+      setCandidates(filteredCandidates);
     } catch (error) {
-      console.error("Failed to fetch candidates:", error);
-      message.error("Failed to load candidates");
+      console.error("Failed to fetch data:", error);
+      message.error("Failed to load candidates or accounts");
     } finally {
       setLoading(false);
     }
@@ -352,10 +368,10 @@ const CandidatePage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-slate-100 p-6">
       <Card className="max-w-7xl mx-auto shadow-xl rounded-xl">
         <div className="flex justify-between items-center mb-6">
-          <Title level={2} className="!mb-0 !text-indigo-700">
+          <Title level={2} className="!mb-0 !text-cyan-700">
             <UserOutlined className="mr-2" />
             Candidate
           </Title>
@@ -393,7 +409,7 @@ const CandidatePage = () => {
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} candidates`,
           }}
-          className="shadow"
+          className="shadow p-6"
           style={{
             scrollbarWidth: "none", // Firefox
             msOverflowStyle: "none", // IE 10+
@@ -408,7 +424,7 @@ const CandidatePage = () => {
               size="large"
               disabled={selectedRowKeys.length === 0}
               onClick={handleCreateAccounts}
-              className="bg-blue-600 hover:bg-blue-700 border-0"
+              className="!bg-gradient-to-r from-cyan-950 to-cyan-800 !border-cyan-950 hover:opacity-50 border-0"
             >
               Create Accounts for Selected
             </Button>
