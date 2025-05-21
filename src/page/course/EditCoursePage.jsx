@@ -19,7 +19,6 @@ import {
 } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import { courseService } from "../../services/courseService";
-import { trainingPlanService } from "../../services/trainingPlanService";
 
 const { Option } = Select;
 const { Title, Text } = Typography;

@@ -4,7 +4,7 @@ import axiosInstance from "../../utils/axiosInstance";
 const instructorAssServices = {
   // Lấy tất cả Instructor Assignments
   getAllInstructorAssignments: () => {
-    return axiosInstance.get(API.GET_ALL_INSTRUCTOR_ASSIGNMENT);
+    return axiosInstance.get(API.GET_ALL_INSTRUCTOR_ASSIGNMENTS);
   },
 
   // Lấy Instructor Assignment theo ID
@@ -25,6 +25,18 @@ const instructorAssServices = {
   // Xóa Instructor Assignment theo ID
   deleteInstructorAssignment: (id) => {
     return axiosInstance.delete(`${API.DELETE_INSTRUCTOR_ASSIGNMENT}/${id}`);
+  },
+
+   getAllInstructors: async () => {
+    const response = await axiosInstance.get(`${API.GET_ALL_USER}`, {
+      params: { roleName: "Instructor" }
+    });
+    return response.data;
+  },
+
+  getAllSubjects: async () => {
+    const response = await axiosInstance.get(`${API.GET_ALL_SUBJECTS}`);
+    return response.data;
   },
 };
 

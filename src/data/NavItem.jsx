@@ -93,13 +93,6 @@ const navItems = [
     ],
   },
   {
-    key: "8",
-    label: "Plan",
-    icon: "AccountBookOutlined",
-    path: "/plan",
-    roles: ["Training staff", "Trainee", "Reviewer"],
-  },
-  {
     key: "9",
     label: "Accomplishments",
     icon: "FileDoneOutlined",
@@ -312,7 +305,13 @@ const navItems = [
     icon: "FileExcelOutlined",
     path: "/export-certificate",
   },
-  
+  {
+    key:"23",
+    label:"Classroom",
+    icon:"FileProtectOutlined",
+    path:"/class",
+    roles:["Training staff","Instructor","Trainee"]
+  }
 ];
 
 export default navItems;

@@ -162,4 +162,11 @@ export const API = {
   CREATE_CLASSROOM: "Class",
   UPDATE_CLASSROOM: "Class",
   DELETE_CLASSROOM: "Class",
+
+  // Instructor Assignment
+  GET_ALL_INSTRUCTOR_ASSIGNMENTS: "InstructorAssignment",
+  GET_INSTRUCTOR_ASSIGNMENT_BY_ID: "InstructorAssignment",
+  CREATE_INSTRUCTOR_ASSIGNMENT: "InstructorAssignment",
+  UPDATE_INSTRUCTOR_ASSIGNMENT: "InstructorAssignment",
+  DELETE_INSTRUCTOR_ASSIGNMENT: "InstructorAssignment",
 };
