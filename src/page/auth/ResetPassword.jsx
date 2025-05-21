@@ -9,13 +9,9 @@ import {
   CheckCircleFilled,
   CloseCircleFilled,
 } from "@ant-design/icons";
-// import * as THREE from 'three'; // Tạm thời vô hiệu hóa Three.js
 
 const ResetPassword = () => {
-  // Get token from URL path params instead of query params
   const { token } = useParams();
-  // const location = useLocation();
-
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordMatch, setPasswordMatch] = useState(null);
@@ -23,17 +19,13 @@ const ResetPassword = () => {
   const [tokenError, setTokenError] = useState(false);
   const navigate = useNavigate();
 
-  // Check for token
   useEffect(() => {
     if (!token) {
       setTokenError(true);
-      message.warning(
-        "No reset token found. You can request a new password reset link."
-      );
+      message.warning("No reset token found. You can request a new link.");
     }
   }, [token]);
 
-  // Check password confirmation
   useEffect(() => {
     if (confirmPassword === "") {
       setPasswordMatch(null);
@@ -46,37 +38,28 @@ const ResetPassword = () => {
 
   const handleReset = async () => {
     if (tokenError || !token) {
-      message.error(
-        "No valid reset token found. Please request a new password reset."
-      );
+      message.error("Invalid or missing reset token.");
       return;
     }
-
     if (!newPassword) {
       message.error("Please enter a new password.");
       return;
     }
-
     if (newPassword !== confirmPassword) {
-      message.error("Passwords do not match. Please try again.");
+      message.error("Passwords do not match.");
       return;
     }
 
     setLoading(true);
     try {
-      // Use token from URL path
       const responseMessage = await resetPassword(token, newPassword);
-
-      message.success(
-        responseMessage || "Password has been reset successfully!"
-      );
+      message.success(responseMessage || "Password reset successfully!");
       navigate("/login");
     } catch (error) {
-      console.error("Reset password error:", error);
       message.error(
         typeof error === "string"
           ? error
-          : "Failed to reset password. Please try again with a valid token."
+          : "Failed to reset password. Try again with a valid token."
       );
     } finally {
       setLoading(false);
@@ -85,10 +68,10 @@ const ResetPassword = () => {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
-      {/* Static gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900" />
+      {/* Cyan Gradient Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-950 via-cyan-800 to-cyan-600" />
 
-      {/* 3D Animation Container */}
+      {/* Placeholder for animation container */}
       <div id="animation-container" className="absolute inset-0" />
 
       {/* Back Button */}
@@ -96,7 +79,7 @@ const ResetPassword = () => {
         type="link"
         icon={<ArrowLeftOutlined />}
         onClick={() => navigate("/login")}
-        className="absolute top-4 left-4 text-blue-300 hover:text-blue-200 z-20"
+        className="absolute top-4 left-4 !text-cyan-200 hover:!text-cyan-100 z-20"
       >
         Back to Login
       </Button>
@@ -106,23 +89,20 @@ const ResetPassword = () => {
         <div className="w-full max-w-4xl">
           <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden">
             <div className="flex flex-col md:flex-row">
-              {/* Left Side - Reset Password Form */}
+              {/* Left - Form */}
               <div className="w-full md:w-1/2 p-8 bg-white/5">
                 <div className="text-white mb-8">
                   <h2 className="text-3xl font-bold mb-2">Reset Password</h2>
-                  <p className="text-blue-200/80">Enter your new password</p>
+                  <p className="text-cyan-200/80">Enter your new password</p>
                 </div>
 
                 {tokenError || !token ? (
                   <div className="text-red-400 bg-red-900/20 p-4 rounded-lg mb-6">
-                    <p>
-                      No valid reset token found. Please request a new password
-                      reset from the Forgot Password page.
-                    </p>
+                    <p>No valid reset token found.</p>
                     <Button
                       type="primary"
                       onClick={() => navigate("/forgot-password")}
-                      className="mt-4 bg-blue-600 hover:bg-blue-700 border-0"
+                      className="mt-4 !bg-cyan-600 hover:!bg-cyan-700 !border-0"
                     >
                       Go to Forgot Password
                     </Button>
@@ -131,11 +111,11 @@ const ResetPassword = () => {
                   <Form className="space-y-6">
                     <Form.Item>
                       <Input.Password
-                        prefix={<LockOutlined className="text-gray-400" />}
+                        prefix={<LockOutlined className="!text-gray-400" />}
                         placeholder="Enter new password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        className="h-12 bg-white/10 border-gray-500/30 text-white rounded-lg"
+                        className="h-12 !bg-white/10 !border-gray-500/30 !text-white rounded-lg"
                         autoComplete="new-password"
                       />
                     </Form.Item>
@@ -143,25 +123,25 @@ const ResetPassword = () => {
                     <Form.Item>
                       <div className="relative">
                         <Input.Password
-                          prefix={<LockOutlined className="text-gray-400" />}
+                          prefix={<LockOutlined className="!text-gray-400" />}
                           placeholder="Confirm new password"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
-                          className={`h-12 bg-white/10 text-white rounded-lg ${
+                          className={`h-12 !bg-white/10 !text-white rounded-lg ${
                             passwordMatch === false
-                              ? "border-red-500"
+                              ? "!border-red-500"
                               : passwordMatch === true
-                              ? "border-green-500"
-                              : "border-gray-500/30"
+                              ? "!border-green-500"
+                              : "!border-gray-500/30"
                           }`}
                           autoComplete="new-password"
                         />
                         {passwordMatch !== null && (
                           <span className="absolute right-3 top-3">
                             {passwordMatch ? (
-                              <CheckCircleFilled className="text-green-500 text-lg" />
+                              <CheckCircleFilled className="!text-green-500 text-lg" />
                             ) : (
-                              <CloseCircleFilled className="text-red-500 text-lg" />
+                              <CloseCircleFilled className="!text-red-500 text-lg" />
                             )}
                           </span>
                         )}
@@ -178,7 +158,7 @@ const ResetPassword = () => {
                       loading={loading}
                       onClick={handleReset}
                       disabled={!newPassword || passwordMatch !== true}
-                      className="w-full h-12 text-lg font-medium bg-gradient-to-r from-blue-600 to-indigo-600 border-0 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300"
+                      className="w-full h-12 text-lg font-medium bg-gradient-to-r from-cyan-600 to-cyan-700 border-0 rounded-lg hover:from-cyan-700 hover:to-cyan-800 transition-all duration-300"
                     >
                       Reset Password
                     </Button>
@@ -186,15 +166,15 @@ const ResetPassword = () => {
                 )}
               </div>
 
-              {/* Right Side - Branding */}
-              <div className="w-full md:w-1/2 p-8 bg-gradient-to-br from-blue-900/30 to-indigo-900/30 backdrop-blur-lg">
+              {/* Right - Branding */}
+              <div className="w-full md:w-1/2 p-8 bg-gradient-to-br from-cyan-900/30 to-cyan-800/30 backdrop-blur-lg">
                 <div className="text-center">
                   <h1 className="text-4xl font-bold mb-4">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-indigo-200">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-cyan-100">
                       OCMS
                     </span>
                   </h1>
-                  <p className="text-blue-200/80 text-lg mb-8">
+                  <p className="text-cyan-200/80 text-lg mb-8">
                     Online Certificate Management System
                   </p>
                   <div className="space-y-4">

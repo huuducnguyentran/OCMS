@@ -62,9 +62,9 @@ const Header = () => {
   const isLoggedIn = !!sessionStorage.getItem("token");
 
   return (
-    <Layout.Header className="bg-white shadow-md px-6 py-4 flex items-center justify-between w-full">
-      <div className="flex-1">
-        {/* Có thể thêm logo hoặc tên ứng dụng ở đây */}
+    <Layout.Header className="!bg-gradient-to-r from-slate-900 to-slate-800  shadow-lg px-8 py-3 flex items-center justify-between w-full">
+      <div className="flex-1 text-white text-xl font-semibold tracking-wide">
+        {/* App Name or Logo could go here */}
       </div>
 
       <div className="flex items-center gap-6">
@@ -78,16 +78,16 @@ const Header = () => {
 
             <Badge count={unreadCount} overflowCount={99}>
               <div
-                className="cursor-pointer text-xl text-white hover:text-blue-500 transition-colors"
+                className="cursor-pointer text-xl text-white hover:text-yellow-300 transition-colors"
                 onClick={() => navigate("/notifications")}
               >
-                <BellOutlined style={{ fontSize: '20px' }} />
+                <BellOutlined style={{ fontSize: "22px" }} />
               </div>
             </Badge>
 
             <div
               onClick={() => navigate(`/profile/${userData?.userId}`)}
-              className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
+              className="flex items-center cursor-pointer hover:opacity-90 transition-opacity"
             >
               <Avatar
                 src={
@@ -96,15 +96,17 @@ const Header = () => {
                   "https://via.placeholder.com/40"
                 }
                 size={40}
-                icon={!avatar && !userData?.avatarUrlWithSas && <UserOutlined />}
-                className="border-2 border-gray-200"
+                icon={
+                  !avatar && !userData?.avatarUrlWithSas && <UserOutlined />
+                }
+                className="border-2 border-white"
               />
             </div>
           </>
         ) : (
           <Link
             to="/login"
-            className="text-blue-500 font-medium hover:text-blue-600 hover:underline"
+            className="text-white font-medium hover:text-yellow-200 hover:underline"
           >
             Login
           </Link>

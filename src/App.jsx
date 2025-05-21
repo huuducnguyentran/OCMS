@@ -81,6 +81,7 @@ import DecisionDetailPage from "./page/decision/DecisionDetailPage";
 import AssignDepartmentPage from "./page/department/AssignDepartment";
 import TraineeGradePage from "./page/grade/TraineeGradePage";
 import EditSchedule from "./page/schedule/EditSchedule";
+import ClassroomPage from "./page/classroom/ClassroomPage";
 
 function App() {
   return (
@@ -388,6 +389,7 @@ function App() {
                             path="/department/assign/:departmentId"
                             element={<AssignDepartmentPage />}
                           />
+                          <Route path="/class" element={<ClassroomPage />} />
                         </Routes>
                         <Footer />
                       </Layout>

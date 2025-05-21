@@ -76,7 +76,7 @@ const navItems = [
     path: "/subject",
     roles: ["Training staff", "user"],
   },
- 
+
   {
     key: "7",
     label: "Schedule",
@@ -289,7 +289,7 @@ const navItems = [
   },
 
   // 7. System/Other
- 
+
   {
     key: "21",
     label: "Regulations",
@@ -312,7 +312,13 @@ const navItems = [
     icon: "FileExcelOutlined",
     path: "/export-certificate",
   },
-  
+  {
+    key: "23",
+    label: "Classroom",
+    icon: "FileExcelOutlined",
+    path: "/class",
+    roles: ["Training staff"],
+  },
 ];
 
 export default navItems;

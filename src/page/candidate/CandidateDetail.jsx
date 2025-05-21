@@ -445,7 +445,7 @@ const CandidateDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-950 to-cyan-900 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header Section */}
         <Card className="shadow-sm">

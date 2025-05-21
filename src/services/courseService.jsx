@@ -108,4 +108,25 @@ export const courseService = {
       throw error;
     }
   },
+  importCourse: async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await axiosInstance.post(
+        `${API.IMPORT_COURSE}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error importing course:", error);
+      throw error;
+    }
+  },
 };

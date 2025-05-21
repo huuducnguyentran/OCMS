@@ -140,15 +140,20 @@ const Navbar = () => {
     .filter(Boolean); // Remove null items
 
   return (
-    <Sider theme="dark" style={{ overflow: "auto", height: "auto" }}>
-      <div className="text-xl font-bold text-white p-4">
-        <span className="text-red-500">F</span>
-        <span className="text-green-500">l</span>
-        <span className="text-blue-500">i</span>
-        <span className="text-yellow-500">g</span>
-        <span className="text-white">ht</span>
-        <span className="text-white font-bold">Vault</span>
-        <div className="text-sm text-gray-300 mt-1 capitalize">
+    <Sider
+      theme="dark"
+      style={{ overflow: "auto", height: "auto", backgroundColor: "#0f172a" }}
+    >
+      <div className="p-4 text-center border-b border-gray-600">
+        <div className="text-2xl font-extrabold text-white tracking-wide">
+          <span className="text-red-500">F</span>
+          <span className="text-green-500">l</span>
+          <span className="text-blue-500">i</span>
+          <span className="text-yellow-500">g</span>
+          <span className="text-white">ht</span>
+          <span className="text-white">Vault</span>
+        </div>
+        <div className="text-xs text-gray-400 mt-1 capitalize">
           {storedRole}
         </div>
       </div>
@@ -156,7 +161,19 @@ const Navbar = () => {
       <Menu
         theme="dark"
         mode="inline"
-        defaultSelectedKeys={["1"]}
+        selectedKeys={[window.location.pathname]}
+        defaultOpenKeys={filteredNavItems
+          .filter((item) =>
+            item.children?.some((child) =>
+              window.location.pathname.startsWith(child.label.props.to)
+            )
+          )
+          .map((item) => item.key)}
+        style={{
+          borderRight: 0,
+          backgroundColor: "#0f172a", // your custom background color
+          color: "#ffffff", // your custom text color
+        }}
         items={filteredNavItems}
       />
     </Sider>

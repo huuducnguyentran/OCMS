@@ -76,6 +76,7 @@ export const API = {
   GET_COURSE_SUBJECTS: "Course/subjects",
   ASSIGN_TRAINEE_TO_COURSE: "Course/assign-trainee",
   ADD_SUBJECT_TO_COURSE: "Course/add-subject",
+  IMPORT_COURSE: "Course/import",
 
   // Training Schedule
   GET_ALL_TRAINING_SCHEDULE: "TrainingSchedule",
@@ -154,4 +155,11 @@ export const API = {
   ASSIGN_TO_DEPARTMENT: "Department/assign-to-department",
   REMOVE_FROM_DEPARTMENT: "Department/remove-from-department",
   ACTIVATE_DEPARTMENT: "Department/activate",
+
+  // Classroom
+  GET_ALL_CLASSROOM: "Class",
+  GET_CLASSROOM_BY_ID: "Class",
+  CREATE_CLASSROOM: "Class",
+  UPDATE_CLASSROOM: "Class",
+  DELETE_CLASSROOM: "Class",
 };

@@ -22,7 +22,6 @@ const LoginPage = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-
   useEffect(() => {
     // Kiểm tra xem có thông báo lỗi từ location state không
     if (location.state?.message) {
@@ -30,7 +29,7 @@ const LoginPage = () => {
       // Clear state để không hiển thị lại thông báo khi refresh
       window.history.replaceState({}, document.title);
     }
-    
+
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
       60,
@@ -177,8 +176,8 @@ const LoginPage = () => {
     try {
       const response = await axios.get(`${BASE_URL}/User/profile`, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
       sessionStorage.setItem("specialtyId", response.data.user.specialtyId);
       return response.data.user.accountStatus;
@@ -192,16 +191,18 @@ const LoginPage = () => {
     try {
       setIsSubmitting(true);
       setErrorMessage(""); // Xóa thông báo lỗi cũ
-      
+
       // Bước 1: Đăng nhập để lấy token
       const response = await authServices.loginUser(values);
       const { token, userID, roles } = response.data;
-      
+
       // Bước 2: Kiểm tra trạng thái tài khoản trước khi lưu thông tin và chuyển hướng
       const accountStatus = await checkUserAccountStatus(token);
-      
+
       if (accountStatus === "Deactivated") {
-        setErrorMessage("Your account has been deactivated. Please contact the administrator for more information.");
+        setErrorMessage(
+          "Your account has been deactivated. Please contact the administrator for more information."
+        );
         return;
       }
 
@@ -217,7 +218,9 @@ const LoginPage = () => {
       navigate("/home");
     } catch (error) {
       if (error.response?.data?.message === "Account has been deactivated") {
-        setErrorMessage("Your account has been deactivated. Please contact the administrator for more information.");
+        setErrorMessage(
+          "Your account has been deactivated. Please contact the administrator for more information."
+        );
       } else {
         setErrorMessage("Invalid username or password.");
       }
@@ -228,9 +231,10 @@ const LoginPage = () => {
   };
 
   return (
+    // Inside return()
     <div className="relative w-screen h-screen overflow-hidden">
       {/* Background gradient tĩnh */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900" />
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-900 via-cyan-950 to-black" />
 
       {/* 3D Animation Container */}
       <div id="animation-container" className="absolute inset-0" />
@@ -244,7 +248,7 @@ const LoginPage = () => {
               <div className="w-full md:w-1/2 p-8 bg-white/5">
                 <div className="text-white mb-8">
                   <h2 className="text-3xl font-bold mb-2">Welcome Back</h2>
-                  <p className="text-blue-200/80">
+                  <p className="text-cyan-200/80">
                     Sign in to continue your journey
                   </p>
                 </div>
@@ -283,7 +287,7 @@ const LoginPage = () => {
                           name="username"
                           placeholder="Username"
                           prefix={<UserOutlined className="text-gray-400" />}
-                          className="h-12 bg-white/10 border-gray-500/30 text-white rounded-lg"
+                          className="h-12 !bg-white/10 !border-gray-500/30 !text-white rounded-lg"
                           value={values.username}
                           onChange={handleChange}
                           onBlur={handleBlur}
@@ -301,7 +305,7 @@ const LoginPage = () => {
                           name="password"
                           placeholder="Password"
                           prefix={<LockOutlined className="text-gray-400" />}
-                          className="h-12 bg-white/10 border-gray-500/30 text-white rounded-lg"
+                          className="h-12 !bg-white/10 !border-gray-500/30 !text-white rounded-lg"
                           value={values.password}
                           onChange={handleChange}
                           onBlur={handleBlur}
@@ -313,7 +317,7 @@ const LoginPage = () => {
                         <Button
                           type="link"
                           onClick={() => navigate("/forgot-password")}
-                          className="text-blue-300 hover:text-blue-100 p-0"
+                          className="!text-cyan-300 hover:!text-cyan-100 p-0"
                           disabled={isSubmitting}
                         >
                           Forgot Password?
@@ -324,7 +328,7 @@ const LoginPage = () => {
                         type="primary"
                         htmlType="submit"
                         loading={isSubmitting}
-                        className="w-full h-12 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 rounded-lg"
+                        className="w-full h-12 !bg-gradient-to-r from-cyan-600 to-cyan-800 hover:from-cyan-700 hover:to-cyan-900 rounded-lg"
                         disabled={isSubmitting}
                       >
                         Sign In
@@ -334,28 +338,27 @@ const LoginPage = () => {
                 </Formik>
               </div>
 
-              {/* Right Side - Image/Info */}
-              <div className="w-full md:w-1/2 p-8 flex items-center justify-center bg-gradient-to-br from-blue-600/40 to-indigo-700/40 backdrop-blur-sm">
+              {/* Right Side - Info Panel */}
+              <div className="w-full md:w-1/2 p-8 flex items-center justify-center bg-gradient-to-br from-cyan-700/40 to-cyan-950/40 backdrop-blur-sm">
                 <div className="text-center">
-                  
                   <h3 className="text-2xl font-bold text-white mb-4">
                     Online Course Management System
                   </h3>
-                  <p className="text-blue-100 mb-6 max-w-sm">
+                  <p className="text-cyan-100 mb-6 max-w-sm">
                     Manage your courses, students, and instructors all in one
                     place with our comprehensive course management system.
                   </p>
                   <div className="space-y-3">
                     <div className="flex items-center text-white">
-                      <CheckCircleOutlined className="text-green-400 mr-2" />
+                      <CheckCircleOutlined className="text-cyan-400 mr-2" />
                       <span>Streamlined course management</span>
                     </div>
                     <div className="flex items-center text-white">
-                      <CheckCircleOutlined className="text-green-400 mr-2" />
+                      <CheckCircleOutlined className="text-cyan-400 mr-2" />
                       <span>Comprehensive analytics</span>
                     </div>
                     <div className="flex items-center text-white">
-                      <CheckCircleOutlined className="text-green-400 mr-2" />
+                      <CheckCircleOutlined className="text-cyan-400 mr-2" />
                       <span>Secure and reliable platform</span>
                     </div>
                   </div>
@@ -365,7 +368,7 @@ const LoginPage = () => {
           </div>
 
           <div className="text-center mt-6">
-            <p className="text-blue-200/70">
+            <p className="text-cyan-200/70">
               OCMS - Your Complete Educational Management Solution
             </p>
           </div>

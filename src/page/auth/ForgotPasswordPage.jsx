@@ -163,8 +163,8 @@ const ForgotPassword = () => {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
-      {/* Background gradient tĩnh */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900" />
+      {/* Background gradient with cyan theme */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-900 via-cyan-800 to-cyan-950" />
 
       {/* 3D Animation Container */}
       <div id="animation-container" className="absolute inset-0" />
@@ -174,7 +174,7 @@ const ForgotPassword = () => {
         type="link"
         icon={<ArrowLeftOutlined />}
         onClick={() => navigate(-1)}
-        className="absolute top-4 left-4 text-blue-300 hover:text-blue-200 z-20"
+        className="absolute top-4 left-4 !text-cyan-300 hover:!text-cyan-100 z-20"
       >
         Back to Login
       </Button>
@@ -184,11 +184,11 @@ const ForgotPassword = () => {
         <div className="w-full max-w-4xl">
           <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden">
             <div className="flex flex-col md:flex-row">
-              {/* Left Side - Forgot Password Form */}
+              {/* Left Side - Form */}
               <div className="w-full md:w-1/2 p-8 bg-white/5">
                 <div className="text-white mb-8">
                   <h2 className="text-3xl font-bold mb-2">Forgot Password?</h2>
-                  <p className="text-blue-200/80">
+                  <p className="text-cyan-200/80">
                     Enter your email to reset your password
                   </p>
                 </div>
@@ -200,7 +200,7 @@ const ForgotPassword = () => {
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="h-12 bg-white/10 border-gray-500/30 text-white rounded-lg"
+                      className="h-12 !bg-white/10 !border-gray-500/30 !text-white rounded-lg"
                     />
                   </Form.Item>
 
@@ -208,7 +208,7 @@ const ForgotPassword = () => {
                     type="primary"
                     loading={loading}
                     onClick={handleForgotPassword}
-                    className="w-full h-12 text-lg font-medium bg-gradient-to-r from-blue-600 to-indigo-600 border-0 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300"
+                    className="w-full h-12 text-lg font-medium !bg-gradient-to-r from-cyan-600 to-cyan-700 border-0 rounded-lg hover:from-cyan-700 hover:to-cyan-800 transition-all duration-300"
                   >
                     Send Reset Link
                   </Button>
@@ -216,14 +216,14 @@ const ForgotPassword = () => {
               </div>
 
               {/* Right Side - Branding */}
-              <div className="w-full md:w-1/2 p-8 bg-gradient-to-br from-blue-900/30 to-indigo-900/30 backdrop-blur-lg">
+              <div className="w-full md:w-1/2 p-8 bg-gradient-to-br from-cyan-900/30 to-cyan-950/30 backdrop-blur-lg">
                 <div className="text-center">
                   <h1 className="text-4xl font-bold mb-4">
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-indigo-200">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-cyan-100">
                       FlightVault
                     </span>
                   </h1>
-                  <p className="text-blue-200/80 text-lg mb-8">
+                  <p className="text-cyan-200/80 text-lg mb-8">
                     Your Gateway to the Skies
                   </p>
                   <div className="space-y-4">
