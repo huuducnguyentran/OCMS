@@ -69,9 +69,9 @@ const CreateCoursePage = () => {
       setLoading(true);
 
       const formattedData = {
-        courseId: values.courseId,
+        // courseId: values.courseId,
         courseLevel: values.courseLevel,
-        trainingPlanId: values.trainingPlanId,
+        // trainingPlanId: values.trainingPlanId,
         courseName: values.courseName,
         description: values.description,
         courseRelatedId: values.courseRelatedId || "",
@@ -110,25 +110,24 @@ const CreateCoursePage = () => {
   };
 
   return (
-    <Layout className="min-h-screen bg-gray-50 p-8 sm:p-10">
+    <Layout className="min-h-screen bg-gray-100 p-4 sm:p-8">
       <Card
-        className="max-w-5xl mx-auto shadow-xl rounded-xl overflow-hidden border-0"
+        className="max-w-4xl mx-auto shadow-lg rounded-2xl"
         title={
-          <div className="flex items-center justify-between py-2">
-            <Title level={2} className="m-0 text-gray-800">
+          <div className="flex items-center justify-between">
+            <Title level={3} className="text-gray-800">
               Create New Course
             </Title>
             <Button
-              size="large"
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate("/all-courses")}
-              className="flex items-center text-gray-600 hover:text-gray-800 border-gray-300"
+              className="text-gray-600 border-gray-300 hover:text-gray-800 hover:border-gray-400"
             >
               Back to Courses
             </Button>
           </div>
         }
-        headStyle={{ borderBottom: "2px solid #f0f0f0", padding: "16px 24px" }}
+        headStyle={{ padding: "20px 24px", borderBottom: "1px solid #f0f0f0" }}
         bodyStyle={{ padding: "32px" }}
       >
         <Spin spinning={loading || loadingCourses} size="large">
@@ -137,72 +136,36 @@ const CreateCoursePage = () => {
             layout="vertical"
             onFinish={handleCreateCourse}
             initialValues={{ courseLevel: "Initial" }}
-            className="p-2"
             size="large"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-              <Form.Item
-                name="courseId"
-                label={
-                  <Text strong className="text-lg">
-                    Course ID
-                  </Text>
-                }
-                rules={[
-                  { required: true, message: "Course ID is required" },
-                  {
-                    max: 20,
-                    message: "Course ID must not exceed 20 characters",
-                  },
-                ]}
-              >
-                <Input
-                  placeholder="e.g., C-0001"
-                  className="rounded-lg py-3 px-4 text-lg"
-                  size="large"
-                  maxLength={20}
-                />
-              </Form.Item>
-
-             
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Course Name */}
               <Form.Item
                 name="courseName"
-                label={
-                  <Text strong className="text-lg">
-                    Course Name
-                  </Text>
-                }
+                label={<Text strong>Course Name</Text>}
                 rules={[
                   { required: true, message: "Course name is required" },
-                  {
-                    max: 255,
-                    message: "Course name must not exceed 255 characters",
-                  },
+                  { max: 255, message: "Max 255 characters" },
                 ]}
               >
-              
                 <Input
                   placeholder="Enter course name"
-                  className="rounded-lg py-3 px-4 text-lg"
-                  size="large"
+                  className="rounded-lg py-2 px-4"
                   maxLength={255}
                 />
               </Form.Item>
+
+              {/* Course Level */}
               <Form.Item
                 name="courseLevel"
-                label={
-                  <Text strong className="text-lg">
-                    Course Level
-                  </Text>
-                }
+                label={<Text strong>Course Level</Text>}
                 rules={[
                   { required: true, message: "Course level is required" },
                 ]}
               >
                 <Select
                   placeholder="Select course level"
-                  className="rounded-lg text-lg"
-                  size="large"
+                  className="rounded-lg"
                   options={[
                     { value: "Initial", label: "Initial" },
                     { value: "Recurrent", label: "Recurrent" },
@@ -212,18 +175,18 @@ const CreateCoursePage = () => {
                 />
               </Form.Item>
 
+              {/* Course Related ID */}
               <Form.Item
                 name="courseRelatedId"
-                label={
-                  <Text strong className="text-lg">
-                    Course Related ID
-                  </Text>
-                }
+                label={<Text strong>Course Related ID</Text>}
                 rules={[
                   ({ getFieldValue }) => ({
                     validator(_, value) {
                       const level = getFieldValue("courseLevel");
-                      if (level > 0 && !value) {
+                      if (
+                        (level === "Recurrent" || level === "Relearn") &&
+                        !value
+                      ) {
                         return Promise.reject(
                           new Error(
                             "Course Related ID is required for Recurrent/Relearn courses"
@@ -235,14 +198,13 @@ const CreateCoursePage = () => {
                   }),
                   {
                     max: 20,
-                    message: "Course Related ID must not exceed 20 characters",
+                    message: "Max 20 characters",
                   },
                 ]}
               >
                 <AutoComplete
-                  placeholder="Select or enter Course Related ID"
+                  placeholder="Select or enter related course ID"
                   className="rounded-lg"
-                  size="large"
                   style={{ width: "100%" }}
                   options={initialCourses.map((course) => ({
                     value: course.courseId,
@@ -251,38 +213,33 @@ const CreateCoursePage = () => {
                   filterOption={(inputValue, option) =>
                     option.value
                       .toLowerCase()
-                      .indexOf(inputValue.toLowerCase()) !== -1 ||
+                      .includes(inputValue.toLowerCase()) ||
                     option.label
                       .toLowerCase()
-                      .indexOf(inputValue.toLowerCase()) !== -1
+                      .includes(inputValue.toLowerCase())
                   }
                   onChange={(value) =>
                     form.setFieldsValue({ courseRelatedId: value })
                   }
                 >
-                  <Input className="py-3 px-4 text-lg" maxLength={100} />
+                  <Input className="py-2 px-4" maxLength={100} />
                 </AutoComplete>
               </Form.Item>
 
+              {/* Description - spans full width */}
               <Form.Item
                 name="description"
-                label={
-                  <Text strong className="text-lg">
-                    Description
-                  </Text>
-                }
+                label={<Text strong>Description</Text>}
                 rules={[
                   { required: true, message: "Description is required" },
-                  {
-                    max: 255,
-                    message: "Description must not exceed 255 characters",
-                  },
+                  { max: 255, message: "Max 255 characters" },
                 ]}
+                className="md:col-span-2"
               >
                 <Input.TextArea
                   placeholder="Enter course description"
-                  className="rounded-lg py-3 px-4 text-lg"
-                  size="large"
+                  className="rounded-lg py-2 px-4"
+                  autoSize={{ minRows: 3 }}
                   maxLength={255}
                 />
               </Form.Item>
@@ -290,22 +247,21 @@ const CreateCoursePage = () => {
 
             <Divider className="my-8 border-gray-200" />
 
-            <div className="flex justify-end space-x-6 mt-8">
+            {/* Action buttons */}
+            <div className="flex justify-end gap-4">
               <Button
                 icon={<ReloadOutlined />}
                 onClick={() => form.resetFields()}
-                className="rounded-lg border-gray-300 hover:border-gray-400 hover:text-gray-700 px-6 py-3 h-auto text-base flex items-center"
-                size="large"
+                className="rounded-lg border-gray-300 px-6 py-2 h-auto"
               >
-                Reset Form
+                Reset
               </Button>
               <Button
                 type="primary"
                 htmlType="submit"
                 icon={<PlusOutlined />}
                 loading={loading}
-                className="bg-gray-700 hover:bg-gray-800 rounded-lg border-0 px-8 py-3 h-auto text-base flex items-center shadow-md"
-                size="large"
+                className="bg-gray-800 hover:bg-gray-900 border-0 rounded-lg px-8 py-2 h-auto"
               >
                 {loading ? "Creating..." : "Create Course"}
               </Button>

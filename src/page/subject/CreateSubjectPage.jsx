@@ -57,7 +57,7 @@ const CreateSubjectPage = () => {
       <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="bg-white rounded-xl shadow-md p-8 mb-8">
           <div className="flex justify-between items-start mb-6">
-            <div>
+            {/* <div>
               <Breadcrumb className="mb-4">
                 <Breadcrumb.Item>
                   <a
@@ -73,9 +73,11 @@ const CreateSubjectPage = () => {
               <Title level={2} className="mb-2">
                 Create New Subject
               </Title>
-            </div>
+            </div> */}
+            <Title level={3} className="text-gray-800 m-0">
+              Create New Subject
+            </Title>
             <Button
-              type="link"
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate("/subject")}
               className="text-blue-600"
@@ -91,7 +93,7 @@ const CreateSubjectPage = () => {
             className="space-y-6"
           >
             <Row gutter={24}>
-              <Col xs={24} md={12}>
+              {/* <Col xs={24} md={12}>
                 <Form.Item
                   name="subjectId"
                   label="Subject ID"
@@ -108,9 +110,9 @@ const CreateSubjectPage = () => {
                     maxLength={20}
                   />
                 </Form.Item>
-              </Col>
+              </Col> */}
 
-              <Col xs={24} md={12}>
+              <Col span={24}>
                 <Form.Item
                   name="subjectName"
                   label="Subject Name"
