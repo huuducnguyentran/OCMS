@@ -22,7 +22,6 @@ const CreateSpecialtyPage = () => {
   const [loading, setLoading] = useState(false);
   const [specialties, setSpecialties] = useState([]);
 
-  // Fetch all specialties for parent selection
   useEffect(() => {
     const fetchSpecialties = async () => {
       try {
@@ -41,7 +40,6 @@ const CreateSpecialtyPage = () => {
     fetchSpecialties();
   }, []);
 
-  // Handle form submission
   const onFinish = async (values) => {
     try {
       setLoading(true);
@@ -64,20 +62,21 @@ const CreateSpecialtyPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <Card className="max-w-6xl mx-auto shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-cyan-100 p-6">
+      <Card className="!mx-auto !mb-6 !shadow-md border !border-cyan-600">
         <div className="mb-6">
           <Button
             icon={<ArrowLeftOutlined />}
-            className="mb-4"
+            className="!mb-4 !text-cyan-800 hover:!text-cyan-950 hover:!border-cyan-900"
             onClick={() => navigate("/specialty")}
+            type="link"
           >
             Back to Specialties
           </Button>
-          <Title level={2} className="!mb-1">
+          <Title level={2} className="!mb-1 text-cyan-900">
             Create New Specialty
           </Title>
-          <p className="text-gray-500">
+          <p className="text-gray-600">
             Add a new medical specialty to the system
           </p>
         </div>
@@ -103,14 +102,17 @@ const CreateSpecialtyPage = () => {
                   { max: 100, message: "Name cannot exceed 100 characters" },
                 ]}
               >
-                <Input placeholder="Enter specialty name" className="h-10" />
+                <Input
+                  placeholder="Enter specialty name"
+                  className="h-10 !border-cyan-500 focus:!border-cyan-800"
+                />
               </Form.Item>
 
               <Form.Item name="parentSpecialtyId" label="Parent Specialty">
                 <Select
                   allowClear
                   placeholder="Select parent specialty"
-                  className="h-10"
+                  className="!h-10 "
                   options={specialties.map((s) => ({
                     value: s.specialtyId,
                     label: s.specialtyName,
@@ -133,7 +135,7 @@ const CreateSpecialtyPage = () => {
               <Input.TextArea
                 placeholder="Enter description"
                 rows={4}
-                className="resize-none"
+                className="!resize-none !border-cyan-500 focus:!border-cyan-800"
               />
             </Form.Item>
 
@@ -144,18 +146,18 @@ const CreateSpecialtyPage = () => {
             >
               <Select className="w-full md:w-1/3">
                 <Select.Option value={0}>
-                  <Tag color="success">Active</Tag>
+                  <Tag color="cyan">Active</Tag>
                 </Select.Option>
                 <Select.Option value={1}>
-                  <Tag color="error">Inactive</Tag>
+                  <Tag color="red">Inactive</Tag>
                 </Select.Option>
               </Select>
             </Form.Item>
 
-            <div className="flex justify-end gap-4 pt-6 border-t">
+            <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
               <Button
                 onClick={() => navigate("/specialty")}
-                className="min-w-[100px]"
+                className="!min-w-[100px]"
               >
                 Cancel
               </Button>
@@ -163,7 +165,7 @@ const CreateSpecialtyPage = () => {
                 type="primary"
                 htmlType="submit"
                 loading={loading}
-                className="bg-blue-600 hover:bg-blue-700 min-w-[100px]"
+                className="!bg-cyan-700 hover:!bg-cyan-900 !text-white !min-w-[100px] !border-none"
               >
                 Create
               </Button>

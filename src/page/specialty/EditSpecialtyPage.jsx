@@ -13,6 +13,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { specialtyService } from "../../services/specialtyServices";
 import { ArrowLeftOutlined } from "@ant-design/icons";
+
 const { Title } = Typography;
 
 const EditSpecialtyPage = () => {
@@ -22,7 +23,6 @@ const EditSpecialtyPage = () => {
   const [loading, setLoading] = useState(false);
   const [specialties, setSpecialties] = useState([]);
 
-  // Fetch specialty data and all specialties for parent selection
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -33,7 +33,6 @@ const EditSpecialtyPage = () => {
         ]);
 
         if (specialtyData.success) {
-          // Set form values
           form.setFieldsValue({
             specialtyName: specialtyData.data.specialtyName,
             description: specialtyData.data.description,
@@ -43,7 +42,6 @@ const EditSpecialtyPage = () => {
         }
 
         if (allSpecialties.success) {
-          // Filter out current specialty from parent options
           setSpecialties(
             allSpecialties.data.filter((s) => s.specialtyId !== id)
           );
@@ -56,12 +54,9 @@ const EditSpecialtyPage = () => {
       }
     };
 
-    if (id) {
-      fetchData();
-    }
+    if (id) fetchData();
   }, [id, form]);
 
-  // Handle form submission
   const onFinish = async (values) => {
     try {
       setLoading(true);
@@ -85,20 +80,21 @@ const EditSpecialtyPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <Card className="max-w-6xl mx-auto shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
+      <Card className="!max-w-6xl !mx-auto !shadow-xl !border !border-cyan-200 !rounded-xl">
         <div className="mb-6">
           <Button
             icon={<ArrowLeftOutlined />}
-            className="mb-4"
+            className="!mb-4 !text-cyan-700 !border-cyan-600 hover:!bg-cyan-100"
             onClick={() => navigate("/specialty")}
           >
             Back to Specialties
           </Button>
-          <Title level={2} className="!mb-1">
+
+          <Title level={2} className="!mb-1 !text-cyan-800">
             {id ? "Edit Specialty" : "Create New Specialty"}
           </Title>
-          <p className="text-gray-500">
+          <p className="text-cyan-700">
             {id
               ? "Update specialty information"
               : "Add a new medical specialty"}
@@ -120,20 +116,26 @@ const EditSpecialtyPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Form.Item
                 name="specialtyName"
-                label="Specialty Name"
+                label={<span className="!text-cyan-800">Specialty Name</span>}
                 rules={[
                   { required: true, message: "Please enter specialty name" },
                   { max: 100, message: "Name cannot exceed 100 characters" },
                 ]}
               >
-                <Input placeholder="Enter specialty name" className="h-10" />
+                <Input
+                  placeholder="Enter specialty name"
+                  className="h-10 !border-cyan-600 focus:!border-cyan-700 focus:!ring-cyan-700"
+                />
               </Form.Item>
 
-              <Form.Item name="parentSpecialtyId" label="Parent Specialty">
+              <Form.Item
+                name="parentSpecialtyId"
+                label={<span className="!text-cyan-800">Parent Specialty</span>}
+              >
                 <Select
                   allowClear
                   placeholder="Select parent specialty"
-                  className="h-10"
+                  className="!h-10 !border-cyan-600 focus:!border-cyan-700 focus:!ring-cyan-700"
                   options={specialties.map((s) => ({
                     value: s.specialtyId,
                     label: s.specialtyName,
@@ -144,7 +146,7 @@ const EditSpecialtyPage = () => {
 
             <Form.Item
               name="description"
-              label="Description"
+              label={<span className="text-cyan-800">Description</span>}
               rules={[
                 { required: true, message: "Please enter description" },
                 {
@@ -156,29 +158,29 @@ const EditSpecialtyPage = () => {
               <Input.TextArea
                 placeholder="Enter description"
                 rows={4}
-                className="resize-none"
+                className="resize-none !border-cyan-600 focus:!border-cyan-700 focus:!ring-cyan-700"
               />
             </Form.Item>
 
             <Form.Item
               name="status"
-              label="Status"
+              label={<span className="!text-cyan-800">Status</span>}
               rules={[{ required: true, message: "Please select status" }]}
             >
-              <Select className="w-full md:w-1/3">
+              <Select className="w-full md:w-1/3 custom-cyan-select">
                 <Select.Option value={0}>
-                  <Tag color="success">Active</Tag>
+                  <Tag color="green">Active</Tag>
                 </Select.Option>
                 <Select.Option value={1}>
-                  <Tag color="error">Inactive</Tag>
+                  <Tag color="red">Inactive</Tag>
                 </Select.Option>
               </Select>
             </Form.Item>
 
-            <div className="flex justify-end gap-4 pt-6 border-t">
+            <div className="flex justify-end gap-4 pt-6 border-t !border-cyan-200">
               <Button
                 onClick={() => navigate("/specialty")}
-                className="min-w-[100px]"
+                className="!min-w-[100px] !border-cyan-600 text-cyan-700 hover:!bg-cyan-50"
               >
                 Cancel
               </Button>
@@ -186,7 +188,7 @@ const EditSpecialtyPage = () => {
                 type="primary"
                 htmlType="submit"
                 loading={loading}
-                className="bg-blue-600 hover:bg-blue-700 min-w-[100px]"
+                className="!min-w-[100px] !bg-cyan-700 hover:!bg-cyan-800 !border-none"
               >
                 {id ? "Save Changes" : "Create"}
               </Button>

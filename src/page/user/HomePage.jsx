@@ -402,21 +402,21 @@ const HomePage = () => {
                   title="Teaching Schedule"
                   description="View and manage your teaching schedules"
                   path="/schedule"
-                  color="bg-gray-500"
+                  color="bg-blue-500"
                 />
                 <QuickAccessCard
                   icon={<FileTextOutlined className="text-2xl text-white" />}
                   title="Grade Management"
                   description="Manage and submit grades for your trainees"
                   path="/grade-view"
-                  color="bg-orange-500"
+                  color="bg-purple-500"
                 />
                 <QuickAccessCard
                   icon={<TeamOutlined className="text-2xl text-white" />}
                   title="My Trainees"
                   description="View and manage your assigned trainees"
                   path="/grade"
-                  color="bg-green-500"
+                  color="bg-yellow-500"
                 />
               </>
             ) : (
@@ -455,7 +455,7 @@ const HomePage = () => {
   };
 
   return (
-    <Layout className="min-h-screen">
+    <Layout className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100">
       <Layout.Content className="p-8">
         <div className="max-w-7xl mx-auto">
           {loading ? (

@@ -268,7 +268,7 @@ const CandidatePage = () => {
       sortOrder: sortField === "fullName" ? sortOrder : null,
       render: (text, record) => (
         <a
-          className="text-blue-600 hover:text-blue-800 font-medium"
+          className="!text-cyan-600 hover:text-cyan-800 font-medium"
           onClick={() => navigate(`/candidates/${record.candidateId}`)}
         >
           {text}
@@ -368,7 +368,7 @@ const CandidatePage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-slate-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
       <Card className="max-w-7xl mx-auto shadow-xl rounded-xl">
         <div className="flex justify-between items-center mb-6">
           <Title level={2} className="!mb-0 !text-cyan-700">
@@ -425,7 +425,7 @@ const CandidatePage = () => {
               size="large"
               disabled={selectedRowKeys.length === 0}
               onClick={handleCreateAccounts}
-              className="!bg-gradient-to-r from-cyan-950 to-cyan-800 !border-cyan-950 hover:opacity-50 border-0"
+              className="!bg-gradient-to-r from-cyan-950 to-cyan-800 !border-cyan-950 hover:opacity-90 disabled:opacity-0 border-0"
             >
               Create Accounts for Selected
             </Button>
@@ -438,7 +438,7 @@ const CandidatePage = () => {
               icon={<DownloadOutlined />}
               size="large"
               onClick={handleExportData}
-              className="bg-green-600 hover:bg-green-700 border-0"
+              className="!bg-green-600 hover:!bg-green-700 border-0"
             >
               Export Candidate Information
             </Button>

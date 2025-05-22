@@ -62,7 +62,7 @@ const Header = () => {
   const isLoggedIn = !!sessionStorage.getItem("token");
 
   return (
-    <Layout.Header className="!bg-gradient-to-r from-slate-900 to-slate-800  shadow-lg px-8 py-3 flex items-center justify-between w-full">
+    <Layout.Header className="!bg-gradient-to-r from-cyan-950 to-cyan-800  shadow-lg px-8 py-3 flex items-center justify-between w-full">
       <div className="flex-1 text-white text-xl font-semibold tracking-wide">
         {/* App Name or Logo could go here */}
       </div>
