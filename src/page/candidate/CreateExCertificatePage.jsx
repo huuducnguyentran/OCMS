@@ -2035,17 +2035,19 @@ const CreateExCertificatePage = () => {
   const handleChange = ({ fileList }) => setFileList(fileList);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <Card className="max-w-2xl mx-auto shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
+      <Card className=" !max-w-2xl !mx-auto shadow-lg">
         <div className="mb-6">
           <Button
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate(`/candidates-view`)}
-            className="mb-4"
+            className="mb-4 !text-cyan-600 hover:!border-cyan-600"
           >
             Back to Candidate
           </Button>
-          <Title level={2}>Upload External Certificate</Title>
+          <Title level={2} className="!text-cyan-800">
+            Upload External Certificate
+          </Title>
           <Text type="secondary">
             Please fill in the certificate details and upload the image
           </Text>
@@ -2060,7 +2062,7 @@ const CreateExCertificatePage = () => {
                 <div className="flex items-center">
                   <Spin className="mr-2" />
                   <span>
-                    We're analyzing your certificate to extract information
+                    We are analyzing your certificate to extract information
                     automatically...
                   </span>
                 </div>
@@ -2240,6 +2242,7 @@ const CreateExCertificatePage = () => {
               icon={<ScanOutlined />}
               disabled={!fileList.length || analyzing}
               loading={analyzing}
+              className="!bg-gradient-to-r from-cyan-950 to-cyan-800 !border-cyan-950 hover:opacity-90 disabled:opacity-50 !text-white"
             >
               Analyze Certificate
             </Button>
@@ -2254,6 +2257,7 @@ const CreateExCertificatePage = () => {
               block
               loading={uploading}
               disabled={analyzing}
+              className="!bg-gradient-to-r from-cyan-950 to-cyan-800 !border-cyan-950 hover:opacity-90"
             >
               Upload Certificate
             </Button>

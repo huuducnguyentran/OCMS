@@ -209,21 +209,24 @@ const PersonalProfilePage = () => {
 
   return (
     <Layout className="min-h-screen flex flex-col">
-      <Layout.Content className="flex-1 p-8 bg-gray-100">
+      <Layout.Content className="flex-1 p-8 bg-gradient-to-br from-cyan-50 via-white to-cyan-100">
         {/* Breadcrumb */}
-        <div className="flex items-center mb-8 space-x-2">
+        <div className="flex items-center mb-6 space-x-2">
           <Button
             type="link"
             icon={<ArrowLeftOutlined />}
             onClick={() => window.history.back()}
-            className="text-blue-600 hover:text-blue-800 px-0"
+            className="!text-cyan-700 hover:!text-cyan-900 hover:!border-cyan-900 px-0"
           >
             Back
           </Button>
         </div>
-        <h1 className="text-2xl font-bold">Profile</h1>
+
+        {/* Page Title */}
+        <h1 className="text-3xl font-bold text-cyan-900 mb-4">Profile</h1>
+
         {/* Profile Image Section */}
-        <div className="relative w-40 h-40 mx-auto my-6 border-4 border-gray-300 rounded-full shadow-sm">
+        <div className="relative w-40 h-40 mx-auto my-6 border-4 border-cyan-600 rounded-full shadow-lg">
           {formData.avatar ? (
             <img
               src={formData.avatar}
@@ -231,38 +234,48 @@ const PersonalProfilePage = () => {
               className="w-full h-full object-cover rounded-full"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-full text-gray-400 text-6xl">
+            <div className="w-full h-full flex items-center justify-center bg-cyan-100 text-cyan-700 text-6xl rounded-full">
               <UserOutlined />
             </div>
           )}
-          {/* Upload/Edit Button */}
+
           <Upload
             showUploadList={false}
             beforeUpload={() => false}
             onChange={handleUpload}
           >
-            <EditOutlined className="absolute bottom-2 right-2 bg-white p-1 rounded-full cursor-pointer shadow-md text-lg" />
+            <EditOutlined className="absolute bottom-2 right-2 bg-white text-cyan-700 p-2 rounded-full cursor-pointer shadow-md text-lg" />
           </Upload>
 
-          {/* Remove Image Button */}
           {avatar && (
             <DeleteOutlined
-              className="absolute top-2 right-2 bg-white p-1 rounded-full cursor-pointer shadow-md text-lg"
+              className="absolute top-2 right-2 bg-white text-red-500 p-2 rounded-full cursor-pointer shadow-md text-lg"
               onClick={() => setAvatar(null)}
             />
           )}
         </div>
-        {/* Tab Navigation */}
+
+        {/* Tabs */}
         <Tabs
           defaultActiveKey="1"
           centered
-          className="mt-4 mb-4"
+          className="mb-6"
+          tabBarStyle={{ color: "#0e7490" }}
           onChange={(key) => setActiveTab(key)}
         >
-          <TabPane tab="Personal Information" key="1">
-            <div className="bg-white p-6 rounded-lg shadow-md">
+          <TabPane
+            tab={
+              <span className="text-cyan-800 font-medium">
+                Personal Information
+              </span>
+            }
+            key="1"
+          >
+            <div className="bg-white p-6 rounded-lg shadow-lg border border-cyan-200">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">Personal Information</h2>
+                <h2 className="text-lg font-semibold text-cyan-900">
+                  Personal Information
+                </h2>
                 {!isEditing ? (
                   <Button icon={<EditOutlined />} onClick={toggleEdit} />
                 ) : (
@@ -271,10 +284,15 @@ const PersonalProfilePage = () => {
                       icon={<SaveOutlined />}
                       type="primary"
                       onClick={() => profileForm.submit()}
+                      className="!bg-cyan-700 hover:!bg-cyan-800 hover:!border-cyan-800"
                     >
                       Save
                     </Button>
-                    <Button icon={<CloseOutlined />} onClick={toggleEdit}>
+                    <Button
+                      icon={<CloseOutlined />}
+                      onClick={toggleEdit}
+                      className="!border-cyan-700 !text-cyan-700 hover:opacity-60"
+                    >
                       Cancel
                     </Button>
                   </div>
@@ -290,14 +308,13 @@ const PersonalProfilePage = () => {
                   setIsEditing(false);
                 }}
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative">
-                  {/* Divider for large screens */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <Form.Item label="User ID" name="userId">
                       {isEditing ? (
-                        <Input disabled />
+                        <Input disabled className="!bg-cyan-100" />
                       ) : (
-                        <span className="inline-block bg-orange-100 text-orange-800 text-sm font-medium px-3 py-1 rounded-full">
+                        <span className="inline-block bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-medium">
                           {formData.userId}
                         </span>
                       )}
@@ -305,9 +322,9 @@ const PersonalProfilePage = () => {
 
                     <Form.Item label="Full Name" name="fullName">
                       {isEditing ? (
-                        <Input disabled />
+                        <Input disabled className="!bg-cyan-100" />
                       ) : (
-                        <span className="inline-block bg-orange-100 text-orange-800 text-sm font-medium px-3 py-1 rounded-full">
+                        <span className="inline-block bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-medium">
                           {formData.fullName}
                         </span>
                       )}
@@ -321,18 +338,19 @@ const PersonalProfilePage = () => {
                       ]}
                     >
                       {isEditing ? (
-                        <Select placeholder="Select gender">
+                        <Select placeholder="Select gender" className="">
                           <Select.Option value="Male">Male</Select.Option>
                           <Select.Option value="Female">Female</Select.Option>
                           <Select.Option value="Other">Other</Select.Option>
                         </Select>
                       ) : (
-                        <span className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                        <span className="inline-block bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-medium">
                           {formData.gender}
                         </span>
                       )}
                     </Form.Item>
                   </div>
+
                   <div className="space-y-4">
                     <Form.Item
                       label="Date of Birth"
@@ -351,8 +369,12 @@ const PersonalProfilePage = () => {
                           format="YYYY-MM-DD"
                         />
                       ) : (
-                        <span className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-                          {formData.dateOfBirth?.format("YYYY-MM-DD")}
+                        <span className="inline-block bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-medium">
+                          {formData.dateOfBirth
+                            ? new Date(formData.dateOfBirth)
+                                .toISOString()
+                                .split("T")[0]
+                            : ""}
                         </span>
                       )}
                     </Form.Item>
@@ -375,12 +397,12 @@ const PersonalProfilePage = () => {
                         <Input
                           maxLength={10}
                           onChange={handlePhoneNumberChange}
-                          onKeyPress={(e) => {
-                            if (!/[0-9]/.test(e.key)) e.preventDefault();
-                          }}
+                          onKeyPress={(e) =>
+                            !/[0-9]/.test(e.key) && e.preventDefault()
+                          }
                         />
                       ) : (
-                        <span className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                        <span className="inline-block bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-medium">
                           {formData.phoneNumber}
                         </span>
                       )}
@@ -404,7 +426,7 @@ const PersonalProfilePage = () => {
                       {isEditing ? (
                         <Input.TextArea rows={3} />
                       ) : (
-                        <span className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                        <span className="inline-block bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-medium">
                           {formData.address}
                         </span>
                       )}
@@ -412,9 +434,8 @@ const PersonalProfilePage = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-end items-center mt-4">
+                <div className="flex justify-end mt-6">
                   <Button
-                    type="default"
                     danger
                     onClick={handleLogout}
                     icon={<LogoutOutlined />}
@@ -426,15 +447,20 @@ const PersonalProfilePage = () => {
             </div>
           </TabPane>
 
-          <TabPane tab="Change Password" key="2">
-            <div className="bg-white p-6 rounded-lg shadow-md">
+          <TabPane
+            tab={
+              <span className="text-cyan-800 font-medium">Change Password</span>
+            }
+            key="2"
+          >
+            <div className="bg-white p-6 rounded-lg shadow-lg border border-cyan-200">
               <Form
                 form={passwordForm}
                 layout="vertical"
                 onFinish={confirmPasswordUpdate}
                 className="space-y-6"
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Form.Item
                     name="currentPassword"
                     label="Current Password"
@@ -502,21 +528,22 @@ const PersonalProfilePage = () => {
                   </Form.Item>
                 </div>
 
-                <Form.Item>
-                  <div className="flex justify-between items-center mt-4">
-                    <Button type="primary" htmlType="submit">
-                      Update Password
-                    </Button>
-                    <Button
-                      type="default"
-                      danger
-                      onClick={handleLogout}
-                      icon={<LogoutOutlined />}
-                    >
-                      Logout
-                    </Button>
-                  </div>
-                </Form.Item>
+                <div className="flex justify-between items-center">
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    className="!bg-cyan-700 hover:!bg-cyan-800"
+                  >
+                    Update Password
+                  </Button>
+                  <Button
+                    danger
+                    icon={<LogoutOutlined />}
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </Button>
+                </div>
               </Form>
             </div>
           </TabPane>

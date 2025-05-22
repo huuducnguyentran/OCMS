@@ -445,7 +445,7 @@ const CandidateDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-950 to-cyan-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header Section */}
         <Card className="shadow-sm">
@@ -455,11 +455,11 @@ const CandidateDetailPage = () => {
                 type="link"
                 icon={<ArrowLeftOutlined />}
                 onClick={handleGoBack}
-                className="text-blue-600 hover:text-blue-800 px-0 mb-2"
+                className="!text-cyan-600 hover:!text-cyan-800 px-0 mb-2"
               >
                 {isFromRequest ? "Request List" : "Candidate List"}
               </Button>
-              <Title level={2} className="mb-0">
+              <Title level={2} className="mb-0 !text-cyan-800">
                 Candidate Profile
               </Title>
               <Text type="secondary">ID: {candidate?.candidateId}</Text>
@@ -487,8 +487,8 @@ const CandidateDetailPage = () => {
               className="shadow-sm"
               title={
                 <div className="flex items-center space-x-2">
-                  <UserOutlined className="text-blue-500" />
-                  <span>Personal Information</span>
+                  <UserOutlined className="!text-cyan-800" />
+                  <span className="!text-cyan-800">Personal Information</span>
                 </div>
               }
             >
@@ -523,8 +523,8 @@ const CandidateDetailPage = () => {
             className="shadow-sm h-fit"
             title={
               <div className="flex items-center space-x-2">
-                <CheckOutlined className="text-green-500" />
-                <span>Status Information</span>
+                <CheckOutlined className="!text-cyan-800" />
+                <span className="!text-cyan-800">Status Information</span>
               </div>
             }
           >
@@ -574,8 +574,8 @@ const CandidateDetailPage = () => {
           title={
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-2">
-                <FileOutlined className="text-blue-500" />
-                <span className="text-xl font-semibold">
+                <FileOutlined className="!text-cyan-800" />
+                <span className="!text-cyan-800 text-xl font-semibold">
                   External Certificates
                 </span>
               </div>
@@ -602,7 +602,7 @@ const CandidateDetailPage = () => {
                         onClick={() =>
                           navigate(`/external-certificate/create/${id}`)
                         }
-                        className="bg-blue-500 hover:bg-blue-600"
+                        className="!bg-gradient-to-r from-cyan-950 to-cyan-800 !border-cyan-950 hover:opacity-90"
                         disabled={userRole === "TrainingStaff"}
                       >
                         Add Certificate
@@ -613,7 +613,7 @@ const CandidateDetailPage = () => {
                         navigate(`/external-certificate/edit/${id}`)
                       }
                       icon={<EditOutlined />}
-                      className="border-blue-500 text-blue-500 hover:text-blue-600 hover:border-blue-600"
+                      className="!border-gradient-to-r from-cyan-950 to-cyan-800 !border-cyan-950 hover:opacity-90 hover:!text-cyan-700"
                     >
                       Manage Certificates
                     </Button>
@@ -645,7 +645,7 @@ const CandidateDetailPage = () => {
                   >
                     <Card.Meta
                       title={
-                        <div className="font-semibold text-lg text-blue-600">
+                        <div className="font-semibold text-lg text-cyan-800">
                           {cert.certificateName}
                         </div>
                       }

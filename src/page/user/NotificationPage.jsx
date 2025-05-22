@@ -51,13 +51,14 @@ const NotificationPage = () => {
   const navigate = useNavigate();
 
   // Kiểm tra xem người dùng có phải là HeadMaster hoặc Training Staff không
-  const isHeadmasterOrTrainingStaff = userRole === "HeadMaster" || userRole === "TrainingStaff";
+  const isHeadmasterOrTrainingStaff =
+    userRole === "HeadMaster" || userRole === "TrainingStaff";
 
   useEffect(() => {
     const userID = sessionStorage.getItem("userID");
     const role = sessionStorage.getItem("role");
     setUserRole(role);
-    
+
     if (userID) {
       fetchNotifications(userID);
     } else {
@@ -315,16 +316,27 @@ const NotificationPage = () => {
   // Hàm xử lý điều hướng dựa vào loại thông báo
   const handleNavigateByType = (notification) => {
     console.log("Notification for navigation:", notification);
-    
-    if (notification.title && notification.title.includes("CertificateSignature")) {
+
+    if (
+      notification.title &&
+      notification.title.includes("CertificateSignature")
+    ) {
       navigate("/certificates/pending");
-    } else if (notification.title && notification.title.includes("DecisionSignature")) {
+    } else if (
+      notification.title &&
+      notification.title.includes("DecisionSignature")
+    ) {
       navigate("/decisions/pending");
-    } else if (notification.title && notification.title.includes("Request") || 
-               notification.notificationType === "Request" ||
-               notification.message && notification.message.includes("request")) {
+    } else if (
+      (notification.title && notification.title.includes("Request")) ||
+      notification.notificationType === "Request" ||
+      (notification.message && notification.message.includes("request"))
+    ) {
       navigate("/request");
-    } else if (notification.title && notification.title.includes("Trainee Assignment")) {
+    } else if (
+      notification.title &&
+      notification.title.includes("Trainee Assignment")
+    ) {
       navigate("/assign-trainee");
     } else {
       // Mặc định nếu không phù hợp với các trường hợp trên
@@ -335,19 +347,23 @@ const NotificationPage = () => {
 
   // Kiểm tra liệu thông báo có thể điều hướng được không
   const canNavigate = (notification) => {
-    return notification.title && (
-      notification.title.includes("CertificateSignature") ||
-      notification.title.includes("DecisionSignature") ||
-      notification.title.includes("Request") ||
-      (notification.message && notification.message.toLowerCase().includes("request")) ||
-      notification.notificationType === "Request" ||
-      notification.title.includes("Trainee Assignment")
+    return (
+      notification.title &&
+      (notification.title.includes("CertificateSignature") ||
+        notification.title.includes("DecisionSignature") ||
+        notification.title.includes("Request") ||
+        (notification.message &&
+          notification.message.toLowerCase().includes("request")) ||
+        notification.notificationType === "Request" ||
+        notification.title.includes("Trainee Assignment"))
     );
   };
 
   // Kiểm tra nếu có thông báo chưa đọc
   const hasUnreadNotifications = () => {
-    return allNotifications.some(notification => !isNotificationRead(notification));
+    return allNotifications.some(
+      (notification) => !isNotificationRead(notification)
+    );
   };
 
   // Hàm xử lý đánh dấu tất cả thông báo là đã đọc
@@ -360,11 +376,14 @@ const NotificationPage = () => {
       }
 
       setLoading(true);
-      message.loading({ content: "Marking all notifications...", key: "markAllAsRead" });
+      message.loading({
+        content: "Marking all notifications...",
+        key: "markAllAsRead",
+      });
 
       // Lọc ra các thông báo chưa đọc
       const unreadNotifications = allNotifications.filter(
-        notification => !isNotificationRead(notification)
+        (notification) => !isNotificationRead(notification)
       );
 
       if (unreadNotifications.length === 0) {
@@ -375,7 +394,7 @@ const NotificationPage = () => {
 
       // Gọi API để đánh dấu từng thông báo là đã đọc
       // Tạo mảng các promise để thực hiện các cuộc gọi API song song
-      const markPromises = unreadNotifications.map(notification => 
+      const markPromises = unreadNotifications.map((notification) =>
         notificationService.markAsRead(notification.notificationId)
       );
 
@@ -383,23 +402,28 @@ const NotificationPage = () => {
       await Promise.all(markPromises);
 
       // Cập nhật UI
-      const updatedNotifications = allNotifications.map(notification => ({
+      const updatedNotifications = allNotifications.map((notification) => ({
         ...notification,
-        isRead: true
+        isRead: true,
       }));
 
       setAllNotifications(updatedNotifications);
       applyFiltersAndSearch();
-      
+
       // Làm mới số lượng thông báo chưa đọc
       refreshUnreadCount();
 
-      message.success({ content: "Marked all notifications as read", key: "markAllAsRead" });
+      message.success({
+        content: "Marked all notifications as read",
+        key: "markAllAsRead",
+      });
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
-      message.error({ 
-        content: "Cannot mark all notifications: " + (error.message || "An error occurred"), 
-        key: "markAllAsRead" 
+      message.error({
+        content:
+          "Cannot mark all notifications: " +
+          (error.message || "An error occurred"),
+        key: "markAllAsRead",
       });
     } finally {
       setLoading(false);
@@ -409,14 +433,18 @@ const NotificationPage = () => {
   // Hiển thị thông tin debug về vai trò người dùng khi component mount
   useEffect(() => {
     console.log("Current user role:", userRole);
-    console.log("Is Headmaster or Training Staff:", isHeadmasterOrTrainingStaff);
+    console.log(
+      "Is Headmaster or Training Staff:",
+      isHeadmasterOrTrainingStaff
+    );
   }, [userRole, isHeadmasterOrTrainingStaff]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
       <div className="max-w-4xl mx-auto">
+        {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <Title level={2} className="text-center text-gray-800 mb-0">
+          <Title level={2} className="text-center text-cyan-950 mb-0">
             Notifications
           </Title>
           {hasUnreadNotifications() && (
@@ -426,7 +454,7 @@ const NotificationPage = () => {
                 icon={<CheckOutlined />}
                 onClick={handleMarkAllAsRead}
                 loading={loading}
-                className="bg-green-600 hover:bg-green-700 border-0"
+                className="!bg-cyan-600 hover:!bg-cyan-700 border-0 !text-white"
               >
                 Mark All as Read
               </Button>
@@ -434,6 +462,7 @@ const NotificationPage = () => {
           )}
         </div>
 
+        {/* Error Alert */}
         {error && (
           <Alert
             message="Error"
@@ -450,8 +479,8 @@ const NotificationPage = () => {
           />
         )}
 
-        {/* Thanh tìm kiếm và bộ lọc */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+        {/* Search & Filters */}
+        <div className="bg-white rounded-lg shadow p-4 mb-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <Input
@@ -470,12 +499,12 @@ const NotificationPage = () => {
                 value={filterTypes}
                 onChange={handleTypeFilterChange}
                 allowClear
-                mode="multiple" // Cho phép chọn nhiều loại
-                maxTagCount={2} // Hiển thị tối đa 2 tag, còn lại +n
+                mode="multiple"
+                maxTagCount={2}
               >
                 {getUniqueNotificationTypes().map((type) => (
                   <Option key={type} value={type}>
-                    <Tag color={getNotificationTypeColor(type)}>{type}</Tag>
+                    <Tag color="cyan">{type}</Tag>
                   </Option>
                 ))}
               </Select>
@@ -494,73 +523,92 @@ const NotificationPage = () => {
             </div>
           </div>
 
-          {/* Thanh sắp xếp */}
           <div className="mt-3 flex justify-end">
             <Radio.Group
               value={sortOrder}
               onChange={handleSortOrderChange}
               buttonStyle="solid"
             >
-              <Radio.Button value="desc">
-                <SortDescendingOutlined /> Newest
-              </Radio.Button>
-              <Radio.Button value="asc">
-                <SortAscendingOutlined /> Oldest
-              </Radio.Button>
+              <Radio.Group
+                value={sortOrder}
+                onChange={handleSortOrderChange}
+                buttonStyle="solid"
+                className="flex gap-2"
+              >
+                <Radio.Button
+                  value="desc"
+                  className={`!border !rounded-md px-4 py-1 transition-colors duration-200 ${
+                    sortOrder === "desc"
+                      ? "!bg-cyan-700 !text-white !border-cyan-700 hover:!bg-cyan-800"
+                      : "!bg-white !text-cyan-700 !border-cyan-700 hover:!bg-cyan-50 hover:!text-cyan-800"
+                  }`}
+                >
+                  <SortDescendingOutlined className="mr-1" />
+                  Newest
+                </Radio.Button>
+
+                <Radio.Button
+                  value="asc"
+                  className={`!border !rounded-md px-4 py-1 transition-colors duration-200 ${
+                    sortOrder === "asc"
+                      ? "!bg-cyan-700 !text-white !border-cyan-700 hover:!bg-cyan-800"
+                      : "!bg-white !text-cyan-700 !border-cyan-700 hover:!bg-cyan-50 hover:!text-cyan-800"
+                  }`}
+                >
+                  <SortAscendingOutlined className="mr-1" />
+                  Oldest
+                </Radio.Button>
+              </Radio.Group>
             </Radio.Group>
           </div>
         </div>
 
+        {/* Notification List */}
         <Spin spinning={loading}>
           {notifications.length > 0 ? (
             <>
               <List
-                className="notification-list bg-white rounded-lg shadow-sm p-1"
+                className="bg-white rounded-lg shadow-sm"
                 itemLayout="horizontal"
                 dataSource={notifications}
                 renderItem={(item) => {
-                  const notificationIsRead = isNotificationRead(item);
+                  const isRead = isNotificationRead(item);
                   return (
                     <List.Item
                       key={item.notificationId}
-                      className={`cursor-pointer border-b hover:bg-gray-50 p-4 ${
-                        !notificationIsRead ? "bg-blue-50" : ""
+                      className={`cursor-pointer border-b p-4 transition-colors ${
+                        isRead
+                          ? "hover:bg-cyan-50"
+                          : "bg-cyan-100 hover:bg-cyan-200"
                       }`}
                       onClick={() => showNotificationDetail(item)}
                     >
-                      <div className="relative w-full flex justify-between items-start">
+                      <div className="flex justify-between items-start w-full">
                         <List.Item.Meta
+                          className="p-6"
                           avatar={
-                            <div className="rounded-full bg-blue-100 p-2 flex items-center justify-center ml-2">
+                            <div className="rounded-full bg-cyan-200 p-2 flex items-center justify-center">
                               <BellOutlined
-                                style={{ fontSize: "18px", color: "#1890ff" }}
+                                style={{ fontSize: 18, color: "#0891b2" }}
                               />
                             </div>
                           }
                           title={
-                            <div className="flex items-center">
-                              <span
-                                className={
-                                  !notificationIsRead ? "font-semibold" : ""
-                                }
-                              >
-                                {item.title}
-                              </span>
-                            </div>
+                            <span
+                              className={`${
+                                !isRead ? "font-semibold text-cyan-900" : ""
+                              }`}
+                            >
+                              {item.title}
+                            </span>
                           }
                           description={
                             <div className="flex flex-col">
-                              <span className="text-gray-500 truncate max-w-lg">
+                              <span className="text-gray-600 truncate max-w-lg">
                                 {item.message}
                               </span>
                               <div className="flex items-center mt-1">
-                                <Tag
-                                  color={getNotificationTypeColor(
-                                    item.notificationType
-                                  )}
-                                >
-                                  {item.notificationType}
-                                </Tag>
+                                <Tag color="cyan">{item.notificationType}</Tag>
                                 <span className="text-xs text-gray-400 ml-2">
                                   {getFormattedDate(item.createdAt)}
                                 </span>
@@ -568,7 +616,7 @@ const NotificationPage = () => {
                             </div>
                           }
                         />
-                        {!notificationIsRead && (
+                        {!isRead && (
                           <Badge status="error" className="ml-3 mt-2" />
                         )}
                       </div>
@@ -602,12 +650,12 @@ const NotificationPage = () => {
         </Spin>
       </div>
 
-      {/* Modal chi tiết thông báo */}
+      {/* Notification Detail Modal */}
       <Modal
         title={
           <div className="flex items-center">
-            <BellOutlined className="mr-2" style={{ color: "#1890ff" }} />
-            <span>Notification Details</span>
+            <BellOutlined className="mr-2 text-cyan-600" />
+            <span className="text-cyan-800">Notification Details</span>
           </div>
         }
         open={modalVisible}
@@ -615,25 +663,23 @@ const NotificationPage = () => {
         footer={
           selectedNotification && isHeadmasterOrTrainingStaff ? (
             <div className="flex justify-end">
-              <Button 
-                onClick={handleCloseModal} 
-                style={{ marginRight: 8 }}
-              >
+              <Button onClick={handleCloseModal} style={{ marginRight: 8 }}>
                 Close
               </Button>
               {canNavigate(selectedNotification) && (
-                <Button 
-                  type="primary" 
-                  onClick={() => handleNavigateByType(selectedNotification)}
+                <Button
+                  type="primary"
                   icon={<ArrowRightOutlined />}
+                  className="bg-cyan-600 hover:bg-cyan-700 text-white"
+                  onClick={() => handleNavigateByType(selectedNotification)}
                 >
-                  {selectedNotification.title?.includes("CertificateSignature") 
-                    ? "Đến Certificate Pending" 
+                  {selectedNotification.title?.includes("CertificateSignature")
+                    ? "Đến Certificate Pending"
                     : selectedNotification.title?.includes("DecisionSignature")
-                      ? "Đến Decision Pending"
-                      : selectedNotification.title?.includes("Trainee Assignment")
-                        ? "Đến Assign Trainee"
-                        : "Đến trang Request"}
+                    ? "Đến Decision Pending"
+                    : selectedNotification.title?.includes("Trainee Assignment")
+                    ? "Đến Assign Trainee"
+                    : "Đến trang Request"}
                 </Button>
               )}
             </div>
@@ -644,19 +690,13 @@ const NotificationPage = () => {
         {selectedNotification && (
           <div className="notification-detail">
             <div className="mb-4">
-              <div className="font-semibold text-lg">
+              <div className="font-semibold text-lg text-cyan-800">
                 {selectedNotification.title}
               </div>
-              <Tag
-                color={getNotificationTypeColor(
-                  selectedNotification.notificationType
-                )}
-              >
-                {selectedNotification.notificationType}
-              </Tag>
+              <Tag color="cyan">{selectedNotification.notificationType}</Tag>
             </div>
 
-            <p className="my-4 text-base whitespace-pre-line">
+            <p className="my-4 text-base text-gray-700 whitespace-pre-line">
               {selectedNotification.message}
             </p>
 

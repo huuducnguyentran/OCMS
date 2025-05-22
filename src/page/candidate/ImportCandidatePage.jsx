@@ -137,7 +137,7 @@ const CandidateImportPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <h2 className="text-4xl text-gray-900 font-bold mb-4">
@@ -148,8 +148,8 @@ const CandidateImportPage = () => {
             <div
               className={`border-2 border-dashed rounded-lg p-8 mb-6 text-center transition-all duration-200 ${
                 isDragging
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-300 hover:border-blue-400"
+                  ? "border-cyan-500 bg-cyan-50"
+                  : "border-gray-300 hover:border-cyan-400"
               }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -159,7 +159,7 @@ const CandidateImportPage = () => {
                 <UploadOutlined className="text-4xl text-gray-400" />
                 <div className="space-y-2">
                   <p className="text-lg text-gray-600">Drag Excel File Here</p>
-                  <label className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg cursor-pointer transition-colors duration-200">
+                  <label className="inline-flex items-center px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg cursor-pointer transition-colors duration-200">
                     <span className="ml-2">Choose File</span>
                     <input
                       type="file"
@@ -205,7 +205,7 @@ const CandidateImportPage = () => {
 
           {loading && (
             <div className="flex justify-center items-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
             </div>
           )}
 
@@ -217,7 +217,7 @@ const CandidateImportPage = () => {
                   onClick={() => setActiveSheet("Candidate")}
                   className={`px-4 py-2 rounded-lg text-sm font-medium ${
                     activeSheet === "Candidate"
-                      ? "!bg-blue-600 text-white"
+                      ? "!bg-cyan-600 text-white"
                       : "!bg-gray-200 text-gray-700 hover:!bg-gray-300"
                   }`}
                 >
@@ -227,7 +227,7 @@ const CandidateImportPage = () => {
                   onClick={() => setActiveSheet("ExternalCertificate")}
                   className={`px-4 py-2 rounded-lg text-sm font-medium ${
                     activeSheet === "ExternalCertificate"
-                      ? "!bg-blue-600 text-white"
+                      ? "!bg-cyan-600 text-white"
                       : "!bg-gray-200 text-gray-700 hover:!bg-gray-300"
                   }`}
                 >
@@ -253,13 +253,13 @@ const CandidateImportPage = () => {
                       setError(null);
                       setActiveSheet("Candidate");
                     }}
-                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                    className="px-4 py-2 text-sm text-cyan-600 !bg-gray-200 hover:text-cyan-800 hover:bg-gray-100 rounded-lg hover:!border-cyan-800 transition-colors duration-200"
                   >
                     Re-import
                   </button>
                   <button
                     onClick={handleSubmitToServer}
-                    className="px-4 py-2 text-sm !bg-blue-500 text-white hover:!bg-blue-700 rounded-lg transition-colors duration-200"
+                    className="px-4 py-2 text-sm !bg-cyan-500 text-white hover:!bg-cyan-700 rounded-lg transition-colors duration-200"
                   >
                     Submit to Server
                   </button>

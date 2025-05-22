@@ -727,7 +727,7 @@ const RequestList = () => {
       render: (text, record) => (
         <Link
           to={`/requests/${record.requestId}`}
-          className="text-blue-600 hover:text-blue-800"
+          className="!text-cyan-600 hover:text-cyan-800 font-medium"
         >
           {text}
         </Link>
@@ -851,19 +851,19 @@ const RequestList = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-100 via-white to-cyan-50 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white/90 backdrop-blur rounded-2xl shadow-xl p-6 sm:p-8 mb-8 border border-gray-100">
+        <div className="bg-white/90 backdrop-blur rounded-2xl shadow-2xl p-6 sm:p-8 mb-8 border border-cyan-100">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-6">
-              <div className="p-6 bg-gradient-to-br from-indigo-100 to-blue-50 rounded-full shadow-lg border-2 border-indigo-200 hover:scale-105 transition-transform">
-                <FileTextOutlined className="text-5xl text-indigo-500 drop-shadow-md hover:text-indigo-600" />
+              <div className="p-6 bg-gradient-to-br from-cyan-200 to-cyan-100 rounded-full shadow-lg border-2 border-cyan-300 hover:scale-105 transition-transform">
+                <FileTextOutlined className="text-5xl text-cyan-700 drop-shadow-md hover:text-cyan-800" />
               </div>
               <div>
-                <Title level={2} className="text-gray-800 mb-2">
+                <Title level={2} className="text-cyan-900 mb-2">
                   Request List
                 </Title>
-                <p className="text-gray-600">
+                <p className="text-cyan-700">
                   {storedRole === "Training staff"
                     ? "Requests submitted to Training Staff"
                     : "Requests submitted to Head Master"}
@@ -874,17 +874,28 @@ const RequestList = () => {
               <Search
                 placeholder="Search by ID or Description"
                 allowClear
-                enterButton={<SearchOutlined />}
+                enterButton={
+                  <Button
+                    type="primary"
+                    style={{
+                      backgroundColor: "#155e75", // Tailwind's cyan-800
+                      borderColor: "#155e75",
+                    }}
+                    icon={<SearchOutlined />}
+                  />
+                }
                 size="large"
                 onSearch={handleSearch}
                 onChange={(e) => handleSearch(e.target.value)}
                 value={searchText}
-                style={{ width: 300 }}
+                style={{ width: 300, borderColor: "#155e75" }}
               />
+
               <Button
                 icon={showFilters ? <UpOutlined /> : <FilterOutlined />}
                 onClick={toggleFilters}
                 size="large"
+                className="!text-cyan-800 !border-cyan-600 hover:bg-cyan-50"
               >
                 {showFilters ? "Hide Filters" : "Show Filters"}
               </Button>
@@ -894,6 +905,7 @@ const RequestList = () => {
                 loading={loading}
                 type="primary"
                 size="large"
+                className="!bg-cyan-700 hover:!bg-cyan-800 !border-cyan-800"
               >
                 Refresh
               </Button>
@@ -901,10 +913,10 @@ const RequestList = () => {
           </div>
 
           {showFilters && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+            <div className="mb-6 p-4 bg-cyan-50 rounded-xl border border-cyan-200 shadow-sm">
               <Row gutter={[16, 16]}>
                 <Col xs={24} md={8}>
-                  <label className="block text-gray-700 font-medium mb-1">
+                  <label className="block text-cyan-800 font-medium mb-1">
                     Status
                   </label>
                   <Select
@@ -920,7 +932,7 @@ const RequestList = () => {
                   </Select>
                 </Col>
                 <Col xs={24} md={8}>
-                  <label className="block text-gray-700 font-medium mb-1">
+                  <label className="block text-cyan-800 font-medium mb-1">
                     Request Type
                   </label>
                   <Select
@@ -941,7 +953,7 @@ const RequestList = () => {
                   </Select>
                 </Col>
                 <Col xs={24} md={8}>
-                  <label className="block text-gray-700 font-medium mb-1">
+                  <label className="block text-cyan-800 font-medium mb-1">
                     Date Range
                   </label>
                   <RangePicker
@@ -972,7 +984,7 @@ const RequestList = () => {
             className="shadow-md"
             rowClassName={(record) =>
               record.status === "Pending"
-                ? "bg-orange-50/50 hover:bg-orange-100/70"
+                ? "bg-cyan-50 hover:bg-cyan-100/80"
                 : ""
             }
           />
@@ -1043,7 +1055,7 @@ const RequestList = () => {
                                   <div className="w-full flex items-center justify-between">
                                     <div>
                                       <span
-                                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                        className="text-cyan-600 hover:text-cyan-800 hover:underline cursor-pointer"
                                         onClick={() =>
                                           navigateToCandidateDetail(
                                             candidate.candidateId
@@ -1113,7 +1125,7 @@ const RequestList = () => {
                                   <div className="w-full flex items-center justify-between">
                                     <div>
                                       <span
-                                        className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                        className="text-cyan-600 hover:text-cyan-800 hover:underline cursor-pointer"
                                         onClick={() =>
                                           navigate(
                                             `/assigned-trainee/${trainee.traineeAssignId}`
@@ -1181,7 +1193,7 @@ const RequestList = () => {
                               isTrainingPlanType(currentRequest.requestType) ? (
                                 <Link
                                   to={`/plan/details/${currentRequest.requestEntityId}`}
-                                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                                  className="text-cyan-600 hover:text-cyan-800 hover:underline"
                                   title="Click to view Training Plan details"
                                 >
                                   {currentRequest.requestEntityId}
@@ -1191,7 +1203,7 @@ const RequestList = () => {
                                 ) ? (
                                 <Link
                                   to={`/subject/${currentRequest.requestEntityId}`}
-                                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                                  className="text-cyan-600 hover:text-cyan-800 hover:underline"
                                   title="Click to view Subject details"
                                 >
                                   {currentRequest.requestEntityId}
@@ -1201,7 +1213,7 @@ const RequestList = () => {
                                 ) ? (
                                 <Button
                                   type="link"
-                                  className="text-blue-600 hover:text-blue-800 hover:underline p-0"
+                                  className="text-cyan-600 hover:text-cyan-800 hover:underline p-0"
                                   onClick={() =>
                                     handleViewCertificateTemplate(
                                       currentRequest.requestEntityId
@@ -1216,7 +1228,7 @@ const RequestList = () => {
                                 ) ? (
                                 <Button
                                   type="link"
-                                  className="text-blue-600 hover:text-blue-800 hover:underline p-0"
+                                  className="text-cyan-600 hover:text-cyan-800 hover:underline p-0"
                                   onClick={() =>
                                     handleViewDecisionTemplate(
                                       currentRequest.requestEntityId
@@ -1311,136 +1323,143 @@ const RequestList = () => {
                   </div>
                 </Card>
 
-                <div className="flex justify-end gap-4 mt-6">
-                  {currentRequest.status === "Pending" && (
-                    <>
-                      <Button
-                        type="primary"
-                        onClick={handleApprove}
-                        className="bg-green-500 hover:bg-green-600"
-                      >
-                        Approve
-                      </Button>
-                      <Button danger onClick={handleReject}>
-                        Reject
-                      </Button>
-                    </>
-                  )}
-
-                  {/* Thêm nút xem chi tiết ứng viên nếu là request nhập ứng viên */}
-                  {(Number(currentRequest.requestType) === 9 ||
-                    currentRequest.requestType === "CandidateImport" ||
-                    currentRequest.requestType === "Candidate Import") &&
-                    candidateData.length > 0 &&
-                    (candidateData.length === 1 ? (
-                      <Button
-                        type="primary"
-                        className="bg-blue-500 hover:bg-blue-600"
-                        onClick={() =>
-                          navigateToCandidateDetail(
-                            candidateData[0].candidateId
-                          )
-                        }
-                      >
-                        View Candidate Details
-                      </Button>
-                    ) : (
-                      <Button
-                        type="primary"
-                        className="bg-blue-500 hover:bg-blue-600"
-                        onClick={() =>
-                          message.info(
-                            "Click on a candidate ID to view details"
-                          )
-                        }
-                      >
-                        {`View ${candidateData.length} Candidates`}
-                      </Button>
-                    ))}
-
-                  {/* Thêm nút xem chi tiết học viên nếu là request gán học viên */}
-                  {isTraineeAssignType(currentRequest.requestType) &&
-                    traineesData.length > 0 &&
-                    (traineesData.length === 1 ? (
-                      <Button
-                        type="primary"
-                        className="bg-blue-500 hover:bg-blue-600"
-                        onClick={() =>
-                          navigate(`/assigned-trainee/${traineesData[0].train}`)
-                        }
-                      >
-                        View Trainee Details
-                      </Button>
-                    ) : (
-                      <Button
-                        type="primary"
-                        className="bg-blue-500 hover:bg-blue-600"
-                        onClick={() => navigate("/assigned-trainee")}
-                      >
-                        {`View All Trainees`}
-                      </Button>
-                    ))}
-
-                  {/* Thêm nút view training plan nếu là request liên quan đến training plan */}
-                  {currentRequest.requestEntityId &&
-                    isTrainingPlanType(currentRequest.requestType) && (
-                      <Link
-                        to={`/plan/details/${currentRequest.requestEntityId}`}
-                      >
+                <div className="flex justify-between flex-wrap gap-4 mt-6">
+                  {/* Left-side buttons (view, preview, etc.) */}
+                  <div className="flex flex-wrap gap-3">
+                    {/* Candidate detail button */}
+                    {(Number(currentRequest.requestType) === 9 ||
+                      currentRequest.requestType === "CandidateImport" ||
+                      currentRequest.requestType === "Candidate Import") &&
+                      candidateData.length > 0 &&
+                      (candidateData.length === 1 ? (
                         <Button
                           type="primary"
-                          className="bg-blue-500 hover:bg-blue-600"
+                          className="!bg-cyan-700 hover:!bg-cyan-800"
+                          onClick={() =>
+                            navigateToCandidateDetail(
+                              candidateData[0].candidateId
+                            )
+                          }
                         >
-                          View Training Plan
+                          View Candidate Details
                         </Button>
-                      </Link>
-                    )}
-
-                  {/* Thêm nút view subject nếu là request liên quan đến complaint */}
-                  {currentRequest.requestEntityId &&
-                    isComplaintType(currentRequest.requestType) && (
-                      <Link to={`/subject/${currentRequest.requestEntityId}`}>
+                      ) : (
                         <Button
                           type="primary"
-                          className="bg-blue-500 hover:bg-blue-600"
+                          className="!bg-cyan-700 hover:!bg-cyan-800"
+                          onClick={() =>
+                            message.info(
+                              "Click on a candidate ID to view details"
+                            )
+                          }
                         >
-                          View Subject
+                          {`View ${candidateData.length} Candidates`}
                         </Button>
-                      </Link>
-                    )}
+                      ))}
 
-                  {/* Thêm nút để xem Certificate Template */}
-                  {currentRequest.requestEntityId &&
-                    isCertificateTemplateType(currentRequest.requestType) && (
-                      <Button
-                        type="primary"
-                        className="bg-blue-500 hover:bg-blue-600"
-                        onClick={() =>
-                          handleViewCertificateTemplate(
-                            currentRequest.requestEntityId
-                          )
-                        }
-                      >
-                        Preview Certificate Template
-                      </Button>
-                    )}
+                    {/* Trainee detail button */}
+                    {isTraineeAssignType(currentRequest.requestType) &&
+                      traineesData.length > 0 &&
+                      (traineesData.length === 1 ? (
+                        <Button
+                          type="primary"
+                          className="!bg-cyan-700 hover:!bg-cyan-800"
+                          onClick={() =>
+                            navigate(
+                              `/assigned-trainee/${traineesData[0].train}`
+                            )
+                          }
+                        >
+                          View Trainee Details
+                        </Button>
+                      ) : (
+                        <Button
+                          type="primary"
+                          className="!bg-cyan-700 hover:!bg-cyan-800"
+                          onClick={() => navigate("/assigned-trainee")}
+                        >
+                          {`View All Trainees`}
+                        </Button>
+                      ))}
 
-                  {currentRequest.requestEntityId &&
-                    isDecisionTemplateType(currentRequest.requestType) && (
-                      <Button
-                        type="primary"
-                        className="bg-blue-500 hover:bg-blue-600"
-                        onClick={() =>
-                          handleViewDecisionTemplate(
-                            currentRequest.requestEntityId
-                          )
-                        }
-                      >
-                        Preview Decision Template
-                      </Button>
-                    )}
+                    {/* Training Plan button */}
+                    {currentRequest.requestEntityId &&
+                      isTrainingPlanType(currentRequest.requestType) && (
+                        <Link
+                          to={`/plan/details/${currentRequest.requestEntityId}`}
+                        >
+                          <Button
+                            type="primary"
+                            className="!bg-cyan-700 hover:!bg-cyan-800"
+                          >
+                            View Training Plan
+                          </Button>
+                        </Link>
+                      )}
 
-                  <Button onClick={handleCloseDetails}>Close</Button>
+                    {/* Subject button */}
+                    {currentRequest.requestEntityId &&
+                      isComplaintType(currentRequest.requestType) && (
+                        <Link to={`/subject/${currentRequest.requestEntityId}`}>
+                          <Button
+                            type="primary"
+                            className="!bg-cyan-700 hover:!bg-cyan-800"
+                          >
+                            View Subject
+                          </Button>
+                        </Link>
+                      )}
+
+                    {/* Certificate Template preview */}
+                    {currentRequest.requestEntityId &&
+                      isCertificateTemplateType(currentRequest.requestType) && (
+                        <Button
+                          type="primary"
+                          className="!bg-cyan-700 hover:!bg-cyan-800"
+                          onClick={() =>
+                            handleViewCertificateTemplate(
+                              currentRequest.requestEntityId
+                            )
+                          }
+                        >
+                          Preview Certificate Template
+                        </Button>
+                      )}
+
+                    {/* Decision Template preview */}
+                    {currentRequest.requestEntityId &&
+                      isDecisionTemplateType(currentRequest.requestType) && (
+                        <Button
+                          type="primary"
+                          className="!bg-cyan-700 hover:!bg-cyan-800"
+                          onClick={() =>
+                            handleViewDecisionTemplate(
+                              currentRequest.requestEntityId
+                            )
+                          }
+                        >
+                          Preview Decision Template
+                        </Button>
+                      )}
+                  </div>
+
+                  {/* Right-side buttons (Approve, Reject, Close) */}
+                  <div className="flex gap-3">
+                    {currentRequest.status === "Pending" && (
+                      <>
+                        <Button
+                          type="primary"
+                          onClick={handleApprove}
+                          className="!bg-green-600 hover:!bg-green-700"
+                        >
+                          Approve
+                        </Button>
+                        <Button danger onClick={handleReject}>
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (
