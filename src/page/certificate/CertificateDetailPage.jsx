@@ -14,7 +14,7 @@ const CertificateDetailPage = () => {
   const navigate = useNavigate();
   const [certificate, setCertificate] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
+  const userRole = sessionStorage.getItem("role");
   const isHeadMaster = userRole === "HeadMaster";
   const isTrainingStaff = userRole === "Training staff";
 
@@ -42,7 +42,6 @@ const CertificateDetailPage = () => {
     try {
       await signCertificate(certificateId);
       message.success("Certificate signed successfully!");
-      // Optional: refresh the certificate data
       const updated = await getCertificateById(certificateId);
       setCertificate(updated);
     } catch (error) {
@@ -52,8 +51,8 @@ const CertificateDetailPage = () => {
   };
 
   const handleRevokeCertificate = async () => {
-    if (!isHeadMaster) {
-      message.warning("Only HeadMaster can revoke certificates");
+    if (!isTrainingStaff) {
+      message.warning("Only Training staff can revoke certificates");
       return;
     }
 
@@ -86,31 +85,34 @@ const CertificateDetailPage = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
+      {/* Back Button */}
+      <div className="mb-6">
         <Button
           type="link"
           onClick={() => navigate(-1)}
           icon={<ArrowLeftOutlined />}
-          className="flex items-center text-blue-600 hover:text-blue-800 text-lg font-medium 
-                       transition-all duration-300 hover:-translate-x-1"
+          className="flex items-center text-cyan-700 hover:text-cyan-900 text-lg font-medium transition-all duration-300 hover:-translate-x-1"
         >
           Back
         </Button>
       </div>
 
-      <h1 className="text-2xl font-semibold mb-4 text-gray-800">
+      {/* Title */}
+      <h1 className="text-3xl font-bold text-cyan-950 mb-6">
         {certificate.certificateCode}
       </h1>
 
-      <div className="overflow-x-auto rounded-lg mb-6 border shadow">
+      {/* Certificate Preview */}
+      <div className="rounded-xl overflow-hidden border border-cyan-200 shadow mb-8">
         <iframe
           src={certificate.certificateURLwithSas}
           title="Certificate Preview"
-          className="w-[1100px] h-[800px] border-0"
+          className="w-full max-w-[1100px] h-[800px] mx-auto block"
         />
       </div>
 
-      <div className="space-y-2 text-base text-gray-600">
+      {/* Certificate Info */}
+      <div className="space-y-3 text-base text-gray-700 bg-white p-6 rounded-xl border border-cyan-100 shadow-sm mb-6">
         <p>
           <strong>User ID:</strong> {certificate.userId}
         </p>
@@ -121,20 +123,18 @@ const CertificateDetailPage = () => {
           <strong>Template ID:</strong> {certificate.templateId}
         </p>
         <p>
-          <strong>
-            Status:
-            <span
-              className={`ml-2 px-4 py-1 rounded-full text-white ${
-                certificate.status === "Active"
-                  ? "bg-green-500"
-                  : certificate.status === "Revoked"
-                  ? "bg-red-500"
-                  : "bg-gray-400"
-              }`}
-            >
-              {certificate.status}
-            </span>{" "}
-          </strong>
+          <strong>Status:</strong>{" "}
+          <span
+            className={`ml-2 px-3 py-1 rounded-full text-white text-sm font-medium ${
+              certificate.status === "Active"
+                ? "bg-cyan-700"
+                : certificate.status === "Revoked"
+                ? "bg-red-600"
+                : "bg-gray-500"
+            }`}
+          >
+            {certificate.status}
+          </span>
         </p>
         <p>
           <strong>Issue Date:</strong>{" "}
@@ -145,42 +145,52 @@ const CertificateDetailPage = () => {
           {new Date(certificate.expirationDate).toLocaleString()}
         </p>
       </div>
-      {certificate.status === "Pending" && (
-        <div className="flex justify-end mt-8">
+
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-4">
+        {certificate.status === "Pending" && (
           <Tooltip
             title={isHeadMaster ? "" : "Only HeadMaster can sign certificates"}
           >
             <Button
-              type="primary"
               icon={<CheckCircleOutlined />}
               onClick={handleSignCertificate}
               disabled={!isHeadMaster}
-              className={`text-white ${
+              className={`text-white font-medium px-6 py-2 rounded-md transition-colors ${
                 isHeadMaster
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-gray-400 hover:bg-gray-500 cursor-not-allowed"
+                  ? "bg-cyan-700 hover:bg-cyan-800"
+                  : "bg-gray-400 cursor-not-allowed"
               }`}
             >
               Sign Certificate
             </Button>
           </Tooltip>
-        </div>
-      )}
-      {certificate.status !== "Pending" && certificate.status !== "Revoked" && (
-        <Tooltip
-          title={
-            isTrainingStaff ? "" : "Only TrainingStaff can revoke certificates"
-          }
-        >
-          <Button
-            danger
-            onClick={handleRevokeCertificate}
-            disabled={!isTrainingStaff}
-          >
-            Revoke Certificate
-          </Button>
-        </Tooltip>
-      )}
+        )}
+
+        {certificate.status !== "Pending" &&
+          certificate.status !== "Revoked" && (
+            <Tooltip
+              title={
+                isTrainingStaff
+                  ? ""
+                  : "Only Training Staff can revoke certificates"
+              }
+            >
+              <Button
+                danger
+                onClick={handleRevokeCertificate}
+                disabled={!isTrainingStaff}
+                className={`px-6 py-2 font-medium rounded-md transition-colors ${
+                  isTrainingStaff
+                    ? "bg-red-600 text-white hover:bg-red-700"
+                    : "bg-gray-400 text-white cursor-not-allowed"
+                }`}
+              >
+                Revoke Certificate
+              </Button>
+            </Tooltip>
+          )}
+      </div>
     </div>
   );
 };

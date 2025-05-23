@@ -2242,7 +2242,7 @@ const CreateExCertificatePage = () => {
               icon={<ScanOutlined />}
               disabled={!fileList.length || analyzing}
               loading={analyzing}
-              className="!bg-gradient-to-r from-cyan-950 to-cyan-800 !border-cyan-950 hover:opacity-90 disabled:opacity-50 !text-white"
+              className="!bg-cyan-600 hover:opacity-90 disabled:opacity-50 !text-white"
             >
               Analyze Certificate
             </Button>
@@ -2257,7 +2257,7 @@ const CreateExCertificatePage = () => {
               block
               loading={uploading}
               disabled={analyzing}
-              className="!bg-gradient-to-r from-cyan-950 to-cyan-800 !border-cyan-950 hover:opacity-90"
+              className="!bg-cyan-700 !border-cyan-950 hover:opacity-90"
             >
               Upload Certificate
             </Button>

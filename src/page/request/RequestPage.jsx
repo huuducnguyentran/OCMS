@@ -851,7 +851,7 @@ const RequestList = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-100 via-white to-cyan-50 p-4 sm:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white/90 backdrop-blur rounded-2xl shadow-2xl p-6 sm:p-8 mb-8 border border-cyan-100">
           <div className="flex items-center justify-between mb-6">
@@ -878,8 +878,8 @@ const RequestList = () => {
                   <Button
                     type="primary"
                     style={{
-                      backgroundColor: "#155e75", // Tailwind's cyan-800
-                      borderColor: "#155e75",
+                      backgroundColor: "#0e7490", // Tailwind's cyan-800
+                      borderColor: "#0e7490",
                     }}
                     icon={<SearchOutlined />}
                   />
@@ -1104,7 +1104,7 @@ const RequestList = () => {
                     {isTraineeAssignType(currentRequest.requestType) && (
                       <div className="border-t border-gray-200 pt-3 mt-3">
                         <div className="flex items-center gap-2 text-gray-600 mb-2">
-                          <IdcardOutlined className="text-indigo-500" />
+                          <IdcardOutlined className="!text-indigo-500" />
                           <span className="text-sm font-semibold">
                             Assigned Trainees:
                           </span>

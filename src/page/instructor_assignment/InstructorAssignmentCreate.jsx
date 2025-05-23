@@ -1,10 +1,23 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getAllSubject } from "../../services/subjectService";
-import { 
-  Card, Form, Input, Select, Button, Spin, message, Typography, Layout, Row, Col, Alert
+import {
+  Card,
+  Form,
+  Input,
+  Select,
+  Button,
+  Spin,
+  message,
+  Typography,
+  Layout,
+  Row,
+  Col,
 } from "antd";
-import { 
-  ArrowLeftOutlined, BookOutlined, TeamOutlined, FormOutlined
+import {
+  ArrowLeftOutlined,
+  BookOutlined,
+  TeamOutlined,
+  FormOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import InstructorAssService from "../../services/instructorAssServices";
@@ -23,18 +36,21 @@ const InstructorAssignmentCreate = () => {
     const loadOptions = async () => {
       setLoading(true);
       try {
-        // Fetch all subjects from subjectService
         const subjRes = await getAllSubject();
-        const subjList =
-          Array.isArray(subjRes) ? subjRes :
-          Array.isArray(subjRes.allSubjects) ? subjRes.allSubjects :
-          [];
+        const subjList = Array.isArray(subjRes)
+          ? subjRes
+          : Array.isArray(subjRes.allSubjects)
+          ? subjRes.allSubjects
+          : [];
         setSubjects(subjList);
 
-        // Fetch all users with role=Instructor
         const instrRes = await InstructorAssService.getAllInstructors();
-        const raw = Array.isArray(instrRes) ? instrRes : Array.isArray(instrRes.data) ? instrRes.data : [];
-        const instrList = raw.filter(u => u.roleName === "Instructor");
+        const raw = Array.isArray(instrRes)
+          ? instrRes
+          : Array.isArray(instrRes.data)
+          ? instrRes.data
+          : [];
+        const instrList = raw.filter((u) => u.roleName === "Instructor");
         setInstructors(instrList);
       } catch (error) {
         console.error(error);
@@ -59,7 +75,7 @@ const InstructorAssignmentCreate = () => {
 
   if (loading) {
     return (
-      <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <Layout className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100">
         <div className="flex justify-center items-center h-screen">
           <Spin size="large" tip="Loading options..." />
         </div>
@@ -68,45 +84,49 @@ const InstructorAssignmentCreate = () => {
   }
 
   return (
-    <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <Layout className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100">
       <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-xl shadow-md p-8 mb-8">
+        <div className="bg-white rounded-xl shadow-xl p-8 mb-8 border border-cyan-400">
           <div className="flex justify-between items-start mb-6">
-            <Title level={3} className="text-gray-800 m-0">
+            <Title level={3} className="!text-cyan-800 !m-0">
               Create New Instructor Assignment
             </Title>
             <Button
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate("/instructor-assignment")}
-              className="text-blue-600"
+              className="!text-cyan-700 hover:!text-cyan-900 border !border-cyan-600"
             >
               Back to Assignments
             </Button>
           </div>
-          
-          <Form 
-            form={form} 
-            layout="vertical" 
+
+          <Form
+            form={form}
+            layout="vertical"
             onFinish={onFinish}
             className="space-y-6"
           >
             <Row gutter={24}>
               <Col span={24}>
-                <Card className="rounded-xl shadow-sm bg-blue-50">
+                <Card className="rounded-xl !bg-cyan-50 border !border-cyan-200 !shadow-sm">
                   <Form.Item
                     name="subjectId"
-                    label="Subject"
-                    rules={[{ required: true, message: "Please select a subject" }]}
+                    label={
+                      <span className="text-cyan-800 font-medium">Subject</span>
+                    }
+                    rules={[
+                      { required: true, message: "Please select a subject" },
+                    ]}
                   >
-                    <Select 
+                    <Select
                       placeholder="Select subject"
                       className="rounded-lg"
                       size="large"
-                      suffixIcon={<BookOutlined className="text-blue-500" />}
+                      suffixIcon={<BookOutlined className="!text-cyan-600" />}
                       showSearch
                       optionFilterProp="children"
                     >
-                      {subjects.map(s => (
+                      {subjects.map((s) => (
                         <Option key={s.subjectId} value={s.subjectId}>
                           {s.subjectName || s.subjectId}
                         </Option>
@@ -117,23 +137,38 @@ const InstructorAssignmentCreate = () => {
               </Col>
 
               <Col span={24} className="mt-4">
-                <Card className="rounded-xl shadow-sm bg-green-50">
+                <Card className="rounded-xl !bg-cyan-50 !border !border-cyan-200 !shadow-sm">
                   <Form.Item
                     name="instructorId"
-                    label="Instructor"
-                    rules={[{ required: true, message: "Please select an instructor" }]}
+                    label={
+                      <span className="!text-cyan-800 font-medium">
+                        Instructor
+                      </span>
+                    }
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select an instructor",
+                      },
+                    ]}
                   >
-                    <Select 
+                    <Select
                       placeholder="Select instructor"
                       className="rounded-lg"
                       size="large"
-                      suffixIcon={<TeamOutlined className="text-green-500" />}
+                      suffixIcon={<TeamOutlined className="!text-cyan-600" />}
                       showSearch
                       optionFilterProp="children"
                     >
-                      {instructors.map(i => (
-                        <Option key={i.userId || i.instructorId} value={i.userId || i.instructorId}>
-                          {i.fullName || i.username || i.userId || i.instructorId}
+                      {instructors.map((i) => (
+                        <Option
+                          key={i.userId || i.instructorId}
+                          value={i.userId || i.instructorId}
+                        >
+                          {i.fullName ||
+                            i.username ||
+                            i.userId ||
+                            i.instructorId}
                         </Option>
                       ))}
                     </Select>
@@ -142,10 +177,15 @@ const InstructorAssignmentCreate = () => {
               </Col>
 
               <Col span={24} className="mt-4">
-                <Card className="rounded-xl shadow-sm">
-                  <Form.Item name="notes" label="Notes">
-                    <Input.TextArea 
-                      rows={4} 
+                <Card className="rounded-xl !bg-cyan-50 !border !border-cyan-100 !shadow-sm">
+                  <Form.Item
+                    name="notes"
+                    label={
+                      <span className="!text-cyan-800 font-medium">Notes</span>
+                    }
+                  >
+                    <Input.TextArea
+                      rows={4}
                       placeholder="Enter any additional notes about this assignment"
                       className="rounded-lg"
                       size="large"
@@ -156,19 +196,19 @@ const InstructorAssignmentCreate = () => {
             </Row>
 
             <Form.Item className="flex justify-end gap-4 mt-8">
-              <Button 
+              <Button
                 onClick={() => navigate(-1)}
                 size="large"
-                className="min-w-[100px]"
+                className="!min-w-[100px] !text-cyan-800 !border-cyan-500 hover:!border-cyan-900 mr-4"
               >
                 Cancel
               </Button>
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 htmlType="submit"
                 icon={<FormOutlined />}
                 size="large"
-                className="min-w-[150px] bg-blue-600 hover:bg-blue-700 border-blue-600 hover:border-blue-700 m-6"
+                className="!min-w-[150px] !bg-cyan-700 hover:!bg-cyan-800 border-cyan-700 hover:!border-cyan-800 !text-white"
               >
                 Create Assignment
               </Button>

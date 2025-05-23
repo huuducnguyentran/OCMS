@@ -13,11 +13,13 @@ import {
   Form,
   message,
 } from "antd";
-import { getActiveCertificate, revokeCertificate } from "../../services/certificateService";
+import {
+  getActiveCertificate,
+  revokeCertificate,
+} from "../../services/certificateService";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { SearchOutlined, UndoOutlined } from "@ant-design/icons";
-
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -34,13 +36,12 @@ const CertificateActivePage = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
 
-  const [userRole, setUserRole] = useState('');
-  const isTrainingStaff = userRole === 'Training staff';
+  const [userRole, setUserRole] = useState("");
+  const isTrainingStaff = userRole === "Training staff";
 
   useEffect(() => {
-    // Get user role from sessionStorage
-    const userRole = sessionStorage.getItem('role');
-    setUserRole(userRole);
+    const role = sessionStorage.getItem("role");
+    setUserRole(role);
 
     const fetchCertificates = async () => {
       try {
@@ -57,7 +58,7 @@ const CertificateActivePage = () => {
   }, []);
 
   const showRevokeModal = (e, certificate) => {
-    e.stopPropagation(); // Prevent clicking on the certificate card
+    e.stopPropagation();
     setCurrentCertificate(certificate);
     setRevokeModalVisible(true);
   };
@@ -66,16 +67,17 @@ const CertificateActivePage = () => {
     try {
       await form.validateFields();
       const values = form.getFieldsValue();
-      
+
       setRevokingLoading(true);
-      await revokeCertificate(currentCertificate.certificateId, values.revokeReason);
-      
+      await revokeCertificate(
+        currentCertificate.certificateId,
+        values.revokeReason
+      );
+
       message.success("Certificate has been successfully revoked!");
-      
-      // Refresh certificate list
       const updatedData = await getActiveCertificate();
       setCertificates(updatedData);
-      
+
       setRevokeModalVisible(false);
       form.resetFields();
     } catch (error) {
@@ -88,29 +90,22 @@ const CertificateActivePage = () => {
 
   const filteredCertificates = useMemo(() => {
     return certificates.filter((cert) => {
-      // Filter by search text across multiple fields
       let matchSearch = true;
       if (searchText) {
         const searchLower = searchText.toLowerCase();
-        const certificateCodeMatch = cert.certificateCode.toLowerCase().includes(searchLower);
-        const userIdMatch = cert.userId.toString().toLowerCase().includes(searchLower);
-        const courseIdMatch = cert.courseId.toString().toLowerCase().includes(searchLower);
-        
-        matchSearch = certificateCodeMatch || userIdMatch || courseIdMatch;
-      }
-      
-      // Filter by date range
-      let matchDate = true;
-      if (filterDateRange && filterDateRange[0] && filterDateRange[1]) {
-        const certDate = dayjs(new Date(cert.issueDate));
-        const startDate = dayjs(filterDateRange[0]);
-        const endDate = dayjs(filterDateRange[1]);
-        
-        // Check if certDate is within the range (inclusive)
-        matchDate = certDate.isAfter(startDate.subtract(1, 'day')) && 
-                    certDate.isBefore(endDate.add(1, 'day'));
+        matchSearch =
+          cert.certificateCode.toLowerCase().includes(searchLower) ||
+          cert.userId.toString().toLowerCase().includes(searchLower) ||
+          cert.courseId.toString().toLowerCase().includes(searchLower);
       }
 
+      let matchDate = true;
+      if (filterDateRange?.[0] && filterDateRange?.[1]) {
+        const certDate = dayjs(new Date(cert.issueDate));
+        matchDate =
+          certDate.isAfter(dayjs(filterDateRange[0]).subtract(1, "day")) &&
+          certDate.isBefore(dayjs(filterDateRange[1]).add(1, "day"));
+      }
 
       return matchSearch && matchDate;
     });
@@ -125,10 +120,20 @@ const CertificateActivePage = () => {
   }
 
   return (
-    <div className="p-4">
-      <Title level={3}>Active Certificates List</Title>
+    <div className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
+      <Title level={3} className="!text-cyan-800">
+        Active Certificates
+      </Title>
+
       {/* Filters */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+      <Card className="!mb-6 !border !border-cyan-600 !rounded-xl !shadow-sm !bg-white">
+        <Title
+          level={5}
+          className="!mb-4 !flex !items-center !gap-2 !text-cyan-700"
+        >
+          <SearchOutlined />
+          Filter Certificates
+        </Title>
         <Row gutter={[16, 16]} className="mb-4">
           <Col xs={24} sm={12} md={12} lg={14}>
             <Input
@@ -138,6 +143,7 @@ const CertificateActivePage = () => {
               prefix={<SearchOutlined />}
               size="large"
               allowClear
+              className="!rounded-md !border-cyan-600 focus:!border-cyan-700 focus:!shadow-cyan-200"
             />
           </Col>
           <Col xs={24} sm={12} md={12} lg={10}>
@@ -148,82 +154,88 @@ const CertificateActivePage = () => {
               style={{ width: "100%" }}
               allowClear
               size="large"
+              className="!rounded-md !border-cyan-600 focus:!border-cyan-700 focus:!shadow-cyan-200"
             />
           </Col>
         </Row>
-      </div>
+      </Card>
 
-      {/* Certificate List */}
+      {/* Certificate Grid */}
       {filteredCertificates.length === 0 ? (
         <div className="flex justify-center items-center h-[60vh]">
           <Empty description="No certificates match the filters" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {filteredCertificates.map((cert) => (
-            <div
+            <Card
               key={cert.certificateId}
-              className="relative"
+              title={
+                <span className="!text-cyan-800 !font-semibold">
+                  {cert.certificateCode}
+                </span>
+              }
+              bordered
+              className="rounded-2xl shadow hover:shadow-lg transition cursor-pointer border-cyan-200"
+              onClick={() => navigate(`/certificate/${cert.certificateId}`)}
+              cover={
+                <iframe
+                  src={cert.certificateURLwithSas}
+                  title="Certificate Preview"
+                  className="w-full h-64 rounded-t-2xl"
+                />
+              }
+              actions={
+                isTrainingStaff
+                  ? [
+                      <Button
+                        key="revoke"
+                        danger
+                        type="text"
+                        icon={<UndoOutlined />}
+                        onClick={(e) => showRevokeModal(e, cert)}
+                        className="hover:bg-cyan-100"
+                      >
+                        Revoke
+                      </Button>,
+                    ]
+                  : undefined
+              }
             >
-              <Card
-                title={cert.certificateCode}
-                bordered
-                className="rounded-2xl shadow-md hover:shadow-lg transition"
-                onClick={() => navigate(`/certificate/${cert.certificateId}`)}
-                cover={
-                  <iframe
-                    src={cert.certificateURLwithSas}
-                    title="Certificate Preview"
-                    className="w-full h-64 rounded-t-2xl"
-                  />
-                }
-                actions={isTrainingStaff ? [
-                  <Button 
-                    key="revoke" 
-                    danger 
-                    type="text" 
-                    icon={<UndoOutlined />} 
-                    onClick={(e) => showRevokeModal(e, cert)}
-                  >
-                    Revoke
-                  </Button>
-                ] : undefined}
-              >
-                <p>
-                  <strong>User ID:</strong> {cert.userId}
-                </p>
-                <p>
-                  <strong>Course ID:</strong> {cert.courseId}
-                </p>
-                <p className="text-sm text-gray-700 mb-1">
-                  <strong className="text-gray-800">Status:</strong>{" "}
-                  <span
-                    className={`px-2 py-1 rounded-full text-white text-xs ${
-                      cert.status === "Active"
-                        ? "bg-green-500"
-                        : cert.status === "Revoked"
-                        ? "bg-red-500"
-                        : "bg-gray-400"
-                    }`}
-                  >
-                    {cert.status}
-                  </span>
-                </p>
-                <p>
-                  <strong>Issue Date:</strong>{" "}
-                  {new Date(cert.issueDate).toLocaleDateString()}
-                </p>
-                <p>
-                  <strong>Expiration Date:</strong>{" "}
-                  {new Date(cert.expirationDate).toLocaleDateString()}
-                </p>
-              </Card>
-            </div>
+              <p>
+                <strong>User ID:</strong> {cert.userId}
+              </p>
+              <p>
+                <strong>Course ID:</strong> {cert.courseId}
+              </p>
+              <p className="text-sm">
+                <strong>Status:</strong>{" "}
+                <span
+                  className={`px-2 py-1 rounded-full text-white text-xs ${
+                    cert.status === "Active"
+                      ? "bg-cyan-700"
+                      : cert.status === "Revoked"
+                      ? "bg-red-500"
+                      : "bg-gray-400"
+                  }`}
+                >
+                  {cert.status}
+                </span>
+              </p>
+              <p>
+                <strong>Issue Date:</strong>{" "}
+                {new Date(cert.issueDate).toLocaleDateString()}
+              </p>
+              <p>
+                <strong>Expiration Date:</strong>{" "}
+                {new Date(cert.expirationDate).toLocaleDateString()}
+              </p>
+            </Card>
           ))}
         </div>
       )}
 
-      {/* Revoke Certificate Modal */}
+      {/* Revoke Modal */}
       <Modal
         title="Revoke Certificate"
         open={revokeModalVisible}
@@ -232,39 +244,47 @@ const CertificateActivePage = () => {
           form.resetFields();
         }}
         footer={[
-          <Button 
-            key="cancel" 
-            onClick={() => {
-              setRevokeModalVisible(false);
-              form.resetFields();
-            }}
-          >
+          <Button key="cancel" onClick={() => setRevokeModalVisible(false)}>
             Cancel
           </Button>,
-          <Button 
-            key="submit" 
-            type="primary" 
+          <Button
+            key="submit"
+            type="primary"
             danger
             loading={revokingLoading}
             onClick={handleRevoke}
+            className="bg-cyan-700 hover:bg-cyan-800"
           >
             Revoke
-          </Button>
+          </Button>,
         ]}
       >
         {currentCertificate && (
           <div className="mb-4">
-            <Text strong className="block mb-2">Certificate: {currentCertificate.certificateCode}</Text>
-            <Text className="block mb-4">User ID: {currentCertificate.userId}</Text>
+            <Text strong className="block mb-2 text-cyan-700">
+              Certificate: {currentCertificate.certificateCode}
+            </Text>
+            <Text className="block mb-4">
+              User ID: {currentCertificate.userId}
+            </Text>
           </div>
         )}
         <Form form={form} layout="vertical">
           <Form.Item
             name="revokeReason"
             label="Revocation Reason"
-            rules={[{ required: true, message: 'Please enter the reason for revoking this certificate' }]}
+            rules={[
+              {
+                required: true,
+                message:
+                  "Please enter the reason for revoking this certificate",
+              },
+            ]}
           >
-            <TextArea rows={4} placeholder="Enter reason for certificate revocation..." />
+            <TextArea
+              rows={4}
+              placeholder="Enter reason for certificate revocation..."
+            />
           </Form.Item>
         </Form>
       </Modal>

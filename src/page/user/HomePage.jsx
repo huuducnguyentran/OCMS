@@ -195,8 +195,7 @@ const HomePage = () => {
             cards.push({
               icon: <CalendarOutlined className="text-2xl text-white" />,
               title: "Subject ",
-              description:
-                "View and manage subjects in your organization",
+              description: "View and manage subjects in your organization",
               path: "/subject",
               color: "bg-green-500",
             });
@@ -320,7 +319,7 @@ const HomePage = () => {
               <Title level={2} className="!text-white !mb-2">
                 Welcome back, {userData?.fullName || roleName}
               </Title>
-              <Text className="text-gray-100 text-lg">
+              <Text className="!text-gray-100 text-lg">
                 Here is what happening in your training system today
               </Text>
             </Col>

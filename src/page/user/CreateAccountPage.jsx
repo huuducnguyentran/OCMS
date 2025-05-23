@@ -63,17 +63,17 @@ const CreateAccountPage = () => {
     try {
       setLoadingDepartments(true);
       const response = await getAllDepartments();
-      
+
       let departmentList = [];
       if (Array.isArray(response)) {
         departmentList = response;
-      } 
-      
+      }
+
       // Lọc các phòng ban có trạng thái là 0 (active)
       const activeDepartments = departmentList.filter(
         (department) => department.status === 0
       );
-      
+
       setDepartments(activeDepartments);
     } catch (error) {
       console.error("Error fetching departments:", error);
@@ -267,12 +267,12 @@ const CreateAccountPage = () => {
   };
 
   return (
-    <Layout className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
-      <Card className="max-w-7xl mx-auto shadow-lg rounded-xl border-0">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-8 border-b pb-4">
+    <Layout className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100 !p-8">
+      <Card className="!max-w-7xl !mx-auto !shadow-xl !rounded-2xl !border !border-cyan-600">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8 border-b border-cyan-600 pb-4">
           <div>
-            <Title level={2} className="mb-0 text-indigo-800">
+            <Title level={2} className="!mb-0 !text-cyan-900">
               Create New Account
             </Title>
             <Text type="secondary">
@@ -282,7 +282,7 @@ const CreateAccountPage = () => {
           <Button
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate("/accounts")}
-            className="hover:bg-gray-100"
+            className="hover:!border-cyan-400 !text-cyan-800 !border-cyan-600"
           >
             Back
           </Button>
@@ -294,281 +294,248 @@ const CreateAccountPage = () => {
             layout="vertical"
             onFinish={handleSubmit}
             onFieldsChange={handleFieldChange}
-            initialValues={{
-              gender: "Male",
-              isAssign: false,
-              status: 0,
-            }}
+            initialValues={{ gender: "Male", isAssign: false, status: 0 }}
             className="space-y-6"
           >
-            {/* Personal Information Section */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <Title level={4} className="mb-4 text-indigo-700">
-                Personal Information
-              </Title>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Form.Item
-                  name="fullName"
-                  label="Full Name"
-                  validateStatus={formErrors.fullName ? "error" : ""}
-                  help={formErrors.fullName}
-                  className="mb-4"
-                  required
-                >
-                  <Input
-                    placeholder="Enter full name"
-                    className="rounded-lg"
-                    size="large"
-                    required
-                  />
-                </Form.Item>
+            {/* Section Template */}
+            {[
+              {
+                title: "Personal Information",
+                children: (
+                  <>
+                    {/* Full Name */}
+                    <Form.Item
+                      name="fullName"
+                      label="Full Name"
+                      validateStatus={formErrors.fullName ? "error" : ""}
+                      help={formErrors.fullName}
+                      required
+                    >
+                      <Input
+                        placeholder="Enter full name"
+                        className="rounded-lg"
+                        size="large"
+                      />
+                    </Form.Item>
 
-                <Form.Item
-                  name="gender"
-                  label="Gender"
-                  validateStatus={formErrors.gender ? "error" : ""}
-                  help={formErrors.gender}
-                  className="mb-4"
-                  required
-                >
-                  <Select
-                    placeholder="Select gender"
-                    className="rounded-lg"
-                    size="large"
-                    required
-                  >
-                    <Option value="Male">Male</Option>
-                    <Option value="Female">Female</Option>
-                    <Option value="Other">Other</Option>
-                  </Select>
-                </Form.Item>
-
-                <Form.Item
-                  name="dateOfBirth"
-                  label="Date of Birth"
-                  validateStatus={formErrors.dateOfBirth ? "error" : ""}
-                  help={formErrors.dateOfBirth}
-                  className="mb-4"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Date of birth is required",
-                    },
-                    {
-                      validator: async (_, value) => {
-                        if (value) {
-                          const age = calculateAge(value.toDate());
-                          if (age < 18) {
-                            throw new Error(
-                              "User must be at least 18 years old"
-                            );
-                          }
-                          if (value.toDate() > new Date()) {
-                            throw new Error(
-                              "Date of birth cannot be in the future"
-                            );
-                          }
-                        }
-                      },
-                    },
-                  ]}
-                >
-                  <DatePicker
-                    className="w-full rounded-lg"
-                    placeholder="Select date of birth"
-                    format="DD/MM/YYYY"
-                    size="large"
-                    onChange={(date) => {
-                      form.setFieldsValue({ dateOfBirth: date });
-                      handleFieldChange([{ name: ["dateOfBirth"] }]);
-                    }}
-                    disabledDate={(current) => {
-                      const eighteenYearsAgo = new Date();
-                      eighteenYearsAgo.setFullYear(
-                        eighteenYearsAgo.getFullYear() - 18
-                      );
-                      return (
-                        current &&
-                        (current > new Date() || current > eighteenYearsAgo)
-                      );
-                    }}
-                  />
-                </Form.Item>
-              </div>
-            </div>
-
-            {/* Contact Information Section */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <Title level={4} className="mb-4 text-indigo-700">
-                Contact Information
-              </Title>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Form.Item
-                  name="email"
-                  label="Email"
-                  validateStatus={formErrors.email ? "error" : ""}
-                  help={formErrors.email}
-                  className="mb-4"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Email is required",
-                    },
-                    {
-                      type: "email",
-                      message: "Invalid email format",
-                    },
-                    {
-                      max: 100,
-                      message: "Email must not exceed 100 characters",
-                    },
-                  ]}
-                >
-                  <Input
-                    placeholder="Enter email"
-                    className="rounded-lg"
-                    size="large"
-                    onChange={(e) => {
-                      form.setFieldsValue({ email: e.target.value });
-                      handleFieldChange([{ name: ["email"] }]);
-                    }}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name="phoneNumber"
-                  label="Phone Number"
-                  validateStatus={formErrors.phoneNumber ? "error" : ""}
-                  help={formErrors.phoneNumber}
-                  className="mb-4"
-                  required
-                >
-                  <Input
-                    placeholder="Enter phone number"
-                    className="rounded-lg"
-                    size="large"
-                    maxLength={10}
-                    required
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name="address"
-                  label="Address"
-                  validateStatus={formErrors.address ? "error" : ""}
-                  help={formErrors.address}
-                  className="mb-4 md:col-span-2"
-                  required
-                >
-                  <Input
-                    placeholder="Enter address"
-                    className="rounded-lg"
-                    size="large"
-                    required
-                  />
-                </Form.Item>
-              </div>
-            </div>
-
-            {/* Role & Department Section */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <Title level={4} className="mb-4 text-indigo-700">
-                Role & Department
-              </Title>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Form.Item
-                  name="roleId"
-                  label="Role"
-                  validateStatus={formErrors.roleId ? "error" : ""}
-                  help={formErrors.roleId}
-                  className="mb-4"
-                  required
-                >
-                  <Select
-                    placeholder="Select role"
-                    className="rounded-lg"
-                    size="large"
-                    required
-                  >
-                    {roleOptions.map((role) => (
-                      <Option key={role.value} value={role.value}>
-                        {role.label}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-
-                <Form.Item
-                  name="specialtyId"
-                  label="Specialty"
-                  validateStatus={formErrors.specialtyId ? "error" : ""}
-                  help={formErrors.specialtyId}
-                  className="mb-4"
-                  required
-                >
-                  <Select
-                    placeholder="Select specialty"
-                    loading={loadingSpecialties}
-                    showSearch
-                    optionFilterProp="children"
-                    className="rounded-lg"
-                    size="large"
-                  >
-                    {specialties.map((specialty) => (
-                      <Option
-                        key={specialty.specialtyId}
-                        value={specialty.specialtyId}
+                    {/* Gender */}
+                    <Form.Item
+                      name="gender"
+                      label="Gender"
+                      validateStatus={formErrors.gender ? "error" : ""}
+                      help={formErrors.gender}
+                      required
+                    >
+                      <Select
+                        placeholder="Select gender"
+                        className="rounded-lg"
+                        size="large"
                       >
-                        {specialty.specialtyName} ({specialty.specialtyId})
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
+                        <Option value="Male">Male</Option>
+                        <Option value="Female">Female</Option>
+                        <Option value="Other">Other</Option>
+                      </Select>
+                    </Form.Item>
 
-                <Form.Item
-                  name="departmentId"
-                  label="Department"
-                  validateStatus={formErrors.departmentId ? "error" : ""}
-                  help={formErrors.departmentId}
-                  className="mb-4"
-                >
-                    <Select
-                    placeholder="Select department"
-                    loading={loadingDepartments}
-                    showSearch
-                    optionFilterProp="children"
-                    className="rounded-lg"
-                    size="large"
-                  >
-                    {departments.map((department) => (
-                      <Option
-                        key={department.departmentId}
-                        value={department.departmentId}
+                    {/* DOB */}
+                    <Form.Item
+                      name="dateOfBirth"
+                      label="Date of Birth"
+                      validateStatus={formErrors.dateOfBirth ? "error" : ""}
+                      help={formErrors.dateOfBirth}
+                      rules={[
+                        {
+                          required: true,
+                          message: "Date of birth is required",
+                        },
+                        {
+                          validator: async (_, value) => {
+                            if (value) {
+                              const age = calculateAge(value.toDate());
+                              if (age < 18)
+                                throw new Error(
+                                  "User must be at least 18 years old"
+                                );
+                              if (value.toDate() > new Date())
+                                throw new Error(
+                                  "Date of birth cannot be in the future"
+                                );
+                            }
+                          },
+                        },
+                      ]}
+                    >
+                      <DatePicker
+                        className="w-full rounded-lg"
+                        format="DD/MM/YYYY"
+                        size="large"
+                        disabledDate={(current) => {
+                          const cutoff = new Date();
+                          cutoff.setFullYear(cutoff.getFullYear() - 18);
+                          return (
+                            current &&
+                            (current > new Date() || current > cutoff)
+                          );
+                        }}
+                      />
+                    </Form.Item>
+                  </>
+                ),
+              },
+              {
+                title: "Contact Information",
+                children: (
+                  <>
+                    <Form.Item
+                      name="email"
+                      label="Email"
+                      validateStatus={formErrors.email ? "error" : ""}
+                      help={formErrors.email}
+                      rules={[
+                        { required: true, message: "Email is required" },
+                        { type: "email", message: "Invalid email format" },
+                        { max: 100, message: "Max 100 characters" },
+                      ]}
+                    >
+                      <Input
+                        placeholder="Enter email"
+                        className="rounded-lg"
+                        size="large"
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="phoneNumber"
+                      label="Phone Number"
+                      validateStatus={formErrors.phoneNumber ? "error" : ""}
+                      help={formErrors.phoneNumber}
+                      required
+                    >
+                      <Input
+                        placeholder="Enter phone number"
+                        className="rounded-lg"
+                        size="large"
+                        maxLength={10}
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="address"
+                      label="Address"
+                      validateStatus={formErrors.address ? "error" : ""}
+                      help={formErrors.address}
+                      required
+                      className="md:col-span-2"
+                    >
+                      <Input
+                        placeholder="Enter address"
+                        className="rounded-lg"
+                        size="large"
+                      />
+                    </Form.Item>
+                  </>
+                ),
+              },
+              {
+                title: "Role & Department",
+                children: (
+                  <>
+                    <Form.Item
+                      name="roleId"
+                      label="Role"
+                      validateStatus={formErrors.roleId ? "error" : ""}
+                      help={formErrors.roleId}
+                      required
+                    >
+                      <Select
+                        placeholder="Select role"
+                        className="rounded-lg"
+                        size="large"
                       >
-                        {department.departmentName} ({department.departmentId})
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-              </div>
-            </div>
+                        {roleOptions.map((role) => (
+                          <Option key={role.value} value={role.value}>
+                            {role.label}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
 
-            {/* Avatar Section */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <Title level={4} className="mb-4 text-indigo-700">
+                    <Form.Item
+                      name="specialtyId"
+                      label="Specialty"
+                      validateStatus={formErrors.specialtyId ? "error" : ""}
+                      help={formErrors.specialtyId}
+                      required
+                    >
+                      <Select
+                        placeholder="Select specialty"
+                        loading={loadingSpecialties}
+                        showSearch
+                        optionFilterProp="children"
+                        className="rounded-lg"
+                        size="large"
+                      >
+                        {specialties.map((s) => (
+                          <Option key={s.specialtyId} value={s.specialtyId}>
+                            {s.specialtyName} ({s.specialtyId})
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                      name="departmentId"
+                      label="Department"
+                      validateStatus={formErrors.departmentId ? "error" : ""}
+                      help={formErrors.departmentId}
+                    >
+                      <Select
+                        placeholder="Select department"
+                        loading={loadingDepartments}
+                        showSearch
+                        optionFilterProp="children"
+                        className="rounded-lg"
+                        size="large"
+                      >
+                        {departments.map((d) => (
+                          <Option key={d.departmentId} value={d.departmentId}>
+                            {d.departmentName} ({d.departmentId})
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </>
+                ),
+              },
+            ].map(({ title, children }, idx) => (
+              <div
+                key={idx}
+                className="bg-white p-6 rounded-xl shadow border border-cyan-100"
+              >
+                <Title level={4} className="mb-4 text-cyan-800">
+                  {title}
+                </Title>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {children}
+                </div>
+              </div>
+            ))}
+
+            {/* Avatar */}
+            <div className="bg-white p-6 rounded-xl shadow border border-cyan-100">
+              <Title level={4} className="!mb-4 !text-cyan-800">
                 Profile Picture
               </Title>
-              <Form.Item name="avatar" className="mb-4">
+              <Form.Item name="avatar">
                 <Upload
                   maxCount={1}
                   beforeUpload={() => false}
                   onChange={handleAvatarChange}
-                  className="upload-list-inline"
                 >
                   <Button
                     icon={<UploadOutlined />}
                     size="large"
-                    className="rounded-lg"
+                    className="rounded-lg !text-cyan-800 !border-cyan-600"
                   >
                     Upload Image
                   </Button>
@@ -576,12 +543,12 @@ const CreateAccountPage = () => {
               </Form.Item>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex justify-end space-x-4 pt-6 border-t">
+            {/* Buttons */}
+            <div className="flex justify-end space-x-4 pt-6 border-t border-cyan-600">
               <Button
                 onClick={handleReset}
                 size="large"
-                className="rounded-lg min-w-[120px]"
+                className="rounded-lg !min-w-[120px] !border-cyan-600 hover:!border-cyan-400 !text-cyan-800"
               >
                 Reset
               </Button>
@@ -591,7 +558,7 @@ const CreateAccountPage = () => {
                 icon={<SaveOutlined />}
                 loading={loading}
                 size="large"
-                className="rounded-lg min-w-[120px]"
+                className="rounded-lg !min-w-[120px] !bg-cyan-800 hover:!bg-cyan-900 !text-white !border-none"
               >
                 Create Account
               </Button>
