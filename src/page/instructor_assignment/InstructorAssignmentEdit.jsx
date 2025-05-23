@@ -8,6 +8,7 @@ import {
 } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import InstructorAssService from "../../services/instructorAssServices";
+import { getAllSubject } from "../../services/subjectService";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -21,25 +22,43 @@ const InstructorAssignmentEdit = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // load dropdowns & current assignment in parallel
     const loadData = async () => {
+      setLoading(true);
       try {
-        const [subjRes, instrRes, detailRes] = await Promise.all([
-          InstructorAssService.getAllSubjects(),
-          InstructorAssService.getAllInstructors(),
-          InstructorAssService.getInstructorAssignmentById(id),
-        ]);
-        setSubjects(subjRes.data || []);
-        setInstructors(instrRes.data || []);
-        // detailRes.data.data holds the assignment object
-        const a = detailRes.data.data;
+        // Fetch assignment details first
+        const detailRes = await InstructorAssService.getInstructorAssignmentById(id);
+        const assignmentData = detailRes.data?.data || detailRes.data || {};
+        console.log('Assignment details:', assignmentData);
+        
+        // Fetch all subjects from subjectService - same as Create component
+        const subjRes = await getAllSubject();
+        const subjList =
+          Array.isArray(subjRes) ? subjRes :
+          Array.isArray(subjRes.allSubjects) ? subjRes.allSubjects :
+          [];
+        setSubjects(subjList);
+
+        // Fetch all users with role=Instructor - same as Create component
+        const instrRes = await InstructorAssService.getAllInstructors();
+        const raw = Array.isArray(instrRes) ? instrRes : Array.isArray(instrRes.data) ? instrRes.data : [];
+        const instrList = raw.filter(u => u.roleName === "Instructor");
+        setInstructors(instrList);
+        
+        // Set form values
         form.setFieldsValue({
-          subjectId: a.subjectId || a.courseSubjectSpecialtyId,
-          instructorId: a.instructorId,
-          notes: a.notes,
+          subjectId: assignmentData.subjectId || assignmentData.courseSubjectSpecialtyId,
+          instructorId: assignmentData.instructorId,
+          notes: assignmentData.notes,
         });
-      } catch {
-        message.error("Failed to load assignment");
+        
+        console.log('Form values set:', {
+          subjectId: assignmentData.subjectId || assignmentData.courseSubjectSpecialtyId,
+          instructorId: assignmentData.instructorId,
+          notes: assignmentData.notes,
+        });
+      } catch (error) {
+        console.error('Error loading data:', error);
+        message.error("Failed to load assignment data");
       } finally {
         setLoading(false);
       }
@@ -120,7 +139,7 @@ const InstructorAssignmentEdit = () => {
                     >
                       {subjects.map(s => (
                         <Option key={s.subjectId} value={s.subjectId}>
-                          {s.subjectName}
+                          {s.subjectName || s.subjectId}
                         </Option>
                       ))}
                     </Select>
