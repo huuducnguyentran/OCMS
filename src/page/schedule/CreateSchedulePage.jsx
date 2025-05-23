@@ -23,6 +23,7 @@ import {
 import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
 import dayjs from "dayjs";
+import { getAllClassSubjects } from "../../services/classSubjectService";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -34,15 +35,14 @@ const CreateSchedulePage = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [instructors, setInstructors] = useState([]);
-  const [courseSubjectSpecialties, setCourseSubjectSpecialties] = useState([]);
+  const [classSubjects, setClassSubjects] = useState([]);
 
   // Fetch subjects and instructors when component mounts
   useEffect(() => {
     fetchInstructors();
-    fetchCourseSubjectSpecialties();
+    fetchClassSubjects();
   }, []);
 
-  // Fetch subjects from API
   // Fetch instructors from API
   const fetchInstructors = async () => {
     try {
@@ -92,20 +92,24 @@ const CreateSchedulePage = () => {
     }
   };
 
-  // Fetch CourseSubjectSpecialtyId list
-  const fetchCourseSubjectSpecialties = async () => {
+  // Fetch ClassSubject list
+  const fetchClassSubjects = async () => {
     try {
       setLoading(true);
-      const response = await learningMatrixService.getAllCourseSubjectSpecialties();
-      if (response && response.data) {
-        setCourseSubjectSpecialties(response.data);
+      const response = await getAllClassSubjects();
+      console.log("ClassSubject API response:", response);
+      
+      // Kiểm tra đúng kiểu dữ liệu trả về từ service
+      if (Array.isArray(response) && response.length > 0) {
+        setClassSubjects(response);
       } else {
-        setCourseSubjectSpecialties([]);
+        console.warn("Class subjects data is empty or invalid format");
+        setClassSubjects([]);
       }
     } catch (error) {
-      console.error("Error fetching CourseSubjectSpecialty list:", error);
-      message.error("Unable to load Course-Subject-Specialty list");
-      setCourseSubjectSpecialties([]);
+      console.error("Error fetching ClassSubject list:", error);
+      message.error("Unable to load ClassSubject list");
+      setClassSubjects([]);
     } finally {
       setLoading(false);
     }
@@ -133,8 +137,7 @@ const CreateSchedulePage = () => {
 
       // Create data according to API format
       const scheduleData = {
-        subjectID: values.subjectID,
-        courseSubjectSpecialtyId: values.courseSubjectSpecialtyId,
+        classSubjectId: values.classSubjectId,
         instructorID: values.instructorID,
         location: values.location,
         room: values.room,
@@ -144,7 +147,6 @@ const CreateSchedulePage = () => {
         daysOfWeek: daysOfWeek,
         classTime: classTime,
         subjectPeriod: subjectPeriod,
-        createdBy: sessionStorage.getItem("userId"), // Add creator information
       };
 
       console.log("Submitting schedule data:", scheduleData);
@@ -226,21 +228,21 @@ const CreateSchedulePage = () => {
                   </Title>
 
                   <Form.Item
-                    name="courseSubjectSpecialtyId"
-                    label="CourseSubjectSpecialtyId"
+                    name="classSubjectId"
+                    label="ClassSubjectId"
                     rules={[
-                      { required: true, message: "Please select a courseSubjectSpecialtyId" },
+                      { required: true, message: "Please select a classSubjectId" },
                     ]}
                   >
                     <Select
-                      placeholder="Select courseSubjectSpecialtyId"
+                      placeholder="Select classSubjectId"
                       loading={loading}
                       showSearch
                       optionFilterProp="children"
                     >
-                      {courseSubjectSpecialties.map((item) => (
-                        <Option key={item.id} value={item.id}>
-                          {item.course?.courseName || item.courseId} / {item.subject?.subjectName || item.subjectId} / {item.specialty?.specialtyName || item.specialtyId}
+                      {classSubjects.map((item) => (
+                        <Option key={item.classSubjectId} value={item.classSubjectId}>
+                          {item.className || item.classId} / {item.subjectName || item.subjectId} 
                         </Option>
                       ))}
                     </Select>

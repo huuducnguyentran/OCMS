@@ -37,6 +37,7 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 import { courseService } from "../../services/courseService";
 import { createRequest } from "../../services/requestService";
+import { getAllSubjectSpecialties } from "../../services/subjectSpecialtyServices";
 
 const { Panel } = Collapse;
 const { Title, Text, Paragraph } = Typography;
@@ -69,6 +70,10 @@ const CoursePage = () => {
   const [searchText, setSearchText] = useState("");
   const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
   const isReviewer = userRole === "Reviewer";
+  const [assignModalVisible, setAssignModalVisible] = useState(false);
+  const [assignForm] = Form.useForm();
+  const [subjectSpecialties, setSubjectSpecialties] = useState([]);
+  const [loadingSpecialties, setLoadingSpecialties] = useState(false);
 
   // Fetch data on mount and when refreshed
   useEffect(() => {
@@ -245,6 +250,69 @@ const CoursePage = () => {
       setSubmitting(false);
     }
   };
+
+  // Thêm function để fetch subject specialties
+  const fetchSubjectSpecialties = async () => {
+    try {
+      setLoadingSpecialties(true);
+      const response = await getAllSubjectSpecialties();
+      console.log("Raw subject specialties response:", response); // Log raw response
+      
+      let specialtiesData = [];
+      if (Array.isArray(response)) {
+        specialtiesData = response;
+      } else if (response && Array.isArray(response.data)) {
+        specialtiesData = response.data;
+      } else if (response && Array.isArray(response.subjectSpecialties)) {
+        specialtiesData = response.subjectSpecialties;
+      }
+
+      // Remove duplicates based on subjectSpecialtyId or combination of subject and specialty
+      const uniqueSpecialties = Array.from(new Map(
+        specialtiesData.map(item => [
+          item.subjectSpecialtyId || `${item.subject?.subjectId}-${item.specialty?.specialtyId}`,
+          item
+        ])
+      ).values());
+
+      console.log("Unique specialties:", uniqueSpecialties); // Log after removing duplicates
+      setSubjectSpecialties(uniqueSpecialties);
+    } catch (error) {
+      console.error("Error fetching subject specialties:", error);
+      message.error("Failed to load subject specialties");
+    } finally {
+      setLoadingSpecialties(false);
+    }
+  };
+
+  // Thêm function để handle việc assign subject specialty
+  const handleAssignSubjectSpecialty = async () => {
+    try {
+      const values = await assignForm.validateFields();
+      setSubmitting(true);
+      
+      await courseService.assignSubjectSpecialty({
+        courseId: selectedCourse.courseId,
+        subjectSpecialtyId: values.subjectSpecialtyId
+      });
+
+      message.success("Successfully assigned subject specialty to course");
+      setAssignModalVisible(false);
+      fetchCourses(); // Refresh course list
+    } catch (error) {
+      console.error("Failed to assign subject specialty:", error);
+      message.error("Failed to assign subject specialty");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Thêm useEffect để load subject specialties khi mở modal
+  useEffect(() => {
+    if (assignModalVisible) {
+      fetchSubjectSpecialties();
+    }
+  }, [assignModalVisible]);
 
   // Table configuration
   const columns = [
@@ -435,7 +503,7 @@ const CoursePage = () => {
                   type="#"
                     icon={<EditOutlined />}
                     onClick={() => navigate(`/course/edit/${selectedCourse.courseId}`)}
-                    className="flex items-center  "
+                    className="flex items-center"
                   >
                     Edit
                   </Button>
@@ -458,6 +526,15 @@ const CoursePage = () => {
                     className="flex items-center bg-blue-600 hover:bg-blue-700"
                   >
                     Send Request
+                  </Button>
+
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => setAssignModalVisible(true)}
+                    className="flex items-center bg-green-600 hover:bg-green-700"
+                  >
+                    Assign Subject Specialty
                   </Button>
                 </div>
               )}
@@ -687,6 +764,58 @@ const CoursePage = () => {
     );
   };
 
+  // Thêm render function cho modal assign
+  const renderAssignModal = () => {
+    return (
+      <Modal
+        title={`Assign Subject Specialty to Course: ${selectedCourse?.courseName || ""}`}
+        open={assignModalVisible}
+        onCancel={() => setAssignModalVisible(false)}
+        onOk={handleAssignSubjectSpecialty}
+        confirmLoading={submitting}
+        okText="Assign"
+        width={500}
+      >
+        <Form
+          form={assignForm}
+          layout="vertical"
+        >
+          <Form.Item
+            name="subjectSpecialtyId"
+            label="Subject Specialty"
+            rules={[{ required: true, message: "Please select a subject specialty" }]}
+          >
+            <Select
+              placeholder="Select subject specialty"
+              loading={loadingSpecialties}
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) => {
+                const label = option?.label?.toLowerCase() || '';
+                return label.includes(input.toLowerCase());
+              }}
+            >
+              {subjectSpecialties.map((specialty) => {
+                const label = `${specialty.subjectName || specialty.subject?.subjectName || ''} - ${specialty.specialtyName || specialty.specialty?.specialtyName || ''}`;
+                const value = specialty.subjectSpecialtyId || specialty.id;
+                
+                return (
+                  <Select.Option 
+                    key={value}
+                    value={value}
+                    label={label}
+                  >
+                    {label}
+                  </Select.Option>
+                );
+              })}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
+    );
+  };
+
   // Thêm component tìm kiếm
   const renderSearchBox = () => (
     <div className="mb-4">
@@ -832,6 +961,7 @@ const CoursePage = () => {
       </Layout.Content>
 
       {renderRequestModal()}
+      {renderAssignModal()}
     </Layout>
   );
 };

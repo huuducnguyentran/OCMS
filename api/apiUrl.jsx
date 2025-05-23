@@ -163,13 +163,22 @@ export const API = {
   UPDATE_CLASSROOM: "Class",
   DELETE_CLASSROOM: "Class",
 
+  // ClassSubject
+  GET_ALL_CLASS_SUBJECT: "ClassSubject",
+  GET_CLASS_SUBJECT_BY_ID: "ClassSubject",
+  GET_CLASS_SUBJECT_DETAILS_BY_ID: "ClassSubject/details",
+  GET_CLASS_SUBJECT_BY_CLASS_ID: "ClassSubject/class",
+  GET_CLASS_SUBJECT_BY_SUBJECT_ID: "ClassSubject/subject",
+  GET_CLASS_SUBJECT_BY_INSTRUCTOR_ID: "ClassSubject/instructor",
+  CREATE_CLASS_SUBJECT: "ClassSubject",
+  UPDATE_CLASS_SUBJECT: "api/ClassSubject",
+
   // Instructor Assignment
   GET_ALL_INSTRUCTOR_ASSIGNMENTS: "InstructorAssignment",
   GET_INSTRUCTOR_ASSIGNMENT_BY_ID: "InstructorAssignment",
   CREATE_INSTRUCTOR_ASSIGNMENT: "InstructorAssignment",
   UPDATE_INSTRUCTOR_ASSIGNMENT: "InstructorAssignment",
   DELETE_INSTRUCTOR_ASSIGNMENT: "InstructorAssignment",
-
 
   // Subject Specialty
   GET_ALL_SUBJECT_SPECIALTY: "SubjectSpecialty",

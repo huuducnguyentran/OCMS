@@ -63,11 +63,11 @@ const navItems = [
     ],
   },
   {
-    key:"5",
-    label: "Instructor Assignment",
+    key: "5",
+    label: "Learning Matrix",
     icon: "BookOutlined",
-    path: "/instructor-assignment",
-    roles: ["Training staff", "Instructor"],
+    path: "/learning-matrix",
+    roles: ["Admin", "Training staff", "HR", "Reviewer"],
   },
   {
     key: "6",
@@ -91,6 +91,13 @@ const navItems = [
         roles: ["Training staff", "Instructor", "Trainee"],
       },
     ],
+  },
+  {
+    key: "8",
+    label: "Plan",
+    icon: "AccountBookOutlined",
+    path: "/plan",
+    roles: ["Training staff", "Trainee", "Reviewer"],
   },
   {
     key: "9",
