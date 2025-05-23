@@ -198,9 +198,26 @@ const EditExternalCertiPage = () => {
         setEditModalVisible(false);
         resetForm();
       }}
-      onOk={handleUpdateCertificate}
-      okText="Save Changes"
-      cancelText="Cancel"
+      footer={[
+        <Button
+          key="cancel"
+          onClick={() => {
+            setEditModalVisible(false);
+            resetForm();
+          }}
+          className="!text-cyan-700 hover:!text-cyan-900 border !border-cyan-600 hover:!border-cyan-800 font-medium rounded-lg transition-colors duration-300"
+        >
+          Cancel
+        </Button>,
+        <Button
+          key="submit"
+          type="primary"
+          onClick={handleUpdateCertificate}
+          className="!bg-gradient-to-r from-cyan-950 to-cyan-800 hover:from-cyan-700 hover:to-cyan-900 border-0 text-white font-semibold rounded-lg shadow-md transition-all duration-300"
+        >
+          Save Changes
+        </Button>,
+      ]}
     >
       <div className="space-y-4">
         <div>
@@ -214,6 +231,7 @@ const EditExternalCertiPage = () => {
             }
           />
         </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Certificate Code
@@ -225,6 +243,7 @@ const EditExternalCertiPage = () => {
             }
           />
         </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Provider
@@ -236,6 +255,7 @@ const EditExternalCertiPage = () => {
             }
           />
         </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Certificate Image
@@ -258,7 +278,7 @@ const EditExternalCertiPage = () => {
                   </div>
                   <div
                     className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 
-                             transition-opacity rounded-lg flex items-center justify-center cursor-pointer"
+                               transition-opacity rounded-lg flex items-center justify-center cursor-pointer"
                     onClick={() => handlePreviewImage(editingCertificate)}
                   >
                     <EyeOutlined className="text-white text-2xl" />
@@ -311,15 +331,16 @@ const EditExternalCertiPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
       <div className="max-w-7xl mx-auto">
-        <Card className="mb-6 shadow-sm">
+        <Card className="!mb-6 shadow-sm">
           <div className="flex justify-between items-center">
             <div>
               <Button
                 type="link"
                 icon={<ArrowLeftOutlined />}
                 onClick={() => navigate(`/candidates/${candidateId}`)}
+                className="!text-cyan-600 hover:!border-cyan-800"
               >
                 Back to Candidates
               </Button>
@@ -329,6 +350,7 @@ const EditExternalCertiPage = () => {
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={handleCreateCertificate}
+                className="!bg-gradient-to-r from-cyan-950 to-cyan-800 !border-cyan-950 hover:opacity-90"
               >
                 Create Certificate
               </Button>
@@ -401,6 +423,7 @@ const EditExternalCertiPage = () => {
                         type="primary"
                         icon={<EditOutlined />}
                         onClick={() => handleEdit(record)}
+                        className="!bg-gradient-to-r from-cyan-950 to-cyan-800 !border-cyan-950 hover:opacity-90"
                       >
                         Edit
                       </Button>
@@ -408,6 +431,7 @@ const EditExternalCertiPage = () => {
                         type="danger"
                         icon={<DeleteOutlined />}
                         onClick={() => handleDelete(record)}
+                        className="!border-red-600 !text-red-600 hover:opacity-80"
                       >
                         Delete
                       </Button>

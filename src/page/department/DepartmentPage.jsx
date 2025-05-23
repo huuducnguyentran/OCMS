@@ -42,7 +42,10 @@ import {
   activateDepartment,
 } from "../../services/departmentServices";
 import { getAllUsers, exportTraineeInfo } from "../../services/userService";
-import { exportExpiredCertificates, exportCertificate } from "../../services/reportService";
+import {
+  exportExpiredCertificates,
+  exportCertificate,
+} from "../../services/reportService";
 
 const { Title, Text } = Typography;
 
@@ -63,7 +66,7 @@ const DepartmentPage = () => {
       setLoading(true);
       const data = await getAllDepartments();
       setDepartments(data);
-      
+
       // Fetch users for each department
       await fetchDepartmentUsers(data);
     } catch (error) {
@@ -77,20 +80,19 @@ const DepartmentPage = () => {
   const fetchDepartmentUsers = async (departments) => {
     try {
       const allUsers = await getAllUsers();
-      
+
       // Create a mapping of departmentId to users
       const usersByDepartment = {};
-      
-      departments.forEach(dept => {
+
+      departments.forEach((dept) => {
         // Filter users who belong to this department and are not AOC (roleId 8)
-        const deptUsers = allUsers.filter(user => 
-          user.departmentId === dept.departmentId && 
-          user.roleId !== 8
+        const deptUsers = allUsers.filter(
+          (user) => user.departmentId === dept.departmentId && user.roleId !== 8
         );
-        
+
         usersByDepartment[dept.departmentId] = deptUsers;
       });
-      
+
       setDepartmentUsers(usersByDepartment);
     } catch (error) {
       console.error("Error fetching department users:", error);
@@ -101,42 +103,42 @@ const DepartmentPage = () => {
   // Handle trainee info export
   const handleExportTraineeInfo = async (userId) => {
     try {
-      setDownloadLoading(prev => ({ ...prev, [userId]: true }));
+      setDownloadLoading((prev) => ({ ...prev, [userId]: true }));
       await exportTraineeInfo(userId);
       message.success("Trainee information exported successfully");
     } catch (error) {
       console.error("Error exporting trainee info:", error);
       message.error("Failed to export trainee information");
     } finally {
-      setDownloadLoading(prev => ({ ...prev, [userId]: false }));
+      setDownloadLoading((prev) => ({ ...prev, [userId]: false }));
     }
   };
 
   // Handle expired certificates export
   const handleExportExpiredCertificates = async () => {
     try {
-      setDownloadLoading(prev => ({ ...prev, expiredCerts: true }));
+      setDownloadLoading((prev) => ({ ...prev, expiredCerts: true }));
       await exportExpiredCertificates();
       message.success("Expired certificates exported successfully");
     } catch (error) {
       console.error("Error exporting expired certificates:", error);
       message.error("No expired certificates found");
     } finally {
-      setDownloadLoading(prev => ({ ...prev, expiredCerts: false }));
+      setDownloadLoading((prev) => ({ ...prev, expiredCerts: false }));
     }
   };
 
   // Handle certificates export
   const handleExportCertificates = async () => {
     try {
-      setDownloadLoading(prev => ({ ...prev, allCerts: true }));
+      setDownloadLoading((prev) => ({ ...prev, allCerts: true }));
       await exportCertificate();
       message.success("Certificates exported successfully");
     } catch (error) {
       console.error("Error exporting certificates:", error);
       message.error("Failed to export certificates");
     } finally {
-      setDownloadLoading(prev => ({ ...prev, allCerts: false }));
+      setDownloadLoading((prev) => ({ ...prev, allCerts: false }));
     }
   };
 
@@ -184,7 +186,7 @@ const DepartmentPage = () => {
       )
     );
   };
-  
+
   //export data
   const handleExport = () => {
     const data = getFilteredData();
@@ -231,7 +233,7 @@ const DepartmentPage = () => {
   // Expandable row render function
   const expandedRowRender = (record) => {
     const users = departmentUsers[record.departmentId] || [];
-    
+
     return (
       <Card className="bg-gray-50 border-0">
         <div className="py-2">
@@ -239,20 +241,19 @@ const DepartmentPage = () => {
             <Text strong className="text-blue-700">
               Department Users ({users.length})
             </Text>
-           
           </div>
-          
+
           {users.length > 0 ? (
             <List
               size="small"
               dataSource={users}
-              renderItem={user => (
+              renderItem={(user) => (
                 <List.Item className="py-2 px-3 hover:bg-blue-50 rounded-lg">
                   <List.Item.Meta
                     avatar={
-                      <Avatar 
-                        size="small" 
-                        style={{ backgroundColor: '#1890ff' }} 
+                      <Avatar
+                        size="small"
+                        style={{ backgroundColor: "#1890ff" }}
                         icon={<UserOutlined />}
                       />
                     }
@@ -322,10 +323,10 @@ const DepartmentPage = () => {
             {text}
           </Text>
           {/* Add dropdown trigger button */}
-          <Button 
-            type="text" 
+          <Button
+            type="text"
             size="small"
-            icon={<TeamOutlined />} 
+            icon={<TeamOutlined />}
             onClick={(e) => {
               e.stopPropagation();
               const expanded = expandedRowKeys.includes(record.departmentId);
@@ -333,7 +334,7 @@ const DepartmentPage = () => {
             }}
             className="text-blue-600 hover:text-blue-800"
           >
-            <DownOutlined style={{ fontSize: '10px' }} />
+            <DownOutlined style={{ fontSize: "10px" }} />
           </Button>
         </div>
       ),
@@ -463,14 +464,14 @@ const DepartmentPage = () => {
   ].filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
+    <div className="min-h-screen bg-cyan-50 p-6">
       <Card
         className="shadow-md rounded-lg border-0"
         bodyStyle={{ padding: "24px" }}
       >
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <Title level={3} className="mb-2 flex items-center text-blue-800">
+            <Title level={3} className="mb-2 flex items-center !text-cyan-800">
               <TeamOutlined className="mr-2" />
               Department Management
             </Title>
@@ -493,7 +494,7 @@ const DepartmentPage = () => {
               icon={<ReloadOutlined />}
               onClick={fetchDepartments}
               loading={loading}
-              className="rounded-lg border-gray-300"
+              className="!rounded-lg !border-cyan-600 !text-cyan-700 hover:!bg-cyan-100"
             >
               Refresh
             </Button>
@@ -503,7 +504,7 @@ const DepartmentPage = () => {
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => navigate("/department/create")}
-                className="bg-blue-600 hover:bg-blue-700 rounded-lg border-0"
+                className="bg-cyan-700 hover:bg-cyan-800 rounded-lg border-0"
               >
                 New Department
               </Button>
@@ -514,46 +515,47 @@ const DepartmentPage = () => {
         {/* Statistics Cards */}
         <Row gutter={16} className="mb-6">
           <Col xs={24} sm={8}>
-            <Card className="shadow-sm h-full bg-gradient-to-br from-blue-50 to-blue-100">
+            <Card className="shadow-sm h-full bg-gradient-to-br from-cyan-50 to-cyan-100">
               <Statistic
-                title={<span className="text-blue-800">Total Departments</span>}
+                title={<span className="text-cyan-800">Total Departments</span>}
                 value={departments.length}
-                prefix={<BarsOutlined className="text-blue-600" />}
-                valueStyle={{ color: "#1890ff" }}
+                prefix={<BarsOutlined className="text-cyan-600" />}
+                valueStyle={{ color: "#0891b2" }} // cyan-600
               />
             </Card>
           </Col>
           <Col xs={24} sm={8}>
-            <Card className="shadow-sm h-full bg-gradient-to-br from-green-50 to-green-100">
+            <Card className="shadow-sm h-full bg-gradient-to-br from-cyan-100 to-cyan-200">
               <Statistic
                 title={
-                  <span className="text-green-800">Active Departments</span>
+                  <span className="text-cyan-900">Active Departments</span>
                 }
                 value={activeCount}
-                prefix={<CheckCircleOutlined className="text-green-600" />}
-                valueStyle={{ color: "#52c41a" }}
+                prefix={<CheckCircleOutlined className="text-cyan-700" />}
+                valueStyle={{ color: "#0e7490" }} // cyan-700
               />
             </Card>
           </Col>
           <Col xs={24} sm={8}>
-            <Card className="shadow-sm h-full bg-gradient-to-br from-red-50 to-red-100">
+            <Card className="shadow-sm h-full bg-gradient-to-br from-gray-100 to-gray-200">
               <Statistic
                 title={
-                  <span className="text-red-800">Inactive Departments</span>
+                  <span className="text-gray-700">Inactive Departments</span>
                 }
                 value={inactiveCount}
-                prefix={<CloseCircleOutlined className="text-red-600" />}
-                valueStyle={{ color: "#ff4d4f" }}
+                prefix={<CloseCircleOutlined className="text-gray-500" />}
+                valueStyle={{ color: "#6b7280" }} // gray-500
               />
             </Card>
           </Col>
         </Row>
 
+        {/* Table Section */}
         <Card
           className="shadow-sm border-0 overflow-hidden"
           bodyStyle={{ padding: 0 }}
         >
-          <div className="p-4 bg-gradient-to-r from-blue-600 to-blue-400 text-white flex justify-between items-center">
+          <div className="p-4 bg-gradient-to-r from-cyan-700 to-cyan-600 text-white flex justify-between items-center">
             <Text strong className="!text-white text-lg">
               Department List
             </Text>
@@ -563,18 +565,18 @@ const DepartmentPage = () => {
                 icon={<ExportOutlined />}
                 type="default"
                 size="small"
-                className="!bg-green-600 !text-white !border-0 hover:!bg-green-700"
+                className="!bg-cyan-800 !text-white !border-0 hover:!bg-cyan-950"
                 onClick={handleExportExpiredCertificates}
                 loading={downloadLoading.expiredCerts}
               >
                 Export Expired Certificates
               </Button>
-              
+
               <Button
                 icon={<DownloadOutlined />}
                 type="default"
                 size="small"
-                className="!bg-orange-600 !text-white !border-0 hover:!bg-orange-700"
+                className="!bg-cyan-500 !text-white !border-0 hover:!bg-cyan-700"
                 onClick={handleExport}
               >
                 Export Departments
@@ -598,7 +600,7 @@ const DepartmentPage = () => {
             size="middle"
             rowClassName={(record) =>
               record.status === 0
-                ? "bg-white hover:bg-blue-50"
+                ? "bg-white hover:bg-cyan-50"
                 : "bg-gray-50 hover:bg-gray-100"
             }
             expandable={{

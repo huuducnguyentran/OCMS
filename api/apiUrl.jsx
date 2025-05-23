@@ -179,4 +179,10 @@ export const API = {
   CREATE_INSTRUCTOR_ASSIGNMENT: "InstructorAssignment",
   UPDATE_INSTRUCTOR_ASSIGNMENT: "InstructorAssignment",
   DELETE_INSTRUCTOR_ASSIGNMENT: "InstructorAssignment",
+
+  // Subject Specialty
+  GET_ALL_SUBJECT_SPECIALTY: "SubjectSpecialty",
+  GET_SUBJECT_SPECIALTY_BY_ID: "SubjectSpecialty",
+  CREATE_SUBJECT_SPECIALTY: "SubjectSpecialty",
+  DELETE_SUBJECT_SPECIALTY: "SubjectSpecialty",
 };

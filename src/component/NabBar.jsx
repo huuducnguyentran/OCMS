@@ -2,6 +2,8 @@
 import { Layout, Menu, Badge } from "antd";
 import { Link } from "react-router-dom";
 import navItems from "../data/NavItem";
+import { useRef } from "react";
+
 import {
   HomeOutlined,
   BookOutlined,
@@ -53,6 +55,7 @@ const iconMap = {
 const Navbar = () => {
   const storedRole = sessionStorage.getItem("role");
   const [unreadCount, setUnreadCount] = useState(0);
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     const storedUserID = sessionStorage.getItem("userID");
@@ -142,7 +145,12 @@ const Navbar = () => {
   return (
     <Sider
       theme="dark"
-      style={{ overflow: "auto", height: "auto", backgroundColor: "#0f172a" }}
+      style={{
+        overflow: "hidden", // hide scrollbar
+        height: "auto",
+        backgroundColor: "#083344",
+        userSelect: "none", // prevent text selection while dragging
+      }}
     >
       <div className="p-4 text-center border-b border-gray-600">
         <div className="text-2xl font-extrabold text-white tracking-wide">
@@ -158,24 +166,35 @@ const Navbar = () => {
         </div>
       </div>
 
-      <Menu
-        theme="dark"
-        mode="inline"
-        selectedKeys={[window.location.pathname]}
-        defaultOpenKeys={filteredNavItems
-          .filter((item) =>
-            item.children?.some((child) =>
-              window.location.pathname.startsWith(child.label.props.to)
-            )
-          )
-          .map((item) => item.key)}
+      {/* Scrollable and draggable container */}
+      <div
+        ref={scrollRef}
         style={{
-          borderRight: 0,
-          backgroundColor: "#0f172a", // your custom background color
-          color: "#ffffff", // your custom text color
+          height: "calc(100vh - 80px)", // adjust height as needed
+          overflowY: "scroll",
+          scrollbarWidth: "none", // Firefox
         }}
-        items={filteredNavItems}
-      />
+        className="no-scrollbar" // use Tailwind utility to hide scrollbar
+      >
+        <Menu
+          theme="dark"
+          mode="inline"
+          selectedKeys={[window.location.pathname]}
+          defaultOpenKeys={filteredNavItems
+            .filter((item) =>
+              item.children?.some((child) =>
+                window.location.pathname.startsWith(child.label.props.to)
+              )
+            )
+            .map((item) => item.key)}
+          style={{
+            borderRight: 0,
+            backgroundColor: "#083344",
+            color: "#083344",
+          }}
+          items={filteredNavItems}
+        />
+      </div>
     </Sider>
   );
 };

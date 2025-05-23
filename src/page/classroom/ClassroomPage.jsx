@@ -11,6 +11,7 @@ import {
   message,
   Modal,
   Form,
+  Button,
 } from "antd";
 import {
   SearchOutlined,
@@ -34,6 +35,7 @@ const ClassroomPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [viewClass, setViewClass] = useState(null);
   const [editClass, setEditClass] = useState(null);
+  const [deleteClassId, setDeleteClassId] = useState(null);
   const [form] = Form.useForm();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createForm] = Form.useForm();
@@ -57,19 +59,8 @@ const ClassroomPage = () => {
     fetchClasses();
   }, []);
 
-  const handleDelete = async (id) => {
-    Modal.confirm({
-      title: "Are you sure you want to delete this classroom?",
-      onOk: async () => {
-        try {
-          await ClassroomService.deleteClassroom(id);
-          message.success("Classroom deleted");
-          fetchClasses();
-        } catch {
-          message.error("Delete failed");
-        }
-      },
-    });
+  const handleDelete = (id) => {
+    setDeleteClassId(id);
   };
 
   const handleEditSubmit = async () => {
@@ -97,26 +88,29 @@ const ClassroomPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-12 mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-cyan-600 to-cyan-800 text-white py-12 mb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center animate__animated animate__fadeIn">
           <HomeOutlined className="text-5xl mb-4" />
           <h1 className="text-4xl font-bold mb-4">Training Classrooms</h1>
-          <p className="text-xl text-blue-100 max-w-2xl mx-auto">
+          <p className="text-xl text-cyan-100 max-w-2xl mx-auto">
             Browse our available classrooms used in training programs
           </p>
         </div>
       </div>
 
+      {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         {/* Search */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8 border border-cyan-600">
           <Input
             prefix={<SearchOutlined />}
             placeholder="Search classrooms by name or ID..."
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
             size="large"
+            className="!border-cyan-400"
           />
         </div>
 
@@ -142,12 +136,12 @@ const ClassroomPage = () => {
             {currentData().map((c) => (
               <Card
                 key={c.classId}
-                className="hover:shadow-xl transition-shadow rounded-xl border-none bg-white overflow-hidden"
+                className="hover:!shadow-xl !transition-shadow !rounded-xl !border !border-cyan-600 !bg-white !overflow-hidden"
                 actions={[
                   <Tooltip title="View" key="view">
                     <EyeOutlined
                       onClick={() => setViewClass(c)}
-                      className="text-blue-500 hover:text-blue-700"
+                      className="!text-cyan-600 hover:!text-cyan-800"
                     />
                   </Tooltip>,
                   <Tooltip title="Edit" key="edit">
@@ -156,7 +150,7 @@ const ClassroomPage = () => {
                         form.setFieldsValue(c);
                         setEditClass(c);
                       }}
-                      className="text-green-500 hover:text-green-700"
+                      className="!text-green-500 hover:!text-green-700"
                     />
                   </Tooltip>,
                   <Tooltip title="Create Schedule" key="create-schedule">
@@ -168,7 +162,7 @@ const ClassroomPage = () => {
                   <Tooltip title="Delete" key="delete">
                     <DeleteOutlined
                       onClick={() => handleDelete(c.classId)}
-                      className="text-red-500 hover:text-red-700"
+                      className="!text-red-500 hover:!text-red-700"
                     />
                   </Tooltip>,
                 ]}
@@ -177,7 +171,7 @@ const ClassroomPage = () => {
                   <Title level={4} className="mb-2" ellipsis>
                     {c.className}
                   </Title>
-                  <Tag color="blue">{c.classId}</Tag>
+                  <Tag color="cyan">{c.classId}</Tag>
                 </div>
               </Card>
             ))}
@@ -198,14 +192,15 @@ const ClassroomPage = () => {
           </div>
         )}
       </div>
+
+      {/* Floating Create Button */}
       <Tooltip title="Create New Classroom" placement="left">
         <button
           onClick={() => {
             createForm.resetFields();
             setIsCreateModalOpen(true);
           }}
-          style={{ background: "black", color: "#fff" }}
-          className="fixed bottom-8 right-8 w-14 h-14 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 animate__animated animate__bounceIn"
+          className="fixed bottom-8 right-8 w-14 h-14 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 !bg-cyan-700 hover:!bg-cyan-950 !text-white animate__animated animate__bounceIn"
         >
           <PlusOutlined className="text-xl" />
         </button>
@@ -235,8 +230,22 @@ const ClassroomPage = () => {
         title="Edit Classroom"
         open={!!editClass}
         onCancel={() => setEditClass(null)}
-        onOk={handleEditSubmit}
-        okText="Update"
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => setEditClass(null)}
+            className="!px-4 !py-2 hover:!border-cyan-600 hover:!text-cyan-600 rounded-md"
+          >
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            onClick={handleEditSubmit}
+            className="!px-4 !py-2 !bg-cyan-700 hover:!bg-cyan-800 !text-white rounded-md"
+          >
+            Update
+          </Button>,
+        ]}
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -249,22 +258,37 @@ const ClassroomPage = () => {
         </Form>
       </Modal>
 
+      {/* Create Modal */}
       <Modal
         title="Create New Classroom"
         open={isCreateModalOpen}
         onCancel={() => setIsCreateModalOpen(false)}
-        onOk={async () => {
-          try {
-            const values = await createForm.validateFields();
-            await ClassroomService.createClassroom(values);
-            message.success("Classroom created");
-            setIsCreateModalOpen(false);
-            fetchClasses();
-          } catch (err) {
-            message.error("Creation failed", err);
-          }
-        }}
-        okText="Create"
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => setIsCreateModalOpen(false)}
+            className="!px-4 !py-2 hover:!border-cyan-600 hover:!text-cyan-600 rounded-md"
+          >
+            Cancel
+          </Button>,
+          <Button
+            key="create"
+            onClick={async () => {
+              try {
+                const values = await createForm.validateFields();
+                await ClassroomService.createClassroom(values);
+                message.success("Classroom created");
+                setIsCreateModalOpen(false);
+                fetchClasses();
+              } catch (err) {
+                message.error("Creation failed", err);
+              }
+            }}
+            className="!px-4 !py-2 !bg-cyan-700 hover:!bg-cyan-800 !text-white rounded-md"
+          >
+            Create
+          </Button>,
+        ]}
       >
         <Form form={createForm} layout="vertical">
           <Form.Item
@@ -276,6 +300,37 @@ const ClassroomPage = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      <Modal
+        open={!!deleteClassId}
+        title="Are you sure you want to delete this classroom?"
+        onCancel={() => setDeleteClassId(null)}
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => setDeleteClassId(null)}
+            className="!px-4 !py-2 hover:!border-cyan-600 hover:!text-cyan-600 rounded-md"
+          >
+            Cancel
+          </Button>,
+          <Button
+            key="delete"
+            onClick={async () => {
+              try {
+                await ClassroomService.deleteClassroom(deleteClassId);
+                message.success("Classroom deleted");
+                setDeleteClassId(null);
+                fetchClasses();
+              } catch {
+                message.error("Delete failed");
+              }
+            }}
+            className="!px-4 !py-2 !bg-red-600 hover:!bg-red-700 !text-white rounded-md"
+          >
+            Delete
+          </Button>,
+        ]}
+      />
     </div>
   );
 };

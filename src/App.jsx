@@ -31,9 +31,6 @@ import SubjectPage from "./page/subject/SubjectPage";
 import CreateSubjectPage from "./page/subject/CreateSubjectPage";
 import SubjectDetailPage from "./page/subject/SubjectDetailPage";
 import AssignedTraineePage from "./page/assigned_trainee/AssignedTraineePage";
-import PlanPage from "./page/training_plan/PlanPage";
-import CreateTrainingPlanPage from "./page/training_plan/CreateTrainingPlanPage";
-import EditPlanPage from "./page/training_plan/EditPlanPage";
 import CreateCoursePage from "./page/course/CreateCoursePage";
 import CoursePage from "./page/course/CoursePage";
 import EditCoursePage from "./page/course/EditCoursePage";
@@ -49,7 +46,6 @@ import UpdateCertificateTemplatePage from "./page/certificate/UpdateCertificateT
 import GradeImportPage from "./page/grade/GradeImportPage";
 import ViewGradePage from "./page/grade/ViewGradePage";
 import CertificateTemplateDetailPage from "./page/certificate/CertificateTemplateDetailPage";
-import PlanDetailPage from "./page/training_plan/PlanDetailPage";
 import UpdateGradePage from "./page/grade/UpdateGradePage";
 import SpecialtyPage from "./page/specialty/SpecialtyPage";
 import EditSpecialtyPage from "./page/specialty/EditSpecialtyPage";
@@ -62,12 +58,8 @@ import RegulationsPage from "./page/Regulations/RegulationsPage";
 import CreateExCertificatePage from "./page/candidate/CreateExCertificatePage";
 import ImportDecisionPage from "./page/decision/ImportDecisionPage";
 import DecisionTemplateListPage from "./page/decision/DecisionTemplatePage";
-import CreateAccountPage from "./page/user/CreateAccountPage";
-import LearningMatrixPage from "./page/learning_matrix/LearningMatrixPage";
-import CreateLearningMatrixPage from "./page/learning_matrix/CreateLearningMatrixPage";
 import UpdateAccountPage from "./page/user/UpdateAccountPage";
 import ExportCertificatePage from "./page/report/ExportCertificatePage";
-
 import DecisionTemplateDetailPage from "./page/decision/DecisionTemplateDetailPage";
 import UpdateDecisionTemplatePage from "./page/decision/UpdateDecisionTemplatePage";
 import DecisionActivePage from "./page/decision/DecisionActivePage";
@@ -83,6 +75,13 @@ import TraineeGradePage from "./page/grade/TraineeGradePage";
 import EditSchedule from "./page/schedule/EditSchedule";
 import ClassroomPage from "./page/classroom/ClassroomPage";
 import CreateScheduleForClassPage from "./page/schedule/CreateScheduleForClassPage";
+import InstructorAssPage from "./page/instructor_assignment/instructor_assPage";
+import CreateAccountPage from "./page/user/CreateAccountPage";
+import InstructorAssignmentCreate from "./page/instructor_assignment/InstructorAssignmentCreate";
+import InstructorAssignmentEdit from "./page/instructor_assignment/InstructorAssignmentEdit";
+import SubjectSpecialtyPage from "./page/subject_specialty/SubjectSpecialtyPage";
+import SubjectSpecialtyCreate from "./page/subject_specialty/SubjectSpecialtyCreate";
+// import SubjectSpecialtyEdit from "./page/subject_specialty/SubjectSpecialtyEdit";
 
 function App() {
   return (
@@ -150,21 +149,6 @@ function App() {
                             element={<EditSchedule />}
                           />
 
-                          {/*  Training Plans */}
-                          <Route path="/plan" element={<PlanPage />} />
-                          <Route
-                            path="/plan/create"
-                            element={<CreateTrainingPlanPage />}
-                          />
-                          <Route
-                            path="/plan/edit/:planId"
-                            element={<EditPlanPage />}
-                          />
-                          <Route
-                            path="/plan/details/:planId"
-                            element={<PlanDetailPage />}
-                          />
-
                           {/*  Candidates */}
                           <Route
                             path="/candidates-import"
@@ -186,7 +170,19 @@ function App() {
                             path="/external-certificate/edit/:id"
                             element={<EditExternalCertiPage />}
                           />
+                          {/*  Instructor Assignment */}
+                          <Route
+                            path="/instructor-assignment"
+                            element={<InstructorAssPage />}
+                          />
+                          <Route path="/instructor-assignment/create" element={<InstructorAssignmentCreate />} />
+                          <Route path="/instructor-assignment/edit/:id" element={<InstructorAssignmentEdit />} />
 
+                          {/*  Subject Specialty */}
+                          <Route path="/subject-specialty" element={<SubjectSpecialtyPage />} />
+                          <Route path="/subject-specialty/create" element={<SubjectSpecialtyCreate />} />
+                          {/* <Route path="/subject-specialty/edit/:id" element={<SubjectSpecialtyEdit />} /> */}
+                        
                           {/*  Subjects */}
                           <Route path="/subject" element={<SubjectPage />} />
                           <Route
@@ -218,14 +214,6 @@ function App() {
                           <Route
                             path="/assigned-trainee-courses"
                             element={<AssignedTraineeCoursePage />}
-                          />
-                          <Route
-                            path="/learning-matrix"
-                            element={<LearningMatrixPage />}
-                          />
-                          <Route
-                            path="/learning-matrix/create"
-                            element={<CreateLearningMatrixPage />}
                           />
                           {/*  Accomplishments & Grades */}
                           <Route

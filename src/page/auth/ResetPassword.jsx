@@ -158,7 +158,7 @@ const ResetPassword = () => {
                       loading={loading}
                       onClick={handleReset}
                       disabled={!newPassword || passwordMatch !== true}
-                      className="w-full h-12 text-lg font-medium bg-gradient-to-r from-cyan-600 to-cyan-700 border-0 rounded-lg hover:from-cyan-700 hover:to-cyan-800 transition-all duration-300"
+                      className="w-full h-12 text-lg font-medium !bg-gradient-to-r from-cyan-600 to-cyan-700 border-0 rounded-lg hover:from-cyan-700 hover:to-cyan-800 transition-all duration-300"
                     >
                       Reset Password
                     </Button>

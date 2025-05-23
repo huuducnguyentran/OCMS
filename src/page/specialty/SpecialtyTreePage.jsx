@@ -20,7 +20,6 @@ const SpecialtyTreePage = () => {
       const response = await specialtyService.getSpecialtyTree();
       if (response.success) {
         setTreeData(processTreeData(response.data));
-        // Automatically expand all nodes
         const allKeys = getAllKeys(response.data);
         setExpandedKeys(allKeys);
       }
@@ -36,14 +35,15 @@ const SpecialtyTreePage = () => {
     fetchSpecialtyTree();
   }, []);
 
-  // Process tree data to add additional properties
   const processTreeData = (data) => {
     return data.map((node) => ({
       key: node.specialtyId,
       title: (
         <div className="flex items-center justify-between py-1">
           <Tooltip title={node.description}>
-            <span className="font-medium">{node.specialtyName}</span>
+            <span className="font-medium text-cyan-800">
+              {node.specialtyName}
+            </span>
           </Tooltip>
           {node.status === 1 && (
             <span className="text-red-500 text-xs ml-2">(Inactive)</span>
@@ -55,7 +55,6 @@ const SpecialtyTreePage = () => {
     }));
   };
 
-  // Get all keys for expansion
   const getAllKeys = (data) => {
     let keys = [];
     data.forEach((node) => {
@@ -67,37 +66,35 @@ const SpecialtyTreePage = () => {
     return keys;
   };
 
-  // Handle tree node selection
   const onSelect = (selectedKeys, info) => {
     setSelectedKeys(selectedKeys);
     if (info.node) {
-      // You can add additional actions when a node is selected
       console.log("Selected node:", info.node);
     }
   };
 
-  // Handle tree expansion
   const onExpand = (expandedKeys) => {
     setExpandedKeys(expandedKeys);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <Card className="max-w-6xl mx-auto shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-cyan-100 p-6">
+      <Card className="!max-w-6xl !mx-auto !shadow-xl !border !border-cyan-600">
         <div className="mb-6">
           <Button
             icon={<ArrowLeftOutlined />}
-            className="mb-4"
+            className="!mb-4 !text-cyan-700 !border-cyan-600 hover:!bg-cyan-100"
             onClick={() => navigate("/specialty")}
           >
             Back to Specialties
           </Button>
+
           <div className="flex items-center justify-between">
             <div>
-              <Title level={2} className="!mb-1">
+              <Title level={2} className="!mb-1 !text-cyan-800">
                 Specialty Hierarchy
               </Title>
-              <p className="text-gray-500">
+              <p className="text-cyan-700">
                 View and navigate through the specialty structure
               </p>
             </div>
@@ -107,7 +104,7 @@ const SpecialtyTreePage = () => {
               onClick={() =>
                 setExpandedKeys(expandedKeys.length ? [] : getAllKeys(treeData))
               }
-              className="bg-blue-600 hover:bg-blue-700"
+              className="!bg-cyan-700 hover:!bg-cyan-800 !border-none !text-white"
             >
               {expandedKeys.length ? "Collapse All" : "Expand All"}
             </Button>
@@ -119,7 +116,7 @@ const SpecialtyTreePage = () => {
             <Spin size="large" />
           </div>
         ) : (
-          <div className="bg-white rounded-lg border p-6">
+          <div className="bg-white rounded-xl border border-cyan-200 p-6">
             <Tree
               treeData={treeData}
               showLine={{ showLeafIcon: false }}
