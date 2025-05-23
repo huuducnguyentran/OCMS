@@ -63,20 +63,20 @@ const navItems = [
     ],
   },
   {
-    key: "5",
-    label: "Learning Matrix",
+    key:"5",
+    label: "Instructor Assignment",
     icon: "BookOutlined",
-    path: "/learning-matrix",
-    roles: ["Admin", "Training staff", "HR", "Reviewer"],
+    path: "/instructor-assignment",
+    roles: ["Training staff", "Instructor"],
   },
   {
     key: "6",
     label: "Subject",
     icon: "ReadOutlined",
     path: "/subject",
-    roles: ["Training staff", "user"],
+    roles: ["Training staff", "user"  ],
   },
-
+ 
   {
     key: "7",
     label: "Schedule",
@@ -91,13 +91,6 @@ const navItems = [
         roles: ["Training staff", "Instructor", "Trainee"],
       },
     ],
-  },
-  {
-    key: "8",
-    label: "Plan",
-    icon: "AccountBookOutlined",
-    path: "/plan",
-    roles: ["Training staff", "Trainee", "Reviewer"],
   },
   {
     key: "9",
@@ -289,7 +282,7 @@ const navItems = [
   },
 
   // 7. System/Other
-
+ 
   {
     key: "21",
     label: "Regulations",
@@ -313,12 +306,12 @@ const navItems = [
     path: "/export-certificate",
   },
   {
-    key: "23",
-    label: "Classroom",
-    icon: "FileExcelOutlined",
-    path: "/class",
-    roles: ["Training staff"],
-  },
+    key:"23",
+    label:"Classroom",
+    icon:"FileProtectOutlined",
+    path:"/class",
+    roles:["Training staff","Instructor","Trainee"]
+  }
 ];
 
 export default navItems;
