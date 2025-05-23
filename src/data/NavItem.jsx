@@ -62,13 +62,7 @@ const navItems = [
       },
     ],
   },
-  {
-    key: "5",
-    label: "Learning Matrix",
-    icon: "BookOutlined",
-    path: "/learning-matrix",
-    roles: ["Admin", "Training staff", "HR", "Reviewer"],
-  },
+
   {
     key: "6",
     label: "Subject",
@@ -92,13 +86,7 @@ const navItems = [
       },
     ],
   },
-  {
-    key: "8",
-    label: "Plan",
-    icon: "AccountBookOutlined",
-    path: "/plan",
-    roles: ["Training staff", "Trainee", "Reviewer"],
-  },
+ 
   {
     key: "9",
     label: "Accomplishments",

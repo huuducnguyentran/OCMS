@@ -129,4 +129,17 @@ export const courseService = {
       throw error;
     }
   },
+
+  assignSubjectSpecialty: async (data) => {
+    try {
+      const response = await axiosInstance.post(
+        `${API.BASE_URL}/Course/assign-subject-specialty`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error assigning subject specialty to course:", error);
+      throw error;
+    }
+  },
 };

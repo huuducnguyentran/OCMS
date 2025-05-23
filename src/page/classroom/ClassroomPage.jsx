@@ -19,9 +19,11 @@ import {
   DeleteOutlined,
   HomeOutlined,
   PlusOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import "animate.css";
 import ClassroomService from "../../services/classroomService";
+import { useNavigate } from "react-router-dom";
 
 const { Title } = Typography;
 
@@ -35,6 +37,7 @@ const ClassroomPage = () => {
   const [form] = Form.useForm();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createForm] = Form.useForm();
+  const navigate = useNavigate();
 
   const pageSize = 6;
 
@@ -154,6 +157,12 @@ const ClassroomPage = () => {
                         setEditClass(c);
                       }}
                       className="text-green-500 hover:text-green-700"
+                    />
+                  </Tooltip>,
+                  <Tooltip title="Create Schedule" key="create-schedule">
+                    <CalendarOutlined
+                      onClick={() => navigate(`/classroom/${c.classId}/create-schedule`)}
+                      className="text-purple-500 hover:text-purple-700"
                     />
                   </Tooltip>,
                   <Tooltip title="Delete" key="delete">
