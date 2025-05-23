@@ -194,10 +194,10 @@ const HomePage = () => {
           if (role !== "Trainee") {
             cards.push({
               icon: <CalendarOutlined className="text-2xl text-white" />,
-              title: "Training Plans",
+              title: "Subject ",
               description:
-                "View and manage training plans in your organization",
-              path: "/plan",
+                "View and manage subjects in your organization",
+              path: "/subject",
               color: "bg-green-500",
             });
           } else {

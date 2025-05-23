@@ -311,6 +311,13 @@ const navItems = [
     icon:"FileProtectOutlined",
     path:"/class",
     roles:["Training staff","Instructor","Trainee"]
+  },
+  {
+    key:"24",
+    label:"Subject Specialty",
+    icon:"FileProtectOutlined",
+    path:"/subject-specialty",
+    roles:["Training staff"]
   }
 ];
 
