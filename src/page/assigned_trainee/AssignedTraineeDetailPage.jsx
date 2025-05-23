@@ -12,7 +12,6 @@ import {
   UpdateAssignedTrainee,
 } from "../../services/traineeService";
 import { getAllUsers } from "../../services/userService";
-import { learningMatrixService } from "../../services/learningMatrixService";
 
 const AssignedTraineeDetailPage = () => {
   const { id } = useParams();

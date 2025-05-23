@@ -23,7 +23,6 @@ import {
 import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
 import dayjs from "dayjs";
-import { learningMatrixService } from "../../services/learningMatrixService";
 
 const { Title, Text } = Typography;
 const { Option } = Select;

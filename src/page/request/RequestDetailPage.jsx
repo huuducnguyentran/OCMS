@@ -21,7 +21,6 @@ import {
   DownOutlined,
 } from "@ant-design/icons";
 import { Spin, Tag, Button, message, Modal, Card, Collapse, Empty, Table, Typography, Divider } from "antd";
-import { trainingPlanService } from "../../services/trainingPlanService";
 
 const { Panel } = Collapse;
 const { Title, Text } = Typography;

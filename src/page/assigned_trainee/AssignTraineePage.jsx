@@ -8,7 +8,6 @@ import {
   assignTraineeManual,
 } from "../../services/traineeService";
 import { getAllUsers } from "../../services/userService";
-import { learningMatrixService } from "../../services/learningMatrixService";
 
 const { Option } = Select;
 
