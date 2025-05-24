@@ -91,4 +91,15 @@ export const updateClassSubject = async (id, data) => {
     console.error("Error updating class subject:", error?.response || error.message);
     throw error;
   }
+};
+
+// Delete ClassSubject by ID
+export const deleteClassSubject = async (id) => {
+  try {
+    const response = await axiosInstance.delete(`https://ocms-bea4aagveeejawff.southeastasia-01.azurewebsites.net/api/ClassSubject/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error deleting class subject ${id}:`, error?.response || error.message);
+    throw error;
+  }
 }; 
