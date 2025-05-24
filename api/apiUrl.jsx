@@ -77,6 +77,7 @@ export const API = {
   ASSIGN_TRAINEE_TO_COURSE: "Course/assign-trainee",
   ADD_SUBJECT_TO_COURSE: "Course/add-subject",
   IMPORT_COURSE: "Course/import",
+  ASSIGN_SUBJECT_SPECIALTY: "Course/assign-subject-specialty",
 
   // Training Schedule
   GET_ALL_TRAINING_SCHEDULE: "TrainingSchedule",
@@ -171,7 +172,7 @@ export const API = {
   GET_CLASS_SUBJECT_BY_SUBJECT_ID: "ClassSubject/subject",
   GET_CLASS_SUBJECT_BY_INSTRUCTOR_ID: "ClassSubject/instructor",
   CREATE_CLASS_SUBJECT: "ClassSubject",
-  UPDATE_CLASS_SUBJECT: "api/ClassSubject",
+  UPDATE_CLASS_SUBJECT: "ClassSubject",
 
   // Instructor Assignment
   GET_ALL_INSTRUCTOR_ASSIGNMENTS: "InstructorAssignment",

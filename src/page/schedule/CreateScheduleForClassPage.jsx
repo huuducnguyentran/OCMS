@@ -23,10 +23,12 @@ import {
   UserOutlined,
   BookOutlined,
   InfoCircleOutlined,
+  SaveOutlined,
 } from "@ant-design/icons";
 import { trainingScheduleService } from "../../services/trainingScheduleService";
-import { getAllSubject } from "../../services/subjectService"; // Đảm bảo đường dẫn đúng
-import { getAllInstructorAssignments } from "../../services/instructorAssignmentService"; // Đảm bảo đường dẫn đúng
+import { getAllSubjectSpecialties } from "../../services/subjectSpecialtyServices";
+import { getAllInstructorAssignments } from "../../services/instructorAssignmentService";
+import { createClassSubject, deleteClassSubject } from "../../services/classSubjectService";
 import dayjs from "dayjs";
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import utc from 'dayjs/plugin/utc';
@@ -71,8 +73,8 @@ const CreateScheduleForClassPage = () => {
   });
   const [submitting, setSubmitting] = useState(false); // Mặc dù không có nút submit, vẫn giữ state này cho tương lai
 
-  const [subjects, setSubjects] = useState([]);
-  const [selectedSubjectId, setSelectedSubjectId] = useState(null);
+  const [subjectSpecialties, setSubjectSpecialties] = useState([]);
+  const [selectedSubjectSpecialty, setSelectedSubjectSpecialty] = useState(null);
 
   const [availableInstructors, setAvailableInstructors] = useState([]);
   const [selectedInstructor, setSelectedInstructor] = useState(null); // Store full instructor object
@@ -85,14 +87,14 @@ const CreateScheduleForClassPage = () => {
       form.setFieldsValue({ classId: classId });
       setLoading(prev => ({ ...prev, page: false }));
     }
-    fetchSubjects();
+    fetchSubjectSpecialties();
   }, [classId]);
 
   useEffect(() => {
-    if (selectedSubjectId) {
-      fetchInstructorsForSubject(selectedSubjectId);
+    if (selectedSubjectSpecialty) {
+      fetchInstructorsForSubject(selectedSubjectSpecialty);
     }
-  }, [selectedSubjectId]);
+  }, [selectedSubjectSpecialty]);
 
   useEffect(() => {
     if (selectedInstructor && selectedInstructor.id) {
@@ -103,49 +105,46 @@ const CreateScheduleForClassPage = () => {
     }
   }, [selectedInstructor]);
 
-  const fetchSubjects = async () => {
+  const fetchSubjectSpecialties = async () => {
     setLoading(prev => ({ ...prev, subjects: true }));
     try {
-      const fetchedSubjects = await getAllSubject();
-      if (Array.isArray(fetchedSubjects)) {
-        setSubjects(fetchedSubjects);
-      } else if (fetchedSubjects && Array.isArray(fetchedSubjects.allSubjects)) {
-        setSubjects(fetchedSubjects.allSubjects);
-      }
-       else if (fetchedSubjects && Array.isArray(fetchedSubjects.subjects)) {
-        setSubjects(fetchedSubjects.subjects);
-      }
-       else {
-        console.warn("Unexpected format for subjects:", fetchedSubjects);
-        setSubjects([]);
-        message.error("Could not load subjects in expected format.");
+      const response = await getAllSubjectSpecialties();
+      console.log("Subject specialties response:", response);
+      
+      if (Array.isArray(response)) {
+        setSubjectSpecialties(response);
+      } else if (response && Array.isArray(response.data)) {
+        setSubjectSpecialties(response.data);
+      } else {
+        console.warn("Unexpected format for subject specialties:", response);
+        setSubjectSpecialties([]);
+        message.error("Could not load subject specialties in expected format.");
       }
     } catch (error) {
-      console.error("Error fetching subjects:", error);
-      message.error("Failed to load subjects.");
-      setSubjects([]);
+      console.error("Error fetching subject specialties:", error);
+      message.error("Failed to load subject specialties.");
+      setSubjectSpecialties([]);
     } finally {
       setLoading(prev => ({ ...prev, subjects: false }));
     }
   };
 
-  const fetchInstructorsForSubject = async (subjectId) => {
+  const fetchInstructorsForSubject = async (specialty) => {
     setLoading(prev => ({ ...prev, instructors: true }));
     setSelectedInstructor(null); 
     form.setFieldsValue({ instructorId: null });
     try {
-      // Lấy danh sách assignments
       const allAssignments = await getAllInstructorAssignments();
-      // Lấy danh sách schedules để map tên giảng viên
       const scheduleResponse = await trainingScheduleService.getAllTrainingSchedules();
       
-      if (allAssignments && Array.isArray(allAssignments)) {
-        // Lọc assignments theo subject
-        const filteredInstructorIds = allAssignments
-          .filter(assign => assign.courseSubjectSpecialtyId === subjectId)
-          .map(assign => assign.instructorId || assign.instructorID);
-e
-        // Tạo map tên giảng viên từ scheduls
+      if (allAssignments && Array.isArray(allAssignments) && specialty && specialty.subjectId) {
+        const filteredAssignments = allAssignments
+          .filter(assign => {
+            // Corrected comparison based on new understanding
+            const isMatch = assign.courseSubjectSpecialtyId === specialty.subjectId;
+            return isMatch;
+          });
+          console.log("Filtered Assignments:", filteredAssignments); // LOG 3
         const instructorNamesMap = {};
         if (scheduleResponse && scheduleResponse.schedules && Array.isArray(scheduleResponse.schedules)) {
           scheduleResponse.schedules.forEach(schedule => {
@@ -155,28 +154,37 @@ e
           });
         }
 
-        // Map instructor information
-        const instructors = filteredInstructorIds.map(id => ({
-          id: id,
-          instructorName: instructorNamesMap[id] || `Instructor ${id}`
-        }));
+        // Map to include id, instructorName, and assignmentId
+        const instructors = filteredAssignments.map(assign => {
+          // The 'assign' object from filteredAssignments already has 'assignmentId'
+          // as seen in the console log: {assignmentId: 'ASG-5A686B', ...}
+          // It also has 'instructorId'
+          if (!assign.assignmentId) {
+             console.warn("CRITICAL: assignmentId is missing in filtered assign object:", assign);
+          }
+          return {
+            id: assign.instructorId, 
+            instructorName: instructorNamesMap[assign.instructorId] || `Instructor ${assign.instructorId}`,
+            assignmentId: assign.assignmentId // Directly use assign.assignmentId
+          };
+        });
+        console.log("LOG 4 - Mapped Instructors (before unique):", instructors);
 
-        // Remove duplicates
         const uniqueInstructors = Array.from(
           new Map(instructors.map(item => [item.id, item])).values()
         );
 
         setAvailableInstructors(uniqueInstructors);
         if (uniqueInstructors.length === 0) {
-            message.info("No instructors found for the selected subject.");
+            message.info("No instructors found for the selected subject specialty.");
         }
       } else {
         console.warn("Unexpected format for instructor assignments:", allAssignments);
         setAvailableInstructors([]);
-        message.error("Could not load instructors for the subject.");
+        message.error("Could not load instructors for the subject specialty.");
       }
     } catch (error) {
-      console.error("Error fetching instructors for subject:", error);
+      console.error("Error fetching instructors for subject specialty:", error);
       message.error("Failed to load instructors.");
       setAvailableInstructors([]);
     } finally {
@@ -235,17 +243,28 @@ e
     }
   };
 
-  const handleSubjectChange = (value) => {
-    setSelectedSubjectId(value);
+  const handleSubjectSpecialtyChange = (value) => {
+    const selectedSpecialty = subjectSpecialties.find(s => s.subjectSpecialtyId === value);
+    setSelectedSubjectSpecialty(selectedSpecialty);
+    form.setFieldsValue({ 
+      subjectSpecialtyId: value,
+      instructorId: null 
+    });
   };
 
   const handleInstructorChange = (value, option) => {
     if(option && option.key){
-        const instructor = availableInstructors.find(inst => inst.id === option.key) || {
-          id: option.key,
-          name: option.children
-        };
-        setSelectedInstructor(instructor); 
+        const instructor = availableInstructors.find(inst => inst.id === option.key);
+        if (instructor) {
+            setSelectedInstructor(instructor); 
+        } else {
+            // Fallback if not found, though ideally it should always be found
+            setSelectedInstructor({
+                id: option.key,
+                instructorName: option.children, // This might be a string like "Name (ID)"
+                assignmentId: null // Or try to extract if possible from a more complex option.props structure
+            });
+        }
     } else {
         setSelectedInstructor(null);
     }
@@ -349,6 +368,118 @@ e
     { label: "Sunday", value: "0" }, // Theo chuẩn JS Date.getDay()
   ];
 
+  const handleSubmit = async () => {
+    try {
+      console.log("Attempting form validation...");
+      await form.validateFields();
+      console.log("Form validation successful! Proceeding to create ClassSubject and Schedule."); 
+      setSubmitting(true);
+
+      console.log("Selected Instructor in handleSubmit:", selectedInstructor); // LOG 5
+      console.log("Selected Subject Specialty in handleSubmit:", selectedSubjectSpecialty); // LOG 6
+
+      if (!selectedSubjectSpecialty || !selectedSubjectSpecialty.subjectSpecialtyId) {
+        message.error("Please select a subject specialty.");
+        setSubmitting(false);
+        return;
+      }
+
+      if (!selectedInstructor || !selectedInstructor.assignmentId) {
+        message.error("Please select an instructor or ensure instructor assignment is available.");
+        setSubmitting(false);
+        return;
+      }
+
+      const values = form.getFieldsValue(true);
+      const classSubjectData = {
+        classId: classId,
+        subjectSpecialtyId: selectedSubjectSpecialty.subjectSpecialtyId,
+        instructorAssignmentID: selectedInstructor.assignmentId,
+        notes: values.notes || "",
+      };
+
+      let classSubjectResponse;
+      let createdClassSubjectId;
+      try {
+        console.log("Creating ClassSubject with data:", classSubjectData);
+        classSubjectResponse = await createClassSubject(classSubjectData);
+        console.log("Create ClassSubject response:", classSubjectResponse);
+        if (classSubjectResponse && classSubjectResponse.classSubject && classSubjectResponse.classSubject.classSubjectId) {
+          createdClassSubjectId = classSubjectResponse.classSubject.classSubjectId;
+        } else if (classSubjectResponse && classSubjectResponse.data && classSubjectResponse.data.classSubject && classSubjectResponse.data.classSubject.classSubjectId) {
+          createdClassSubjectId = classSubjectResponse.data.classSubject.classSubjectId;
+        } else if (classSubjectResponse && classSubjectResponse.data && classSubjectResponse.data.classSubjectId) {
+          createdClassSubjectId = classSubjectResponse.data.classSubjectId;
+        } else if (classSubjectResponse && classSubjectResponse.classSubjectId) {
+            createdClassSubjectId = classSubjectResponse.classSubjectId;
+        }
+        if (!createdClassSubjectId) {
+          message.error("Failed to create class subject: ClassSubject ID not found in API response.");
+          setSubmitting(false);
+          return;
+        }
+        console.log("Extracted ClassSubject ID:", createdClassSubjectId);
+      } catch (csError) {
+        console.error("Error creating ClassSubject:", csError);
+        message.error("Failed to create class subject. " + (csError.response?.data?.message || csError.message));
+        setSubmitting(false);
+        return;
+      }
+      
+      const scheduleData = {
+        classSubjectId: createdClassSubjectId,
+        location: values.location,
+        room: values.room,
+        notes: values.notes || "",
+        startDay: values.startDate ? values.startDate.toISOString() : null,
+        endDay: values.endDate ? values.endDate.toISOString() : null,
+        daysOfWeek: values.daysOfWeek ? values.daysOfWeek.map(day => parseInt(day, 10)) : [],
+        classTime: values.classTime ? values.classTime.format("HH:mm:ss") : null,
+        subjectPeriod: values.subjectPeriod ? values.subjectPeriod.format("HH:mm:ss") : null,
+      };
+
+      try {
+        console.log("Creating TrainingSchedule with data:", scheduleData);
+        await trainingScheduleService.createTrainingSchedule(scheduleData);
+        console.log("IMMEDIATELY AFTER SUCCESSFUL schedule creation. ClassSubjectId:", createdClassSubjectId, "NO DELETE SHOULD BE CALLED YET.");
+        console.log("Create TrainingSchedule successful");
+        message.success("Schedule created successfully!");
+        form.resetFields();
+        setSelectedSubjectSpecialty(null);
+        setSelectedInstructor(null);
+        setAvailableInstructors([]);
+        setInstructorExistingSchedules([]);
+        setConflictMessages([]);
+      } catch (tsError) {
+        console.error("DETAILED tsError Object for TrainingSchedule creation failure:", JSON.stringify(tsError, Object.getOwnPropertyNames(tsError), 2));
+        console.error("ERROR CAUGHT: Entering catch block for TrainingSchedule creation.", tsError);
+        
+        const errMsg = tsError.response?.data?.message || tsError.message || "An unexpected error occurred.";
+        message.error("Failed to create training schedule. Attempting to rollback ClassSubject creation. " + String(errMsg));
+        
+        console.log("Value of createdClassSubjectId before attempting delete:", createdClassSubjectId);
+        if (createdClassSubjectId) {
+          try {
+            console.log(`Attempting to delete ClassSubject with ID: ${createdClassSubjectId}`);
+            await deleteClassSubject(createdClassSubjectId);
+          } catch (deleteError) {
+            const delErrMsg = deleteError.response?.data?.message || deleteError.message || "An unexpected error occurred during rollback.";
+            message.error(`Failed to rollback ClassSubject ${createdClassSubjectId}. Please contact support or delete it manually. ` + String(delErrMsg));
+          }
+        } else {
+          console.warn("Rollback skipped: createdClassSubjectId is not available.");
+        }
+      }
+
+    } catch (errorInfo) {
+      console.error("Form validation FAILED in handleSubmit's main try-catch:", errorInfo);
+      message.error("Please fill in all required fields correctly. Check console for details.");
+    } finally {
+      console.log("handleSubmit finally block executing.");
+      setSubmitting(false);
+    }
+  };
+
   if (loading.page) {
     return (
       <div className="flex justify-center items-center min-h-screen"><Spin size="large" /></div>
@@ -387,20 +518,23 @@ e
                     <BookOutlined className="mr-2" /> Selection
                   </Title>
                   <Form.Item
-                    name="subjectId"
-                    label="Subject"
-                    rules={[{ required: true, message: "Please select a subject" }]}
+                    name="subjectSpecialtyId"
+                    label="Subject Specialty"
+                    rules={[{ required: true, message: "Please select a subject specialty" }]}
                   >
                     <Select
-                      placeholder="Select subject"
+                      placeholder="Select subject specialty"
                       loading={loading.subjects}
-                      onChange={handleSubjectChange}
+                      onChange={handleSubjectSpecialtyChange}
                       showSearch
                       optionFilterProp="children"
                     >
-                      {subjects.map((subject) => (
-                        <Option key={subject.subjectId} value={subject.subjectId}>
-                          {subject.subjectName} ({subject.subjectId})
+                      {subjectSpecialties.map((specialty) => (
+                        <Option 
+                          key={specialty.subjectSpecialtyId} 
+                          value={specialty.subjectSpecialtyId}
+                        >
+                          {specialty.subjectName || specialty.subject?.subjectName} - {specialty.specialtyName || specialty.specialty?.specialtyName}
                         </Option>
                       ))}
                     </Select>
@@ -574,19 +708,16 @@ e
                 >
                   Back to Classrooms
                 </Button>
-                {/* Nút Submit bị ẩn theo yêu cầu */}
-                {/* 
                 <Button
                   type="primary"
                   icon={<SaveOutlined />}
-                  htmlType="submit"
+                  onClick={handleSubmit}
                   loading={submitting}
                   size="large"
                   className="bg-purple-600 hover:bg-purple-700"
                 >
-                  Create Schedule (DEV)
+                  Create Schedule
                 </Button>
-                */}
               </div>
             </Form>
           </Spin>
