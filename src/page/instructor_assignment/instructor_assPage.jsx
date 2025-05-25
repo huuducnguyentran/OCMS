@@ -21,7 +21,6 @@ import {
 import {
   PlusOutlined,
   SearchOutlined,
-  EditOutlined,
   DeleteOutlined,
   QuestionCircleOutlined,
   BookOutlined,
@@ -209,20 +208,6 @@ export default function InstructorAssignmentList() {
                     hoverable
                     className="transition-all duration-300 rounded-xl shadow-md hover:shadow-lg"
                     actions={[
-                      <Tooltip title="Edit Assignment">
-                        <Button
-                          type="text"
-                          icon={<EditOutlined className="!text-cyan-600" />}
-                          onClick={() =>
-                            navigate(
-                              `/instructor-assignment/edit/${item.assignmentId}`
-                            )
-                          }
-                          className="!text-cyan-600 hover:!text-cyan-800"
-                        >
-                          Edit
-                        </Button>
-                      </Tooltip>,
                       <Tooltip title="Delete Assignment">
                         <Button
                           type="text"

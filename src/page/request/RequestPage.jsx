@@ -222,6 +222,7 @@ const RequestList = () => {
   // State cho danh sách học viên
   const [traineesData, setTraineesData] = useState([]);
   const [traineesLoading, setTraineesLoading] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
   const toggleFilters = () => {
     setShowFilters(!showFilters);
@@ -718,6 +719,65 @@ const RequestList = () => {
     };
   }, []);
 
+  // Handler for row selection
+  const onSelectChange = (newSelectedRowKeys) => {
+    console.log("selectedRowKeys changed: ", newSelectedRowKeys);
+    setSelectedRowKeys(newSelectedRowKeys);
+  };
+
+  // Configuration for row selection
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: onSelectChange,
+    getCheckboxProps: (record) => ({
+      disabled: record.status !== "Pending", // Disable checkbox if status is not Pending
+      name: record.requestId,
+    }),
+  };
+
+  const handleApproveSelected = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.info("No requests selected for approval.");
+      return;
+    }
+
+    const requestsToApprove = selectedRowKeys.filter(key => {
+      const request = requests.find(r => r.requestId === key);
+      return request && request.status === "Pending";
+    });
+
+    if (requestsToApprove.length === 0) {
+      message.info("No 'Pending' requests selected for approval. Please select requests with 'Pending' status.");
+      setSelectedRowKeys([]);
+      return;
+    }
+
+    setLoading(true); // Use main loading state or a new one for batch actions
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const requestId of requestsToApprove) {
+      try {
+        await approveRequest(requestId);
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to approve request ${requestId}:`, error);
+        errorCount++;
+      }
+    }
+    setLoading(false);
+    setSelectedRowKeys([]); // Clear selection after processing
+
+    if (successCount > 0) {
+      message.success(`${successCount} request(s) approved successfully.`);
+    }
+    if (errorCount > 0) {
+      message.error(`${errorCount} request(s) failed to approve. Check console for details.`);
+    }
+
+    fetchRequests(); // Refresh the list to show updated statuses
+  };
+
   const columns = [
     {
       title: "ID",
@@ -909,6 +969,19 @@ const RequestList = () => {
               >
                 Refresh
               </Button>
+              {/* Button for approving selected requests */} 
+              {selectedRowKeys.filter(key => requests.find(r => r.requestId === key && r.status === "Pending")).length > 0 && (
+                <Button
+                  type="primary"
+                  onClick={handleApproveSelected}
+                  loading={loading} // Consider a specific loading state for this action
+                  icon={<CheckCircleOutlined />}
+                  size="large"
+                  className="!bg-green-600 hover:!bg-green-700 !border-green-700"
+                >
+                  Approve Selected ({selectedRowKeys.filter(key => requests.find(r => r.requestId === key && r.status === "Pending")).length})
+                </Button>
+              )}
             </Space>
           </div>
 
@@ -967,6 +1040,8 @@ const RequestList = () => {
           )}
 
           <Table
+            rowKey="requestId"
+            rowSelection={rowSelection}
             columns={columns}
             dataSource={filteredRequests}
             onChange={handleChange}

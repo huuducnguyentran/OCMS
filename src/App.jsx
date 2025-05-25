@@ -81,6 +81,7 @@ import InstructorAssignmentCreate from "./page/instructor_assignment/InstructorA
 import InstructorAssignmentEdit from "./page/instructor_assignment/InstructorAssignmentEdit";
 import SubjectSpecialtyPage from "./page/subject_specialty/SubjectSpecialtyPage";
 import SubjectSpecialtyCreate from "./page/subject_specialty/SubjectSpecialtyCreate";
+import ClassroomDetailPage from "./page/classroom/ClassroomDetailPage";
 // import SubjectSpecialtyEdit from "./page/subject_specialty/SubjectSpecialtyEdit";
 
 function App() {
@@ -137,7 +138,7 @@ function App() {
                             path="/course/edit/:id"
                             element={<EditCoursePage />}
                           />
-
+                          <Route path="/classroom/:classId/details" element={<ClassroomDetailPage />} />
                           {/*  Schedule Management */}
                           <Route path="/schedule" element={<SchedulePage />} />
                           <Route
