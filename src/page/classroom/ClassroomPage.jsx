@@ -33,7 +33,6 @@ const ClassroomPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [viewClass, setViewClass] = useState(null);
   const [editClass, setEditClass] = useState(null);
   const [deleteClassId, setDeleteClassId] = useState(null);
   const [form] = Form.useForm();
@@ -140,7 +139,7 @@ const ClassroomPage = () => {
                 actions={[
                   <Tooltip title="View" key="view">
                     <EyeOutlined
-                      onClick={() => setViewClass(c)}
+                      onClick={() => navigate(`/classroom/${c.classId}/details`)}
                       className="!text-cyan-600 hover:!text-cyan-800"
                     />
                   </Tooltip>,
@@ -205,25 +204,6 @@ const ClassroomPage = () => {
           <PlusOutlined className="text-xl" />
         </button>
       </Tooltip>
-
-      {/* View Modal */}
-      <Modal
-        title="Classroom Details"
-        open={!!viewClass}
-        onCancel={() => setViewClass(null)}
-        footer={null}
-      >
-        {viewClass && (
-          <div>
-            <p>
-              <strong>Class ID:</strong> {viewClass.classId}
-            </p>
-            <p>
-              <strong>Class Name:</strong> {viewClass.className}
-            </p>
-          </div>
-        )}
-      </Modal>
 
       {/* Edit Modal */}
       <Modal
