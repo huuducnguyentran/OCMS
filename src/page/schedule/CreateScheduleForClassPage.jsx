@@ -15,6 +15,10 @@ import {
   Typography,
   Alert,
   Space,
+  Upload,
+  Radio,
+  Divider,
+  Steps,
 } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -24,24 +28,35 @@ import {
   BookOutlined,
   InfoCircleOutlined,
   SaveOutlined,
+  UploadOutlined,
+  UserAddOutlined,
+  TeamOutlined,
+  SolutionOutlined,
+  EditOutlined,
+  CheckCircleOutlined,
+  CheckCircleFilled,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { trainingScheduleService } from "../../services/trainingScheduleService";
 import { getAllSubjectSpecialties } from "../../services/subjectSpecialtyServices";
 import { getAllInstructorAssignments } from "../../services/instructorAssignmentService";
 import { createClassSubject, deleteClassSubject } from "../../services/classSubjectService";
+import { assignTrainee, assignTraineeManual } from "../../services/traineeService";
 import dayjs from "dayjs";
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import { getAllUsers } from "../../services/userService";
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(utc);
 dayjs.extend(timezone);
-dayjs.tz.setDefault(dayjs.tz.guess()); // Optional: set default timezone if needed
+dayjs.tz.setDefault(dayjs.tz.guess());
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
+const { Step } = Steps;
 
 // Enums for Location and Room
 const LocationEnum = {
@@ -65,26 +80,42 @@ const CreateScheduleForClassPage = () => {
   const navigate = useNavigate();
   const { classId } = useParams();
   const [form] = Form.useForm();
+  const [traineeForm] = Form.useForm();
+
   const [loading, setLoading] = useState({
     page: true,
     subjects: false,
     instructors: false,
     instructorSchedules: false,
+    assigningTrainee: false,
+    eligibleTrainees: false,
   });
-  const [submitting, setSubmitting] = useState(false); // Mặc dù không có nút submit, vẫn giữ state này cho tương lai
+  const [submittingStep1, setSubmittingStep1] = useState(false);
+  const [submittingStep2, setSubmittingStep2] = useState(false);
+  
+  const [currentStep, setCurrentStep] = useState(0);
+  const [createdClassSubjectId, setCreatedClassSubjectId] = useState(null);
+  const [createdTrainingScheduleId, setCreatedTrainingScheduleId] = useState(null);
+  const [isEditingScheduleDetails, setIsEditingScheduleDetails] = useState(false);
 
   const [subjectSpecialties, setSubjectSpecialties] = useState([]);
   const [selectedSubjectSpecialty, setSelectedSubjectSpecialty] = useState(null);
 
   const [availableInstructors, setAvailableInstructors] = useState([]);
-  const [selectedInstructor, setSelectedInstructor] = useState(null); // Store full instructor object
+  const [selectedInstructor, setSelectedInstructor] = useState(null);
   
   const [instructorExistingSchedules, setInstructorExistingSchedules] = useState([]);
   const [conflictMessages, setConflictMessages] = useState([]);
 
+  const [traineeAssignMethod, setTraineeAssignMethod] = useState('import');
+  const [fileList, setFileList] = useState([]);
+  const [manualTrainees, setManualTrainees] = useState([{ traineeId: '', notes: '' }]);
+  const [eligibleManualTrainees, setEligibleManualTrainees] = useState([]);
+
+  const isStep1Completed = createdClassSubjectId !== null && currentStep === 1;
+
   useEffect(() => {
     if (classId) {
-      form.setFieldsValue({ classId: classId });
       setLoading(prev => ({ ...prev, page: false }));
     }
     fetchSubjectSpecialties();
@@ -93,8 +124,14 @@ const CreateScheduleForClassPage = () => {
   useEffect(() => {
     if (selectedSubjectSpecialty) {
       fetchInstructorsForSubject(selectedSubjectSpecialty);
+      if (traineeAssignMethod === 'manual' && isStep1Completed) {
+        fetchEligibleManualTrainees(selectedSubjectSpecialty.specialtyId);
+      }
+    } else {
+      setAvailableInstructors([]);
+      setEligibleManualTrainees([]);
     }
-  }, [selectedSubjectSpecialty]);
+  }, [selectedSubjectSpecialty, isStep1Completed]);
 
   useEffect(() => {
     if (selectedInstructor && selectedInstructor.id) {
@@ -105,24 +142,31 @@ const CreateScheduleForClassPage = () => {
     }
   }, [selectedInstructor]);
 
+  useEffect(() => {
+    if (traineeAssignMethod === 'manual' && isStep1Completed && selectedSubjectSpecialty?.specialtyId) {
+      fetchEligibleManualTrainees(selectedSubjectSpecialty.specialtyId);
+    } else {
+      setEligibleManualTrainees([]);
+    }
+  }, [traineeAssignMethod, isStep1Completed, selectedSubjectSpecialty]);
+
   const fetchSubjectSpecialties = async () => {
     setLoading(prev => ({ ...prev, subjects: true }));
     try {
       const response = await getAllSubjectSpecialties();
-      console.log("Subject specialties response:", response);
-      
+
       if (Array.isArray(response)) {
         setSubjectSpecialties(response);
       } else if (response && Array.isArray(response.data)) {
         setSubjectSpecialties(response.data);
       } else {
-        console.warn("Unexpected format for subject specialties:", response);
         setSubjectSpecialties([]);
-        message.error("Could not load subject specialties in expected format.");
+        message.error("Could not load subject specialties in expected format. See console for API response.");
       }
     } catch (error) {
       console.error("Error fetching subject specialties:", error);
-      message.error("Failed to load subject specialties.");
+      console.error("Error details (if available):", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+      message.error("Failed to load subject specialties. Check console for error details.");
       setSubjectSpecialties([]);
     } finally {
       setLoading(prev => ({ ...prev, subjects: false }));
@@ -140,11 +184,9 @@ const CreateScheduleForClassPage = () => {
       if (allAssignments && Array.isArray(allAssignments) && specialty && specialty.subjectId) {
         const filteredAssignments = allAssignments
           .filter(assign => {
-            // Corrected comparison based on new understanding
             const isMatch = assign.courseSubjectSpecialtyId === specialty.subjectId;
             return isMatch;
           });
-          console.log("Filtered Assignments:", filteredAssignments); // LOG 3
         const instructorNamesMap = {};
         if (scheduleResponse && scheduleResponse.schedules && Array.isArray(scheduleResponse.schedules)) {
           scheduleResponse.schedules.forEach(schedule => {
@@ -154,21 +196,16 @@ const CreateScheduleForClassPage = () => {
           });
         }
 
-        // Map to include id, instructorName, and assignmentId
         const instructors = filteredAssignments.map(assign => {
-          // The 'assign' object from filteredAssignments already has 'assignmentId'
-          // as seen in the console log: {assignmentId: 'ASG-5A686B', ...}
-          // It also has 'instructorId'
           if (!assign.assignmentId) {
              console.warn("CRITICAL: assignmentId is missing in filtered assign object:", assign);
           }
           return {
             id: assign.instructorId, 
             instructorName: instructorNamesMap[assign.instructorId] || `Instructor ${assign.instructorId}`,
-            assignmentId: assign.assignmentId // Directly use assign.assignmentId
+            assignmentId: assign.assignmentId
           };
         });
-        console.log("LOG 4 - Mapped Instructors (before unique):", instructors);
 
         const uniqueInstructors = Array.from(
           new Map(instructors.map(item => [item.id, item])).values()
@@ -194,10 +231,9 @@ const CreateScheduleForClassPage = () => {
   
   const fetchInstructorSchedules = async (instructorId) => {
     setLoading(prev => ({ ...prev, instructorSchedules: true }));
-    setConflictMessages([]); // Reset old messages
+    setConflictMessages([]); 
     try {
       const response = await trainingScheduleService.getAllTrainingSchedules(); 
-      // API response: { message: "...", schedules: [...] }
       let currentSchedules = [];
       if (response && response.schedules && Array.isArray(response.schedules)) {
         currentSchedules = response.schedules.filter(s => s.instructorID === instructorId);
@@ -209,7 +245,7 @@ const CreateScheduleForClassPage = () => {
       if (currentSchedules.length > 0) {
         const today = dayjs();
         const newConflictMessages = [];
-        currentSchedules.forEach(sch => {
+        currentSchedules.forEach((sch, index) => {
           const endDate = dayjs(sch.endDateTime);
           if (today.isSameOrBefore(endDate, 'day')) {
             const startTime = dayjs(sch.classTime, "HH:mm:ss");
@@ -218,17 +254,20 @@ const CreateScheduleForClassPage = () => {
               const [h, m, s] = sch.subjectPeriod.split(':').map(Number);
               endTime = startTime.add(h, 'hours').add(m, 'minutes').add(s, 'seconds');
             }
-            newConflictMessages.push(
-              `Instructor ${sch.instructorName || `ID: ${sch.instructorID}`} already has schedule for "${sch.subjectName}" ` +
-              `at ${getLocationName(sch.location) || sch.location} (Room: ${getRoomName(sch.room) || sch.room}), ` +
-              `from ${dayjs(sch.startDateTime).format("YYYY-MM-DD")} to ${endDate.format("YYYY-MM-DD")}, ` +
-              `on ${sch.daysOfWeek} from ${startTime.format("HH:mm")} to ${endTime.format("HH:mm")}.`
+            const conflictMessageJSX = (
+              <span key={`conflict-${index}`}>
+                Instructor <strong>{sch.instructorName || `ID: ${sch.instructorID}`}</strong> already has schedule for <strong>"{sch.subjectName}"</strong> {} 
+                at <strong>{getLocationName(sch.location) || sch.location}</strong> (Room: <strong>{getRoomName(sch.room) || sch.room}</strong>), {} 
+                from <strong>{dayjs(sch.startDateTime).format("YYYY-MM-DD")}</strong> to <strong>{endDate.format("YYYY-MM-DD")}</strong>, {} 
+                on <strong>{sch.daysOfWeek}</strong> from <strong>{startTime.format("HH:mm")}</strong> to <strong>{endTime.format("HH:mm")}</strong>.
+              </span>
             );
+            newConflictMessages.push(conflictMessageJSX);
           }
         });
         setConflictMessages(newConflictMessages);
         if (newConflictMessages.length > 0) {
-            message.warning("Selected instructor has existing schedules. Please check carefully.", 5);
+            message.warning("Selected instructor has existing schedules. Please check carefully.", 7);
         }
       } else {
         message.info("Selected instructor has no existing schedules.");
@@ -258,30 +297,27 @@ const CreateScheduleForClassPage = () => {
         if (instructor) {
             setSelectedInstructor(instructor); 
         } else {
-            // Fallback if not found, though ideally it should always be found
             setSelectedInstructor({
                 id: option.key,
-                instructorName: option.children, // This might be a string like "Name (ID)"
-                assignmentId: null // Or try to extract if possible from a more complex option.props structure
+                instructorName: option.children, 
+                assignmentId: null 
             });
         }
     } else {
         setSelectedInstructor(null);
     }
   };
-
-    // Logic kiểm tra xung đột (ví dụ đơn giản, cần làm phức tạp hơn)
+  
   const isSlotFree = (date, timeRange) => {
     if (!selectedInstructor || instructorExistingSchedules.length === 0) {
       return true; 
     }
 
-    const targetDayOfWeek = date.day(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
-    const targetStartTime = dayjs(timeRange[0]); // Giả sử timeRange là [startTime, endTime] của TimePicker.RangePicker
+    const targetDayOfWeek = date.day(); 
+    const targetStartTime = dayjs(timeRange[0]); 
     const targetEndTime = dayjs(timeRange[1]);
 
     for (const schedule of instructorExistingSchedules) {
-      // Cần parse 'daysOfWeek' từ string "Monday,Tuesday" thành mảng số [1, 2]
       const scheduleDays = (schedule.daysOfWeek || "")
         .toLowerCase()
         .split(',')
@@ -294,17 +330,17 @@ const CreateScheduleForClassPage = () => {
                 case "thursday": return 4;
                 case "friday": return 5;
                 case "saturday": return 6;
-                default: return -1; // Hoặc ném lỗi nếu tên ngày không hợp lệ
+                default: return -1; 
             }
         })
         .filter(dayNum => dayNum !== -1);
 
       if (!scheduleDays.includes(targetDayOfWeek)) {
-        continue; // Khác ngày trong tuần, bỏ qua
+        continue; 
       }
 
-      const scheduleStartTime = dayjs(schedule.classTime, "HH:mm:ss"); // classTime từ API
-      const schedulePeriod = schedule.subjectPeriod; // Ví dụ "01:30:00"
+      const scheduleStartTime = dayjs(schedule.classTime, "HH:mm:ss"); 
+      const schedulePeriod = schedule.subjectPeriod; 
       
       let scheduleEndTime = scheduleStartTime;
       if (schedulePeriod) {
@@ -312,51 +348,29 @@ const CreateScheduleForClassPage = () => {
         scheduleEndTime = scheduleStartTime.add(h, 'hours').add(m, 'minutes').add(s, 'seconds');
       }
       
-      // Kiểm tra ngày bắt đầu và kết thúc của lịch hiện có
-      const existingSchStartDate = dayjs(schedule.startDateTime || schedule.startDay); // API có thể trả về startDay
-      const existingSchEndDate = dayjs(schedule.endDateTime || schedule.endDay); // API có thể trả về endDay
+      const existingSchStartDate = dayjs(schedule.startDateTime || schedule.startDay); 
+      const existingSchEndDate = dayjs(schedule.endDateTime || schedule.endDay); 
 
       if (!(date.isSame(existingSchStartDate, 'day') || date.isAfter(existingSchStartDate, 'day')) || 
           !(date.isSame(existingSchEndDate, 'day') || date.isBefore(existingSchEndDate, 'day'))) {
-          continue; // Ngày chọn nằm ngoài khoảng của lịch hiện có
+          continue; 
       }
 
-
-      // Kiểm tra chồng chéo thời gian
-      // (StartA <= EndB) and (EndA >= StartB)
       if (targetStartTime.isBefore(scheduleEndTime) && targetEndTime.isAfter(scheduleStartTime)) {
         message.warning(`Time conflict with existing schedule: ${schedule.subjectName} on ${date.format("YYYY-MM-DD")} from ${scheduleStartTime.format("HH:mm")} to ${scheduleEndTime.format("HH:mm")}`);
-        return false; // Xung đột
+        return false; 
       }
     }
-    return true; // Không xung đột
+    return true; 
   };
 
   const disabledDate = (current) => {
-    // Logic cơ bản: không cho chọn quá khứ
-    // Có thể thêm logic dựa trên instructorExistingSchedules nếu cần vô hiệu hóa cả ngày
     return current && current < dayjs().startOf("day");
   };
   
-  // Ví dụ cho disabledTime - cần TimePicker.RangePicker để có range
   const disabledTime = (now, type) => {
-    // const currentSelectedDate = form.getFieldValue('startDate'); // Hoặc ngày cụ thể đang được chọn
-    // if (!currentSelectedDate || !selectedInstructorId || instructorExistingSchedules.length === 0) {
-    //   return {};
-    // }
-    // if (type === 'start') {
-    //   return {
-    //     disabledHours: () => [], // Trả về mảng giờ bị vô hiệu hóa
-    //   };
-    // }
-    // return {
-    //   disabledHours: () => [], // Trả về mảng giờ bị vô hiệu hóa
-    // };
-    // Phần này rất phức tạp và phụ thuộc vào cách bạn muốn hiển thị + kiểm tra xung đột.
-    // Hiện tại để trống để tránh lỗi.
     return {};
   };
-
 
   const daysOfWeekOptions = [
     { label: "Monday", value: "1" },
@@ -365,118 +379,342 @@ const CreateScheduleForClassPage = () => {
     { label: "Thursday", value: "4" },
     { label: "Friday", value: "5" },
     { label: "Saturday", value: "6" },
-    { label: "Sunday", value: "0" }, // Theo chuẩn JS Date.getDay()
+    { label: "Sunday", value: "0" }, 
   ];
 
-  const handleSubmit = async () => {
+  const handleProceedToStep2 = (newClassSubjectId, newTrainingScheduleId) => {
+    setCreatedClassSubjectId(newClassSubjectId);
+    setCreatedTrainingScheduleId(newTrainingScheduleId);
+    setCurrentStep(1);
+    setIsEditingScheduleDetails(false);
+    message.success("Step 1 Completed: Schedule created! Please proceed to Step 2.");
+  };
+  
+  const hardResetAndRollback = async () => {
+    console.log("hardResetAndRollback function CALLED!");
+    const csIdToRollback = createdClassSubjectId;
+
+    form.resetFields(); 
+    traineeForm.resetFields(); 
+
+    setSelectedSubjectSpecialty(null);
+    setSelectedInstructor(null);
+    setAvailableInstructors([]);
+    setInstructorExistingSchedules([]);
+    setConflictMessages([]);
+    setCurrentStep(0);
+    setCreatedClassSubjectId(null);
+    setCreatedTrainingScheduleId(null);
+    setIsEditingScheduleDetails(false);
+    setTraineeAssignMethod('import');
+    setFileList([]);
+    setSubmittingStep1(false);
+    setSubmittingStep2(false);
+    setLoading(prev => ({ ...prev, assigningTrainee: false, eligibleTrainees: false }));
+    
+    if (csIdToRollback) {
+        try {
+            setSubmittingStep1(true); 
+            console.log(`HardReset: Attempting to delete ClassSubject ID: ${csIdToRollback}`);
+            await deleteClassSubject(csIdToRollback);
+            message.success(`Rolled back: ClassSubject ${csIdToRollback} has been deleted during page reset.`);
+        } catch (deleteError) {
+            console.error("HardReset: Error deleting ClassSubject:", deleteError);
+            const delErrMsg = deleteError.response?.data?.message || deleteError.message || "An unexpected error occurred during rollback.";
+            message.error(`HardReset: Failed to rollback ClassSubject ${csIdToRollback}. Error: ${String(delErrMsg)}`, 7);
+        } finally {
+            setSubmittingStep1(false);
+        }
+    }
+    message.info("Page has been completely reset.");
+  };
+
+  const resetPageForNewScheduleCycle = () => {
+    console.log("resetPageForNewScheduleCycle function CALLED!");
+    form.resetFields(); 
+    traineeForm.resetFields();
+
+    setSelectedSubjectSpecialty(null);
+    setSelectedInstructor(null);
+    setAvailableInstructors([]);
+    setInstructorExistingSchedules([]);
+    setConflictMessages([]);
+    setCurrentStep(0);
+    setCreatedClassSubjectId(null);
+    setCreatedTrainingScheduleId(null);
+    setIsEditingScheduleDetails(false);
+    setTraineeAssignMethod('import');
+    setFileList([]);
+    setSubmittingStep1(false);
+    setSubmittingStep2(false);
+    setEligibleManualTrainees([]);
+    setLoading(prev => ({ ...prev, assigningTrainee: false, eligibleTrainees: false }));
+    message.success("Process completed! Ready to create a new schedule.", 5);
+  };
+
+  const handleCreateScheduleSubmit = async () => {
     try {
-      console.log("Attempting form validation...");
       await form.validateFields();
-      console.log("Form validation successful! Proceeding to create ClassSubject and Schedule."); 
-      setSubmitting(true);
-
-      console.log("Selected Instructor in handleSubmit:", selectedInstructor); // LOG 5
-      console.log("Selected Subject Specialty in handleSubmit:", selectedSubjectSpecialty); // LOG 6
-
-      if (!selectedSubjectSpecialty || !selectedSubjectSpecialty.subjectSpecialtyId) {
-        message.error("Please select a subject specialty.");
-        setSubmitting(false);
-        return;
+      setSubmittingStep1(true);
+      if (!selectedSubjectSpecialty?.subjectSpecialtyId || !selectedInstructor?.assignmentId) {
+        message.error("Please select subject specialty and instructor.");
+        setSubmittingStep1(false); return;
       }
-
-      if (!selectedInstructor || !selectedInstructor.assignmentId) {
-        message.error("Please select an instructor or ensure instructor assignment is available.");
-        setSubmitting(false);
-        return;
-      }
-
       const values = form.getFieldsValue(true);
-      const classSubjectData = {
-        classId: classId,
-        subjectSpecialtyId: selectedSubjectSpecialty.subjectSpecialtyId,
-        instructorAssignmentID: selectedInstructor.assignmentId,
-        notes: values.notes || "",
-      };
-
-      let classSubjectResponse;
-      let createdClassSubjectId;
+      const classSubjectData = { classId, subjectSpecialtyId: selectedSubjectSpecialty.subjectSpecialtyId, instructorAssignmentID: selectedInstructor.assignmentId, notes: values.notes || "" };
+      let csResponse, newClassSubjectId;
       try {
-        console.log("Creating ClassSubject with data:", classSubjectData);
-        classSubjectResponse = await createClassSubject(classSubjectData);
-        console.log("Create ClassSubject response:", classSubjectResponse);
-        if (classSubjectResponse && classSubjectResponse.classSubject && classSubjectResponse.classSubject.classSubjectId) {
-          createdClassSubjectId = classSubjectResponse.classSubject.classSubjectId;
-        } else if (classSubjectResponse && classSubjectResponse.data && classSubjectResponse.data.classSubject && classSubjectResponse.data.classSubject.classSubjectId) {
-          createdClassSubjectId = classSubjectResponse.data.classSubject.classSubjectId;
-        } else if (classSubjectResponse && classSubjectResponse.data && classSubjectResponse.data.classSubjectId) {
-          createdClassSubjectId = classSubjectResponse.data.classSubjectId;
-        } else if (classSubjectResponse && classSubjectResponse.classSubjectId) {
-            createdClassSubjectId = classSubjectResponse.classSubjectId;
+        csResponse = await createClassSubject(classSubjectData);
+        newClassSubjectId = csResponse?.classSubject?.classSubjectId || csResponse?.data?.classSubject?.classSubjectId || csResponse?.data?.classSubjectId || csResponse?.classSubjectId;
+        if (!newClassSubjectId) {
+          message.error("Failed to create class subject: ID not found. " + JSON.stringify(csResponse));
+          setSubmittingStep1(false); return;
         }
-        if (!createdClassSubjectId) {
-          message.error("Failed to create class subject: ClassSubject ID not found in API response.");
-          setSubmitting(false);
-          return;
-        }
-        console.log("Extracted ClassSubject ID:", createdClassSubjectId);
       } catch (csError) {
-        console.error("Error creating ClassSubject:", csError);
         message.error("Failed to create class subject. " + (csError.response?.data?.message || csError.message));
-        setSubmitting(false);
-        return;
+        setSubmittingStep1(false); return;
       }
       
-      const scheduleData = {
-        classSubjectId: createdClassSubjectId,
-        location: values.location,
-        room: values.room,
-        notes: values.notes || "",
-        startDay: values.startDate ? values.startDate.toISOString() : null,
-        endDay: values.endDate ? values.endDate.toISOString() : null,
-        daysOfWeek: values.daysOfWeek ? values.daysOfWeek.map(day => parseInt(day, 10)) : [],
-        classTime: values.classTime ? values.classTime.format("HH:mm:ss") : null,
-        subjectPeriod: values.subjectPeriod ? values.subjectPeriod.format("HH:mm:ss") : null,
+      const scheduleData = { 
+        classSubjectId: newClassSubjectId, 
+        location: values.location, 
+        room: values.room, 
+        notes: values.notes,
+        startDay: values.startDate?.toISOString(), 
+        endDay: values.endDate?.toISOString(), 
+        daysOfWeek: values.daysOfWeek?.map(d => parseInt(d,10)) || [], 
+        classTime: values.classTime?.format("HH:00:00"),
+        subjectPeriod: values.subjectPeriod?.format("HH:mm:ss")
       };
 
       try {
-        console.log("Creating TrainingSchedule with data:", scheduleData);
-        await trainingScheduleService.createTrainingSchedule(scheduleData);
-        console.log("IMMEDIATELY AFTER SUCCESSFUL schedule creation. ClassSubjectId:", createdClassSubjectId, "NO DELETE SHOULD BE CALLED YET.");
-        console.log("Create TrainingSchedule successful");
-        message.success("Schedule created successfully!");
-        form.resetFields();
-        setSelectedSubjectSpecialty(null);
-        setSelectedInstructor(null);
-        setAvailableInstructors([]);
-        setInstructorExistingSchedules([]);
-        setConflictMessages([]);
+        const tsResponse = await trainingScheduleService.createTrainingSchedule(scheduleData);
+        console.log("Create Training Schedule Response:", tsResponse);
+        const newTrainingScheduleId = tsResponse?.data?.scheduleID || tsResponse?.scheduleId || tsResponse?.data?.trainingScheduleID || tsResponse?.trainingScheduleID || tsResponse?.id || tsResponse?.data?.id;
+
+        if (!newTrainingScheduleId) {
+            message.error("Failed to create training schedule: Training Schedule ID not found in API response. Rolling back ClassSubject.", 7);
+            try { await deleteClassSubject(newClassSubjectId); message.warning(`Rolled back: ClassSubject ${newClassSubjectId} deleted.`); }
+            catch (delError) { message.error(`Failed to rollback ClassSubject ${newClassSubjectId}. ` + (delError.response?.data?.message || delError.message)); }
+            setSubmittingStep1(false);
+            return;
+        }
+        handleProceedToStep2(newClassSubjectId, newTrainingScheduleId);
       } catch (tsError) {
-        console.error("DETAILED tsError Object for TrainingSchedule creation failure:", JSON.stringify(tsError, Object.getOwnPropertyNames(tsError), 2));
-        console.error("ERROR CAUGHT: Entering catch block for TrainingSchedule creation.", tsError);
-        
-        const errMsg = tsError.response?.data?.message || tsError.message || "An unexpected error occurred.";
-        message.error("Failed to create training schedule. Attempting to rollback ClassSubject creation. " + String(errMsg));
-        
-        console.log("Value of createdClassSubjectId before attempting delete:", createdClassSubjectId);
-        if (createdClassSubjectId) {
-          try {
-            console.log(`Attempting to delete ClassSubject with ID: ${createdClassSubjectId}`);
-            await deleteClassSubject(createdClassSubjectId);
-          } catch (deleteError) {
-            const delErrMsg = deleteError.response?.data?.message || deleteError.message || "An unexpected error occurred during rollback.";
-            message.error(`Failed to rollback ClassSubject ${createdClassSubjectId}. Please contact support or delete it manually. ` + String(delErrMsg));
-          }
-        } else {
-          console.warn("Rollback skipped: createdClassSubjectId is not available.");
+        const errMsg = tsError.response?.data?.message || tsError.message || "Unexpected error creating training schedule.";
+        message.error("Failed to create training schedule. Rolling back... " + String(errMsg), 7);
+        if (newClassSubjectId) {
+          try { await deleteClassSubject(newClassSubjectId); message.warning(`Rolled back: ClassSubject ${newClassSubjectId} deleted.`); }
+          catch (delError) { message.error(`Failed to rollback ClassSubject ${newClassSubjectId}. ` + (delError.response?.data?.message || delError.message)); }
         }
       }
+    } catch (errorInfo) {
+      message.error("Please fill all required fields for schedule.");
+    } finally { setSubmittingStep1(false); }
+  };
+
+  const handleAssignTraineesSubmit = async () => {
+    if (!createdClassSubjectId) {
+        message.error("Cannot assign trainees without a created schedule (ClassSubject ID is missing). Please complete Step 1.");
+        return;
+    }
+    setSubmittingStep2(true);
+    setLoading(prev => ({ ...prev, assigningTrainee: true }));
+
+    try {
+        if (traineeAssignMethod === 'import') {
+            if (fileList.length === 0) {
+                message.error("Please select an Excel file to import.");
+                setSubmittingStep2(false); setLoading(prev => ({ ...prev, assigningTrainee: false })); return;
+            }
+            await assignTrainee(fileList[0]); 
+            message.success("Trainees imported successfully from file!");
+            resetPageForNewScheduleCycle();
+        } else {
+            await traineeForm.validateFields();
+            const manualValues = traineeForm.getFieldValue('trainees');
+            if (!manualValues || manualValues.length === 0 || manualValues.every(t => !t.traineeId)) {
+                 message.error("Please add at least one trainee or fill in the details for existing ones.");
+                 setSubmittingStep2(false); setLoading(prev => ({ ...prev, assigningTrainee: false })); return;
+            }
+
+            const assignments = manualValues
+                .filter(trainee => trainee.traineeId)
+                .map(trainee => ({
+                    traineeId: trainee.traineeId,
+                    classId: classId, 
+                    notes: trainee.notes || "",
+                    classSubjectId: createdClassSubjectId,
+            }));
+            
+            if (assignments.length === 0) {
+                message.error("No valid trainee data to assign.");
+                setSubmittingStep2(false); setLoading(prev => ({ ...prev, assigningTrainee: false })); return;
+            }
+
+            let allSuccessful = true;
+            for (const assignment of assignments) {
+                try {
+                    await assignTraineeManual(assignment);
+                } catch (manualError) {
+                    allSuccessful = false;
+                    const errMsg = manualError.response?.data?.message || manualError.message || "An unexpected error occurred.";
+                    message.error(`Failed to assign trainee ${assignment.traineeId}: ${String(errMsg)}`);
+                }
+            }
+            if (allSuccessful) {
+                message.success("All selected trainees assigned manually successfully!");
+                resetPageForNewScheduleCycle();
+            } else {
+                 message.warning("Some trainees could not be assigned. Please check the details. The schedule itself is created.");
+            }
+        }
+    } catch (error) {
+        console.error("Error assigning trainees:", error);
+        const mainErrMsg = error.response?.data?.message || error.message || "An unexpected error occurred while assigning trainees.";
+        message.error("Failed to assign trainees: " + String(mainErrMsg) + (error.errors ? " Check validation." : ""));
+    } finally {
+        setSubmittingStep2(false);
+        setLoading(prev => ({ ...prev, assigningTrainee: false }));
+    }
+  };
+
+  const beforeUpload = (file) => {
+    const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.type === 'application/vnd.ms-excel';
+    if (!isExcel) {
+      message.error('You can only upload Excel files (xls, xlsx)!');
+    }
+    const isLt2M = file.size / 1024 / 1024 < 2;
+    if (!isLt2M) {
+      message.error('File must be smaller than 2MB!');
+    }
+    if (isExcel && isLt2M) {
+        setFileList([file]);
+    }
+    return false;
+  };
+
+  const handleRemoveFile = () => {
+    setFileList([]);
+  };
+
+  const getDisabledHours = () => {
+    const hours = [];
+    for (let i = 0; i < 24; i++) {
+      if (i < 7 || i > 20) {
+        hours.push(i);
+      }
+    }
+    return hours;
+  };
+
+  const getDisabledMinutes = (selectedHour) => {
+    if (selectedHour === null || selectedHour === undefined) return [];
+    const minutes = [];
+    for (let i = 1; i < 60; i++) {
+      minutes.push(i);
+    }
+    return minutes;
+  };
+  
+  const getDisabledSeconds = (selectedHour, selectedMinute) => {
+     if (selectedHour === null || selectedMinute === null) return [];
+     const seconds = [];
+     for (let i = 1; i < 60; i++) {
+       seconds.push(i);
+     }
+     return seconds;
+  };
+
+  const handleEditScheduleDetails = () => {
+    setIsEditingScheduleDetails(true);
+    message.info("You are now editing schedule details. Instructor and Subject cannot be changed.", 5);
+  };
+
+  const handleCancelUpdateScheduleDetails = () => {
+    setIsEditingScheduleDetails(false);
+    message.info("Editing schedule details cancelled.");
+  };
+
+  const handleUpdateScheduleDetailsSubmit = async () => {
+    if (!createdTrainingScheduleId) {
+      message.error("Cannot update schedule: Training Schedule ID is missing. Please ensure Step 1 was completed correctly.");
+      return;
+    }
+    try {
+      await form.validateFields(); 
+      setSubmittingStep1(true);
+
+      const values = form.getFieldsValue(true);
+      
+      const scheduleDetailsData = {
+        location: values.location,
+        room: values.room,
+        notes: values.notes,
+        startDay: values.startDate?.toISOString(),
+        endDay: values.endDate?.toISOString(),
+        daysOfWeek: values.daysOfWeek?.map(d => parseInt(d, 10)) || [],
+        classTime: values.classTime?.format("HH:00:00"),
+        subjectPeriod: values.subjectPeriod?.format("HH:mm:ss"),
+        classSubjectId: createdClassSubjectId,
+      };
+      
+      console.log("Updating Training Schedule with ID:", createdTrainingScheduleId, "Data:", scheduleDetailsData);
+
+      await trainingScheduleService.updateTrainingSchedule(createdTrainingScheduleId, scheduleDetailsData);
+      message.success("Schedule details updated successfully!");
+      setIsEditingScheduleDetails(false);
 
     } catch (errorInfo) {
-      console.error("Form validation FAILED in handleSubmit's main try-catch:", errorInfo);
-      message.error("Please fill in all required fields correctly. Check console for details.");
+      if (errorInfo.errorFields) {
+          message.error("Please fill all required schedule details correctly.");
+      } else {
+          console.error("Error updating training schedule:", errorInfo);
+          const errMsg = errorInfo.response?.data?.message || errorInfo.message || "An unexpected error occurred while updating schedule.";
+          message.error(`Failed to update schedule: ${String(errMsg)}`, 7);
+      }
     } finally {
-      console.log("handleSubmit finally block executing.");
-      setSubmitting(false);
+      setSubmittingStep1(false);
+    }
+  };
+
+  const fetchEligibleManualTrainees = async (specialtyId) => {
+    if (!specialtyId) {
+      setEligibleManualTrainees([]);
+      return;
+    }
+    setLoading(prev => ({ ...prev, eligibleTrainees: true }));
+    try {
+      const response = await getAllUsers();
+      let users = [];
+      if (response && Array.isArray(response.data)) {
+        users = response.data;
+      } else if (response && Array.isArray(response)) {
+         users = response;
+      } else if (response && response.data && Array.isArray(response.data.users) ){
+         users = response.data.users;
+      }
+      else {
+        console.warn("Unexpected format for getAllUsers response:", response);
+      }
+
+      if (users.length > 0) {
+        const filteredTrainees = users.filter(
+          (user) => user.roleName === "Trainee" && user.specialtyId === specialtyId && user.accountStatus === "Active"
+        );
+        setEligibleManualTrainees(filteredTrainees);
+        if (filteredTrainees.length === 0) {
+          message.info("No eligible trainees found for the selected specialty to assign manually.");
+        }
+      } else {
+        setEligibleManualTrainees([]);
+      }
+    } catch (error) {
+      console.error("Error fetching eligible trainees:", error);
+      message.error("Failed to load trainees for manual assignment.");
+      setEligibleManualTrainees([]);
+    } finally {
+      setLoading(prev => ({ ...prev, eligibleTrainees: false }));
     }
   };
 
@@ -487,241 +725,262 @@ const CreateScheduleForClassPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
-      <div className="max-w-[1200px] mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-purple-600 rounded-xl shadow-lg">
-              <CalendarOutlined className="text-3xl text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100 p-4 sm:p-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
+        {/* Header Section */}
+        <div className="bg-gradient-to-r from-purple-600 to-pink-500 p-6 text-white">
+            <div className="flex items-center gap-4">
+                <CalendarOutlined className="text-4xl opacity-80" />
+                <div>
+                    <Title level={2} style={{ color: 'white', margin: 0 }}>Create Class Schedule & Assign Trainees</Title>
+                    <Text style={{ color: 'rgba(255,255,255,0.8)' }}>Class ID: {classId}</Text>
+                </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Create Schedule for Class: {classId}
-              </h2>
-              <p className="text-gray-600">
-                Plan and schedule training sessions.
-              </p>
-            </div>
-          </div>
         </div>
 
-        <Card className="shadow-xl rounded-2xl">
-          <Spin spinning={submitting || loading.subjects || loading.instructors || loading.instructorSchedules}>
-            <Form form={form} layout="vertical" initialValues={{
-                startDate: dayjs().startOf('day'),
-                endDate: dayjs().add(7, 'day').startOf('day'),
-            }} >
-              <Row gutter={24}>
-                {/* Column 1: Subject and Instructor Selection */}
-                <Col xs={24} md={8}>
-                  <Title level={4} className="mb-4 flex items-center">
-                    <BookOutlined className="mr-2" /> Selection
-                  </Title>
-                  <Form.Item
-                    name="subjectSpecialtyId"
-                    label="Subject Specialty"
-                    rules={[{ required: true, message: "Please select a subject specialty" }]}
-                  >
-                    <Select
-                      placeholder="Select subject specialty"
-                      loading={loading.subjects}
-                      onChange={handleSubjectSpecialtyChange}
-                      showSearch
-                      optionFilterProp="children"
-                    >
-                      {subjectSpecialties.map((specialty) => (
-                        <Option 
-                          key={specialty.subjectSpecialtyId} 
-                          value={specialty.subjectSpecialtyId}
-                        >
-                          {specialty.subjectName || specialty.subject?.subjectName} - {specialty.specialtyName || specialty.specialty?.specialtyName}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
+        <div className="p-6 sm:p-8">
+        <div className="flex justify-center">
+  <div className="w-full max-w-xl">
+    <Steps
+      current={currentStep}
+      className="mb-10 pb-2 border-b border-gray-200"
+    >
+      <Step
+        title="Create Schedule"
+        icon={isStep1Completed ? <CheckCircleFilled style={{ fontSize: '24px', color: '#52c41a' }} /> : ( <div className="w-6 h-6 border-2 border-blue-500 rounded-full flex items-center justify-center text-sm text-blue-500 mt-1"> 1 </div> )}
+        description=" "
+        status={
+          currentStep > 0
+            ? createdClassSubjectId
+              ? 'finish'
+              : 'error'
+            : currentStep === 0
+            ? 'process'
+            : 'wait'
+        }
+      />
+      <Step
+        title="Assign Trainees"
+        description=" "
+        icon={
+            <div className="w-6 h-6 border-2 border-blue-500 rounded-full flex items-center justify-center text-sm text-blue-500 mt-1">
+              2
+            </div>
+          }
+        disabled={!isStep1Completed}
+        status={
+          currentStep === 1
+            ? isStep1Completed
+              ? 'process'
+              : 'wait'
+            : isStep1Completed
+            ? 'wait'
+            : 'wait'
+        }
+      />
+    </Steps>
+  </div>
+</div>
+            {/* ----- STEP 1: CREATE SCHEDULE ----- */}
+            <Card 
+                className={`shadow-lg rounded-lg mb-8 transition-all duration-500 ${isStep1Completed ? 'opacity-70 border-green-500' : 'border-purple-500'}`}
+                bordered
+                title={
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <SolutionOutlined className={`mr-3 text-2xl ${isStep1Completed ? 'text-green-500' : 'text-purple-600'}`} />
+                            <Title level={4} style={{ margin: 0 }} className={`${isStep1Completed ? 'text-gray-600' : 'text-purple-700'}`}>Step 1: Create Training Schedule</Title>
+                        </div>
+                        {isStep1Completed && !isEditingScheduleDetails && (
+                            <Button icon={<EditOutlined />} onClick={handleEditScheduleDetails} type="link">
+                                Edit Schedule Details
+                            </Button>
+                        )}
+                    </div>
+                }
+            >
+                <Spin spinning={submittingStep1 || loading.subjects || loading.instructors || loading.instructorSchedules}>
+                    <Form form={form} layout="vertical" initialValues={{ startDate: dayjs().startOf('day'), endDate: dayjs().add(7, 'day').startOf('day') }} disabled={(isStep1Completed && !isEditingScheduleDetails) || submittingStep1}>
+                        <Row gutter={24}> 
+                            {/* Phần Selection sẽ chiếm toàn bộ chiều rộng */}
+                            <Col xs={24} md={24}>
+                                <Title level={5} className="mb-3 text-gray-700"><BookOutlined className="mr-2"/>Selection</Title>
+                                {/* Loại bỏ Row con, để mỗi Form.Item chiếm một dòng */} 
+                                <Form.Item name="subjectSpecialtyId" label="Subject Specialty" rules={[{ required: true, message: "Required" }]}>
+                                    <Select placeholder="Select subject specialty" loading={loading.subjects} onChange={handleSubjectSpecialtyChange} showSearch optionFilterProp="children" style={{ width: '100%' }} disabled={createdClassSubjectId !== null || submittingStep1}>
+                                        {subjectSpecialties.map(s => (
+                                            <Option key={s.subjectSpecialtyId} value={s.subjectSpecialtyId}>
+                                                {s.subjectName || s.subject?.subjectName || 'Unknown Subject'} - {s.specialtyName || s.specialty?.specialtyName || 'Unknown Specialty'}
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                                <Form.Item name="instructorId" label="Instructor" rules={[{ required: true, message: "Required" }]}>
+                                    <Select placeholder="Select instructor" loading={loading.instructors} onChange={handleInstructorChange} showSearch optionFilterProp="children" style={{ width: '100%' }} disabled={createdClassSubjectId !== null || submittingStep1}>
+                                        {availableInstructors.map(i => <Option key={i.id} value={i.id}>{i.instructorName} ({i.id})</Option>)}
+                                    </Select>
+                                </Form.Item>
+                                {conflictMessages.length > 0 && !isStep1Completed && (
+                                    <Alert 
+                                        message="Instructor Conflicts" 
+                                        description={
+                                            <Space direction="vertical" style={{width: '100%'}}>
+                                                {conflictMessages.map((msgComponent, idx) => <Paragraph key={idx} style={{fontSize: '12px', marginBottom: '4px'}}>{msgComponent}</Paragraph>)}
+                                            </Space>
+                                        } 
+                                        type="warning" 
+                                        showIcon 
+                                        className="my-4"
+                                    />
+                                )}
+                            </Col>
 
-                  <Form.Item
-                    name="instructorId"
-                    label="Instructor"
-                    rules={[{ required: true, message: "Please select an instructor" }]}
-                  >
-                    <Select
-                      placeholder="Select instructor"
-                      loading={loading.instructors}
-                      onChange={handleInstructorChange}
-                      showSearch
-                      optionFilterProp="children"
-                    >
-                      {availableInstructors.map((instructor) => (
-                        <Option key={instructor.id} value={instructor.id}>
-                          {instructor.instructorName} ({instructor.id})
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                  {conflictMessages.length > 0 && (
-                     <Alert
-                        message={<><InfoCircleOutlined className="mr-2" />Instructor's Existing Schedules</>}
-                        description={
-                            <Space direction="vertical">
-                                {conflictMessages.map((msg, index) => (
-                                    <Paragraph key={index} style={{fontSize: '12px', marginBottom: '8px'}}>
-                                       {msg}
-                                    </Paragraph>
-                                ))}
-                            </Space>
-                        }
-                        type="warning"
-                        showIcon={false} // Icon is in message
-                        className="mb-4 p-3"
-                    />
-                  )}
-                </Col>
-
-                {/* Column 2: Schedule Details */}
-                <Col xs={24} md={16}>
-                  <Title level={4} className="mb-4 flex items-center">
-                    <CalendarOutlined className="mr-2" /> Schedule Details
-                  </Title>
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item name="location" label="Location" rules={[{ required: true, message: "Please enter location" }]}>
-                        <Select 
-                          placeholder="Select location"
-                          showSearch
-                          optionFilterProp="children"
-                        >
-                          {Object.entries(LocationEnum).map(([name, value]) => (
-                            <Option key={value} value={value}>{name}</Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item name="room" label="Room / Platform" rules={[{ required: true, message: "Please enter room or platform" }]}>
-                         <Select 
-                           placeholder="Select room"
-                           showSearch
-                           optionFilterProp="children"
-                         >
-                          {Object.entries(RoomEnum).map(([name, value]) => (
-                            <Option key={value} value={value}>{name}</Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Row gutter={16}>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="startDate"
-                        label="Start Date"
-                        rules={[
-                          { required: true, message: "Start date is required" },
-                        ]}
-                      >
-                        <DatePicker
-                          className="w-full"
-                          format="YYYY-MM-DD"
-                          disabledDate={disabledDate}
-                          onChange={(date, dateString) => {
-                            // Khi ngày thay đổi, set thời gian về 00:00
-                            // Tuy nhiên, DatePicker chỉ chọn ngày sẽ tự động có time là 00:00:00 của timezone hiện tại
-                            // nếu cần UTC 00:00:00 thì cần xử lý thêm.
-                            // form.setFieldsValue({ startDate: date ? date.startOf('day') : null });
-                          }}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} sm={12}>
-                      <Form.Item
-                        name="endDate"
-                        label="End Date"
-                        rules={[
-                          { required: true, message: "End date is required" },
-                           ({ getFieldValue }) => ({
-                            validator(_, value) {
-                              if (!value || !getFieldValue('startDate')) {
-                                return Promise.resolve();
-                              }
-                              if (value.isBefore(getFieldValue('startDate'))) {
-                                return Promise.reject(new Error('End date must be after start date'));
-                              }
-                              return Promise.resolve();
-                            },
-                          }),
-                        ]}
-                      >
-                        <DatePicker
-                          className="w-full"
-                          format="YYYY-MM-DD"
-                          disabledDate={disabledDate}
-                           onChange={(date, dateString) => {
-                            // form.setFieldsValue({ endDate: date ? date.startOf('day') : null });
-                          }}
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                   <Row gutter={16}>
-                     <Col xs={24} sm={12}>
-                        <Form.Item
-                            name="classTime"
-                            label="Class Start Time"
-                            rules={[{ required: true, message: "Please select a class time" }]}
-                        >
-                            <TimePicker className="w-full" format="HH:mm" placeholder="Select class time" minuteStep={1} secondStep={1} />
+                            {/* Phần Details sẽ nằm bên dưới và cũng chiếm toàn bộ chiều rộng */}
+                            <Col xs={24} md={24} className="mt-6"> {/* Thêm class mt-6 (margin-top) để tạo khoảng cách */} 
+                                <Title level={5} className="mb-3 text-gray-700"><CalendarOutlined className="mr-2"/>Details</Title>
+                                <Row gutter={16}>
+                                    <Col xs={24} sm={12}><Form.Item name="location" label="Location" rules={[{ required: true}]}><Select placeholder="Select">{Object.entries(LocationEnum).map(([n,v])=><Option key={v} value={v}>{n}</Option>)}</Select></Form.Item></Col>
+                                    <Col xs={24} sm={12}><Form.Item name="room" label="Room/Platform" rules={[{ required: true}]}><Select placeholder="Select">{Object.entries(RoomEnum).map(([n,v])=><Option key={v} value={v}>{n}</Option>)}</Select></Form.Item></Col>
+                                </Row>
+                                <Row gutter={16}>
+                                    <Col xs={24} sm={12}><Form.Item name="startDate" label="Start Date" rules={[{ required: true}]}><DatePicker className="w-full" format="YYYY-MM-DD" disabledDate={disabledDate}/></Form.Item></Col>
+                                    <Col xs={24} sm={12}><Form.Item name="endDate" label="End Date" rules={[{ required: true}, ({getFieldValue})=>({validator(_,v){if(!v||!getFieldValue('startDate'))return Promise.resolve(); if(v.isBefore(getFieldValue('startDate')))return Promise.reject(new Error('Must be after start')); return Promise.resolve();}})]}><DatePicker className="w-full" format="YYYY-MM-DD" disabledDate={disabledDate}/></Form.Item></Col>
+                                </Row>
+                                <Row gutter={16}>
+                                    <Col xs={24} sm={12}>
+                                        <Form.Item name="classTime" label="Start Time" rules={[{ required: true}]}>
+                                            <TimePicker 
+                                                className="w-full" 
+                                                format="HH:00" 
+                                                showNow={false}
+                                                disabledHours={getDisabledHours}
+                                                disabledMinutes={getDisabledMinutes}
+                                                disabledSeconds={getDisabledSeconds}
+                                                hideDisabledOptions
+                                            />
+                                        </Form.Item>
+                                    </Col>
+                                    <Col xs={24} sm={12}><Form.Item name="subjectPeriod" label="Duration"><TimePicker className="w-full" format="HH:mm" placeholder="HH:mm (e.g. 01:30)" showNow={false} minuteStep={15}/></Form.Item></Col>
+                                </Row>
+                                <Form.Item name="daysOfWeek" label="Recurring Days" rules={[{ required: true, message: "Select at least one day"}]}><Checkbox.Group options={daysOfWeekOptions} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2"/></Form.Item>
+                                <Form.Item name="notes" label="Notes"><TextArea rows={3} placeholder="Notes for this class" /></Form.Item>
+                            </Col>
+                        </Row>
+                        {!createdClassSubjectId && !isEditingScheduleDetails && (
+                            <div className="flex justify-end mt-6 pt-6 border-t border-gray-200">
+                                <Button icon={<RollbackOutlined />} onClick={() => navigate("/class")} size="large" className="mr-4" disabled={submittingStep1}>Back to Classrooms</Button>
+                                <Button type="primary" icon={<SaveOutlined />} onClick={handleCreateScheduleSubmit} loading={submittingStep1} size="large" className="bg-purple-600 hover:bg-purple-700">
+                                    Save Schedule & Proceed to Step 2
+                                </Button>
+                            </div>
+                        )}
+                         {createdClassSubjectId && !isEditingScheduleDetails && (
+                            <Alert message="Step 1 Completed" description={`Schedule created with Class Subject ID: ${createdClassSubjectId}. Training Schedule ID: ${createdTrainingScheduleId}. You can now proceed to Step 2 below, or edit schedule details.`} type="success" showIcon className="mt-4" />
+                        )}
+                        {isEditingScheduleDetails && createdClassSubjectId && (
+                            <div className="flex justify-end mt-6 pt-6 border-t border-gray-200 gap-4">
+                                <Button onClick={handleCancelUpdateScheduleDetails} size="large" disabled={submittingStep1}>
+                                    Cancel Update
+                                </Button>
+                                <Button type="primary" icon={<SaveOutlined />} onClick={handleUpdateScheduleDetailsSubmit} loading={submittingStep1} size="large" className="bg-blue-600 hover:bg-blue-700">
+                                    Update Schedule Details
+                                </Button>
+                            </div>
+                        )}
+                    </Form>
+                </Spin>
+            </Card>
+            <br/>
+            {/* ----- STEP 2: ASSIGN TRAINEES ----- */}
+            <Card 
+                className={`shadow-lg rounded-lg transition-all duration-500 ${!isStep1Completed ? 'opacity-50 cursor-not-allowed' : 'border-blue-500'}`}
+                bordered
+                title={
+                    <div className="flex items-center">
+                        <TeamOutlined className={`mr-3 text-2xl ${!isStep1Completed ? 'text-gray-400' : 'text-blue-600'}`} />
+                        <Title level={4} style={{ margin: 0 }} className={`${!isStep1Completed ? 'text-gray-500' : 'text-blue-700'}`}>Step 2: Assign Trainees to Class</Title>
+                    </div>
+                }
+            >
+                <Spin spinning={loading.assigningTrainee || loading.eligibleTrainees}>
+                    <div className={`${!isStep1Completed ? 'pointer-events-none' : ''}`}> {/* Overlay để chặn tương tác khi Bước 1 chưa xong */} 
+                        <Form.Item label="Assign Trainee Method" className="mb-6">
+                            <Radio.Group onChange={(e) => setTraineeAssignMethod(e.target.value)} value={traineeAssignMethod} disabled={!isStep1Completed}>
+                                <Radio.Button value="import"><UploadOutlined className="mr-1"/> Import Excel</Radio.Button>
+                                <Radio.Button value="manual"><UserAddOutlined className="mr-1"/> Add Manually</Radio.Button>
+                            </Radio.Group>
                         </Form.Item>
-                     </Col>
-                     <Col xs={24} sm={12}>
-                        <Form.Item name="subjectPeriod" label="Class Duration">
-                            <TimePicker
-                            className="w-full"
-                            format="HH:mm"
-                            placeholder="Select duration (e.g., 01:30)"
-                            showNow={false}
-                            minuteStep={1} 
-                            secondStep={1}
-                            />
-                        </Form.Item>
-                     </Col>
-                   </Row>
-                  <Form.Item
-                    name="daysOfWeek"
-                    label="Recurring Days of Week"
-                    rules={[{ required: true, message: "Select at least one day" }]}
-                  >
-                    <Checkbox.Group options={daysOfWeekOptions} className="grid grid-cols-2 sm:grid-cols-4 gap-2"/>
-                  </Form.Item>
-                  <Form.Item name="notes" label="Notes">
-                    <TextArea rows={3} placeholder="Any additional notes for this schedule" />
-                  </Form.Item>
-                </Col>
-              </Row>
 
-              <div className="flex justify-end mt-6 gap-4">
-                <Button
-                  icon={<RollbackOutlined />}
-                  onClick={() => navigate("/class")} // Quay lại trang Classroom
-                  size="large"
-                >
-                  Back to Classrooms
-                </Button>
-                <Button
-                  type="primary"
-                  icon={<SaveOutlined />}
-                  onClick={handleSubmit}
-                  loading={submitting}
-                  size="large"
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  Create Schedule
-                </Button>
-              </div>
-            </Form>
-          </Spin>
-        </Card>
+                        {traineeAssignMethod === 'import' && (
+                            <Form.Item label="Upload Excel File (.xlsx, .xls)">
+                                <Upload fileList={fileList} beforeUpload={beforeUpload} onRemove={handleRemoveFile} maxCount={1} disabled={!isStep1Completed}>
+                                    <Button icon={<UploadOutlined />} disabled={!isStep1Completed}>Select File (Max 5MB)</Button>
+                                </Upload>
+                                <Text type="secondary" className="block mt-1">Ensure 'TraineeID' column exists. Trainees will be assigned to Class ID: {classId}.</Text>
+                            </Form.Item>
+                        )}
+
+                        {traineeAssignMethod === 'manual' && (
+                            <Form form={traineeForm} layout="vertical" initialValues={{ trainees: [{ traineeId: '', notes: ''}] }} disabled={!isStep1Completed || submittingStep2}>
+                                <Title level={5} className="mb-2">Add Trainees Manually to Class ID: {classId}</Title>
+                                <Paragraph type="secondary" className="mb-4">
+                                  Select trainees have specialty: <Text strong>{selectedSubjectSpecialty?.specialtyName || selectedSubjectSpecialty?.specialtyId || "N/A"}</Text>.
+                                </Paragraph>
+                                <Form.List name="trainees">
+                                    {(fields, { add, remove }) => (
+                                        <>
+                                            {fields.map(({ key, name, ...restField }) => (
+                                                <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                                                    <Form.Item 
+                                                        {...restField} 
+                                                        name={[name, 'traineeId']} 
+                                                        rules={[{ required: true, message: 'Trainee required' }]} 
+                                                        style={{width: '300px'}}
+                                                    >
+                                                        <Select 
+                                                            placeholder="Select Trainee" 
+                                                            loading={loading.eligibleTrainees}
+                                                            showSearch
+                                                            optionFilterProp="children"
+                                                            filterOption={(input, option) => 
+                                                              (option?.label ?? '').toLowerCase().includes(input.toLowerCase()) ||
+                                                              (option?.value ?? '').toLowerCase().includes(input.toLowerCase())
+                                                            }
+                                                            disabled={!isStep1Completed || submittingStep2}
+                                                        >
+                                                            {eligibleManualTrainees.map(trainee => (
+                                                                <Option key={trainee.userId} value={trainee.userId} label={`${trainee.fullName} (${trainee.userId})`}>
+                                                                    {trainee.fullName} ({trainee.userId}) - {trainee.specialtyId}
+                                                                </Option>
+                                                            ))}
+                                                        </Select>
+                                                    </Form.Item>
+                                                    <Form.Item {...restField} name={[name, 'notes']} style={{width: '250px'}}><Input placeholder="Notes (Optional)" disabled={!isStep1Completed || submittingStep2} /></Form.Item>
+                                                    {fields.length > 1 ? <Button type="dashed" danger onClick={() => remove(name)} icon={<UserOutlined />} disabled={!isStep1Completed || submittingStep2}>Remove</Button> : null}
+                                                </Space>
+                                            ))}
+                                            <Form.Item>
+                                                <Button type="dashed" onClick={() => add()} block icon={<UserAddOutlined />} disabled={!isStep1Completed || submittingStep2}>Add Another Trainee</Button>
+                                            </Form.Item>
+                                        </>
+                                    )}
+                                </Form.List>
+                            </Form>
+                        )}
+                        <Divider />
+                        <div className="flex justify-end mt-6 pt-6 border-t border-gray-200">
+                             <Button icon={<DeleteOutlined />} onClick={hardResetAndRollback} size="large" danger className="mr-auto" disabled={submittingStep1 || submittingStep2}>
+                                Reset All & Start Over
+                            </Button>
+                          
+                            <Button type="primary" icon={<SaveOutlined />} onClick={handleAssignTraineesSubmit} loading={submittingStep2} size="large" className="bg-green-600 hover:bg-green-700" disabled={!isStep1Completed || submittingStep1}>
+                                Assign Trainees & Finish
+                            </Button>
+                        </div>
+                    </div>
+                </Spin>
+            </Card>
+        </div>
       </div>
     </div>
   );
@@ -729,10 +988,3 @@ const CreateScheduleForClassPage = () => {
 
 export default CreateScheduleForClassPage;
 
-// Helper để parse daysOfWeek từ API (nếu nó là chuỗi "Monday,Tuesday")
-// Chuyển sang dạng số [1,2] (Monday=1, Sunday=0 hoặc 7 tùy chuẩn)
-// function parseDaysOfWeek(daysString) {
-//   if (!daysString) return [];
-//   const dayMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 0 };
-//   return daysString.toLowerCase().split(',').map(day => dayMap[day.trim()]).filter(day => day !== undefined);
-// } 
