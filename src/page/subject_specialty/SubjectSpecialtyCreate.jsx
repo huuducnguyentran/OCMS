@@ -45,6 +45,8 @@ const SubjectSpecialtyCreate = () => {
           getSpecialtiesForDropdown(),
         ]);
 
+        console.log('Raw specialties response:', specialtiesRes);
+
         let subjectsList = [];
         if (Array.isArray(subjectsRes)) {
           subjectsList = subjectsRes;
@@ -59,12 +61,34 @@ const SubjectSpecialtyCreate = () => {
           specialtiesList = specialtiesRes;
         } else if (specialtiesRes.data?.data) {
           specialtiesList = specialtiesRes.data.data;
+        } else if (specialtiesRes.specialties) {
+          specialtiesList = specialtiesRes.specialties;
+        } else if (specialtiesRes.data) {
+          specialtiesList = specialtiesRes.data;
         }
 
+        console.log('Processed specialties list:', specialtiesList);
+        
+        // Check if specialties have the expected properties
+        if (specialtiesList.length > 0) {
+          console.log('First specialty item:', specialtiesList[0]);
+          console.log('specialtyId exists:', 'specialtyId' in specialtiesList[0]);
+          console.log('specialtyName exists:', 'specialtyName' in specialtiesList[0]);
+          
+          // Try to find the correct property names
+          const firstItem = specialtiesList[0];
+          const possibleIdKeys = Object.keys(firstItem).filter(key => key.toLowerCase().includes('id'));
+          const possibleNameKeys = Object.keys(firstItem).filter(key => key.toLowerCase().includes('name'));
+          
+          console.log('Possible ID keys:', possibleIdKeys);
+          console.log('Possible Name keys:', possibleNameKeys);
+        }
+        
         setSubjects(subjectsList);
         setSpecialties(specialtiesList);
       } catch (error) {
-        message.error("Failed to load subjects or specialties", error);
+        console.error('Error fetching data:', error);
+        message.error("Failed to load subjects or specialties");
       } finally {
         setLoading(false);
       }
@@ -197,14 +221,20 @@ const SubjectSpecialtyCreate = () => {
                       size="large"
                       className="w-full"
                     >
-                      {specialties.map((specialty) => (
-                        <Option
-                          key={specialty.specialtyId}
-                          value={specialty.specialtyId}
-                        >
-                          {specialty.specialtyName || specialty.specialtyId}
-                        </Option>
-                      ))}
+                      {specialties.length > 0 ? specialties.map((specialty) => {
+                        // Handle different property naming conventions
+                        const id = specialty.specialtyId || specialty.id || specialty.specialty_id || '';
+                        const name = specialty.specialtyName || specialty.name || specialty.specialty_name || id;
+                        
+                        return (
+                          <Option
+                            key={id}
+                            value={id}
+                          >
+                            {name}
+                          </Option>
+                        );
+                      }) : <Option value="" disabled>No data</Option>}
                     </Select>
                   </Form.Item>
                 </Card>
