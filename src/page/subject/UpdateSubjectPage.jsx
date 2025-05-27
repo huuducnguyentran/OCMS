@@ -124,21 +124,20 @@ const UpdateSubjectPage = () => {
   };
 
   return (
-    <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Header Section - Full width gradient */}
-
-      {/* Main Content - Full width */}
+    <Layout className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100">
+      {/* Main Content Wrapper */}
       <div className="w-full px-6 py-12">
-        <div className="bg-white p-12 shadow-xl rounded-xl min-h-[calc(100vh-200px)]">
-          <div className="flex justify-between items-start mb-6">
+        <div className="bg-white p-10 shadow-2xl rounded-3xl min-h-[calc(100vh-200px)]">
+          {/* Header Section */}
+          <div className="flex justify-between items-start mb-8">
             <div>
-              <h2 className="text-4xl font-bold text-gray-800 m-0">
+              <h2 className="text-3xl font-extrabold text-cyan-800 m-0">
                 Edit Subject
               </h2>
-              <p className="text-gray-500 text-xl mt-2">
+              <p className="text-cyan-600 text-sm mt-2">
                 Update the subject information below
               </p>
-              <Tag color="blue" className="mt-2 text-lg px-4 py-1">
+              <Tag color="cyan" className="!mt-3 text-base !px-4 py-1">
                 {subjectId}
               </Tag>
             </div>
@@ -146,13 +145,13 @@ const UpdateSubjectPage = () => {
               type="link"
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate("/subject")}
-              className="text-white hover:text-blue-200 px-0 text-lg"
+              className="!text-cyan-500 hover:!text-cyan-700 !border !border-cyan-500 hover:!border-cyan-700  px-0 text-lg font-medium"
             >
               Back to Subjects
             </Button>
           </div>
 
-          {/* Hiển thị thông báo lỗi từ API nếu có */}
+          {/* Error Alert */}
           {apiError && (
             <Alert
               message={
@@ -160,12 +159,10 @@ const UpdateSubjectPage = () => {
               }
               description={
                 <div>
-                  {apiError.message ? (
+                  {apiError.message && (
                     <div className="font-semibold text-red-600">
                       {apiError.message}
                     </div>
-                  ) : (
-                    apiError.title || "An error occurred during the update."
                   )}
                   {apiError.errors && (
                     <ul className="mt-2">
@@ -178,7 +175,7 @@ const UpdateSubjectPage = () => {
                     </ul>
                   )}
                   {apiError.traceId && (
-                    <p className="mt-2 text-xs">
+                    <p className="mt-2 text-xs text-gray-400">
                       <span className="font-semibold">Trace ID:</span>{" "}
                       {apiError.traceId}
                     </p>
@@ -193,19 +190,18 @@ const UpdateSubjectPage = () => {
             />
           )}
 
+          {/* Form */}
           <Form
             form={form}
             layout="vertical"
             onFinish={handleSubmit}
-            className="space-y-10 max-w-full"
+            className="space-y-10"
           >
-            {/* Subject Name - Full width */}
+            {/* Subject Name */}
             <Form.Item
               name="subjectName"
               label={
-                <span className="text-gray-700 font-medium text-xl">
-                  Subject Name
-                </span>
+                <span className="text-cyan-800 font-medium">Subject Name</span>
               }
               rules={[
                 { required: true, message: "Subject name is required" },
@@ -217,18 +213,16 @@ const UpdateSubjectPage = () => {
             >
               <Input
                 placeholder="Enter subject name"
-                className="rounded-xl py-4 text-lg"
+                className="!rounded-lg !shadow-sm !border-cyan-400 focus:!border-cyan-600 focus:!ring-cyan-600"
                 size="large"
               />
             </Form.Item>
 
-            {/* Description - Full width with larger height */}
+            {/* Description */}
             <Form.Item
               name="description"
               label={
-                <span className="text-gray-700 font-medium text-xl">
-                  Description
-                </span>
+                <span className="text-cyan-800 font-medium">Description</span>
               }
               rules={[
                 { required: true, message: "Description is required" },
@@ -239,30 +233,29 @@ const UpdateSubjectPage = () => {
               ]}
             >
               <TextArea
-                rows={8}
+                rows={6}
                 placeholder="Enter subject description"
-                className="rounded-xl text-lg"
+                className="!rounded-lg !shadow-sm !border-cyan-400 focus:!border-cyan-600 focus:!ring-cyan-600"
                 size="large"
                 maxLength={255}
               />
             </Form.Item>
 
-            {/* Stats Cards */}
-            <Row gutter={16} className="mt-8">
+            {/* Credits and Passing Score */}
+            <Row gutter={20} className="mt-4">
               <Col xs={24} sm={12}>
-                <Card className="rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                <Card className="!bg-cyan-50 rounded-xl shadow hover:shadow-lg transition">
                   <Form.Item
                     name="credits"
                     label={
-                      <span className="text-gray-700 font-medium text-xl">
-                        Credits (1-10)
+                      <span className="text-cyan-800 font-medium ">
+                        Credits (1–10)
                       </span>
                     }
                     rules={[
                       { required: true, message: "Credits are required" },
                       () => ({
                         validator(_, value) {
-                          if (!value) return Promise.resolve();
                           const num = Number(value);
                           if (num < 1 || num > 10 || !Number.isInteger(num)) {
                             return Promise.reject(
@@ -281,32 +274,31 @@ const UpdateSubjectPage = () => {
                       max={10}
                       placeholder="Enter credits"
                       prefix={
-                        <BookOutlined className="text-gray-400 text-xl" />
+                        <BookOutlined className="!text-cyan-600 text-xl" />
                       }
-                      className="rounded-xl py-4 text-lg"
+                      className="!rounded-lg !shadow-sm !border-cyan-400 focus:!border-cyan-600 focus:!ring-cyan-600"
                       size="large"
                     />
                   </Form.Item>
                 </Card>
               </Col>
               <Col xs={24} sm={12}>
-                <Card className="rounded-xl shadow-md hover:shadow-lg transition-shadow">
+                <Card className="!bg-cyan-50 rounded-xl shadow hover:shadow-lg transition">
                   <Form.Item
                     name="passingScore"
                     label={
-                      <span className="text-gray-700 font-medium text-xl">
-                        Passing Score (0-10)
+                      <span className="text-cyan-800 font-medium">
+                        Passing Score (0–10)
                       </span>
                     }
                     rules={[
                       { required: true, message: "Passing score is required" },
                       () => ({
                         validator(_, value) {
-                          if (!value) return Promise.resolve();
                           const num = Number(value);
                           if (num < 0 || num > 10) {
                             return Promise.reject(
-                              "Passing score must be between 0 and 10"
+                              "Score must be between 0 and 10"
                             );
                           }
                           return Promise.resolve();
@@ -321,9 +313,9 @@ const UpdateSubjectPage = () => {
                       max={10}
                       placeholder="Enter passing score"
                       prefix={
-                        <TrophyOutlined className="text-yellow-500 text-xl" />
+                        <TrophyOutlined className="!text-cyan-600 text-xl" />
                       }
-                      className="rounded-xl py-4 text-lg"
+                      className="!rounded-lg !shadow-sm !border-cyan-400 focus:!border-cyan-600 focus:!ring-cyan-600"
                       size="large"
                     />
                   </Form.Item>
@@ -331,13 +323,13 @@ const UpdateSubjectPage = () => {
               </Col>
             </Row>
 
-            {/* Submit Button - Wider and more prominent */}
-            <Form.Item className="mt-8">
+            {/* Submit Button */}
+            <Form.Item className="mt-10">
               <Button
                 type="primary"
                 htmlType="submit"
                 loading={loading}
-                className="w-full h-20 text-2xl bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 border-0 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                className="!w-full !h-10 text-xl !bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 border-none rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 {loading ? "Updating..." : "Update Subject"}
               </Button>

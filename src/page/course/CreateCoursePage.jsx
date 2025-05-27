@@ -33,7 +33,7 @@ const CreateCoursePage = () => {
   const [initialCourses, setInitialCourses] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [mode, setMode] = useState("manual"); // "manual" or "import"
+  const [mode, setMode] = useState("manual");
 
   useEffect(() => {
     fetchInitialCourses();
@@ -95,28 +95,35 @@ const CreateCoursePage = () => {
   };
 
   return (
-    <Layout className="min-h-screen bg-gray-100 p-4 sm:p-8">
+    <Layout className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100 !p-6 !sm:p-8">
       <Card
-        className="max-w-4xl mx-auto shadow-lg rounded-2xl"
+        className="!min-w-5xl !mx-auto !rounded-xl !border !border-cyan-600 !shadow-lg"
         title={
           <div className="flex items-center justify-between">
-            <Title level={3} className="text-gray-800">
+            <Title level={3} className="!text-cyan-700 m-0">
               {mode === "manual" ? "Create New Course" : "Import Courses"}
             </Title>
             <Button
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate("/all-courses")}
-              className="text-gray-600 border-gray-300 hover:text-gray-800 hover:border-gray-400"
+              className="!border-cyan-400 !text-cyan-700 hover:!text-cyan-900 hover:!border-cyan-600"
             >
               Back to Courses
             </Button>
           </div>
         }
-        headStyle={{ padding: "20px 24px", borderBottom: "1px solid #f0f0f0" }}
-        bodyStyle={{ padding: "32px" }}
       >
-        <Tabs activeKey={mode} onChange={setMode} className="mb-6">
-          <Tabs.TabPane key="manual" tab="Create Manually" />
+        <Tabs
+          activeKey={mode}
+          onChange={setMode}
+          className="mb-6"
+          tabBarStyle={{ color: "#0891b2", fontWeight: "500" }}
+        >
+          <Tabs.TabPane
+            key="manual"
+            className="active:!text-cyan-700"
+            tab="Create Manually"
+          />
           <Tabs.TabPane key="import" tab="Import from File" />
         </Tabs>
 
@@ -130,28 +137,39 @@ const CreateCoursePage = () => {
               size="large"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Course Name */}
                 <Form.Item
                   name="courseName"
-                  label={<Text strong>Course Name</Text>}
+                  label={
+                    <Text strong className="!text-cyan-700">
+                      Course Name
+                    </Text>
+                  }
                   rules={[
                     { required: true, message: "Course name is required" },
                     { max: 255, message: "Max 255 characters" },
                   ]}
                 >
-                  <Input placeholder="Enter course name" maxLength={255} />
+                  <Input
+                    placeholder="Enter course name"
+                    maxLength={255}
+                    className="rounded-md"
+                  />
                 </Form.Item>
 
-                {/* Course Level */}
                 <Form.Item
                   name="courseLevel"
-                  label={<Text strong>Course Level</Text>}
+                  label={
+                    <Text strong className="!text-cyan-700">
+                      Course Level
+                    </Text>
+                  }
                   rules={[
                     { required: true, message: "Course level is required" },
                   ]}
                 >
                   <Select
                     placeholder="Select course level"
+                    className="rounded-md"
                     options={[
                       { value: "Initial", label: "Initial" },
                       { value: "Recurrent", label: "Recurrent" },
@@ -161,10 +179,13 @@ const CreateCoursePage = () => {
                   />
                 </Form.Item>
 
-                {/* Related Course */}
                 <Form.Item
                   name="courseRelatedId"
-                  label={<Text strong>Course Related ID</Text>}
+                  label={
+                    <Text strong className="!text-cyan-700">
+                      Course Related ID
+                    </Text>
+                  }
                   rules={[
                     ({ getFieldValue }) => ({
                       validator(_, value) {
@@ -195,20 +216,18 @@ const CreateCoursePage = () => {
                         .includes(input.toLowerCase()) ||
                       option?.label?.toLowerCase().includes(input.toLowerCase())
                     }
-                    onChange={(value) => {
-                      if (value.length <= 100) {
-                        form.setFieldsValue({ courseRelatedId: value });
-                      }
-                    }}
                   >
-                    <Input className="py-2 px-4" />
+                    <Input className="py-2 px-4 rounded-md" />
                   </AutoComplete>
                 </Form.Item>
 
-                {/* Description */}
                 <Form.Item
                   name="description"
-                  label={<Text strong>Description</Text>}
+                  label={
+                    <Text strong className="!text-cyan-700">
+                      Description
+                    </Text>
+                  }
                   rules={[
                     { required: true, message: "Description is required" },
                     { max: 255, message: "Max 255 characters" },
@@ -219,6 +238,7 @@ const CreateCoursePage = () => {
                     placeholder="Enter course description"
                     autoSize={{ minRows: 3 }}
                     maxLength={255}
+                    className="rounded-md"
                   />
                 </Form.Item>
               </div>
@@ -229,6 +249,7 @@ const CreateCoursePage = () => {
                 <Button
                   onClick={() => form.resetFields()}
                   icon={<ReloadOutlined />}
+                  className="!border-cyan-500 !text-cyan-600 hover:!border-cyan-700 hover:!text-cyan-700"
                 >
                   Reset
                 </Button>
@@ -237,6 +258,7 @@ const CreateCoursePage = () => {
                   htmlType="submit"
                   icon={<PlusOutlined />}
                   loading={loading}
+                  className="!bg-cyan-700 hover:!bg-cyan-800 !border-none"
                 >
                   {loading ? "Creating..." : "Create Course"}
                 </Button>
@@ -249,15 +271,15 @@ const CreateCoursePage = () => {
                 multiple={false}
                 beforeUpload={(file) => {
                   setSelectedFile(file);
-                  return false; // prevent auto upload
+                  return false;
                 }}
                 showUploadList={false}
-                className="w-full min-h-[200px] p-8"
+                className="w-full min-h-[200px] p-8 border-2 border-dashed border-cyan-400 rounded-xl bg-white"
               >
                 <p className="ant-upload-drag-icon">
-                  <InboxOutlined style={{ fontSize: 32, color: "#1890ff" }} />
+                  <InboxOutlined style={{ fontSize: 32, color: "#06b6d4" }} />
                 </p>
-                <p className="text-lg font-medium text-gray-800">
+                <p className="text-lg font-medium text-gray-700">
                   Click or drag file to this area
                 </p>
                 <p className="text-sm text-gray-500">
@@ -266,12 +288,13 @@ const CreateCoursePage = () => {
               </Upload.Dragger>
 
               {selectedFile && (
-                <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border p-4 rounded-lg bg-gray-50 shadow-sm">
+                <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border p-4 rounded-lg bg-cyan-50 border-cyan-200 shadow-sm">
                   <Text className="text-gray-800">{selectedFile.name}</Text>
                   <div className="flex gap-3 justify-end">
                     <Button
                       icon={<ReloadOutlined />}
                       onClick={() => setSelectedFile(null)}
+                      className="border-cyan-400 text-cyan-600 hover:text-white hover:bg-cyan-500"
                     >
                       Remove
                     </Button>
@@ -285,6 +308,7 @@ const CreateCoursePage = () => {
                         setLoading(false);
                         setSelectedFile(null);
                       }}
+                      className="bg-cyan-600 hover:bg-cyan-700 border-none"
                     >
                       Confirm Import
                     </Button>

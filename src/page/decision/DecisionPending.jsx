@@ -137,78 +137,110 @@ const DecisionPendingPage = () => {
   }
 
   return (
-    <div className="p-4">
-      <Title level={3}>Pending Decisions List</Title>
+    <div className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
+      <Title level={3} className="!text-cyan-800">
+        Pending Decisions
+      </Title>
 
       {/* Filters */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
-        <Row gutter={[16, 16]} className="mb-4">
+      <Card className="!mb-6 !border !border-cyan-600 !rounded-xl !shadow-sm !bg-white">
+        <Title
+          level={5}
+          className="!mb-4 !flex !items-center !gap-2 !text-cyan-700"
+        >
+          <SearchOutlined />
+          Filter Decisions
+        </Title>
+        <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={8}>
             <Input
               placeholder="Search by Decision Code, Title or Issued By"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               prefix={<SearchOutlined />}
-              size="large"
+              size="middle"
               allowClear
+              className="!rounded-md !border-cyan-600 focus:!border-cyan-700 focus:!shadow-cyan-200"
             />
           </Col>
           <Col xs={24} sm={12} md={8}>
             <RangePicker
-              placeholder={["From Date", "To Date"]}
+              placeholder={["Issue Date From", "To"]}
               value={filterDate}
               onChange={(dates) => setFilterDate(dates)}
               style={{ width: "100%" }}
               allowClear
+              size="middle"
+              className="!rounded-md !border-cyan-600"
             />
           </Col>
-          <Col xs={24} md={8} className="flex justify-end items-center gap-3">
+          <Col
+            xs={24}
+            md={8}
+            className="flex justify-end items-center gap-3 flex-wrap"
+          >
+            <Button
+              onClick={() => {
+                setSearchText("");
+                setFilterDate(null);
+              }}
+              size="middle"
+              className="!bg-gray-100 hover:!bg-gray-200 hover:!text-cyan-700 hover:!border-cyan-600  !rounded-md"
+            >
+              Reset Filters
+            </Button>
+
             <Tooltip
-              title={isHeadMaster ? "" : "Only HeadMaster can select decisions"}
+              title={
+                !isHeadMaster ? "Only HeadMaster can select decisions" : ""
+              }
             >
               <Checkbox
                 checked={areAllSelected}
                 onChange={(e) => handleSelectAll(e.target.checked)}
                 disabled={!isHeadMaster || filteredDecisions.length === 0}
+                className="!ml-4 !text-cyan-700"
               >
                 Select All
               </Checkbox>
             </Tooltip>
+
             <Tooltip
-              title={isHeadMaster ? "" : "Only HeadMaster can sign decisions"}
+              title={!isHeadMaster ? "Only HeadMaster can sign decisions" : ""}
             >
               <Button
                 type="primary"
                 onClick={handleSignDecisions}
                 disabled={!isHeadMaster || selectedDecisions.length === 0}
-                size="large"
+                size="middle"
+                className="!bg-cyan-700 hover:!bg-cyan-800 disabled:!opacity-50 !text-white !rounded-md !transition-all"
               >
-                Sign Selected ({selectedDecisions.length})
+                Sign ({selectedDecisions.length})
               </Button>
             </Tooltip>
           </Col>
         </Row>
-      </div>
+      </Card>
 
-      {/* Decision List */}
+      {/* Decision Cards */}
       {filteredDecisions.length === 0 ? (
         <div className="flex justify-center items-center h-[60vh]">
           <Empty description="No decisions match the filters" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {filteredDecisions.map((decision) => (
             <div
               key={decision.decisionId}
-              className="relative group rounded-2xl border border-gray-200 shadow-md hover:shadow-lg transition-all bg-white"
+              className="relative group rounded-2xl border border-cyan-200 shadow hover:shadow-lg transition-all duration-300 bg-white"
             >
               <Tooltip
                 title={
-                  isHeadMaster ? "" : "Only HeadMaster can select decisions"
+                  !isHeadMaster ? "Only HeadMaster can select decisions" : ""
                 }
               >
                 <Checkbox
-                  className="absolute top-2 right-2 z-10 bg-white p-1 rounded"
+                  className="absolute top-3 right-3 z-10 p-1 rounded bg-white bg-opacity-70"
                   checked={selectedDecisions.includes(decision.decisionId)}
                   onChange={(e) =>
                     handleCheckboxChange(decision.decisionId, e.target.checked)
@@ -216,14 +248,19 @@ const DecisionPendingPage = () => {
                   disabled={!isHeadMaster}
                 />
               </Tooltip>
+
               <div
                 onClick={() => navigate(`/decision/${decision.decisionId}`)}
                 className="cursor-pointer"
               >
                 <Card
-                  title={decision.decisionCode}
-                  bordered
-                  className="rounded-2xl shadow-md hover:shadow-lg transition"
+                  title={
+                    <span className="text-base font-semibold text-cyan-900">
+                      {decision.decisionCode}
+                    </span>
+                  }
+                  bordered={false}
+                  className="rounded-2xl border-none"
                   cover={
                     <iframe
                       src={decision.contentWithSas}
@@ -232,26 +269,28 @@ const DecisionPendingPage = () => {
                     />
                   }
                 >
-                  <p>
-                    <strong>Title:</strong> {decision.title}
-                  </p>
-                  <p>
-                    <strong>Issued By:</strong> {decision.issuedBy}
-                  </p>
-                  <p className="text-sm text-gray-700 mb-1">
-                    <strong className="text-gray-800">Status:</strong>{" "}
-                    <span
-                      className={`px-2 py-1 rounded-full text-white text-xs ${
-                        decision.status === 1 ? "bg-green-500" : "bg-gray-400"
-                      }`}
-                    >
-                      {decision.status === 1 ? "Active" : "Inactive"}
-                    </span>
-                  </p>
-                  <p>
-                    <strong>Issue Date:</strong>{" "}
-                    {new Date(decision.issueDate).toLocaleDateString()}
-                  </p>
+                  <div className="space-y-2 text-sm">
+                    <p>
+                      <strong>Title:</strong> {decision.title}
+                    </p>
+                    <p>
+                      <strong>Issued By:</strong> {decision.issuedBy}
+                    </p>
+                    <p>
+                      <strong>Status:</strong>{" "}
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium text-white ${
+                          decision.status === 1 ? "bg-cyan-600" : "bg-gray-400"
+                        }`}
+                      >
+                        {decision.status === 1 ? "Active" : "Inactive"}
+                      </span>
+                    </p>
+                    <p>
+                      <strong>Issue Date:</strong>{" "}
+                      {new Date(decision.issueDate).toLocaleDateString()}
+                    </p>
+                  </div>
                 </Card>
               </div>
             </div>

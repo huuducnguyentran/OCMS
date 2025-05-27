@@ -78,7 +78,7 @@ import CreateScheduleForClassPage from "./page/schedule/CreateScheduleForClassPa
 import InstructorAssPage from "./page/instructor_assignment/instructor_assPage";
 import CreateAccountPage from "./page/user/CreateAccountPage";
 import InstructorAssignmentCreate from "./page/instructor_assignment/InstructorAssignmentCreate";
-import InstructorAssignmentEdit from "./page/instructor_assignment/InstructorAssignmentEdit";
+// import InstructorAssignmentEdit from "./page/instructor_assignment/InstructorAssignmentEdit";
 import SubjectSpecialtyPage from "./page/subject_specialty/SubjectSpecialtyPage";
 import SubjectSpecialtyCreate from "./page/subject_specialty/SubjectSpecialtyCreate";
 import ClassroomDetailPage from "./page/classroom/ClassroomDetailPage";
@@ -138,7 +138,10 @@ function App() {
                             path="/course/edit/:id"
                             element={<EditCoursePage />}
                           />
-                          <Route path="/classroom/:classId/details" element={<ClassroomDetailPage />} />
+                          <Route
+                            path="/classroom/:classId/details"
+                            element={<ClassroomDetailPage />}
+                          />
                           {/*  Schedule Management */}
                           <Route path="/schedule" element={<SchedulePage />} />
                           <Route
@@ -176,14 +179,26 @@ function App() {
                             path="/instructor-assignment"
                             element={<InstructorAssPage />}
                           />
-                          <Route path="/instructor-assignment/create" element={<InstructorAssignmentCreate />} />
-                          <Route path="/instructor-assignment/edit/:id" element={<InstructorAssignmentEdit />} />
+                          <Route
+                            path="/instructor-assignment/create"
+                            element={<InstructorAssignmentCreate />}
+                          />
+                          {/* <Route
+                            path="/instructor-assignment/edit/:id"
+                            element={<InstructorAssignmentEdit />}
+                          /> */}
 
                           {/*  Subject Specialty */}
-                          <Route path="/subject-specialty" element={<SubjectSpecialtyPage />} />
-                          <Route path="/subject-specialty/create" element={<SubjectSpecialtyCreate />} />
+                          <Route
+                            path="/subject-specialty"
+                            element={<SubjectSpecialtyPage />}
+                          />
+                          <Route
+                            path="/subject-specialty/create"
+                            element={<SubjectSpecialtyCreate />}
+                          />
                           {/* <Route path="/subject-specialty/edit/:id" element={<SubjectSpecialtyEdit />} /> */}
-                        
+
                           {/*  Subjects */}
                           <Route path="/subject" element={<SubjectPage />} />
                           <Route
@@ -380,7 +395,10 @@ function App() {
                             element={<AssignDepartmentPage />}
                           />
                           <Route path="/class" element={<ClassroomPage />} />
-                          <Route path="/classroom/:classId/create-schedule" element={<CreateScheduleForClassPage />} />
+                          <Route
+                            path="/classroom/:classId/create-schedule"
+                            element={<CreateScheduleForClassPage />}
+                          />
                         </Routes>
                         <Footer />
                       </Layout>

@@ -139,7 +139,9 @@ const ClassroomPage = () => {
                 actions={[
                   <Tooltip title="View" key="view">
                     <EyeOutlined
-                      onClick={() => navigate(`/classroom/${c.classId}/details`)}
+                      onClick={() =>
+                        navigate(`/classroom/${c.classId}/details`)
+                      }
                       className="!text-cyan-600 hover:!text-cyan-800"
                     />
                   </Tooltip>,
@@ -154,7 +156,9 @@ const ClassroomPage = () => {
                   </Tooltip>,
                   <Tooltip title="Create Schedule" key="create-schedule">
                     <CalendarOutlined
-                      onClick={() => navigate(`/classroom/${c.classId}/create-schedule`)}
+                      onClick={() =>
+                        navigate(`/classroom/${c.classId}/create-schedule`)
+                      }
                       className="text-purple-500 hover:text-purple-700"
                     />
                   </Tooltip>,
@@ -199,7 +203,7 @@ const ClassroomPage = () => {
             createForm.resetFields();
             setIsCreateModalOpen(true);
           }}
-          className="fixed bottom-8 right-8 w-14 h-14 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 !bg-cyan-700 hover:!bg-cyan-950 !text-white animate__animated animate__bounceIn"
+          className="!fixed !bottom-8 !right-8 !w-14 !h-14 !rounded-full !bg-cyan-600 hover:!bg-cyan-700 !text-white !shadow-lg !flex !items-center !justify-center !transition animate__animated animate__bounceIn"
         >
           <PlusOutlined className="text-xl" />
         </button>

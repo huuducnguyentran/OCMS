@@ -121,7 +121,7 @@ const CertificateActivePage = () => {
 
   return (
     <div className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
-      <Title level={3} className="!text-cyan-800">
+      <Title level={3} className="!text-cyan-700">
         Active Certificates
       </Title>
 
