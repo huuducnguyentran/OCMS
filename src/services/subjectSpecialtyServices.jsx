@@ -64,8 +64,8 @@ export const getSubjectsForDropdown = async () => {
 // Helper function to get all specialties for dropdown
 export const getSpecialtiesForDropdown = async () => {
   try {
-    // Assuming there's an API endpoint for specialties
-    const response = await axiosInstance.get(`/Specialty`);
+    const response = await axiosInstance.get(`/${API.GET_ALL_SPECIALTY}`);
+    console.log('Specialty response:', response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching specialties for dropdown:", error?.response || error.message);
@@ -83,3 +83,5 @@ export const getAllSubject = async () => {
     throw error;
   }
 };
+
+
