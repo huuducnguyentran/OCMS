@@ -517,13 +517,28 @@ const CoursePage = () => {
                     </Button>
                   )}
                   {selectedCourse.status !== "Approved" && (
-                    <Button
-                      icon={<DeleteOutlined />}
-                      onClick={() => handleDelete(selectedCourse.courseId)}
-                      className="!flex !items-center !text-cyan-700 !border !border-cyan-600 hover:!border-cyan-800 hover:!text-cyan-900"
+                    <Popconfirm
+                      title="Are you sure you want to delete this course?"
+                      onConfirm={() => handleDelete(selectedCourse.courseId)}
+                      okText="Yes"
+                      cancelText="No"
+                      placement="topRight"
+                      okButtonProps={{
+                        className:
+                          "!bg-cyan-600 hover:!bg-cyan-700 !text-white !border-cyan-600",
+                      }}
+                      cancelButtonProps={{
+                        className:
+                          "!text-cyan-700 !border-cyan-600 hover:!text-cyan-900 hover:!border-cyan-800",
+                      }}
                     >
-                      Delete
-                    </Button>
+                      <Button
+                        icon={<DeleteOutlined />}
+                        className="!flex !items-center !text-cyan-700 !border !border-cyan-600 hover:!border-cyan-800 hover:!text-cyan-900"
+                      >
+                        Delete
+                      </Button>
+                    </Popconfirm>
                   )}
 
                   <Button

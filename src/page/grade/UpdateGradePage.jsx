@@ -12,7 +12,7 @@ import {
 } from "antd";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { gradeServices } from "../../services/gradeServices";
-import { useAuth } from "../../context/useAuth";
+// import { useAuth } from "../../context/useAuth";
 import {
   ArrowLeftOutlined,
   BookOutlined,
@@ -28,7 +28,7 @@ const UpdateGradePage = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [initialData, setInitialData] = useState(null);
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const [finalExamEnabled, setFinalExamEnabled] = useState(true);
   const [resitEnabled, setResitEnabled] = useState(false);
 
@@ -119,7 +119,6 @@ const UpdateGradePage = () => {
       navigate("/grade-view");
     } catch (error) {
       message.error(JSON.stringify(error, null, 2));
-
     } finally {
       setLoading(false);
     }
@@ -134,67 +133,80 @@ const UpdateGradePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-8 rounded-lg mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
+      <div className="bg-gradient-to-r from-cyan-600 to-cyan-700 text-white p-8 rounded-lg mb-6 shadow-lg">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center space-x-4 mb-4">
             <Button
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate("/grade-view")}
-              className="flex items-center bg-white/10 border-white/20 text-white hover:bg-white/20"
+              className="flex items-center bg-white/20 border-white/30 text-white hover:bg-white/30"
               ghost
             >
               Back to Grades
             </Button>
-            <Breadcrumb className="text-white/60">
+            <Breadcrumb className="text-white/70">
               <Breadcrumb.Item>
-                <a
-                  href="/grade-view"
-                  className="text-white/60 hover:text-white"
-                >
+                <a href="/grade-view" className="hover:text-white">
                   Grades
                 </a>
               </Breadcrumb.Item>
-              <Breadcrumb.Item className="text-white">
+              <Breadcrumb.Item className="text-white font-semibold">
                 Update Grade
               </Breadcrumb.Item>
             </Breadcrumb>
           </div>
 
-          <Title level={2} className="text-white mb-2">
+          <Title
+            level={2}
+            className="text-white mb-2 font-semibold tracking-wide"
+          >
             Update Grade
           </Title>
-          <Text className="text-white/80">
+          <Text className="text-white/80 text-lg">
             Update grade information for trainee
           </Text>
         </div>
       </div>
 
-      <Card className="max-w-3xl mx-auto shadow-md" bordered={false}>
+      <Card
+        className="max-w-3xl mx-auto shadow-xl border border-cyan-200 rounded-lg"
+        bordered={false}
+      >
         <Form
           form={form}
           layout="vertical"
           onFinish={onFinish}
           initialValues={initialData}
-          className="space-y-4"
+          className="space-y-6"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Form.Item name="traineeAssignID" label="Trainee Assign ID">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Form.Item
+              name="traineeAssignID"
+              label="Trainee Assign ID"
+              className="text-cyan-700 font-medium"
+            >
               <Input
                 disabled
-                prefix={<BookOutlined className="text-gray-400" />}
+                prefix={<BookOutlined className="text-cyan-400" />}
+                className="border-cyan-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-400 rounded-md"
               />
             </Form.Item>
 
-            <Form.Item name="subjectId" label="Subject ID">
+            <Form.Item
+              name="subjectId"
+              label="Subject ID"
+              className="text-cyan-700 font-medium"
+            >
               <Input
                 disabled
-                prefix={<FileExcelOutlined className="text-gray-400" />}
+                prefix={<FileExcelOutlined className="text-cyan-400" />}
+                className="border-cyan-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-400 rounded-md"
               />
             </Form.Item>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Form.Item
               name="participantScore"
               label="Participant Score"
@@ -207,9 +219,10 @@ const UpdateGradePage = () => {
                   message: "Score must be between 0 and 10!",
                 },
               ]}
+              className="text-cyan-700 font-medium"
             >
               <InputNumber
-                className="w-full"
+                className="w-full border-cyan-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-400 rounded-md"
                 step={0.1}
                 precision={1}
                 placeholder="Enter participant score"
@@ -228,9 +241,10 @@ const UpdateGradePage = () => {
                   message: "Score must be between 0 and 10!",
                 },
               ]}
+              className="text-cyan-700 font-medium"
             >
               <InputNumber
-                className="w-full"
+                className="w-full border-cyan-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-400 rounded-md"
                 step={0.1}
                 precision={1}
                 placeholder="Enter assignment score"
@@ -238,14 +252,14 @@ const UpdateGradePage = () => {
             </Form.Item>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Form.Item
               name="finalExamScore"
               label={
                 <span>
                   Final Exam Score
                   {!finalExamEnabled && (
-                    <span className="text-gray-400 ml-2">
+                    <span className="text-cyan-400 ml-2 text-sm font-normal">
                       (Disabled when Resit &gt; 0)
                     </span>
                   )}
@@ -263,9 +277,10 @@ const UpdateGradePage = () => {
                   message: "Score must be between 0 and 10!",
                 },
               ]}
+              className="text-cyan-700 font-medium"
             >
               <InputNumber
-                className="w-full"
+                className="w-full border-cyan-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-400 rounded-md"
                 step={0.1}
                 precision={1}
                 placeholder="Enter final exam score"
@@ -280,7 +295,7 @@ const UpdateGradePage = () => {
                 <span>
                   Resit
                   {!resitEnabled && (
-                    <span className="text-gray-400 ml-2">
+                    <span className="text-cyan-400 ml-2 text-sm font-normal">
                       (Disabled when Final Exam &gt; 0)
                     </span>
                   )}
@@ -298,9 +313,10 @@ const UpdateGradePage = () => {
                   message: "Score must be between 0 and 10!",
                 },
               ]}
+              className="text-cyan-700 font-medium"
             >
               <InputNumber
-                className="w-full"
+                className="w-full border-cyan-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-400 rounded-md"
                 step={0.1}
                 precision={1}
                 placeholder="Enter resit score"
@@ -310,11 +326,15 @@ const UpdateGradePage = () => {
             </Form.Item>
           </div>
 
-          <Form.Item name="remarks" label="Remarks">
+          <Form.Item
+            name="remarks"
+            label="Remarks"
+            className="text-cyan-700 font-medium"
+          >
             <Input.TextArea
               rows={4}
               placeholder="Enter remarks (optional)"
-              className="w-full"
+              className="w-full border-cyan-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-400 rounded-md resize-none"
             />
           </Form.Item>
 
@@ -322,7 +342,7 @@ const UpdateGradePage = () => {
             <div className="flex justify-end space-x-4">
               <Button
                 onClick={() => navigate("/grade-view")}
-                className="min-w-[100px]"
+                className="min-w-[100px] border border-cyan-400 text-cyan-700 hover:bg-cyan-100 hover:border-cyan-600"
               >
                 Cancel
               </Button>
@@ -330,7 +350,7 @@ const UpdateGradePage = () => {
                 type="primary"
                 htmlType="submit"
                 loading={loading}
-                className="min-w-[100px] bg-blue-600 hover:bg-blue-700"
+                className="min-w-[100px] bg-cyan-600 hover:bg-cyan-700 border-cyan-600"
               >
                 Update
               </Button>

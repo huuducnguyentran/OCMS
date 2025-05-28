@@ -12,6 +12,7 @@ import {
   Modal,
   Form,
   Button,
+  Select,
 } from "antd";
 import {
   SearchOutlined,
@@ -25,11 +26,13 @@ import {
 import "animate.css";
 import ClassroomService from "../../services/classroomService";
 import { useNavigate } from "react-router-dom";
+import { courseService } from "../../services/courseService";
 
 const { Title } = Typography;
 
 const ClassroomPage = () => {
   const [classes, setClasses] = useState([]);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,7 +59,17 @@ const ClassroomPage = () => {
 
   useEffect(() => {
     fetchClasses();
+    fetchCourses();
   }, []);
+
+  const fetchCourses = async () => {
+    try {
+      const res = await courseService.getAllCourses();
+      setCourses(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      message.error("Failed to load courses", err);
+    }
+  };
 
   const handleDelete = (id) => {
     setDeleteClassId(id);
@@ -239,6 +252,19 @@ const ClassroomPage = () => {
           >
             <Input />
           </Form.Item>
+          <Form.Item
+            label="Course"
+            name="courseId"
+            rules={[{ required: true, message: "Please select a course" }]}
+          >
+            <Select placeholder="Select a course">
+              {courses.map((course) => (
+                <Select.Option key={course.courseId} value={course.courseId}>
+                  {course.courseId} - {course.courseName}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
         </Form>
       </Modal>
 
@@ -281,6 +307,19 @@ const ClassroomPage = () => {
             rules={[{ required: true, message: "Please enter class name" }]}
           >
             <Input />
+          </Form.Item>
+          <Form.Item
+            label="Course"
+            name="courseId"
+            rules={[{ required: true, message: "Please select a course" }]}
+          >
+            <Select placeholder="Select a course">
+              {courses.map((course) => (
+                <Select.Option key={course.courseId} value={course.courseId}>
+                  {course.courseId} - {course.courseName}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
         </Form>
       </Modal>

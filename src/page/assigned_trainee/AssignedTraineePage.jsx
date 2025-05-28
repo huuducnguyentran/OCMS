@@ -12,7 +12,11 @@ import {
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import { getAllAssignedTrainee } from "../../services/traineeService";
-import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  ReloadOutlined,
+  SearchOutlined,
+  UserAddOutlined,
+} from "@ant-design/icons";
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -51,7 +55,7 @@ const AssignedTraineePage = () => {
       render: (text, record) => (
         <Tooltip title={text}>
           <span
-            className="text-blue-600 cursor-pointer hover:underline"
+            className="text-cyan-600 cursor-pointer hover:underline"
             onClick={() =>
               navigate(`/assigned-trainee/${record.traineeAssignId}`)
             }
@@ -104,7 +108,7 @@ const AssignedTraineePage = () => {
         sortedInfo.columnKey === "requestStatus" ? sortedInfo.order : null,
       render: (status) => {
         let color = "default";
-        if (status === "Pending") color = "orange";
+        if (status === "Pending") color = "cyan";
         else if (status === "Approved") color = "green";
         else if (status === "Rejected") color = "red";
 
@@ -160,7 +164,7 @@ const AssignedTraineePage = () => {
       const filtered = assignments.filter(
         (assignment) =>
           assignment.traineeId.toLowerCase().includes(value.toLowerCase()) ||
-          assignment.courseId.toLowerCase().includes(value.toLowerCase()) ||
+          assignment.courseId?.toLowerCase().includes(value.toLowerCase()) ||
           assignment.assignByUserId.toLowerCase().includes(value.toLowerCase())
       );
       setFilteredAssignments(filtered);
@@ -191,32 +195,50 @@ const AssignedTraineePage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-indigo-200 p-8 animate__animated animate__fadeIn">
-      <div className="max-w-7xl mx-auto bg-white p-8 rounded-lg shadow-xl">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-8 animate__animated animate__fadeIn">
+      <div className="max-w-7xl mx-auto bg-white p-8 rounded-2xl shadow-2xl border border-cyan-400">
         <div className="mb-6">
-          <div className="flex justify-between items-center">
-            <Title level={2} className="text-center mb-8 text-gray-800">
+          <div className="flex justify-between items-center flex-wrap gap-4">
+            <Title level={2} className="!text-cyan-700 mb-2">
               Assigned Trainee List
             </Title>
-            <Space size="large">
+            <Space size="middle" wrap>
               <Search
                 placeholder="Search by Trainee ID, Course ID, or Assigned By"
                 allowClear
-                enterButton={<SearchOutlined />}
+                enterButton={
+                  <Button
+                    type="primary"
+                    style={{
+                      backgroundColor: "#0891b2", // Tailwind's cyan-800
+                      borderColor: "#0891b2",
+                    }}
+                    icon={<SearchOutlined />}
+                  />
+                }
                 size="large"
                 onSearch={handleSearch}
                 onChange={(e) => handleSearch(e.target.value)}
                 style={{ width: 400 }}
-                className="rounded-lg"
               />
               <Button
                 icon={<ReloadOutlined />}
                 onClick={fetchAssignments}
                 loading={loading}
-                type="primary"
+                type="default"
                 size="large"
+                className="!border-cyan-500 !text-cyan-600 hover:!bg-cyan-100"
               >
                 Refresh
+              </Button>
+              <Button
+                icon={<UserAddOutlined />}
+                type="primary"
+                size="large"
+                className="!bg-cyan-600 !text-white hover:!bg-cyan-700"
+                onClick={() => navigate("/import-assign-trainee")}
+              >
+                Assign Trainee
               </Button>
             </Space>
           </div>
@@ -225,7 +247,7 @@ const AssignedTraineePage = () => {
         {/* Search Results Summary */}
         {searchText && (
           <div className="mb-4">
-            <Tag color="blue" className="text-sm px-3 py-1">
+            <Tag color="cyan" className="text-sm px-3 py-1">
               Found {filteredAssignments.length} results for {searchText}
             </Tag>
           </div>
