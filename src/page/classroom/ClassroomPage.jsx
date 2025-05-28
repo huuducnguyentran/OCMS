@@ -12,7 +12,6 @@ import {
   Modal,
   Form,
   Button,
-  Select,
 } from "antd";
 import {
   SearchOutlined,
@@ -27,13 +26,11 @@ import "animate.css";
 import ClassroomService from "../../services/classroomService";
 import { getClassSubjectByInstructorId } from "../../services/classSubjectService";
 import { useNavigate } from "react-router-dom";
-import { courseService } from "../../services/courseService";
 
 const { Title } = Typography;
 
 const ClassroomPage = () => {
   const [classes, setClasses] = useState([]);
-  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -93,17 +90,6 @@ const ClassroomPage = () => {
   useEffect(() => {
     fetchClasses();
   }, [userRole]);
-    fetchCourses();
-  }, []);
-
-  const fetchCourses = async () => {
-    try {
-      const res = await courseService.getAllCourses();
-      setCourses(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      message.error("Failed to load courses", err);
-    }
-  };
 
   const handleDelete = (id) => {
     if (userRole === "Instructor") {
@@ -278,90 +264,6 @@ const ClassroomPage = () => {
             onClick={() => {
               createForm.resetFields();
               setIsCreateModalOpen(true);
-      {/* Floating Create Button */}
-      <Tooltip title="Create New Classroom" placement="left">
-        <button
-          onClick={() => {
-            createForm.resetFields();
-            setIsCreateModalOpen(true);
-          }}
-          className="!fixed !bottom-8 !right-8 !w-14 !h-14 !rounded-full !bg-cyan-600 hover:!bg-cyan-700 !text-white !shadow-lg !flex !items-center !justify-center !transition animate__animated animate__bounceIn"
-        >
-          <PlusOutlined className="text-xl" />
-        </button>
-      </Tooltip>
-
-      {/* Edit Modal */}
-      <Modal
-        title="Edit Classroom"
-        open={!!editClass}
-        onCancel={() => setEditClass(null)}
-        footer={[
-          <Button
-            key="cancel"
-            onClick={() => setEditClass(null)}
-            className="!px-4 !py-2 hover:!border-cyan-600 hover:!text-cyan-600 rounded-md"
-          >
-            Cancel
-          </Button>,
-          <Button
-            key="submit"
-            onClick={handleEditSubmit}
-            className="!px-4 !py-2 !bg-cyan-700 hover:!bg-cyan-800 !text-white rounded-md"
-          >
-            Update
-          </Button>,
-        ]}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            label="Class Name"
-            name="className"
-            rules={[{ required: true, message: "Class name is required" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Course"
-            name="courseId"
-            rules={[{ required: true, message: "Please select a course" }]}
-          >
-            <Select placeholder="Select a course">
-              {courses.map((course) => (
-                <Select.Option key={course.courseId} value={course.courseId}>
-                  {course.courseId} - {course.courseName}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Create Modal */}
-      <Modal
-        title="Create New Classroom"
-        open={isCreateModalOpen}
-        onCancel={() => setIsCreateModalOpen(false)}
-        footer={[
-          <Button
-            key="cancel"
-            onClick={() => setIsCreateModalOpen(false)}
-            className="!px-4 !py-2 hover:!border-cyan-600 hover:!text-cyan-600 rounded-md"
-          >
-            Cancel
-          </Button>,
-          <Button
-            key="create"
-            onClick={async () => {
-              try {
-                const values = await createForm.validateFields();
-                await ClassroomService.createClassroom(values);
-                message.success("Classroom created");
-                setIsCreateModalOpen(false);
-                fetchClasses();
-              } catch (err) {
-                message.error("Creation failed", err);
-              }
             }}
             className="!fixed !bottom-8 !right-8 !w-14 !h-14 !rounded-full !bg-cyan-600 hover:!bg-cyan-700 !text-white !shadow-lg !flex !items-center !justify-center !transition animate__animated animate__bounceIn"
           >
@@ -369,33 +271,6 @@ const ClassroomPage = () => {
           </button>
         </Tooltip>
       )}
-            Create
-          </Button>,
-        ]}
-      >
-        <Form form={createForm} layout="vertical">
-          <Form.Item
-            label="Class Name"
-            name="className"
-            rules={[{ required: true, message: "Please enter class name" }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item
-            label="Course"
-            name="courseId"
-            rules={[{ required: true, message: "Please select a course" }]}
-          >
-            <Select placeholder="Select a course">
-              {courses.map((course) => (
-                <Select.Option key={course.courseId} value={course.courseId}>
-                  {course.courseId} - {course.courseName}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
 
       {/* Modals - Only render for non-Instructor roles */}
       {userRole !== "Instructor" && (
