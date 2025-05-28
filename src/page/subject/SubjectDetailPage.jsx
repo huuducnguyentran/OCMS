@@ -35,7 +35,7 @@ import {
   ClockCircleOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getSubjectById } from "../../services/subjectService";
 import { 
   createSubjectSpecialty, 
@@ -66,35 +66,60 @@ const SubjectDetailPage = () => {
   const [confirmLoadingModal, setConfirmLoadingModal] = useState(false);
   const [form] = Form.useForm();
 
+  // Moved useMemo to the top level of the component
+  const filteredSpecialtiesForDropdown = useMemo(() => {
+    // Ensure dependencies are ready before processing
+    if (loadingSpecialtiesDropdown || loadingRelatedSpecialties) {
+      return []; // Or some indicator that options are loading
+    }
+    const linkedSpecialtyIds = relatedSubjectSpecialties.map(rs => rs.specialtyId);
+    return specialtiesForDropdown
+      .filter(spec => !linkedSpecialtyIds.includes(spec.specialtyId));
+  }, [specialtiesForDropdown, relatedSubjectSpecialties, loadingSpecialtiesDropdown, loadingRelatedSpecialties]);
+
   const fetchSubjectAndRelatedSpecialties = async () => {
     setLoading(true); // Overall page loading
-    setLoadingRelatedSpecialties(true);
+    setLoadingRelatedSpecialties(true); // Start loading for related specialties
+    setSubject(null); // Clear previous subject data
+    setRelatedSubjectSpecialties([]); // Clear previous related specialties
+
     try {
-      const subjectPromise = getSubjectById(subjectId);
-      const allSpecialtiesPromise = getAllSubjectSpecialties();
+      // 1. Fetch subject details
+      const subjectResponse = await getSubjectById(subjectId);
+      if (subjectResponse && subjectResponse.subject) {
+        setSubject(subjectResponse.subject);
+      } else {
+        message.error("Could not load subject details.");
+        setLoading(false);
+        setLoadingRelatedSpecialties(false);
+        return; // Exit if subject details failed to load
+      }
 
-      const [subjectResponse, allSpecialtiesResponse] = await Promise.all([
-        subjectPromise,
-        allSpecialtiesPromise,
-      ]);
+      // 2. Fetch all subject specialties
+      const allSpecialtiesResponse = await getAllSubjectSpecialties();
 
-      setSubject(subjectResponse.subject);
-
+      // 3. Filter for related ones based on the current subjectId
       if (Array.isArray(allSpecialtiesResponse)) {
         const filteredSpecialties = allSpecialtiesResponse.filter(
           (ss) => ss.subjectId === subjectId
         );
         setRelatedSubjectSpecialties(filteredSpecialties);
+      } else if (allSpecialtiesResponse && Array.isArray(allSpecialtiesResponse.data)) {
+        // Handle cases where the actual array might be nested, e.g., response.data
+        const filteredSpecialties = allSpecialtiesResponse.data.filter(
+          (ss) => ss.subjectId === subjectId
+        );
+        setRelatedSubjectSpecialties(filteredSpecialties);
       } else {
-        setRelatedSubjectSpecialties([]);
+        console.warn("Unexpected format for getAllSubjectSpecialties response or no data:", allSpecialtiesResponse);
+        // No explicit message to user, Empty component will handle it
       }
     } catch (error) {
       console.error("Error fetching subject details or related specialties:", error);
-      message.error("Could not load subject details or related specialties");
-      setRelatedSubjectSpecialties([]);
+      message.error("Could not load subject details or related specialties. " + (error.message || ''));
     } finally {
       setLoading(false); // Overall page loading off
-      setLoadingRelatedSpecialties(false);
+      setLoadingRelatedSpecialties(false); // Stop loading for related specialties
     }
   };
 
@@ -128,22 +153,52 @@ const SubjectDetailPage = () => {
     setIsAddSpecialtyModalVisible(true);
   };
 
-  const handleOkAddSpecialty = async (values) => {
+  const handleOkAddSpecialty = async () => {
     try {
+      // Validate and get form values first
+      const values = await form.validateFields();
       setConfirmLoadingModal(true);
-      await createSubjectSpecialty(values.specialtyId);
+      
+      // Now we have both subjectId and specialtyId
+      const payload = {
+        subjectId: subjectId,
+        specialtyId: values.specialtyId // This comes from the form Select value
+      };
+      
+      console.log('Creating subject specialty with payload:', payload); // For debugging
+      
+      await createSubjectSpecialty(payload);
       message.success("Specialty link added successfully");
       form.resetFields();
       setIsAddSpecialtyModalVisible(false);
+      fetchSubjectAndRelatedSpecialties();
     } catch (error) {
       console.error("Error adding specialty link:", error);
-      message.error("Failed to add specialty link");
+      let backendMessage = "Failed to add specialty link.";
+      if (error.response && error.response.data) {
+        const data = error.response.data;
+        if (data.title) {
+          backendMessage = data.title;
+        }
+        if (data.errors) {
+          const errorDetails = Object.entries(data.errors)
+            .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+            .join('; ');
+          backendMessage += ` Details: ${errorDetails}`;
+        } else if (data.message && !data.title) {
+          backendMessage = data.message;
+        }
+      } else if (error.message) {
+        backendMessage = `Failed to add specialty link: ${error.message}`;
+      }
+      message.error(backendMessage);
     } finally {
       setConfirmLoadingModal(false);
     }
   };
 
   const handleCancelAddSpecialty = () => {
+    form.resetFields();
     setIsAddSpecialtyModalVisible(false);
   };
 
@@ -234,7 +289,7 @@ const SubjectDetailPage = () => {
             >
               <Statistic
                 title="Subject Specialties"
-                value={subject?.courseSubjectSpecialties?.length || 0}
+                value={relatedSubjectSpecialties?.length || 0}
                 prefix={<TagOutlined className="!text-cyan-500" />}
               />
             </Card>
@@ -313,7 +368,7 @@ const SubjectDetailPage = () => {
             </Col>
           </Row>
         </Card>
-
+<br/>
         {/* Related Specialties Section */}
         <Card
           title={
@@ -324,7 +379,7 @@ const SubjectDetailPage = () => {
           }
           className="mb-8 shadow-sm hover:shadow-md transition-shadow"
           extra={
-            !subject?.courseSubjectSpecialties || subject.courseSubjectSpecialties.length === 0 ? (
+            !loadingRelatedSpecialties ? (
               <Button
                 icon={<PlusOutlined />}
                 type="primary"
@@ -335,10 +390,14 @@ const SubjectDetailPage = () => {
             ) : null
           }
         >
-          {subject?.courseSubjectSpecialties && subject.courseSubjectSpecialties.length > 0 ? (
+          {loadingRelatedSpecialties ? (
+            <div className="flex justify-center items-center py-8">
+              <Spin />
+            </div>
+          ) : relatedSubjectSpecialties && relatedSubjectSpecialties.length > 0 ? (
             <List
               itemLayout="horizontal"
-              dataSource={subject.courseSubjectSpecialties}
+              dataSource={relatedSubjectSpecialties}
               renderItem={(item) => (
                 <List.Item>
                   <List.Item.Meta
@@ -365,8 +424,12 @@ const SubjectDetailPage = () => {
         okText="Add Link"
         cancelText="Cancel"
       >
-        <Spin spinning={loadingSpecialtiesDropdown}>
-          <Form form={form} layout="vertical" name="add_specialty_link_form">
+        <Spin spinning={loadingSpecialtiesDropdown || loadingRelatedSpecialties}>
+          <Form 
+            form={form} 
+            layout="vertical" 
+            name="add_specialty_link_form"
+          >
             <Form.Item
               name="specialtyId"
               label="Select Specialty"
@@ -374,14 +437,13 @@ const SubjectDetailPage = () => {
             >
               <Select
                 placeholder="Choose a specialty to link"
-                onChange={(value) => setSelectedSpecialtyIdModal(value)}
                 showSearch
                 optionFilterProp="children"
                 filterOption={(input, option) =>
                   option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                 }
               >
-                {specialtiesForDropdown.map((spec) => (
+                {filteredSpecialtiesForDropdown.map((spec) => (
                   <Select.Option key={spec.specialtyId} value={spec.specialtyId}>
                     {spec.specialtyName} ({spec.specialtyId})
                   </Select.Option>

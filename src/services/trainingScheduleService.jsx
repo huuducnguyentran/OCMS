@@ -79,20 +79,24 @@ export const trainingScheduleService = {
               ...schedule,
               subjectId: subject.subjectId,
               subjectName: subject.subjectName,
-              courseId: subject.courseId,
-              status: schedule.status || "Active"
+              description: subject.description
             }));
             allSchedules.push(...schedulesWithSubjectInfo);
           }
         });
         
         return {
-          data: subjectsWithSchedules,
-          schedules: allSchedules
+          schedules: allSchedules,
+          message: response.data.message,
+          subjects: subjectsWithSchedules
         };
       }
       
-      return response.data;
+      return {
+        schedules: [],
+        message: "No schedules found",
+        subjects: []
+      };
     } catch (error) {
       console.error("Error fetching instructor subjects:", error);
       throw error;

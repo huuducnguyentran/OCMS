@@ -4,7 +4,8 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
-
+import CourseDetailPage from "./page/course/CourseDetailPage";
+import ClassSubjectDetailPage from "./page/classSubject/ClassSubjectDetailPage";
 import ProtectedRoute from "./component/ProtectedRoute";
 import AvatarProvider from "./context/AvatarProvider";
 import { AuthProvider } from "./context/AuthContext";
@@ -205,7 +206,7 @@ function App() {
                             path="/subject-edit/:subjectId"
                             element={<UpdateSubjectPage />}
                           />
-
+  <Route path="/classSubject/:classSubjectId" element = {<ClassSubjectDetailPage />}/>
                           {/*  Trainees */}
                           <Route
                             path="/import-assign-trainee"
@@ -365,10 +366,10 @@ function App() {
                             path="/plan/:planId"
                             element={<TrainingPlanDetailPage />}
                           /> */}
-                          {/* <Route
-                            path="/course/:id"
+                          { <Route
+                            path="/course/:courseId"
                             element={<CourseDetailPage />}
-                          /> */}
+                          /> }
                           {/* Department */}
                           <Route
                             path="/department"

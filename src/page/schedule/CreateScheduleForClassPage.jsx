@@ -22,7 +22,7 @@ import {
   Table,
   Modal,
 } from "antd";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   CalendarOutlined,
   RollbackOutlined,
@@ -45,6 +45,7 @@ import { getAllSubjectSpecialties } from "../../services/subjectSpecialtyService
 import { getAllInstructorAssignments } from "../../services/instructorAssignmentService";
 import { createClassSubject, deleteClassSubject } from "../../services/classSubjectService";
 import { assignTrainee, assignTraineeManual } from "../../services/traineeService";
+import { courseService } from "../../services/courseService";
 import dayjs from "dayjs";
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import utc from 'dayjs/plugin/utc';
@@ -83,6 +84,8 @@ const getRoomName = (value) => Object.keys(RoomEnum).find(key => RoomEnum[key] =
 const CreateScheduleForClassPage = () => {
   const navigate = useNavigate();
   const { classId } = useParams();
+  const location = useLocation();
+  const courseId = location.state?.courseId;
   const [form] = Form.useForm();
   const [traineeForm] = Form.useForm();
 
@@ -103,6 +106,10 @@ const CreateScheduleForClassPage = () => {
   const [isEditingScheduleDetails, setIsEditingScheduleDetails] = useState(false);
 
   const [subjectSpecialties, setSubjectSpecialties] = useState([]);
+  const [allSubjectSpecialties, setAllSubjectSpecialties] = useState([]);
+  const [courseDetails, setCourseDetails] = useState(null);
+  const [loadingCourse, setLoadingCourse] = useState(false);
+
   const [selectedSubjectSpecialty, setSelectedSubjectSpecialty] = useState(null);
 
   const [availableInstructors, setAvailableInstructors] = useState([]);
@@ -152,8 +159,31 @@ const CreateScheduleForClassPage = () => {
     if (classId) {
       setLoading(prev => ({ ...prev, page: false }));
     }
-    fetchSubjectSpecialties();
-  }, [classId]);
+    fetchAllSubjectSpecialtiesList();
+    if (courseId) {
+      fetchCourseDetails(courseId);
+    } else {
+      message.warn("Course ID not found. Subject specialty filtering might not work as expected.");
+    }
+  }, [classId, courseId]);
+
+  useEffect(() => {
+    if (courseDetails && allSubjectSpecialties.length > 0) {
+      if (courseDetails.subjectSpecialties && courseDetails.subjectSpecialties.length > 0) {
+        const courseSubjectSpecialtyIds = courseDetails.subjectSpecialties.map(ss => ss.subjectSpecialtyId);
+        const filtered = allSubjectSpecialties.filter(ss => courseSubjectSpecialtyIds.includes(ss.subjectSpecialtyId));
+        setSubjectSpecialties(filtered);
+        if (filtered.length === 0) {
+            message.info("No subject specialties from the course are available for scheduling.");
+        }
+      } else {
+        message.warn("The fetched course has no subject specialties linked. No subjects will be available.");
+        setSubjectSpecialties([]);
+      }
+    } else if (!courseId && allSubjectSpecialties.length > 0) {
+      setSubjectSpecialties(allSubjectSpecialties);
+    }
+  }, [courseDetails, allSubjectSpecialties, courseId]);
 
   useEffect(() => {
     if (selectedSubjectSpecialty) {
@@ -184,33 +214,52 @@ const CreateScheduleForClassPage = () => {
     }
   }, [traineeAssignMethod, isStep1Completed, selectedSubjectSpecialty]);
 
-  const fetchSubjectSpecialties = async () => {
+  const fetchAllSubjectSpecialtiesList = async () => {
     setLoading(prev => ({ ...prev, subjects: true }));
     try {
       const response = await getAllSubjectSpecialties();
-
       if (Array.isArray(response)) {
-        setSubjectSpecialties(response);
+        setAllSubjectSpecialties(response);
       } else if (response && Array.isArray(response.data)) {
-        setSubjectSpecialties(response.data);
+        setAllSubjectSpecialties(response.data);
       } else {
-        setSubjectSpecialties([]);
-        message.error("Could not load subject specialties in expected format. See console for API response.");
+        setAllSubjectSpecialties([]);
+        message.error("Could not load all subject specialties in expected format.");
       }
     } catch (error) {
-      console.error("Error fetching subject specialties:", error);
-      console.error("Error details (if available):", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
-      message.error("Failed to load subject specialties. Check console for error details.");
-      setSubjectSpecialties([]);
+      console.error("Error fetching all subject specialties:", error);
+      message.error("Failed to load all subject specialties.");
+      setAllSubjectSpecialties([]);
     } finally {
       setLoading(prev => ({ ...prev, subjects: false }));
     }
   };
 
+  const fetchCourseDetails = async (cId) => {
+    setLoadingCourse(true);
+    try {
+      const response = await courseService.getCourseById(cId);
+      if (response && response.data) {
+        setCourseDetails(response.data);
+      } else {
+        message.error(`Could not retrieve details for course ${cId}.`);
+        setCourseDetails(null);
+      }
+    } catch (error) {
+      console.error(`Error fetching course ${cId} details:`, error);
+      message.error(`Failed to load course ${cId} details. ` + (error.response?.data?.message || error.message) );
+      setCourseDetails(null);
+    } finally {
+      setLoadingCourse(false);
+    }
+  };
+
   const fetchInstructorsForSubject = async (specialty) => {
     setLoading(prev => ({ ...prev, instructors: true }));
-    setSelectedInstructor(null); 
-    form.setFieldsValue({ instructorId: null });
+    if (!createdClassSubjectId) { 
+      setSelectedInstructor(null); 
+      form.setFieldsValue({ instructorId: null });
+    }
     try {
       const allAssignments = await getAllInstructorAssignments();
       const scheduleResponse = await trainingScheduleService.getAllTrainingSchedules();

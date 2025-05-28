@@ -296,7 +296,7 @@ const navItems = [
     label:"Classroom",
     icon:"FileProtectOutlined",
     path:"/class",
-    roles:["Training staff","Instructor","Trainee"]
+    roles:["Training staff","Instructor"]
   },
   {
     key:"24",
