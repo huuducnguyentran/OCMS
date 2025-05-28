@@ -78,7 +78,6 @@ import CreateScheduleForClassPage from "./page/schedule/CreateScheduleForClassPa
 import InstructorAssPage from "./page/instructor_assignment/instructor_assPage";
 import CreateAccountPage from "./page/user/CreateAccountPage";
 import InstructorAssignmentCreate from "./page/instructor_assignment/InstructorAssignmentCreate";
-import InstructorAssignmentEdit from "./page/instructor_assignment/InstructorAssignmentEdit";
 import SubjectSpecialtyPage from "./page/subject_specialty/SubjectSpecialtyPage";
 import SubjectSpecialtyCreate from "./page/subject_specialty/SubjectSpecialtyCreate";
 import ClassroomDetailPage from "./page/classroom/ClassroomDetailPage";
@@ -177,7 +176,6 @@ function App() {
                             element={<InstructorAssPage />}
                           />
                           <Route path="/instructor-assignment/create" element={<InstructorAssignmentCreate />} />
-                          <Route path="/instructor-assignment/edit/:id" element={<InstructorAssignmentEdit />} />
 
                           {/*  Subject Specialty */}
                           <Route path="/subject-specialty" element={<SubjectSpecialtyPage />} />

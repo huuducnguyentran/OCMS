@@ -48,7 +48,7 @@ const ClassroomPage = () => {
       const res = await ClassroomService.getAllClassrooms();
       setClasses(Array.isArray(res.data?.classes) ? res.data.classes : []);
     } catch {
-      message.error("Failed to load classrooms");
+      message.error("Failed to load classrooms", 3);
     } finally {
       setLoading(false);
     }
@@ -66,11 +66,11 @@ const ClassroomPage = () => {
     try {
       const values = await form.validateFields();
       await ClassroomService.updateClassroom(editClass.classId, values);
-      message.success("Classroom updated");
+      message.success("Classroom updated", 3);
       setEditClass(null);
       fetchClasses();
     } catch (err) {
-      message.error("Update failed", err);
+      message.error("Update failed", 3);
     }
   };
 
@@ -257,11 +257,11 @@ const ClassroomPage = () => {
               try {
                 const values = await createForm.validateFields();
                 await ClassroomService.createClassroom(values);
-                message.success("Classroom created");
+                message.success("Classroom created", 3);
                 setIsCreateModalOpen(false);
                 fetchClasses();
               } catch (err) {
-                message.error("Creation failed", err);
+                message.error("Creation failed", 3);
               }
             }}
             className="!px-4 !py-2 !bg-cyan-700 hover:!bg-cyan-800 !text-white rounded-md"
@@ -298,11 +298,11 @@ const ClassroomPage = () => {
             onClick={async () => {
               try {
                 await ClassroomService.deleteClassroom(deleteClassId);
-                message.success("Classroom deleted");
+                message.success("Classroom deleted", 3);
                 setDeleteClassId(null);
                 fetchClasses();
               } catch {
-                message.error("Delete failed");
+                message.error("Delete failed", 3);
               }
             }}
             className="!px-4 !py-2 !bg-red-600 hover:!bg-red-700 !text-white rounded-md"

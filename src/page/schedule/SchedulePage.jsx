@@ -439,7 +439,7 @@ const SchedulePage = () => {
                   
                   <div className="flex items-center gap-2 text-gray-600">
                     <CalendarOutlined className="text-gray-400" />
-                    <span>Room {schedule.room}</span>
+                    <span>Room {schedule.roomName}</span>
               </div>
 
                   {/* Chỉ hiển thị instructor name khi không phải role Instructor */}
@@ -454,7 +454,7 @@ const SchedulePage = () => {
                   <Tooltip title={schedule.location}>
                     <div className="flex items-center gap-2 text-gray-600">
                       <EnvironmentOutlined className="text-gray-400" />
-                      <span className="truncate">{schedule.location}</span>
+                      <span className="truncate">{schedule.locationName}</span>
                     </div>
                   </Tooltip>
                 </div>

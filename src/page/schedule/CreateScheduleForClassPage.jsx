@@ -19,6 +19,8 @@ import {
   Radio,
   Divider,
   Steps,
+  Table,
+  Modal,
 } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -36,6 +38,7 @@ import {
   CheckCircleOutlined,
   CheckCircleFilled,
   DeleteOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import { trainingScheduleService } from "../../services/trainingScheduleService";
 import { getAllSubjectSpecialties } from "../../services/subjectSpecialtyServices";
@@ -47,6 +50,7 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { getAllUsers } from "../../services/userService";
+import { read, utils } from "xlsx";
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(utc);
@@ -112,7 +116,37 @@ const CreateScheduleForClassPage = () => {
   const [manualTrainees, setManualTrainees] = useState([{ traineeId: '', notes: '' }]);
   const [eligibleManualTrainees, setEligibleManualTrainees] = useState([]);
 
+  const [excelPreviewData, setExcelPreviewData] = useState([]);
+  const [excelPreviewColumns, setExcelPreviewColumns] = useState([]);
+  const [excelPreviewError, setExcelPreviewError] = useState(null);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
+
   const isStep1Completed = createdClassSubjectId !== null && currentStep === 1;
+  const isEditingStep1 = currentStep === 0 && !createdClassSubjectId;
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      const isStep1FormTouched = isEditingStep1 && form.isFieldsTouched();
+      
+      let hasFormValues = false;
+      if (isEditingStep1) {
+        const currentValues = form.getFieldsValue();
+        hasFormValues = Object.values(currentValues).some(value => value !== undefined && value !== '' && (!Array.isArray(value) || value.length > 0));
+      }
+
+      if ((hasFormValues && !createdClassSubjectId) || isStep1Completed) {
+        event.preventDefault();
+        event.returnValue = "You have unsaved changes or an incomplete schedule. Are you sure you want to leave?";
+        return "You have unsaved changes or an incomplete schedule. Are you sure you want to leave?";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isEditingStep1, form, createdClassSubjectId, isStep1Completed]);
 
   useEffect(() => {
     if (classId) {
@@ -523,13 +557,18 @@ const CreateScheduleForClassPage = () => {
 
     try {
         if (traineeAssignMethod === 'import') {
-            if (fileList.length === 0) {
-                message.error("Please select an Excel file to import.");
+            if (excelPreviewData.length === 0 && fileList.length > 0) {
+                message.info("Attempting to import with selected file. If preview was not shown, check console.");
+            } else if (fileList.length === 0) {
+                message.error("Please select and preview an Excel file to import.");
                 setSubmittingStep2(false); setLoading(prev => ({ ...prev, assigningTrainee: false })); return;
             }
             await assignTrainee(fileList[0]); 
             message.success("Trainees imported successfully from file!");
-            resetPageForNewScheduleCycle();
+            setFileList([]); 
+            setExcelPreviewData([]);
+            setExcelPreviewColumns([]);
+            setExcelPreviewError(null);
         } else {
             await traineeForm.validateFields();
             const manualValues = traineeForm.getFieldValue('trainees');
@@ -564,7 +603,6 @@ const CreateScheduleForClassPage = () => {
             }
             if (allSuccessful) {
                 message.success("All selected trainees assigned manually successfully!");
-                resetPageForNewScheduleCycle();
             } else {
                  message.warning("Some trainees could not be assigned. Please check the details. The schedule itself is created.");
             }
@@ -579,18 +617,67 @@ const CreateScheduleForClassPage = () => {
     }
   };
 
-  const beforeUpload = (file) => {
+  const beforeUpload = async (file) => {
+    setFileList([file]);
+    setExcelPreviewData([]);
+    setExcelPreviewColumns([]);
+    setExcelPreviewError(null);
+    setIsProcessingFile(true);
+
     const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.type === 'application/vnd.ms-excel';
     if (!isExcel) {
       message.error('You can only upload Excel files (xls, xlsx)!');
+      setExcelPreviewError('Invalid file type. Please upload Excel files only.');
+      setIsProcessingFile(false);
+      return Upload.LIST_IGNORE;
     }
-    const isLt2M = file.size / 1024 / 1024 < 2;
-    if (!isLt2M) {
-      message.error('File must be smaller than 2MB!');
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isLt5M) {
+      message.error('File must be smaller than 5MB!');
+      setExcelPreviewError('File size exceeds 5MB limit.');
+      setIsProcessingFile(false);
+      return Upload.LIST_IGNORE;
     }
-    if (isExcel && isLt2M) {
-        setFileList([file]);
+
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = utils.sheet_to_json(worksheet, { header: 1 });
+
+      if (jsonData.length === 0) {
+        message.error("File contains no data.");
+        setExcelPreviewError("File contains no data.");
+        setIsProcessingFile(false);
+        return Upload.LIST_IGNORE;
+      }
+
+      const headers = jsonData[0];
+      const tableColumns = headers.map((header, index) => ({
+        title: header,
+        dataIndex: index.toString(),
+        key: header + index,
+      }));
+
+      const tableData = jsonData.slice(1).map((row, rowIndex) => {
+        const rowObject = { key: `row-${rowIndex}` };
+        headers.forEach((header, index) => {
+          rowObject[index.toString()] = row[index];
+        });
+        return rowObject;
+      });
+
+      setExcelPreviewColumns(tableColumns);
+      setExcelPreviewData(tableData);
+      message.success("Excel file preview generated successfully.");
+    } catch (err) {
+      console.error("Error processing Excel file for preview:", err);
+      message.error("Error reading or processing Excel file for preview.");
+      setExcelPreviewError("Error reading or processing Excel file: " + err.message);
+    } finally {
+      setIsProcessingFile(false);
     }
+    
     return false;
   };
 
@@ -913,10 +1000,33 @@ const CreateScheduleForClassPage = () => {
 
                         {traineeAssignMethod === 'import' && (
                             <Form.Item label="Upload Excel File (.xlsx, .xls)">
-                                <Upload fileList={fileList} beforeUpload={beforeUpload} onRemove={handleRemoveFile} maxCount={1} disabled={!isStep1Completed}>
-                                    <Button icon={<UploadOutlined />} disabled={!isStep1Completed}>Select File (Max 5MB)</Button>
+                                <Upload fileList={fileList} beforeUpload={beforeUpload} onRemove={handleRemoveFile} maxCount={1} disabled={!isStep1Completed || isProcessingFile}>
+                                    <Button icon={<UploadOutlined />} disabled={!isStep1Completed || isProcessingFile} loading={isProcessingFile}>
+                                        {isProcessingFile ? 'Processing...' : 'Select File (Max 5MB)'}
+                                    </Button>
                                 </Upload>
                                 <Text type="secondary" className="block mt-1">Ensure 'TraineeID' column exists. Trainees will be assigned to Class ID: {classId}.</Text>
+                                
+                                {isProcessingFile && <Spin tip="Generating preview..." className="mt-2"/>}
+
+                                {excelPreviewError && (
+                                    <Alert message="File Preview Error" description={excelPreviewError} type="error" showIcon className="mt-4" />
+                                )}
+
+                                {excelPreviewData.length > 0 && !excelPreviewError && (
+                                    <div className="mt-6">
+                                        <Title level={5}>Preview Data ({excelPreviewData.length} records)</Title>
+                                        <Table 
+                                            columns={excelPreviewColumns}
+                                            dataSource={excelPreviewData}
+                                            bordered
+                                            size="small"
+                                            scroll={{ x: 'max-content' }}
+                                            pagination={false} // Or configure as needed
+                                            className="mt-2"
+                                        />
+                                    </div>
+                                )}
                             </Form.Item>
                         )}
 
@@ -968,12 +1078,15 @@ const CreateScheduleForClassPage = () => {
                             </Form>
                         )}
                         <Divider />
-                        <div className="flex justify-end mt-6 pt-6 border-t border-gray-200">
+                        <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
                              <Button icon={<DeleteOutlined />} onClick={hardResetAndRollback} size="large" danger className="mr-auto" disabled={submittingStep1 || submittingStep2}>
                                 Reset All & Start Over
                             </Button>
+                            <Button icon={<ReloadOutlined />} onClick={resetPageForNewScheduleCycle} size="large" className="mr-4" disabled={submittingStep1 || submittingStep2}>
+                                Start New Schedule Cycle
+                            </Button>
                           
-                            <Button type="primary" icon={<SaveOutlined />} onClick={handleAssignTraineesSubmit} loading={submittingStep2} size="large" className="bg-green-600 hover:bg-green-700" disabled={!isStep1Completed || submittingStep1}>
+                            <Button type="primary" icon={<SaveOutlined />} onClick={handleAssignTraineesSubmit} loading={submittingStep2} size="large" className="bg-green-600 hover:bg-green-700" disabled={!isStep1Completed || submittingStep1 || (traineeAssignMethod === 'import' && excelPreviewData.length === 0 && fileList.length > 0) }>
                                 Assign Trainees & Finish
                             </Button>
                         </div>

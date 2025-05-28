@@ -15,6 +15,9 @@ import {
   Empty,
   message,
   Tooltip,
+  Modal,
+  Form,
+  Select,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -30,9 +33,15 @@ import {
   DeleteOutlined,
   TagOutlined,
   ClockCircleOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import { useState, useEffect } from "react";
-import { getSubjectById, getSubjectTrainees } from "../../services/subjectService";
+import { getSubjectById } from "../../services/subjectService";
+import { 
+  createSubjectSpecialty, 
+  getAllSubjectSpecialties
+} from "../../services/subjectSpecialtyServices";
+import { specialtyService } from '../../services/specialtyServices';
 import moment from "moment";
 
 const { Title, Text, Paragraph } = Typography;
@@ -44,46 +53,99 @@ const SubjectDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [trainees, setTrainees] = useState([]);
   const [loadingTrainees, setLoadingTrainees] = useState(false);
+  const [relatedSubjectSpecialties, setRelatedSubjectSpecialties] = useState([]);
+  const [loadingRelatedSpecialties, setLoadingRelatedSpecialties] = useState(false);
   const isTrainee = sessionStorage.getItem("role") === "Trainee";
   const isInstructor = sessionStorage.getItem("role") === "Instructor";
   const shouldNavigateToSchedule = isTrainee || isInstructor;
 
-  useEffect(() => {
-    const fetchSubject = async () => {
-      try {
-        const response = await getSubjectById(subjectId);
-        setSubject(response.subject);
-      } catch (error) {
-        console.error("Error fetching subject:", error);
-        message.error("Could not load subject details");
-      } finally {
-        setLoading(false);
+  const [isAddSpecialtyModalVisible, setIsAddSpecialtyModalVisible] = useState(false);
+  const [specialtiesForDropdown, setSpecialtiesForDropdown] = useState([]);
+  const [loadingSpecialtiesDropdown, setLoadingSpecialtiesDropdown] = useState(false);
+  const [selectedSpecialtyIdModal, setSelectedSpecialtyIdModal] = useState(null);
+  const [confirmLoadingModal, setConfirmLoadingModal] = useState(false);
+  const [form] = Form.useForm();
+
+  const fetchSubjectAndRelatedSpecialties = async () => {
+    setLoading(true); // Overall page loading
+    setLoadingRelatedSpecialties(true);
+    try {
+      const subjectPromise = getSubjectById(subjectId);
+      const allSpecialtiesPromise = getAllSubjectSpecialties();
+
+      const [subjectResponse, allSpecialtiesResponse] = await Promise.all([
+        subjectPromise,
+        allSpecialtiesPromise,
+      ]);
+
+      setSubject(subjectResponse.subject);
+
+      if (Array.isArray(allSpecialtiesResponse)) {
+        const filteredSpecialties = allSpecialtiesResponse.filter(
+          (ss) => ss.subjectId === subjectId
+        );
+        setRelatedSubjectSpecialties(filteredSpecialties);
+      } else {
+        setRelatedSubjectSpecialties([]);
       }
-    };
-    fetchSubject();
-  }, [subjectId]);
+    } catch (error) {
+      console.error("Error fetching subject details or related specialties:", error);
+      message.error("Could not load subject details or related specialties");
+      setRelatedSubjectSpecialties([]);
+    } finally {
+      setLoading(false); // Overall page loading off
+      setLoadingRelatedSpecialties(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTrainees = async () => {
-      if (subjectId) {
-        try {
-          setLoadingTrainees(true);
-          const response = await getSubjectTrainees(subjectId);
-          if (response && response.trainees) {
-            setTrainees(Array.isArray(response.trainees) ? response.trainees : [response.trainees]);
-          } else {
-            setTrainees([]);
-          }
-        } catch (error) {
-          console.log("Note: Trainees data not available", error);
-          setTrainees([]);
-        } finally {
-          setLoadingTrainees(false);
+    fetchSubjectAndRelatedSpecialties();
+  }, [subjectId]);
+
+
+  useEffect(() => {
+    const fetchSpecialtiesForDropdown = async () => {
+      try {
+        setLoadingSpecialtiesDropdown(true);
+        const response = await specialtyService.getAllSpecialties();
+        console.log("fetchSpecialtiesForDropdown",  response);
+        if (response && response.data) {
+          setSpecialtiesForDropdown(response.data);
+        } else {
+          setSpecialtiesForDropdown([]);
         }
+      } catch (error) {
+        console.error("Error fetching specialties for dropdown:", error);
+        setSpecialtiesForDropdown([]);
+      } finally {
+        setLoadingSpecialtiesDropdown(false);
       }
     };
-    fetchTrainees();
-  }, [subjectId]);
+    fetchSpecialtiesForDropdown();
+  }, []);
+
+  const showAddSpecialtyModal = () => {
+    setIsAddSpecialtyModalVisible(true);
+  };
+
+  const handleOkAddSpecialty = async (values) => {
+    try {
+      setConfirmLoadingModal(true);
+      await createSubjectSpecialty(values.specialtyId);
+      message.success("Specialty link added successfully");
+      form.resetFields();
+      setIsAddSpecialtyModalVisible(false);
+    } catch (error) {
+      console.error("Error adding specialty link:", error);
+      message.error("Failed to add specialty link");
+    } finally {
+      setConfirmLoadingModal(false);
+    }
+  };
+
+  const handleCancelAddSpecialty = () => {
+    setIsAddSpecialtyModalVisible(false);
+  };
 
   if (loading) {
     return (
@@ -167,7 +229,7 @@ const SubjectDetailPage = () => {
               className="h-full shadow-sm hover:shadow-md transition-shadow"
             >
               <Statistic
-                title="Course Specialties"
+                title="Subject Specialties"
                 value={subject?.courseSubjectSpecialties?.length || 0}
                 prefix={<TagOutlined className="text-purple-500" />}
               />
@@ -245,121 +307,83 @@ const SubjectDetailPage = () => {
           </Row>
         </Card>
 
-        {/* Course Subject Specialties Section */}
+        {/* Related Specialties Section */}
         <Card
           title={
             <div className="flex items-center space-x-2">
-              <TeamOutlined className="text-indigo-500" />
-              <span>Course Subject Specialties</span>
+              <TagOutlined className="text-green-500" />
+              <span>Related Specialties</span>
             </div>
           }
-          className="shadow-sm hover:shadow-md transition-shadow"
-        >
-          {subject?.courseSubjectSpecialties?.length > 0 ? (
-            <Table
-              dataSource={subject.courseSubjectSpecialties}
-              rowKey="id"
-              pagination={false}
-              className="shadow-sm"
-              columns={[
-                {
-                  title: "Course ID",
-                  dataIndex: "courseId",
-                  key: "courseId",
-                  width: "15%",
-                  render: (text) => <Text strong>{text}</Text>,
-                },
-                {
-                  title: "Specialty",
-                  key: "specialty",
-                  width: "25%",
-                  render: (_, record) => (
-                    <div>
-                      <Text strong>{record.specialty?.specialtyName}</Text>
-                      <Text className="block text-xs text-gray-500">
-                        {record.specialty?.specialtyId}
-                      </Text>
-                    </div>
-                  ),
-                },
-                {
-                  title: "Created At",
-                  dataIndex: "createdAt",
-                  key: "createdAt",
-                  width: "20%",
-                  render: (date) => moment(date).format("DD/MM/YYYY HH:mm"),
-                },
-                {
-                  title: "Created By",
-                  dataIndex: "createdByUserId",
-                  key: "createdByUserId",
-                  width: "15%",
-                  render: (text) => <Tag color="blue">{text}</Tag>,
-                },
-                {
-                  title: "Notes",
-                  dataIndex: "notes",
-                  key: "notes",
-                  width: "25%",
-                  render: (notes) => notes || "-",
-                },
-              ]}
-            />
-          ) : (
-            <Empty description="No course subject specialties assigned" />
-          )}
-        </Card>
-        {/* Trainees Section */}
-        <Card
-          title={
-            <div className="flex items-center space-x-2">
-              <UserOutlined className="text-green-500" />
-              <span>Assigned Trainees</span>
-            </div>
+          className="mb-8 shadow-sm hover:shadow-md transition-shadow"
+          extra={
+            !subject?.courseSubjectSpecialties || subject.courseSubjectSpecialties.length === 0 ? (
+              <Button
+                icon={<PlusOutlined />}
+                type="primary"
+                onClick={showAddSpecialtyModal}
+              >
+                Add Specialty Link
+              </Button>
+            ) : null
           }
-          className="mt-8 shadow-sm hover:shadow-md transition-shadow"
         >
-          {loadingTrainees ? (
-            <div className="flex justify-center items-center p-8">
-              <Spin size="large" tip="Loading trainees..." />
-            </div>
-          ) : trainees.length === 0 ? (
-            <Empty description="Không có học viên nào trong môn học này" />
-          ) : (
+          {subject?.courseSubjectSpecialties && subject.courseSubjectSpecialties.length > 0 ? (
             <List
               itemLayout="horizontal"
-              dataSource={trainees}
-              pagination={{
-                pageSize: 5,
-                showSizeChanger: false,
-              }}
-              renderItem={(trainee) => (
+              dataSource={subject.courseSubjectSpecialties}
+              renderItem={(item) => (
                 <List.Item>
                   <List.Item.Meta
-                    avatar={<Avatar icon={<UserOutlined />} className="bg-blue-500" />}
-                    title={<div className="text-lg font-medium">{trainee.name}</div>}
-                    description={
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
-                        <div className="flex items-center gap-2">
-                          <IdcardOutlined className="text-gray-500" />
-                          <span className="text-gray-700">ID: {trainee.traineeId}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MailOutlined className="text-gray-500" />
-                          <span className="text-gray-700">{trainee.email}</span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Tag color="blue">Trainee Assign ID: {trainee.traineeAssignId}</Tag>
-                        </div>
-                      </div>
-                    }
+                    avatar={<Avatar icon={<TagOutlined />} style={{ backgroundColor: '#87d068' }}/>}
+                    title={item.specialty?.specialtyName || "Unknown Specialty"}
+                    description={`Specialty ID: ${item.specialty?.specialtyId || 'N/A'}`}
                   />
                 </List.Item>
               )}
             />
+          ) : (
+            <Empty description="No specialties are currently linked to this subject." />
           )}
         </Card>
+
       </div>
+
+      <Modal
+        title="Add Specialty Link to Subject"
+        open={isAddSpecialtyModalVisible}
+        onOk={handleOkAddSpecialty}
+        confirmLoading={confirmLoadingModal}
+        onCancel={handleCancelAddSpecialty}
+        okText="Add Link"
+        cancelText="Cancel"
+      >
+        <Spin spinning={loadingSpecialtiesDropdown}>
+          <Form form={form} layout="vertical" name="add_specialty_link_form">
+            <Form.Item
+              name="specialtyId"
+              label="Select Specialty"
+              rules={[{ required: true, message: "Please select a specialty!" }]}
+            >
+              <Select
+                placeholder="Choose a specialty to link"
+                onChange={(value) => setSelectedSpecialtyIdModal(value)}
+                showSearch
+                optionFilterProp="children"
+                filterOption={(input, option) =>
+                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                }
+              >
+                {specialtiesForDropdown.map((spec) => (
+                  <Select.Option key={spec.specialtyId} value={spec.specialtyId}>
+                    {spec.specialtyName} ({spec.specialtyId})
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Form>
+        </Spin>
+      </Modal>
     </div>
   );
 };
