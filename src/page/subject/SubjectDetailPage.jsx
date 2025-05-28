@@ -161,24 +161,28 @@ const SubjectDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-8">
+      <div className="bg-gradient-to-r from-cyan-600 to-cyan-700 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center space-x-4 mb-4">
             <Button
               icon={<ArrowLeftOutlined />}
-              onClick={() => navigate(shouldNavigateToSchedule ? "/schedule" : "/subject")}
-              className="flex items-center bg-white/10 border-white/20 text-white hover:bg-white/20"
+              onClick={() =>
+                navigate(shouldNavigateToSchedule ? "/schedule" : "/subject")
+              }
+              className="flex items-center !bg-white/10 !border-white/20 !text-white hover:!bg-white/20"
               ghost
             >
-              {shouldNavigateToSchedule ? "Back to Schedule" : "Back to Subjects"}
+              {shouldNavigateToSchedule
+                ? "Back to Schedule"
+                : "Back to Subjects"}
             </Button>
-            <Breadcrumb className="text-white/60">
+            <Breadcrumb className="text-white/70">
               <Breadcrumb.Item>
-                <a 
-                  href={shouldNavigateToSchedule ? "/schedule" : "/subject"} 
-                  className="text-white/60 hover:text-white"
+                <a
+                  href={shouldNavigateToSchedule ? "/schedule" : "/subject"}
+                  className="text-white/70 hover:text-white"
                 >
                   {shouldNavigateToSchedule ? "Schedule" : "Subjects"}
                 </a>
@@ -187,7 +191,7 @@ const SubjectDetailPage = () => {
             </Breadcrumb>
           </div>
 
-          <Title level={2} className="text-white mb-2">
+          <Title level={2} className="text-white mb-1">
             {subject?.subjectName || "Subject Details"}
           </Title>
           <Text className="text-white/80">
@@ -196,54 +200,54 @@ const SubjectDetailPage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Statistics Cards */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Stats Cards */}
         <Row gutter={[16, 16]} className="mb-8">
           <Col xs={24} sm={12} md={6}>
             <Card
               bordered={false}
-              className="h-full shadow-sm hover:shadow-md transition-shadow"
+              className="h-full shadow-md hover:shadow-lg transition"
             >
               <Statistic
                 title="Credits"
                 value={subject?.credits || 0}
-                prefix={<BookOutlined className="text-blue-500" />}
+                prefix={<BookOutlined className="!text-cyan-500" />}
               />
             </Card>
           </Col>
           <Col xs={24} sm={12} md={6}>
             <Card
               bordered={false}
-              className="h-full shadow-sm hover:shadow-md transition-shadow"
+              className="h-full shadow-md hover:shadow-lg transition"
             >
               <Statistic
                 title="Passing Score"
                 value={subject?.passingScore || 0}
-                prefix={<TrophyOutlined className="text-yellow-500" />}
+                prefix={<TrophyOutlined className="!text-cyan-500" />}
               />
             </Card>
           </Col>
           <Col xs={24} sm={12} md={6}>
             <Card
               bordered={false}
-              className="h-full shadow-sm hover:shadow-md transition-shadow"
+              className="h-full shadow-md hover:shadow-lg transition"
             >
               <Statistic
                 title="Subject Specialties"
                 value={subject?.courseSubjectSpecialties?.length || 0}
-                prefix={<TagOutlined className="text-purple-500" />}
+                prefix={<TagOutlined className="!text-cyan-500" />}
               />
             </Card>
           </Col>
           <Col xs={24} sm={12} md={6}>
             <Card
               bordered={false}
-              className="h-full shadow-sm hover:shadow-md transition-shadow"
+              className="h-full shadow-md hover:shadow-lg transition"
             >
               <Statistic
                 title="Last Updated"
                 value={moment(subject?.updatedAt).format("DD/MM/YYYY")}
-                prefix={<ClockCircleOutlined className="text-indigo-500" />}
+                prefix={<ClockCircleOutlined className="!text-cyan-500" />}
               />
             </Card>
           </Col>
@@ -252,32 +256,35 @@ const SubjectDetailPage = () => {
         {/* Basic Information */}
         <Card
           title={
-            <div className="flex items-center space-x-2">
-              <BookOutlined className="text-blue-500" />
-              <span>Basic Information</span>
+            <div className="flex items-center space-x-2 text-cyan-700">
+              <BookOutlined />
+              <span className="font-semibold">Basic Information</span>
             </div>
           }
-          className="mb-8 shadow-sm hover:shadow-md transition-shadow"
+          className="mb-8 shadow-md hover:shadow-lg transition"
         >
           <Row gutter={[24, 24]}>
             <Col xs={24} md={12}>
               <div className="space-y-4">
                 <div>
-                  <Text className="text-gray-500 block">Credits</Text>
-                  <Tag color="blue" className="mt-1 text-base px-3 py-1">
-                    {subject?.credits || "N/A"}
+                  <Text className="!text-gray-500">Credits</Text>
+                  <Tag color="cyan" className="!mt-1 !ml-1 px-3 py-1 text-base">
+                    {subject?.credits}
                   </Tag>
                 </div>
                 <div>
-                  <Text className="text-gray-500 block">Passing Score</Text>
-                  <Tag color="orange" className="mt-1 text-base px-3 py-1">
-                    {subject?.passingScore || "N/A"}
+                  <Text className="!text-gray-500">Passing Score</Text>
+                  <Tag color="blue" className="!mt-1 !ml-1 py-1 text-base">
+                    {subject?.passingScore}
                   </Tag>
                 </div>
                 <div>
-                  <Text className="text-gray-500 block">Created By</Text>
-                  <Tag color="cyan" className="mt-1 text-base px-3 py-1">
-                    {subject?.createByUserId || "N/A"}
+                  <Text className="!text-gray-500">Created By</Text>
+                  <Tag
+                    color="geekblue"
+                    className="!mt-1 !ml-1 px-3 py-1 text-base"
+                  >
+                    {subject?.createByUserId}
                   </Tag>
                 </div>
               </div>
@@ -285,22 +292,22 @@ const SubjectDetailPage = () => {
             <Col xs={24} md={12}>
               <div className="space-y-4">
                 <div>
-                  <Text className="text-gray-500 block">Created At</Text>
-                  <Text strong className="text-base">
+                  <Text className="!text-gray-500">Created At</Text>
+                  <Text strong className="block text-base">
                     {moment(subject?.createdAt).format("DD/MM/YYYY HH:mm")}
                   </Text>
                 </div>
                 <div>
-                  <Text className="text-gray-500 block">Last Updated</Text>
-                  <Text strong className="text-base">
+                  <Text className="!text-gray-500">Last Updated</Text>
+                  <Text strong className="block text-base">
                     {moment(subject?.updatedAt).format("DD/MM/YYYY HH:mm")}
                   </Text>
                 </div>
               </div>
             </Col>
             <Col span={24}>
-              <Text className="text-gray-500 block mb-2">Description</Text>
-              <Text className="text-base">
+              <Text className="!text-gray-500 !block mb-1">Description</Text>
+              <Text className="!text-base">
                 {subject?.description || "No description available"}
               </Text>
             </Col>

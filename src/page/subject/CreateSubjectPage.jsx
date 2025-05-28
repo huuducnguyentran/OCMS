@@ -5,10 +5,8 @@ import {
   Button,
   message,
   Form,
-  Card,
   Row,
   Col,
-  Breadcrumb,
   Typography,
 } from "antd";
 import { createSubject } from "../../services/subjectService";
@@ -53,34 +51,17 @@ const CreateSubjectPage = () => {
   };
 
   return (
-    <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-xl shadow-md p-8 mb-8">
-          <div className="flex justify-between items-start mb-6">
-            {/* <div>
-              <Breadcrumb className="mb-4">
-                <Breadcrumb.Item>
-                  <a
-                    onClick={() => navigate("/subject")}
-                    className="text-blue-600"
-                  >
-                    <BookOutlined className="mr-1" />
-                    Subjects
-                  </a>
-                </Breadcrumb.Item>
-                <Breadcrumb.Item>Create New Subject</Breadcrumb.Item>
-              </Breadcrumb>
-              <Title level={2} className="mb-2">
-                Create New Subject
-              </Title>
-            </div> */}
-            <Title level={3} className="text-gray-800 m-0">
+    <Layout className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100">
+      <div className="max-w-4xl mx-auto px-4 py-10 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl shadow-lg p-10 animate__animated animate__fadeIn">
+          <div className="flex justify-between items-center mb-8">
+            <Title level={3} className="text-cyan-800 m-0">
               Create New Subject
             </Title>
             <Button
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate("/subject")}
-              className="text-blue-600"
+              className="!text-cyan-600 hover:!text-cyan-800 border !border-cyan-300 rounded-lg"
             >
               Back to Subjects
             </Button>
@@ -93,36 +74,21 @@ const CreateSubjectPage = () => {
             className="space-y-6"
           >
             <Row gutter={24}>
-              {/* <Col xs={24} md={12}>
-                <Form.Item
-                  name="subjectId"
-                  label="Subject ID"
-                  rules={[
-                    { required: true, message: "Subject ID is required" },
-                    { max: 20, message: "Max 20 characters" },
-                  ]}
-                >
-                  <Input
-                    prefix={<BookOutlined className="text-gray-400" />}
-                    placeholder="Enter subject ID"
-                    className="rounded-lg"
-                    size="large"
-                    maxLength={20}
-                  />
-                </Form.Item>
-              </Col> */}
-
               <Col span={24}>
                 <Form.Item
                   name="subjectName"
-                  label="Subject Name"
+                  label={
+                    <span className="font-medium text-cyan-700">
+                      Subject Name
+                    </span>
+                  }
                   rules={[
                     { required: true, message: "Subject name is required" },
                   ]}
                 >
                   <Input
                     placeholder="Enter subject name"
-                    className="rounded-lg"
+                    className="!rounded-lg !shadow-sm !border-cyan-400 focus:!border-cyan-600 focus:!ring-cyan-600"
                     size="large"
                   />
                 </Form.Item>
@@ -131,7 +97,11 @@ const CreateSubjectPage = () => {
               <Col span={24}>
                 <Form.Item
                   name="description"
-                  label="Description"
+                  label={
+                    <span className="font-medium text-cyan-700">
+                      Description
+                    </span>
+                  }
                   rules={[
                     { required: true, message: "Description is required" },
                     { max: 255, message: "Max 255 characters" },
@@ -140,7 +110,7 @@ const CreateSubjectPage = () => {
                   <TextArea
                     rows={4}
                     placeholder="Enter subject description"
-                    className="rounded-lg"
+                    className="!rounded-lg !shadow-sm !border-cyan-400 focus:!border-cyan-600 focus:!ring-cyan-600"
                     size="large"
                     maxLength={255}
                   />
@@ -148,10 +118,14 @@ const CreateSubjectPage = () => {
               </Col>
 
               <Col xs={24} sm={12}>
-                <Card className="rounded-xl shadow-md">
+                <div className="bg-cyan-50 p-4 rounded-xl shadow-sm">
                   <Form.Item
                     name="credits"
-                    label="Credits (1-10)"
+                    label={
+                      <span className="font-medium text-cyan-700">
+                        Credits (1–10)
+                      </span>
+                    }
                     rules={[
                       { required: true, message: "Credits are required" },
                       () => ({
@@ -178,19 +152,23 @@ const CreateSubjectPage = () => {
                       min={1}
                       max={10}
                       placeholder="Enter credits"
-                      prefix={<BookOutlined className="text-gray-400" />}
-                      className="rounded-lg"
+                      prefix={<BookOutlined className="text-cyan-500" />}
+                      className="!rounded-lg !shadow-sm !border-cyan-400 focus:!border-cyan-600 focus:!ring-cyan-600"
                       size="large"
                     />
                   </Form.Item>
-                </Card>
+                </div>
               </Col>
 
               <Col xs={24} sm={12}>
-                <Card className="rounded-xl shadow-md">
+                <div className="bg-cyan-50 p-4 rounded-xl shadow-sm">
                   <Form.Item
                     name="passingScore"
-                    label="Passing Score (0-10)"
+                    label={
+                      <span className="font-medium text-cyan-700">
+                        Passing Score (0–10)
+                      </span>
+                    }
                     rules={[
                       { required: true, message: "Passing score is required" },
                       () => ({
@@ -213,20 +191,20 @@ const CreateSubjectPage = () => {
                       max={10}
                       placeholder="Enter passing score"
                       prefix={<TrophyOutlined className="text-yellow-500" />}
-                      className="rounded-lg"
+                      className="!rounded-lg !shadow-sm !border-cyan-400 focus:!border-cyan-600 focus:!ring-cyan-600"
                       size="large"
                     />
                   </Form.Item>
-                </Card>
+                </div>
               </Col>
             </Row>
 
-            <Form.Item className="mt-8">
+            <Form.Item className="pt-4">
               <Button
                 type="primary"
                 htmlType="submit"
                 loading={loading}
-                className="w-full h-12 text-lg bg-blue-600 hover:bg-blue-700 border-0 rounded-lg shadow-md"
+                className="!w-full !h-12 !text-lg !bg-cyan-700 hover:!bg-cyan-800 !border-none !rounded-lg !shadow-md !transition-all !duration-200"
               >
                 {loading ? "Creating..." : "Create Subject"}
               </Button>

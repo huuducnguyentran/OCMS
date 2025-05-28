@@ -137,7 +137,10 @@ function App() {
                             path="/course/edit/:id"
                             element={<EditCoursePage />}
                           />
-                          <Route path="/classroom/:classId/details" element={<ClassroomDetailPage />} />
+                          <Route
+                            path="/classroom/:classId/details"
+                            element={<ClassroomDetailPage />}
+                          />
                           {/*  Schedule Management */}
                           <Route path="/schedule" element={<SchedulePage />} />
                           <Route
@@ -178,10 +181,16 @@ function App() {
                           <Route path="/instructor-assignment/create" element={<InstructorAssignmentCreate />} />
 
                           {/*  Subject Specialty */}
-                          <Route path="/subject-specialty" element={<SubjectSpecialtyPage />} />
-                          <Route path="/subject-specialty/create" element={<SubjectSpecialtyCreate />} />
+                          <Route
+                            path="/subject-specialty"
+                            element={<SubjectSpecialtyPage />}
+                          />
+                          <Route
+                            path="/subject-specialty/create"
+                            element={<SubjectSpecialtyCreate />}
+                          />
                           {/* <Route path="/subject-specialty/edit/:id" element={<SubjectSpecialtyEdit />} /> */}
-                        
+
                           {/*  Subjects */}
                           <Route path="/subject" element={<SubjectPage />} />
                           <Route
@@ -378,7 +387,10 @@ function App() {
                             element={<AssignDepartmentPage />}
                           />
                           <Route path="/class" element={<ClassroomPage />} />
-                          <Route path="/classroom/:classId/create-schedule" element={<CreateScheduleForClassPage />} />
+                          <Route
+                            path="/classroom/:classId/create-schedule"
+                            element={<CreateScheduleForClassPage />}
+                          />
                         </Routes>
                         <Footer />
                       </Layout>

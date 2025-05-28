@@ -1,16 +1,28 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Layout, Typography, Form, Button, Select, Card, Row, Col,
-  message, Spin, Divider, Alert
+  Layout,
+  Typography,
+  Form,
+  Button,
+  Select,
+  Card,
+  Row,
+  Col,
+  message,
+  Spin,
+  Divider,
 } from "antd";
 import {
-  ArrowLeftOutlined, SaveOutlined, BookOutlined, TagsOutlined
+  ArrowLeftOutlined,
+  SaveOutlined,
+  BookOutlined,
+  TagsOutlined,
 } from "@ant-design/icons";
 import {
   createSubjectSpecialty,
   getSpecialtiesForDropdown,
-  getAllSubject
+  getAllSubject,
 } from "../../services/subjectSpecialtyServices";
 
 const { Title, Text } = Typography;
@@ -28,45 +40,55 @@ const SubjectSpecialtyCreate = () => {
     const fetchOptions = async () => {
       setLoading(true);
       try {
-        // Fetch subjects and specialties in parallel
         const [subjectsRes, specialtiesRes] = await Promise.all([
           getAllSubject(),
-          getSpecialtiesForDropdown()
+          getSpecialtiesForDropdown(),
         ]);
 
-        console.log('Raw subjects response:', subjectsRes);
-        
-        // Process subjects data
+        console.log('Raw specialties response:', specialtiesRes);
+
         let subjectsList = [];
         if (Array.isArray(subjectsRes)) {
           subjectsList = subjectsRes;
-        } else if (subjectsRes.data && Array.isArray(subjectsRes.data)) {
-          subjectsList = subjectsRes.data;
-        } else if (subjectsRes.data?.data && Array.isArray(subjectsRes.data.data)) {
+        } else if (subjectsRes.data?.data) {
           subjectsList = subjectsRes.data.data;
-        } else if (subjectsRes.allSubjects && Array.isArray(subjectsRes.allSubjects)) {
+        } else if (subjectsRes.allSubjects) {
           subjectsList = subjectsRes.allSubjects;
         }
-        
-        console.log('Processed subjects list:', subjectsList);
-        setSubjects(subjectsList);
 
-        // Process specialties data
         let specialtiesList = [];
         if (Array.isArray(specialtiesRes)) {
           specialtiesList = specialtiesRes;
-        } else if (specialtiesRes.data && Array.isArray(specialtiesRes.data)) {
-          specialtiesList = specialtiesRes.data;
-        } else if (specialtiesRes.data?.data && Array.isArray(specialtiesRes.data.data)) {
+        } else if (specialtiesRes.data?.data) {
           specialtiesList = specialtiesRes.data.data;
+        } else if (specialtiesRes.specialties) {
+          specialtiesList = specialtiesRes.specialties;
+        } else if (specialtiesRes.data) {
+          specialtiesList = specialtiesRes.data;
         }
-        setSpecialties(specialtiesList);
 
-        console.log('Subjects:', subjectsList);
-        console.log('Specialties:', specialtiesList);
+        console.log('Processed specialties list:', specialtiesList);
+        
+        // Check if specialties have the expected properties
+        if (specialtiesList.length > 0) {
+          console.log('First specialty item:', specialtiesList[0]);
+          console.log('specialtyId exists:', 'specialtyId' in specialtiesList[0]);
+          console.log('specialtyName exists:', 'specialtyName' in specialtiesList[0]);
+          
+          // Try to find the correct property names
+          const firstItem = specialtiesList[0];
+          const possibleIdKeys = Object.keys(firstItem).filter(key => key.toLowerCase().includes('id'));
+          const possibleNameKeys = Object.keys(firstItem).filter(key => key.toLowerCase().includes('name'));
+          
+          console.log('Possible ID keys:', possibleIdKeys);
+          console.log('Possible Name keys:', possibleNameKeys);
+        }
+        
+        setSubjects(subjectsList);
+        setSpecialties(specialtiesList);
       } catch (error) {
-        console.error('Error fetching options:', error);
-        message.error('Failed to load subjects or specialties');
+        console.error('Error fetching data:', error);
+        message.error("Failed to load subjects or specialties");
       } finally {
         setLoading(false);
       }
@@ -78,13 +100,11 @@ const SubjectSpecialtyCreate = () => {
   const onFinish = async (values) => {
     setSubmitting(true);
     try {
-      console.log('Form values:', values);
       await createSubjectSpecialty(values);
-      message.success('Subject specialty created successfully');
-      navigate('/subject-specialty');
+      message.success("Subject specialty created successfully");
+      navigate("/subject-specialty");
     } catch (error) {
-      console.error('Error creating subject specialty:', error);
-      message.error('Failed to create subject specialty');
+      message.error("Failed to create subject specialty", error);
     } finally {
       setSubmitting(false);
     }
@@ -92,7 +112,7 @@ const SubjectSpecialtyCreate = () => {
 
   if (loading) {
     return (
-      <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <Layout className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100">
         <div className="flex justify-center items-center h-screen">
           <Spin size="large" tip="Loading options..." />
         </div>
@@ -101,48 +121,57 @@ const SubjectSpecialtyCreate = () => {
   }
 
   return (
-    <Layout className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="w-full px-6 py-8">
-        <Card className="shadow-xl rounded-xl">
+    <Layout className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100">
+      <div className="w-full px-6 py-10">
+        <Card className="shadow-2xl rounded-2xl p-8 max-w-6xl !mx-auto bg-white">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <Title level={2} className="m-0">Create Subject Specialty</Title>
+              <Title level={2} className="!m-0 !text-cyan-700">
+                Create Subject Specialty
+              </Title>
               <Text type="secondary" className="text-lg">
                 Associate a subject with a specialty
               </Text>
             </div>
             <Button
               icon={<ArrowLeftOutlined />}
-              onClick={() => navigate('/subject-specialty')}
+              onClick={() => navigate("/subject-specialty")}
               size="large"
+              className="!border-cyan-600 !text-cyan-600 hover:!border-cyan-800 hover:!text-cyan-800"
             >
               Back to List
             </Button>
           </div>
 
-          <Divider />
+          <Divider className="!border-cyan-400" />
 
           <Form
             form={form}
             layout="vertical"
             onFinish={onFinish}
-            className="max-w-3xl mx-auto"
+            className="max-w-5xl mx-auto"
           >
             <Row gutter={24}>
               <Col span={24} md={12}>
                 <Card
-                  className="mb-6 shadow-md bg-blue-50"
+                  className="!mb-6 !shadow-md !bg-cyan-50 !rounded-xl"
                   title={
-                    <div className="flex items-center">
-                      <BookOutlined className="mr-2 text-blue-500" />
-                      <span>Subject</span>
+                    <div className="flex items-center text-cyan-600 font-semibold">
+                      <BookOutlined className="!mr-2" />
+                      Subject
                     </div>
                   }
                 >
                   <Form.Item
                     name="subjectId"
-                    label="Select Subject"
-                    rules={[{ required: true, message: 'Please select a subject' }]}
+                    label={
+                      <span className="text-base font-medium">
+                        Select Subject
+                      </span>
+                    }
+                    rules={[
+                      { required: true, message: "Please select a subject" },
+                    ]}
                   >
                     <Select
                       placeholder="Select a subject"
@@ -151,8 +180,11 @@ const SubjectSpecialtyCreate = () => {
                       size="large"
                       className="w-full"
                     >
-                      {subjects.map(subject => (
-                        <Option key={subject.subjectId} value={subject.subjectId}>
+                      {subjects.map((subject) => (
+                        <Option
+                          key={subject.subjectId}
+                          value={subject.subjectId}
+                        >
                           {subject.subjectName || subject.subjectId}
                         </Option>
                       ))}
@@ -163,18 +195,24 @@ const SubjectSpecialtyCreate = () => {
 
               <Col span={24} md={12}>
                 <Card
-                  className="mb-6 shadow-md bg-green-50"
+                  className="!mb-6 !shadow-md !bg-cyan-50 !rounded-xl"
                   title={
-                    <div className="flex items-center">
-                      <TagsOutlined className="mr-2 text-green-500" />
-                      <span>Specialty</span>
+                    <div className="flex items-center text-cyan-600 font-semibold">
+                      <TagsOutlined className="!mr-2" />
+                      Specialty
                     </div>
                   }
                 >
                   <Form.Item
                     name="specialtyId"
-                    label="Select Specialty"
-                    rules={[{ required: true, message: 'Please select a specialty' }]}
+                    label={
+                      <span className="text-base font-medium">
+                        Select Specialty
+                      </span>
+                    }
+                    rules={[
+                      { required: true, message: "Please select a specialty" },
+                    ]}
                   >
                     <Select
                       placeholder="Select a specialty"
@@ -183,22 +221,31 @@ const SubjectSpecialtyCreate = () => {
                       size="large"
                       className="w-full"
                     >
-                      {specialties.map(specialty => (
-                        <Option key={specialty.specialtyId} value={specialty.specialtyId}>
-                          {specialty.specialtyName || specialty.specialtyId}
-                        </Option>
-                      ))}
+                      {specialties.length > 0 ? specialties.map((specialty) => {
+                        // Handle different property naming conventions
+                        const id = specialty.specialtyId || specialty.id || specialty.specialty_id || '';
+                        const name = specialty.specialtyName || specialty.name || specialty.specialty_name || id;
+                        
+                        return (
+                          <Option
+                            key={id}
+                            value={id}
+                          >
+                            {name}
+                          </Option>
+                        );
+                      }) : <Option value="" disabled>No data</Option>}
                     </Select>
                   </Form.Item>
                 </Card>
               </Col>
             </Row>
 
-            <div className="flex justify-end mt-6">
+            <div className="flex justify-end mt-8">
               <Button
                 type="default"
-                onClick={() => navigate('/subject-specialty')}
-                className="mr-4"
+                onClick={() => navigate("/subject-specialty")}
+                className="!mr-4 !border-cyan-400 !text-cyan-400 hover:!border-cyan-600 hover:!text-cyan-600 !px-6 "
                 size="large"
               >
                 Cancel
@@ -209,7 +256,7 @@ const SubjectSpecialtyCreate = () => {
                 icon={<SaveOutlined />}
                 loading={submitting}
                 size="large"
-                className="bg-blue-600 hover:bg-blue-700"
+                className="!bg-cyan-600 hover:!bg-cyan-700 !border-none !text-white !shadow-lg !px-6 py-2 rounded-xl"
               >
                 Create
               </Button>
