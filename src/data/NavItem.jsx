@@ -292,11 +292,11 @@ const navItems = [
     path: "/export-certificate",
   },
   {
-    key: "23",
-    label: "Classroom",
-    icon: "FileProtectOutlined",
-    path: "/class",
-    roles: ["Training staff", "Instructor", "Trainee"],
+    key:"23",
+    label:"Classroom",
+    icon:"FileProtectOutlined",
+    path:"/class",
+    roles:["Training staff","Instructor"]
   },
   {
     key: "24",

@@ -10,6 +10,9 @@ import {
   Typography,
   Divider,
   Select,
+  DatePicker,
+  Row,
+  Col,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -18,9 +21,14 @@ import {
 } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import { courseService } from "../../services/courseService";
+import dayjs from "dayjs";
 
 const { Option } = Select;
 const { Title, Text } = Typography;
+
+const disabledDate = (current) => {
+  return current && current < dayjs().startOf('day');
+};
 
 const EditCoursePage = () => {
   const [form] = Form.useForm();
@@ -45,13 +53,15 @@ const EditCoursePage = () => {
           description: response.data.description,
           courseName: response.data.courseName,
           courseRelatedId: response.data.courseRelatedId || "",
+          startDate: response.data.startDate ? dayjs(response.data.startDate) : null,
+          endDate: response.data.endDate ? dayjs(response.data.endDate) : null,
         });
       } else {
-        message.error("Failed to load course data");
+        message.error(response?.message || "Failed to load course data");
       }
     } catch (error) {
       console.error("Failed to fetch course:", error);
-      message.error("Failed to load course data");
+      message.error(error?.response?.data?.message || error?.message || "Failed to load course data");
     } finally {
       setLoadingCourse(false);
     }
@@ -67,7 +77,7 @@ const EditCoursePage = () => {
       setCourses(filteredCourses || []);
     } catch (error) {
       console.error("Failed to fetch courses:", error);
-      message.error("Failed to load courses");
+      message.error("Failed to load courses for dropdown");
     } finally {
       setLoadingCourses(false);
     }
@@ -77,10 +87,19 @@ const EditCoursePage = () => {
     try {
       setLoading(true);
       const formattedData = {
-        description: values.description?.trim() || "",
-        courseName: values.courseName?.trim() || "",
-        courseRelatedId: values.courseRelatedId || "",
+        description: values.description?.trim() || null,
+        courseName: values.courseName?.trim(),
+        courseRelatedId: values.courseRelatedId || null,
+        startDate: values.startDate ? values.startDate.toISOString() : null,
+        endDate: values.endDate ? values.endDate.toISOString() : null,
       };
+
+      if (formattedData.startDate && formattedData.endDate && dayjs(formattedData.startDate).isAfter(dayjs(formattedData.endDate))) {
+        message.error("End Date must be after Start Date.");
+        setLoading(false);
+        return;
+      }
+      
       await courseService.updateCourse(id, formattedData);
       message.success("Course updated successfully!");
       navigate("/all-courses", { state: { refresh: true } });
@@ -97,11 +116,11 @@ const EditCoursePage = () => {
   return (
     <Layout className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100 !p-6 !sm:p-8">
       <Card
-        className="!min-w-5xl !mx-auto !rounded-xl !border !border-cyan-600 !shadow-lg"
+        className="!max-w-5xl !mx-auto !rounded-xl !border !border-cyan-600 !shadow-lg"
         title={
           <div className="flex items-center justify-between">
             <Title level={3} className="!text-cyan-800 !m-0">
-              Edit Course
+              Edit Course: {id}
             </Title>
             <Button
               size="middle"
@@ -109,11 +128,11 @@ const EditCoursePage = () => {
               onClick={() => navigate("/all-courses")}
               className="!text-cyan-700 hover:!text-cyan-900 border border-cyan-300 hover:!border-cyan-400"
             >
-              Back
+              Back to Courses
             </Button>
           </div>
         }
-        bodyStyle={{ padding: 24 }}
+        bodyStyle={{ padding: "24px" }}
       >
         <Spin spinning={loading || loadingCourse || loadingCourses}>
           <Form
@@ -125,42 +144,65 @@ const EditCoursePage = () => {
           >
             <Form.Item
               name="courseName"
-              label={
-                <Text strong className="!text-cyan-700">
-                  Course Name
-                </Text>
-              }
+              label={<Text strong className="!text-cyan-700">Course Name</Text>}
               rules={[{ required: true, message: "Course name is required" }]}
             >
-              <Input
-                placeholder="Enter course name"
-                className="rounded-lg py-3 px-4 text-base"
-              />
+              <Input placeholder="Enter course name" className="rounded-lg py-3 px-4 text-base" />
             </Form.Item>
 
             <Form.Item
               name="description"
-              label={
-                <Text strong className="!text-cyan-700">
-                  Description
-                </Text>
-              }
+              label={<Text strong className="!text-cyan-700">Description</Text>}
               rules={[{ required: true, message: "Description is required" }]}
             >
-              <Input.TextArea
-                placeholder="Enter course description"
-                rows={4}
-                className="rounded-lg py-3 px-4 text-base"
-              />
+              <Input.TextArea placeholder="Enter course description" rows={4} className="rounded-lg py-3 px-4 text-base" />
             </Form.Item>
+            
+            <Row gutter={16}>
+                <Col xs={24} sm={12}>
+                    <Form.Item
+                        name="startDate"
+                        label={<Text strong className="!text-cyan-700">Start Date</Text>}
+                        rules={[{ required: true, message: "Start date is required" }]}
+                    >
+                        <DatePicker 
+                            className="w-full rounded-lg py-3 px-4 text-base" 
+                            format="YYYY-MM-DD" 
+                            disabledDate={disabledDate} 
+                        />
+                    </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                    <Form.Item
+                        name="endDate"
+                        label={<Text strong className="!text-cyan-700">End Date</Text>}
+                        rules={[
+                            { required: true, message: "End date is required" },
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                if (!value || !getFieldValue('startDate')) {
+                                    return Promise.resolve();
+                                }
+                                if (dayjs(value).isBefore(dayjs(getFieldValue('startDate')))) {
+                                    return Promise.reject(new Error('End Date must be on or after Start Date!'));
+                                }
+                                return Promise.resolve();
+                                },
+                            }),
+                        ]}
+                    >
+                        <DatePicker 
+                            className="w-full rounded-lg py-3 px-4 text-base" 
+                            format="YYYY-MM-DD" 
+                            disabledDate={disabledDate}
+                        />
+                    </Form.Item>
+                </Col>
+            </Row>
 
             <Form.Item
               name="courseRelatedId"
-              label={
-                <Text strong className="!text-cyan-700">
-                  Related Course
-                </Text>
-              }
+              label={<Text strong className="!text-cyan-700">Related Course (Optional)</Text>}
             >
               <Select
                 placeholder="Select a related course"
@@ -168,21 +210,23 @@ const EditCoursePage = () => {
                 showSearch
                 allowClear
                 optionFilterProp="children"
+                filterOption={(input, option) => 
+                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase()) || 
+                    (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+                }
                 className="rounded-lg"
+                 getPopupContainer={triggerNode => triggerNode.parentNode}
                 notFoundContent={
                   loadingCourses ? (
-                    <div className="text-center py-4">
-                      <Spin size="small" />
-                      <div className="mt-2">Loading...</div>
-                    </div>
+                    <div className="text-center py-4"><Spin size="small" /><div className="mt-2">Loading...</div></div>
                   ) : (
-                    <div className="text-center py-4">No courses found</div>
+                    <div className="text-center py-4">No other courses found</div>
                   )
                 }
               >
-                {courses.map((course) => (
-                  <Option key={course.courseId} value={course.courseId}>
-                    {course.courseName} ({course.courseId})
+                {courses.map((courseItem) => (
+                  <Option key={courseItem.courseId} value={courseItem.courseId} label={courseItem.courseName}>
+                    {courseItem.courseName} ({courseItem.courseId})
                   </Option>
                 ))}
               </Select>
@@ -194,9 +238,10 @@ const EditCoursePage = () => {
               <Button
                 icon={<ReloadOutlined />}
                 onClick={fetchCourseData}
+                disabled={loading || loadingCourse}
                 className="!rounded-lg !border-cyan-400 hover:!border-cyan-600 !text-cyan-700 hover:!text-cyan-900 !px-6 !py-2"
               >
-                Reset
+                Reset Form
               </Button>
               <Button
                 type="primary"

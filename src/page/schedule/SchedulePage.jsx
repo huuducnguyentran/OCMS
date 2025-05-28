@@ -164,29 +164,36 @@ const SchedulePage = () => {
         return;
       }
 
-      // Sửa lại phần này để log response và kiểm tra cấu trúc dữ liệu
       let response;
       if (userRole === "Instructor") {
         response = await trainingScheduleService.getInstructorSubjects();
+        console.log("Instructor schedule response:", response);
+        if (response?.schedules) {
+          setScheduleData(response.schedules);
+        } else {
+          setScheduleData([]);
+          message.info("No schedule data found");
+        }
       } else if (userRole === "Trainee") {
         response = await trainingScheduleService.getTraineeSubjects();
-      } else if (
-        userRole === "TrainingStaff" ||
-        userRole === "Training staff"
-      ) {
+        if (response?.schedules) {
+          setScheduleData(response.schedules);
+        } else {
+          setScheduleData([]);
+          message.info("No schedule data found");
+        }
+      } else if (userRole === "TrainingStaff" || userRole === "Training staff") {
+
         response = await trainingScheduleService.getAllTrainingSchedules();
+        if (response?.schedules) {
+          setScheduleData(response.schedules);
+        } else {
+          setScheduleData([]);
+          message.info("No schedule data found");
+        }
       }
 
-      console.log("API Response:", response); // Thêm log để kiểm tra
-
-      // Sửa lại cách set scheduleData
-      if (response?.schedules && Array.isArray(response.schedules)) {
-        setScheduleData(response.schedules);
-        console.log("Schedule Data after setting:", response.schedules); // Thêm log để kiểm tra
-      } else {
-        setScheduleData([]);
-        message.info("No schedule data found");
-      }
+      console.log("Schedule Data after setting:", scheduleData);
     } catch (error) {
       console.error("Error fetching schedule:", error);
       handleError(error);
@@ -418,39 +425,36 @@ const SchedulePage = () => {
 
         if (matchingSchedules.length > 0) {
           const schedule = matchingSchedules[0];
-
-          // Chỉ hiển thị schedule có status Approved cho Instructor
-          if (userRole === "Instructor" && schedule.status !== "Approved") {
-            row[day] = (
-              <div className="h-full flex items-center justify-center">
-                <div
-                  className="text-center text-gray-400 p-4 bg-gray-50/50 rounded-xl border border-gray-100 
-                  hover:bg-gray-100/50 transition-colors"
-                >
-                  <ClockCircleOutlined className="!text-2xl !mb-2" />
-                  <div>No Class</div>
-                </div>
-              </div>
-            );
-            return;
-          }
+          
+          // Kiểm tra ngày hiện tại có nằm trong khoảng startDateTime và endDateTime không
+          const currentDate = new Date();
+          const startDate = new Date(schedule.startDateTime);
+          const endDate = new Date(schedule.endDateTime);
+          const isActive = currentDate >= startDate && currentDate <= endDate;
 
           row[day] = (
             <div
               key={`schedule-${schedule.scheduleID}`}
-              onClick={() => navigate(`/subject/${schedule.subjectId}`)}
+              onClick={() => navigate(`/classSubject/${schedule.classSubjectId}`)}
               className="group cursor-pointer transform transition-all duration-300 hover:scale-[1.02]"
             >
-              <div className="p-4 rounded-xl border transition-all duration-300 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-lg hover:border-green-300">
-                {/* Status Badge - Chỉ hiển thị cho Training Staff hoặc status Approved */}
+              <div className={`p-4 rounded-xl border transition-all duration-300 
+                ${isActive ? 'border-green-200 bg-gradient-to-br from-green-50 to-emerald-50' : 
+                           'border-gray-200 bg-gradient-to-br from-gray-50 to-slate-50'} 
+                hover:shadow-lg hover:border-green-300`}>
+                
+                {/* Status Badge */}
                 <div className="flex justify-between items-center mb-2">
-                  {(userRole === "TrainingStaff" ||
-                    userRole === "Training staff" ||
-                    schedule.status === "Approved") && (
-                    <Tag className="!px-2 !py-1 !border-0 !font-medium !bg-cyan-200 !text-cyan-700">
-                      {schedule.status}
-                    </Tag>
-                  )}
+                  <Tag 
+                    className={`px-2 py-1 border-0 font-medium 
+                      ${schedule.status === 'Completed' ? 'bg-blue-100 text-blue-700' :
+                        schedule.status === 'Incoming' ? 'bg-yellow-100 text-yellow-700' :
+                        schedule.status === 'Pending' ? 'bg-orange-100 text-orange-700' :
+                        'bg-gray-100 text-gray-700'}`}
+                  >
+                    {schedule.status}
+                  </Tag>
+                  
 
                   {/* Action Buttons */}
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -462,7 +466,8 @@ const SchedulePage = () => {
                 </div>
 
                 {/* Subject Name */}
-                <div className="font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-cyan-600 transition-colors">
+                <div className="font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+
                   {schedule.subjectName}
                 </div>
 
@@ -472,31 +477,31 @@ const SchedulePage = () => {
                     <ClockCircleOutlined className="!text-cyan-700" />
                     <span>{timeSlot}</span>
                   </div>
-
+                  
                   <div className="flex items-center gap-2 text-gray-600">
-                    <CalendarOutlined className="!text-cyan-700" />
-                    <span>Room {schedule.room}</span>
+                    <CalendarOutlined className="text-gray-400" />
+                    <span>Room {schedule.roomName}</span>
                   </div>
 
-                  {/* Chỉ hiển thị instructor name khi không phải role Instructor */}
                   {userRole !== "Instructor" && (
                     <div className="flex items-center gap-2 text-gray-600">
-                      <UserSwitchOutlined className="!text-cyan-700" />
+                      <UserSwitchOutlined className="text-gray-400" />
+
                       <span>{schedule.instructorName}</span>
                     </div>
                   )}
 
-                  {/* Location with Tooltip */}
                   <Tooltip title={schedule.location}>
                     <div className="flex items-center gap-2 text-gray-600">
-                      <EnvironmentOutlined className="!text-cyan-700" />
-                      <span className="truncate">{schedule.location}</span>
+                      <EnvironmentOutlined className="text-gray-400" />
+                      <span className="truncate">{schedule.locationName}</span>
+
                     </div>
                   </Tooltip>
                 </div>
 
-                {/* Hover Effect Indicator */}
-                <div className="h-1 w-0 group-hover:w-full bg-cyan-500 mt-3 transition-all duration-300 rounded-full"></div>
+                <div className="h-1 w-0 group-hover:w-full bg-blue-500 mt-3 transition-all duration-300 rounded-full"></div>
+
               </div>
             </div>
           );

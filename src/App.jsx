@@ -4,7 +4,8 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
-
+import CourseDetailPage from "./page/course/CourseDetailPage";
+import ClassSubjectDetailPage from "./page/classSubject/ClassSubjectDetailPage";
 import ProtectedRoute from "./component/ProtectedRoute";
 import AvatarProvider from "./context/AvatarProvider";
 import { AuthProvider } from "./context/AuthContext";
@@ -78,7 +79,6 @@ import CreateScheduleForClassPage from "./page/schedule/CreateScheduleForClassPa
 import InstructorAssPage from "./page/instructor_assignment/instructor_assPage";
 import CreateAccountPage from "./page/user/CreateAccountPage";
 import InstructorAssignmentCreate from "./page/instructor_assignment/InstructorAssignmentCreate";
-// import InstructorAssignmentEdit from "./page/instructor_assignment/InstructorAssignmentEdit";
 import SubjectSpecialtyPage from "./page/subject_specialty/SubjectSpecialtyPage";
 import SubjectSpecialtyCreate from "./page/subject_specialty/SubjectSpecialtyCreate";
 import ClassroomDetailPage from "./page/classroom/ClassroomDetailPage";
@@ -179,14 +179,7 @@ function App() {
                             path="/instructor-assignment"
                             element={<InstructorAssPage />}
                           />
-                          <Route
-                            path="/instructor-assignment/create"
-                            element={<InstructorAssignmentCreate />}
-                          />
-                          {/* <Route
-                            path="/instructor-assignment/edit/:id"
-                            element={<InstructorAssignmentEdit />}
-                          /> */}
+                          <Route path="/instructor-assignment/create" element={<InstructorAssignmentCreate />} />
 
                           {/*  Subject Specialty */}
                           <Route
@@ -213,7 +206,7 @@ function App() {
                             path="/subject-edit/:subjectId"
                             element={<UpdateSubjectPage />}
                           />
-
+  <Route path="/classSubject/:classSubjectId" element = {<ClassSubjectDetailPage />}/>
                           {/*  Trainees */}
                           <Route
                             path="/import-assign-trainee"
@@ -373,10 +366,10 @@ function App() {
                             path="/plan/:planId"
                             element={<TrainingPlanDetailPage />}
                           /> */}
-                          {/* <Route
-                            path="/course/:id"
+                          { <Route
+                            path="/course/:courseId"
                             element={<CourseDetailPage />}
-                          /> */}
+                          /> }
                           {/* Department */}
                           <Route
                             path="/department"

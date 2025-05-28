@@ -19,8 +19,10 @@ import {
   Radio,
   Divider,
   Steps,
+  Table,
+  Modal,
 } from "antd";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   CalendarOutlined,
   RollbackOutlined,
@@ -34,23 +36,20 @@ import {
   EditOutlined,
   CheckCircleFilled,
   DeleteOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import { trainingScheduleService } from "../../services/trainingScheduleService";
 import { getAllSubjectSpecialties } from "../../services/subjectSpecialtyServices";
 import { getAllInstructorAssignments } from "../../services/instructorAssignmentService";
-import {
-  createClassSubject,
-  deleteClassSubject,
-} from "../../services/classSubjectService";
-import {
-  assignTrainee,
-  assignTraineeManual,
-} from "../../services/traineeService";
+import { createClassSubject, deleteClassSubject } from "../../services/classSubjectService";
+import { assignTrainee, assignTraineeManual } from "../../services/traineeService";
+import { courseService } from "../../services/courseService";
 import dayjs from "dayjs";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { getAllUsers } from "../../services/userService";
+import { read, utils } from "xlsx";
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(utc);
@@ -133,6 +132,8 @@ const getRoomName = (value) =>
 const CreateScheduleForClassPage = () => {
   const navigate = useNavigate();
   const { classId } = useParams();
+  const location = useLocation();
+  const courseId = location.state?.courseId;
   const [form] = Form.useForm();
   const [traineeForm] = Form.useForm();
 
@@ -155,8 +156,11 @@ const CreateScheduleForClassPage = () => {
     useState(false);
 
   const [subjectSpecialties, setSubjectSpecialties] = useState([]);
-  const [selectedSubjectSpecialty, setSelectedSubjectSpecialty] =
-    useState(null);
+  const [allSubjectSpecialties, setAllSubjectSpecialties] = useState([]);
+  const [courseDetails, setCourseDetails] = useState(null);
+  const [loadingCourse, setLoadingCourse] = useState(false);
+
+  const [selectedSubjectSpecialty, setSelectedSubjectSpecialty] = useState(null);
 
   const [availableInstructors, setAvailableInstructors] = useState([]);
   const [selectedInstructor, setSelectedInstructor] = useState(null);
@@ -172,14 +176,67 @@ const CreateScheduleForClassPage = () => {
   ]);
   const [eligibleManualTrainees, setEligibleManualTrainees] = useState([]);
 
+  const [excelPreviewData, setExcelPreviewData] = useState([]);
+  const [excelPreviewColumns, setExcelPreviewColumns] = useState([]);
+  const [excelPreviewError, setExcelPreviewError] = useState(null);
+  const [isProcessingFile, setIsProcessingFile] = useState(false);
+
   const isStep1Completed = createdClassSubjectId !== null && currentStep === 1;
+  const isEditingStep1 = currentStep === 0 && !createdClassSubjectId;
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      const isStep1FormTouched = isEditingStep1 && form.isFieldsTouched();
+      
+      let hasFormValues = false;
+      if (isEditingStep1) {
+        const currentValues = form.getFieldsValue();
+        hasFormValues = Object.values(currentValues).some(value => value !== undefined && value !== '' && (!Array.isArray(value) || value.length > 0));
+      }
+
+      if ((hasFormValues && !createdClassSubjectId) || isStep1Completed) {
+        event.preventDefault();
+        event.returnValue = "You have unsaved changes or an incomplete schedule. Are you sure you want to leave?";
+        return "You have unsaved changes or an incomplete schedule. Are you sure you want to leave?";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isEditingStep1, form, createdClassSubjectId, isStep1Completed]);
 
   useEffect(() => {
     if (classId) {
       setLoading((prev) => ({ ...prev, page: false }));
     }
-    fetchSubjectSpecialties();
-  }, [classId]);
+    fetchAllSubjectSpecialtiesList();
+    if (courseId) {
+      fetchCourseDetails(courseId);
+    } else {
+      message.warn("Course ID not found. Subject specialty filtering might not work as expected.");
+    }
+  }, [classId, courseId]);
+
+  useEffect(() => {
+    if (courseDetails && allSubjectSpecialties.length > 0) {
+      if (courseDetails.subjectSpecialties && courseDetails.subjectSpecialties.length > 0) {
+        const courseSubjectSpecialtyIds = courseDetails.subjectSpecialties.map(ss => ss.subjectSpecialtyId);
+        const filtered = allSubjectSpecialties.filter(ss => courseSubjectSpecialtyIds.includes(ss.subjectSpecialtyId));
+        setSubjectSpecialties(filtered);
+        if (filtered.length === 0) {
+            message.info("No subject specialties from the course are available for scheduling.");
+        }
+      } else {
+        message.warn("The fetched course has no subject specialties linked. No subjects will be available.");
+        setSubjectSpecialties([]);
+      }
+    } else if (!courseId && allSubjectSpecialties.length > 0) {
+      setSubjectSpecialties(allSubjectSpecialties);
+    }
+  }, [courseDetails, allSubjectSpecialties, courseId]);
 
   useEffect(() => {
     if (selectedSubjectSpecialty) {
@@ -214,40 +271,52 @@ const CreateScheduleForClassPage = () => {
     }
   }, [traineeAssignMethod, isStep1Completed, selectedSubjectSpecialty]);
 
-  const fetchSubjectSpecialties = async () => {
-    setLoading((prev) => ({ ...prev, subjects: true }));
+  const fetchAllSubjectSpecialtiesList = async () => {
+    setLoading(prev => ({ ...prev, subjects: true }));
     try {
       const response = await getAllSubjectSpecialties();
-
       if (Array.isArray(response)) {
-        setSubjectSpecialties(response);
+        setAllSubjectSpecialties(response);
       } else if (response && Array.isArray(response.data)) {
-        setSubjectSpecialties(response.data);
+        setAllSubjectSpecialties(response.data);
       } else {
-        setSubjectSpecialties([]);
-        message.error(
-          "Could not load subject specialties in expected format. See console for API response."
-        );
+        setAllSubjectSpecialties([]);
+        message.error("Could not load all subject specialties in expected format.");
       }
     } catch (error) {
-      console.error("Error fetching subject specialties:", error);
-      console.error(
-        "Error details (if available):",
-        JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
-      );
-      message.error(
-        "Failed to load subject specialties. Check console for error details."
-      );
-      setSubjectSpecialties([]);
+      console.error("Error fetching all subject specialties:", error);
+      message.error("Failed to load all subject specialties.");
+      setAllSubjectSpecialties([]);
     } finally {
       setLoading((prev) => ({ ...prev, subjects: false }));
     }
   };
 
+  const fetchCourseDetails = async (cId) => {
+    setLoadingCourse(true);
+    try {
+      const response = await courseService.getCourseById(cId);
+      if (response && response.data) {
+        setCourseDetails(response.data);
+      } else {
+        message.error(`Could not retrieve details for course ${cId}.`);
+        setCourseDetails(null);
+      }
+    } catch (error) {
+      console.error(`Error fetching course ${cId} details:`, error);
+      message.error(`Failed to load course ${cId} details. ` + (error.response?.data?.message || error.message) );
+      setCourseDetails(null);
+    } finally {
+      setLoadingCourse(false);
+    }
+  };
+
   const fetchInstructorsForSubject = async (specialty) => {
-    setLoading((prev) => ({ ...prev, instructors: true }));
-    setSelectedInstructor(null);
-    form.setFieldsValue({ instructorId: null });
+    setLoading(prev => ({ ...prev, instructors: true }));
+    if (!createdClassSubjectId) { 
+      setSelectedInstructor(null); 
+      form.setFieldsValue({ instructorId: null });
+    }
     try {
       const allAssignments = await getAllInstructorAssignments();
       const scheduleResponse =
@@ -777,31 +846,27 @@ const CreateScheduleForClassPage = () => {
     setLoading((prev) => ({ ...prev, assigningTrainee: true }));
 
     try {
-      if (traineeAssignMethod === "import") {
-        if (fileList.length === 0) {
-          message.error("Please select an Excel file to import.");
-          setSubmittingStep2(false);
-          setLoading((prev) => ({ ...prev, assigningTrainee: false }));
-          return;
-        }
-        await assignTrainee(fileList[0]);
-        message.success("Trainees imported successfully from file!");
-        resetPageForNewScheduleCycle();
-      } else {
-        await traineeForm.validateFields();
-        const manualValues = traineeForm.getFieldValue("trainees");
-        if (
-          !manualValues ||
-          manualValues.length === 0 ||
-          manualValues.every((t) => !t.traineeId)
-        ) {
-          message.error(
-            "Please add at least one trainee or fill in the details for existing ones."
-          );
-          setSubmittingStep2(false);
-          setLoading((prev) => ({ ...prev, assigningTrainee: false }));
-          return;
-        }
+        if (traineeAssignMethod === 'import') {
+            if (excelPreviewData.length === 0 && fileList.length > 0) {
+                message.info("Attempting to import with selected file. If preview was not shown, check console.");
+            } else if (fileList.length === 0) {
+                message.error("Please select and preview an Excel file to import.");
+                setSubmittingStep2(false); setLoading(prev => ({ ...prev, assigningTrainee: false })); return;
+            }
+            await assignTrainee(fileList[0]); 
+            message.success("Trainees imported successfully from file!");
+            setFileList([]); 
+            setExcelPreviewData([]);
+            setExcelPreviewColumns([]);
+            setExcelPreviewError(null);
+        } else {
+            await traineeForm.validateFields();
+            const manualValues = traineeForm.getFieldValue('trainees');
+            if (!manualValues || manualValues.length === 0 || manualValues.every(t => !t.traineeId)) {
+                 message.error("Please add at least one trainee or fill in the details for existing ones.");
+                 setSubmittingStep2(false); setLoading(prev => ({ ...prev, assigningTrainee: false })); return;
+            }
+
 
         const assignments = manualValues
           .filter((trainee) => trainee.traineeId)
@@ -818,33 +883,22 @@ const CreateScheduleForClassPage = () => {
           setLoading((prev) => ({ ...prev, assigningTrainee: false }));
           return;
         }
+            let allSuccessful = true;
+            for (const assignment of assignments) {
+                try {
+                    await assignTraineeManual(assignment);
+                } catch (manualError) {
+                    allSuccessful = false;
+                    const errMsg = manualError.response?.data?.message || manualError.message || "An unexpected error occurred.";
+                    message.error(`Failed to assign trainee ${assignment.traineeId}: ${String(errMsg)}`);
+                }
+            }
+            if (allSuccessful) {
+                message.success("All selected trainees assigned manually successfully!");
+            } else {
+                 message.warning("Some trainees could not be assigned. Please check the details. The schedule itself is created.");
+            }
 
-        let allSuccessful = true;
-        for (const assignment of assignments) {
-          try {
-            await assignTraineeManual(assignment);
-          } catch (manualError) {
-            allSuccessful = false;
-            const errMsg =
-              manualError.response?.data?.message ||
-              manualError.message ||
-              "An unexpected error occurred.";
-            message.error(
-              `Failed to assign trainee ${assignment.traineeId}: ${String(
-                errMsg
-              )}`
-            );
-          }
-        }
-        if (allSuccessful) {
-          message.success(
-            "All selected trainees assigned manually successfully!"
-          );
-          resetPageForNewScheduleCycle();
-        } else {
-          message.warning(
-            "Some trainees could not be assigned. Please check the details. The schedule itself is created."
-          );
         }
       }
     } catch (error) {
@@ -863,22 +917,68 @@ const CreateScheduleForClassPage = () => {
       setLoading((prev) => ({ ...prev, assigningTrainee: false }));
     }
   };
+  const beforeUpload = async (file) => {
+    setFileList([file]);
+    setExcelPreviewData([]);
+    setExcelPreviewColumns([]);
+    setExcelPreviewError(null);
+    setIsProcessingFile(true);
 
-  const beforeUpload = (file) => {
-    const isExcel =
-      file.type ===
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-      file.type === "application/vnd.ms-excel";
+    const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.type === 'application/vnd.ms-excel';
     if (!isExcel) {
-      message.error("You can only upload Excel files (xls, xlsx)!");
+      message.error('You can only upload Excel files (xls, xlsx)!');
+      setExcelPreviewError('Invalid file type. Please upload Excel files only.');
+      setIsProcessingFile(false);
+      return Upload.LIST_IGNORE;
     }
-    const isLt2M = file.size / 1024 / 1024 < 2;
-    if (!isLt2M) {
-      message.error("File must be smaller than 2MB!");
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isLt5M) {
+      message.error('File must be smaller than 5MB!');
+      setExcelPreviewError('File size exceeds 5MB limit.');
+      setIsProcessingFile(false);
+      return Upload.LIST_IGNORE;
     }
-    if (isExcel && isLt2M) {
-      setFileList([file]);
+
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = utils.sheet_to_json(worksheet, { header: 1 });
+
+      if (jsonData.length === 0) {
+        message.error("File contains no data.");
+        setExcelPreviewError("File contains no data.");
+        setIsProcessingFile(false);
+        return Upload.LIST_IGNORE;
+      }
+
+      const headers = jsonData[0];
+      const tableColumns = headers.map((header, index) => ({
+        title: header,
+        dataIndex: index.toString(),
+        key: header + index,
+      }));
+
+      const tableData = jsonData.slice(1).map((row, rowIndex) => {
+        const rowObject = { key: `row-${rowIndex}` };
+        headers.forEach((header, index) => {
+          rowObject[index.toString()] = row[index];
+        });
+        return rowObject;
+      });
+
+      setExcelPreviewColumns(tableColumns);
+      setExcelPreviewData(tableData);
+      message.success("Excel file preview generated successfully.");
+    } catch (err) {
+      console.error("Error processing Excel file for preview:", err);
+      message.error("Error reading or processing Excel file for preview.");
+      setExcelPreviewError("Error reading or processing Excel file: " + err.message);
+    } finally {
+      setIsProcessingFile(false);
+
     }
+    
     return false;
   };
 
@@ -1275,375 +1375,98 @@ const CreateScheduleForClassPage = () => {
                             ))}
                           </Select>
                         </Form.Item>
-                      </Col>
-                      <Col xs={24} sm={12}>
-                        <Form.Item
-                          name="room"
-                          label="Room/Platform"
-                          rules={[{ required: true }]}
-                        >
-                          <Select placeholder="Select">
-                            {Object.entries(RoomEnum).map(([n, v]) => (
-                              <Option key={v} value={v}>
-                                {n}
-                              </Option>
-                            ))}
-                          </Select>
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                    <Row gutter={16}>
-                      <Col xs={24} sm={12}>
-                        <Form.Item
-                          name="startDate"
-                          label="Start Date"
-                          rules={[{ required: true }]}
-                        >
-                          <DatePicker
-                            className="w-full"
-                            format="YYYY-MM-DD"
-                            disabledDate={disabledDate}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} sm={12}>
-                        <Form.Item
-                          name="endDate"
-                          label="End Date"
-                          rules={[
-                            { required: true },
-                            ({ getFieldValue }) => ({
-                              validator(_, v) {
-                                if (!v || !getFieldValue("startDate"))
-                                  return Promise.resolve();
-                                if (v.isBefore(getFieldValue("startDate")))
-                                  return Promise.reject(
-                                    new Error("Must be after start")
-                                  );
-                                return Promise.resolve();
-                              },
-                            }),
-                          ]}
-                        >
-                          <DatePicker
-                            className="w-full"
-                            format="YYYY-MM-DD"
-                            disabledDate={disabledDate}
-                          />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                    <Row gutter={16}>
-                      <Col xs={24} sm={12}>
-                        <Form.Item
-                          name="classTime"
-                          label="Start Time"
-                          rules={[{ required: true }]}
-                        >
-                          <TimePicker
-                            className="w-full"
-                            format="HH:00"
-                            showNow={false}
-                            disabledHours={getDisabledHours}
-                            disabledMinutes={getDisabledMinutes}
-                            disabledSeconds={getDisabledSeconds}
-                            hideDisabledOptions
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={24} sm={12}>
-                        <Form.Item name="subjectPeriod" label="Duration">
-                          <TimePicker
-                            className="w-full"
-                            format="HH:mm"
-                            placeholder="HH:mm (e.g. 01:30)"
-                            showNow={false}
-                            minuteStep={15}
-                          />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                    <Form.Item
-                      name="daysOfWeek"
-                      label="Recurring Days"
-                      rules={[
-                        { required: true, message: "Select at least one day" },
-                      ]}
-                    >
-                      <Checkbox.Group
-                        options={daysOfWeekOptions}
-                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2"
-                      />
-                    </Form.Item>
-                    <Form.Item name="notes" label="Notes">
-                      <TextArea rows={3} placeholder="Notes for this class" />
-                    </Form.Item>
-                  </Col>
-                </Row>
-                {!createdClassSubjectId && !isEditingScheduleDetails && (
-                  <div className="flex justify-end mt-6 pt-6 border-t border-gray-200">
-                    <Button
-                      icon={<RollbackOutlined />}
-                      onClick={() => navigate("/class")}
-                      size="large"
-                      className="mr-4 hover:!border-cyan-600 hover:!text-cyan-700"
-                      disabled={submittingStep1}
-                    >
-                      Back to Classrooms
-                    </Button>
-                    <Button
-                      type="primary"
-                      icon={<SaveOutlined />}
-                      onClick={handleCreateScheduleSubmit}
-                      loading={submittingStep1}
-                      size="large"
-                      className="!bg-cyan-600 hover:!bg-cyan-700"
-                    >
-                      Save Schedule & Proceed to Step 2
-                    </Button>
-                  </div>
-                )}
-                {createdClassSubjectId && !isEditingScheduleDetails && (
-                  <Alert
-                    message="Step 1 Completed"
-                    description={`Schedule created with Class Subject ID: ${createdClassSubjectId}. Training Schedule ID: ${createdTrainingScheduleId}. You can now proceed to Step 2 below, or edit schedule details.`}
-                    type="success"
-                    showIcon
-                    className="mt-4"
-                  />
-                )}
-                {isEditingScheduleDetails && createdClassSubjectId && (
-                  <div className="flex justify-end mt-6 pt-6 border-t border-gray-200 gap-4">
-                    <Button
-                      onClick={handleCancelUpdateScheduleDetails}
-                      size="large"
-                      disabled={submittingStep1}
-                    >
-                      Cancel Update
-                    </Button>
-                    <Button
-                      type="primary"
-                      icon={<SaveOutlined />}
-                      onClick={handleUpdateScheduleDetailsSubmit}
-                      loading={submittingStep1}
-                      size="large"
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      Update Schedule Details
-                    </Button>
-                  </div>
-                )}
-              </Form>
-            </Spin>
-          </Card>
-          <br />
-          {/* ----- STEP 2: ASSIGN TRAINEES ----- */}
-          <Card
-            className={`shadow-lg rounded-lg transition-all duration-500 ${
-              !isStep1Completed
-                ? "!opacity-50 !cursor-not-allowed"
-                : "!border-cyan-500"
-            }`}
-            bordered
-            title={
-              <div className="flex items-center">
-                <TeamOutlined
-                  className={`mr-3 text-2xl ${
-                    !isStep1Completed ? "!text-gray-400" : "!text-cyan-600"
-                  }`}
-                />
-                <Title
-                  level={4}
-                  style={{ margin: 0 }}
-                  className={`${
-                    !isStep1Completed ? "!text-gray-500" : "!text-cyan-700"
-                  }`}
-                >
-                  Step 2: Assign Trainees to Class
-                </Title>
-              </div>
-            }
-          >
-            <Spin
-              spinning={loading.assigningTrainee || loading.eligibleTrainees}
-            >
-              <div
-                className={`${!isStep1Completed ? "pointer-events-none" : ""}`}
-              >
-                {/* Assign Method */}
-                <Form.Item
-                  label={
-                    <span className="text-cyan-600 font-medium">
-                      Assign Trainee Method
-                    </span>
-                  }
-                  className="mb-6"
-                >
-                  <Radio.Group
-                    onChange={(e) => setTraineeAssignMethod(e.target.value)}
-                    value={traineeAssignMethod}
-                    disabled={!isStep1Completed}
-                    className="!text-cyan-600"
-                  >
-                    <Radio.Button
-                      value="import"
-                      className="!text-cyan-700 hover:!text-cyan-500"
-                    >
-                      <UploadOutlined className="mr-1" /> Import Excel
-                    </Radio.Button>
-                    <Radio.Button
-                      value="manual"
-                      className="!text-cyan-700 hover:!text-cyan-500"
-                    >
-                      <UserAddOutlined className="mr-1" /> Add Manually
-                    </Radio.Button>
-                  </Radio.Group>
-                </Form.Item>
 
-                {/* Import Trainees */}
-                {traineeAssignMethod === "import" && (
-                  <Form.Item
-                    label={
-                      <span className="text-cyan-600 font-medium">
-                        Upload Excel File (.xlsx, .xls)
-                      </span>
-                    }
-                  >
-                    <Upload
-                      fileList={fileList}
-                      beforeUpload={beforeUpload}
-                      onRemove={handleRemoveFile}
-                      maxCount={1}
-                      disabled={!isStep1Completed}
-                    >
-                      <Button
-                        icon={<UploadOutlined />}
-                        disabled={!isStep1Completed}
-                        className="!text-cyan-700 !border-cyan-500 hover:!border-cyan-600"
-                      >
-                        Select File (Max 5MB)
-                      </Button>
-                    </Upload>
-                    <Text
-                      type="secondary"
-                      className="!block !mt-1 !text-cyan-700"
-                    >
-                      Ensure 'TraineeID' column exists. Trainees will be
-                      assigned to Class ID: <Text strong>{classId}</Text>.
-                    </Text>
-                  </Form.Item>
-                )}
+                        {traineeAssignMethod === 'import' && (
+                            <Form.Item label="Upload Excel File (.xlsx, .xls)">
+                                <Upload fileList={fileList} beforeUpload={beforeUpload} onRemove={handleRemoveFile} maxCount={1} disabled={!isStep1Completed || isProcessingFile}>
+                                    <Button icon={<UploadOutlined />} disabled={!isStep1Completed || isProcessingFile} loading={isProcessingFile}>
+                                        {isProcessingFile ? 'Processing...' : 'Select File (Max 5MB)'}
+                                    </Button>
+                                </Upload>
+                                <Text type="secondary" className="block mt-1">Ensure 'TraineeID' column exists. Trainees will be assigned to Class ID: {classId}.</Text>
+                                
+                                {isProcessingFile && <Spin tip="Generating preview..." className="mt-2"/>}
 
-                {/* Manual Trainees */}
-                {traineeAssignMethod === "manual" && (
-                  <Form
-                    form={traineeForm}
-                    layout="vertical"
-                    initialValues={{ trainees: [{ traineeId: "", notes: "" }] }}
-                    disabled={!isStep1Completed || submittingStep2}
-                  >
-                    <Title level={5} className="!mb-2 !text-cyan-700">
-                      Add Trainees Manually to Class ID: {classId}
-                    </Title>
-                    <Paragraph
-                      type="secondary"
-                      className="!mb-4 !text-cyan-700"
-                    >
-                      Select trainees have specialty:{" "}
-                      <Text strong>
-                        {selectedSubjectSpecialty?.specialtyName ||
-                          selectedSubjectSpecialty?.specialtyId ||
-                          "N/A"}
-                      </Text>
-                      .
-                    </Paragraph>
+                                {excelPreviewError && (
+                                    <Alert message="File Preview Error" description={excelPreviewError} type="error" showIcon className="mt-4" />
+                                )}
 
-                    <Form.List name="trainees">
-                      {(fields, { add, remove }) => (
-                        <>
-                          {fields.map(({ key, name, ...restField }) => (
-                            <Space
-                              key={key}
-                              style={{ display: "flex", marginBottom: 8 }}
-                              align="baseline"
-                            >
-                              <Form.Item
-                                {...restField}
-                                name={[name, "traineeId"]}
-                                rules={[
-                                  {
-                                    required: true,
-                                    message: "Trainee required",
-                                  },
-                                ]}
-                                style={{ width: "300px" }}
-                              >
-                                <Select
-                                  placeholder="Select Trainee"
-                                  loading={loading.eligibleTrainees}
-                                  showSearch
-                                  optionFilterProp="children"
-                                  filterOption={(input, option) =>
-                                    (option?.label ?? "")
-                                      .toLowerCase()
-                                      .includes(input.toLowerCase()) ||
-                                    (option?.value ?? "")
-                                      .toLowerCase()
-                                      .includes(input.toLowerCase())
-                                  }
-                                  disabled={
-                                    !isStep1Completed || submittingStep2
-                                  }
-                                >
-                                  {eligibleManualTrainees.map((trainee) => (
-                                    <Option
-                                      key={trainee.userId}
-                                      value={trainee.userId}
-                                      label={`${trainee.fullName} (${trainee.userId})`}
-                                    >
-                                      {trainee.fullName} ({trainee.userId}) -{" "}
-                                      {trainee.specialtyId}
-                                    </Option>
-                                  ))}
-                                </Select>
-                              </Form.Item>
-                              <Form.Item
-                                {...restField}
-                                name={[name, "notes"]}
-                                style={{ width: "250px" }}
-                              >
-                                <Input
-                                  placeholder="Notes (Optional)"
-                                  disabled={
-                                    !isStep1Completed || submittingStep2
-                                  }
-                                />
-                              </Form.Item>
-                              {fields.length > 1 ? (
-                                <Button
-                                  type="dashed"
-                                  danger
-                                  onClick={() => remove(name)}
-                                  icon={<UserOutlined />}
-                                  disabled={
-                                    !isStep1Completed || submittingStep2
-                                  }
-                                >
-                                  Remove
-                                </Button>
-                              ) : null}
-                            </Space>
-                          ))}
-                          <Form.Item>
-                            <Button
-                              type="dashed"
-                              onClick={() => add()}
-                              block
-                              icon={<UserAddOutlined />}
-                              disabled={!isStep1Completed || submittingStep2}
-                              className="border-cyan-500 text-cyan-700 hover:border-cyan-600"
-                            >
-                              Add Another Trainee
+                                {excelPreviewData.length > 0 && !excelPreviewError && (
+                                    <div className="mt-6">
+                                        <Title level={5}>Preview Data ({excelPreviewData.length} records)</Title>
+                                        <Table 
+                                            columns={excelPreviewColumns}
+                                            dataSource={excelPreviewData}
+                                            bordered
+                                            size="small"
+                                            scroll={{ x: 'max-content' }}
+                                            pagination={false} // Or configure as needed
+                                            className="mt-2"
+                                        />
+                                    </div>
+                                )}
+                            </Form.Item>
+                        )}
+
+                        {traineeAssignMethod === 'manual' && (
+                            <Form form={traineeForm} layout="vertical" initialValues={{ trainees: [{ traineeId: '', notes: ''}] }} disabled={!isStep1Completed || submittingStep2}>
+                                <Title level={5} className="mb-2">Add Trainees Manually to Class ID: {classId}</Title>
+                                <Paragraph type="secondary" className="mb-4">
+                                  Select trainees have specialty: <Text strong>{selectedSubjectSpecialty?.specialtyName || selectedSubjectSpecialty?.specialtyId || "N/A"}</Text>.
+                                </Paragraph>
+                                <Form.List name="trainees">
+                                    {(fields, { add, remove }) => (
+                                        <>
+                                            {fields.map(({ key, name, ...restField }) => (
+                                                <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                                                    <Form.Item 
+                                                        {...restField} 
+                                                        name={[name, 'traineeId']} 
+                                                        rules={[{ required: true, message: 'Trainee required' }]} 
+                                                        style={{width: '300px'}}
+                                                    >
+                                                        <Select 
+                                                            placeholder="Select Trainee" 
+                                                            loading={loading.eligibleTrainees}
+                                                            showSearch
+                                                            optionFilterProp="children"
+                                                            filterOption={(input, option) => 
+                                                              (option?.label ?? '').toLowerCase().includes(input.toLowerCase()) ||
+                                                              (option?.value ?? '').toLowerCase().includes(input.toLowerCase())
+                                                            }
+                                                            disabled={!isStep1Completed || submittingStep2}
+                                                        >
+                                                            {eligibleManualTrainees.map(trainee => (
+                                                                <Option key={trainee.userId} value={trainee.userId} label={`${trainee.fullName} (${trainee.userId})`}>
+                                                                    {trainee.fullName} ({trainee.userId}) - {trainee.specialtyId}
+                                                                </Option>
+                                                            ))}
+                                                        </Select>
+                                                    </Form.Item>
+                                                    <Form.Item {...restField} name={[name, 'notes']} style={{width: '250px'}}><Input placeholder="Notes (Optional)" disabled={!isStep1Completed || submittingStep2} /></Form.Item>
+                                                    {fields.length > 1 ? <Button type="dashed" danger onClick={() => remove(name)} icon={<UserOutlined />} disabled={!isStep1Completed || submittingStep2}>Remove</Button> : null}
+                                                </Space>
+                                            ))}
+                                            <Form.Item>
+                                                <Button type="dashed" onClick={() => add()} block icon={<UserAddOutlined />} disabled={!isStep1Completed || submittingStep2}>Add Another Trainee</Button>
+                                            </Form.Item>
+                                        </>
+                                    )}
+                                </Form.List>
+                            </Form>
+                        )}
+                        <Divider />
+                        <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
+                             <Button icon={<DeleteOutlined />} onClick={hardResetAndRollback} size="large" danger className="mr-auto" disabled={submittingStep1 || submittingStep2}>
+                                Reset All & Start Over
+                            </Button>
+                            <Button icon={<ReloadOutlined />} onClick={resetPageForNewScheduleCycle} size="large" className="mr-4" disabled={submittingStep1 || submittingStep2}>
+                                Start New Schedule Cycle
+                            </Button>
+                          
+                            <Button type="primary" icon={<SaveOutlined />} onClick={handleAssignTraineesSubmit} loading={submittingStep2} size="large" className="bg-green-600 hover:bg-green-700" disabled={!isStep1Completed || submittingStep1 || (traineeAssignMethod === 'import' && excelPreviewData.length === 0 && fileList.length > 0) }>
+                                Assign Trainees & Finish
+
                             </Button>
                           </Form.Item>
                         </>

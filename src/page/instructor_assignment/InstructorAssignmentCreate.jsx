@@ -183,12 +183,14 @@ const InstructorAssignmentCreate = () => {
                     label={
                       <span className="!text-cyan-800 font-medium">Notes</span>
                     }
+                    required
                   >
                     <Input.TextArea
                       rows={4}
                       placeholder="Enter any additional notes about this assignment"
                       className="rounded-lg"
                       size="large"
+                      required
                     />
                   </Form.Item>
                 </Card>
