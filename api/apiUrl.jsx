@@ -173,6 +173,7 @@ export const API = {
   GET_CLASS_SUBJECT_BY_INSTRUCTOR_ID: "ClassSubject/instructor",
   CREATE_CLASS_SUBJECT: "ClassSubject",
   UPDATE_CLASS_SUBJECT: "ClassSubject",
+  DELETE_CLASS_SUBJECT: "ClassSubject",
 
   // Instructor Assignment
   GET_ALL_INSTRUCTOR_ASSIGNMENTS: "InstructorAssignment",
