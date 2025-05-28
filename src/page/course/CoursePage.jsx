@@ -180,7 +180,6 @@ const CoursePage = () => {
   const currentDisplayCourses = filteredCourses.slice(indexOfFirstCourse, indexOfLastCourse);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
   const renderSearchBox = () => (
     <div className="mb-6">
       <Input

@@ -63,7 +63,7 @@ const navItems = [
     ],
   },
   {
-    key:"5",
+    key: "5",
     label: "Instructor Assignment",
     icon: "BookOutlined",
     path: "/instructor-assignment",
@@ -74,9 +74,9 @@ const navItems = [
     label: "Subject",
     icon: "ReadOutlined",
     path: "/subject",
-    roles: ["Training staff", "user"  ],
+    roles: ["Training staff", "user"],
   },
- 
+
   {
     key: "7",
     label: "Schedule",
@@ -254,9 +254,9 @@ const navItems = [
   },
   {
     key: "19",
-    label: "Instructor Assignment",
+    label: "Trainee Assignment",
     icon: "DeploymentUnitOutlined",
-    path: "/instructor-assignment",
+    path: "/assigned-trainee",
     roles: ["Training staff"],
   },
   {
@@ -268,7 +268,7 @@ const navItems = [
   },
 
   // 7. System/Other
- 
+
   {
     key: "21",
     label: "Regulations",
@@ -299,12 +299,12 @@ const navItems = [
     roles:["Training staff","Instructor"]
   },
   {
-    key:"24",
-    label:"Subject Specialty",
-    icon:"FileProtectOutlined",
-    path:"/subject-specialty",
-    roles:["Training staff"]
-  }
+    key: "24",
+    label: "Subject Specialty",
+    icon: "FileProtectOutlined",
+    path: "/subject-specialty",
+    roles: ["Training staff"],
+  },
 ];
 
 export default navItems;

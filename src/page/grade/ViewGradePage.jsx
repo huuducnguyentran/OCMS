@@ -304,9 +304,9 @@ const ViewGradePage = () => {
                 onConfirm={() => handleDelete(record)}
                 okText="Yes"
                 cancelText="No"
-                okButtonProps={{ className: "bg-red-500 hover:bg-red-600" }}
+                okButtonProps={{ className: "bg-red-500 hover:bg-red-100" }}
               >
-                <div className="flex items-center text-red-500">
+                <div className="flex items-center text-red-500 hover:text-red-100">
                   {/* <DeleteOutlined className="mr-2" /> */}
                   Delete Grade
                 </div>
@@ -326,7 +326,7 @@ const ViewGradePage = () => {
           >
             <Button
               icon={<MoreOutlined />}
-              className="border-none shadow-none hover:bg-gray-100"
+              className="!border-none shadow-none hover:bg-gray-100 hover:text-cyan-700"
               onClick={(e) => e.stopPropagation()}
             />
           </Dropdown>
@@ -536,50 +536,57 @@ const ViewGradePage = () => {
   const CreateGradeModal = () => (
     <Modal
       title={
-        <div className="flex items-center gap-2">
-          <PlusOutlined className="text-green-600" />
-          <span>Create New Grade</span>
+        <div className="flex items-center gap-2 text-cyan-700">
+          <PlusOutlined className="!text-cyan-600" />
+          <span className="font-semibold text-lg">Create New Grade</span>
         </div>
       }
       open={isModalVisible}
       onCancel={() => setIsModalVisible(false)}
       footer={null}
       width={700}
+      className="rounded-xl"
     >
       <Form
         form={createForm}
         layout="vertical"
         onFinish={handleCreate}
-        className="mt-4"
+        className="mt-6"
       >
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-6">
           <Form.Item
             name="traineeAssignID"
             label="Trainee Assign ID"
             rules={[
               { required: true, message: "Please input trainee assign ID!" },
             ]}
+            className="!text-cyan-700"
           >
-            <Input placeholder="Enter trainee assign ID" />
+            <Input
+              placeholder="Enter trainee assign ID"
+              className="!border-cyan-500 focus:!border-cyan-500 focus:!ring-1 focus:!ring-cyan-400"
+            />
           </Form.Item>
 
           <Form.Item
             name="subjectId"
             label="Subject"
             rules={[{ required: true, message: "Please select subject!" }]}
+            className="!text-cyan-700"
           >
             <Select
               placeholder="Select subject"
               options={subjectList}
               showSearch
               filterOption={(input, option) =>
-                option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                option.label.toLowerCase().includes(input.toLowerCase())
               }
+              className="!border-cyan-500 focus:!border-cyan-500 focus:!ring-1 focus:!ring-cyan-400"
             />
           </Form.Item>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-6 mt-4">
           <Form.Item
             name="participantScore"
             label="Participation Score"
@@ -592,8 +599,14 @@ const ViewGradePage = () => {
                 message: "Score must be between 0 and 10!",
               },
             ]}
+            className="!text-cyan-700"
           >
-            <InputNumber min={0} max={10} step={0.1} className="w-full" />
+            <InputNumber
+              min={0}
+              max={10}
+              step={0.1}
+              className="w-full !border-cyan-500 focus:!border-cyan-500 focus:!ring-1 focus:!ring-cyan-400 !rounded-md"
+            />
           </Form.Item>
 
           <Form.Item
@@ -608,12 +621,18 @@ const ViewGradePage = () => {
                 message: "Score must be between 0 and 10!",
               },
             ]}
+            className="!text-cyan-700"
           >
-            <InputNumber min={0} max={10} step={0.1} className="w-full" />
+            <InputNumber
+              min={0}
+              max={10}
+              step={0.1}
+              className="w-full !border-cyan-500 focus:!border-cyan-600 focus:!ring-1 focus:!ring-cyan-500 !rounded-md"
+            />
           </Form.Item>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-6 mt-4">
           <Form.Item
             name="finalExamScore"
             label="Final Exam Score"
@@ -626,8 +645,14 @@ const ViewGradePage = () => {
                 message: "Score must be between 0 and 10!",
               },
             ]}
+            className="text-cyan-700"
           >
-            <InputNumber min={0} max={10} step={0.1} className="w-full" />
+            <InputNumber
+              min={0}
+              max={10}
+              step={0.1}
+              className="w-full !border-cyan-500 focus:!border-cyan-600 focus:!ring-1 focus:!ring-cyan-500 !rounded-md"
+            />
           </Form.Item>
 
           <Form.Item
@@ -641,22 +666,41 @@ const ViewGradePage = () => {
                 message: "Score must be between 0 and 10!",
               },
             ]}
+            className="!text-cyan-700"
           >
-            <InputNumber min={0} max={10} step={0.1} className="w-full" />
+            <InputNumber
+              min={0}
+              max={10}
+              step={0.1}
+              className="w-full !border-cyan-500 focus:!border-cyan-600 focus:!ring-1 focus:!ring-cyan-500 !rounded-md"
+            />
           </Form.Item>
         </div>
 
-        <Form.Item name="remarks" label="Remarks">
-          <Input.TextArea rows={4} placeholder="Enter remarks" />
+        <Form.Item
+          name="remarks"
+          label="Remarks"
+          className="!text-cyan-700 !mt-4"
+        >
+          <Input.TextArea
+            rows={4}
+            placeholder="Enter remarks"
+            className="!border-cyan-500 focus:!border-cyan-600 focus:!ring-1 focus:!ring-cyan-500 !rounded-md"
+          />
         </Form.Item>
 
-        <Form.Item className="mb-0 flex justify-end gap-2">
-          <Button onClick={() => setIsModalVisible(false)}>Cancel</Button>
+        <Form.Item className="!mb-0 !flex !justify-end !gap-3 !mt-6">
+          <Button
+            onClick={() => setIsModalVisible(false)}
+            className="!text-cyan-600 hover:!text-cyan-800 border !border-cyan-500 hover:!border-cyan-600"
+          >
+            Cancel
+          </Button>
           <Button
             type="primary"
             htmlType="submit"
             loading={creating}
-            className="bg-blue-500"
+            className="!bg-cyan-600 hover:!bg-cyan-700 !border-cyan-600 !ml-2"
           >
             Create Grade
           </Button>
@@ -670,21 +714,25 @@ const ViewGradePage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-indigo-200 p-8 animate__animated animate__fadeIn">
-      <div className="max-w-7xl mx-auto bg-white p-8 rounded-lg shadow-xl">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-8 animate__animated animate__fadeIn">
+      <div className="max-w-7xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
+        {/* Title and Controls */}
         <div className="mb-6">
-          <div className="flex justify-between items-center">
-            <Title level={2} className="text-center mb-8 text-gray-800">
-              <FileExcelOutlined className="text-green-600 mr-2" />
+          <div className="flex flex-wrap justify-between items-center gap-4">
+            <Title
+              level={2}
+              className="!flex !items-center !text-cyan-700 !mb-4 !md:mb-0"
+            >
+              <FileExcelOutlined className="!text-3xl !text-cyan-600 !mr-2" />
               Grade List
             </Title>
-            <Space size="large">
+            <Space size="middle" wrap>
               {isInstructor && (
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
                   onClick={() => setIsModalVisible(true)}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="!bg-cyan-600 hover:!bg-cyan-700 !text-white"
                   size="large"
                 >
                   Create Grade
@@ -695,17 +743,27 @@ const ViewGradePage = () => {
                 onChange={handleSubjectChange}
                 value={selectedSubject}
                 style={{ width: 200 }}
+                size="large"
                 options={[
                   { value: "all", label: "All Subjects" },
                   ...subjectList,
                 ]}
-                suffixIcon={<FilterOutlined />}
+                suffixIcon={<FilterOutlined className="!text-cyan-600" />}
                 className="rounded-lg"
               />
               <Search
                 placeholder="Search by Grade ID, Trainee ID, Full Name, or Subject ID"
                 allowClear
-                enterButton={<SearchOutlined />}
+                enterButton={
+                  <Button
+                    type="primary"
+                    style={{
+                      backgroundColor: "#0891B2", // Tailwind's cyan-800
+                      borderColor: "#0891B2",
+                    }}
+                    icon={<SearchOutlined />}
+                  />
+                }
                 size="large"
                 onSearch={handleSearch}
                 onChange={(e) => handleSearch(e.target.value)}
@@ -718,6 +776,7 @@ const ViewGradePage = () => {
                 loading={loading}
                 type="primary"
                 size="large"
+                className="!bg-cyan-600 hover:!bg-cyan-700 text-white"
               >
                 Refresh
               </Button>
@@ -725,24 +784,26 @@ const ViewGradePage = () => {
           </div>
         </div>
 
-        <div className="mb-4 flex items-center gap-2">
+        {/* Tags */}
+        <div className="mb-4 flex flex-wrap items-center gap-2">
           {searchText && (
-            <Tag color="blue" className="text-sm px-3 py-1">
+            <Tag color="cyan" className="text-sm px-3 py-1">
               Search: {searchText}
             </Tag>
           )}
           {selectedSubject !== "all" && (
-            <Tag color="green" className="text-sm px-3 py-1">
+            <Tag color="cyan" className="text-sm px-3 py-1">
               Subject: {selectedSubject}
             </Tag>
           )}
           {(searchText || selectedSubject !== "all") && (
-            <Tag color="blue" className="text-sm px-3 py-1">
+            <Tag color="cyan" className="text-sm px-3 py-1">
               Found {filteredGrades.length} results
             </Tag>
           )}
         </div>
 
+        {/* Table */}
         <Table
           loading={loading}
           columns={getTableColumns()}
@@ -754,39 +815,37 @@ const ViewGradePage = () => {
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} records`,
           }}
-          className="shadow-sm"
+          className="shadow-md border border-cyan-400 rounded-xl"
           scroll={{ x: 1500 }}
           bordered
           size="middle"
         />
 
+        {/* Export Buttons for Reviewer */}
         {userRole === "Reviewer" && (
-          <div className="mt-6 flex justify-end">
-            <div className="flex items-center gap-2 p-5">
-              <Button
-                type="primary"
-                icon={<DownloadOutlined />}
-                size="large"
-                onClick={handleExportData}
-                className="bg-green-600 hover:bg-green-700 border-0"
-              >
-                Export All Information
-              </Button>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                type="primary"
-                icon={<DownloadOutlined />}
-                size="large"
-                onClick={handleExportCourseResults}
-                className="bg-green-600 hover:bg-green-700 border-0"
-              >
-                Export Course Results
-              </Button>
-            </div>
+          <div className="mt-6 flex flex-wrap justify-end gap-4">
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              size="large"
+              onClick={handleExportData}
+              className="!bg-cyan-600 hover:!bg-cyan-700 !border-0 !text-white"
+            >
+              Export All Information
+            </Button>
+            <Button
+              type="primary"
+              icon={<DownloadOutlined />}
+              size="large"
+              onClick={handleExportCourseResults}
+              className="!bg-cyan-600 hover:!bg-cyan-700 !border-0 !text-white"
+            >
+              Export Course Results
+            </Button>
           </div>
         )}
 
+        {/* Modal */}
         <CreateGradeModal />
       </div>
     </div>
