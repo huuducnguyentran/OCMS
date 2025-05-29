@@ -121,7 +121,7 @@ export default function InstructorAssignmentList() {
               className="!bg-cyan-700 hover:!bg-cyan-800 !border-none !text-white !transition-all"
               size="large"
             >
-              Create Assignment
+              Assign Instructor
             </Button>
           </div>
 
