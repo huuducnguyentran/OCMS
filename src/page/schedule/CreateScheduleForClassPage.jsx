@@ -942,11 +942,11 @@ const CreateScheduleForClassPage = () => {
                             <Col xs={24} md={24}>
                                 <Title level={5} className="mb-3 text-gray-700"><BookOutlined className="mr-2"/>Selection</Title>
                                 {/* Loại bỏ Row con, để mỗi Form.Item chiếm một dòng */} 
-                                <Form.Item name="subjectSpecialtyId" label="Subject Specialty" rules={[{ required: true, message: "Required" }]}>
-                                    <Select placeholder="Select subject specialty" loading={loading.subjects} onChange={handleSubjectSpecialtyChange} showSearch optionFilterProp="children" style={{ width: '100%' }} disabled={createdClassSubjectId !== null || submittingStep1}>
+                                <Form.Item name="subjectSpecialtyId" label="Subject" rules={[{ required: true, message: "Required" }]}>
+                                    <Select placeholder="Select subject" loading={loading.subjects} onChange={handleSubjectSpecialtyChange} showSearch optionFilterProp="children" style={{ width: '100%' }} disabled={createdClassSubjectId !== null || submittingStep1}>
                                         {subjectSpecialties.map(s => (
                                             <Option key={s.subjectSpecialtyId} value={s.subjectSpecialtyId}>
-                                                {s.subjectName || s.subject?.subjectName || 'Unknown Subject'} - {s.specialtyName || s.specialty?.specialtyName || 'Unknown Specialty'}
+                                                {s.subjectName || s.subject?.subjectName || 'Unknown Subject'} 
                                             </Option>
                                         ))}
                                     </Select>
