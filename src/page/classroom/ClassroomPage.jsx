@@ -12,6 +12,7 @@ import {
   Modal,
   Form,
   Button,
+  Select,
 } from "antd";
 import {
   SearchOutlined,
@@ -26,6 +27,7 @@ import "animate.css";
 import ClassroomService from "../../services/classroomService";
 import { getClassSubjectByInstructorId } from "../../services/classSubjectService";
 import { useNavigate } from "react-router-dom";
+import { courseService } from "../../services/courseService";
 
 const { Title } = Typography;
 
@@ -36,6 +38,7 @@ const ClassroomPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [editClass, setEditClass] = useState(null);
   const [deleteClassId, setDeleteClassId] = useState(null);
+  const [courses, setCourses] = useState([]);
   const [form] = Form.useForm();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createForm] = Form.useForm();
@@ -47,6 +50,20 @@ const ClassroomPage = () => {
   useEffect(() => {
     const role = sessionStorage.getItem("role");
     setUserRole(role);
+
+    // Fetch courses
+    courseService
+      .getAllCourses()
+      .then((res) => {
+        if (res?.success) {
+          setCourses(Array.isArray(res.data) ? res.data : []);
+        } else {
+          message.error("Failed to load courses");
+        }
+      })
+      .catch(() => {
+        message.error("Failed to load courses");
+      });
   }, []);
 
   const fetchClasses = async () => {
@@ -56,21 +73,23 @@ const ClassroomPage = () => {
         const instructorId = sessionStorage.getItem("userId");
         const response = await getClassSubjectByInstructorId(instructorId);
         console.log("Instructor classes response:", response);
-        
+
         if (response && response.classSubjects) {
           // Lấy unique classIds từ các class subjects
-          const uniqueClassIds = [...new Set(response.classSubjects.map(cs => cs.classId))];
-          
+          const uniqueClassIds = [
+            ...new Set(response.classSubjects.map((cs) => cs.classId)),
+          ];
+
           // Fetch thông tin chi tiết của từng lớp
-          const classesPromises = uniqueClassIds.map(classId => 
+          const classesPromises = uniqueClassIds.map((classId) =>
             ClassroomService.getClassroomById(classId)
           );
-          
+
           const classesResults = await Promise.all(classesPromises);
           const instructorClasses = classesResults
-            .filter(result => result && result.data)
-            .map(result => result.data);
-          
+            .filter((result) => result && result.data)
+            .map((result) => result.data);
+
           setClasses(instructorClasses);
         } else {
           setClasses([]);
@@ -111,7 +130,7 @@ const ClassroomPage = () => {
       setEditClass(null);
       fetchClasses();
     } catch (err) {
-      message.error("Update failed");
+      message.error("Update failed", err);
     }
   };
 
@@ -155,9 +174,11 @@ const ClassroomPage = () => {
         </Tooltip>,
         <Tooltip title="Create Schedule" key="create-schedule">
           <CalendarOutlined
-            onClick={() => navigate(`/classroom/${classroom.classId}/create-schedule`, { 
-              state: { courseId: classroom.courseId } 
-            })}
+            onClick={() =>
+              navigate(`/classroom/${classroom.classId}/create-schedule`, {
+                state: { courseId: classroom.courseId },
+              })
+            }
             className="text-purple-500 hover:text-purple-700"
           />
         </Tooltip>,
@@ -180,10 +201,12 @@ const ClassroomPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center animate__animated animate__fadeIn">
           <HomeOutlined className="text-5xl mb-4" />
           <h1 className="text-4xl font-bold mb-4">
-            {userRole === "Instructor" ? "My Teaching Classes" : "Training Classrooms"}
+            {userRole === "Instructor"
+              ? "My Teaching Classes"
+              : "Training Classrooms"}
           </h1>
           <p className="text-xl text-cyan-100 max-w-2xl mx-auto">
-            {userRole === "Instructor" 
+            {userRole === "Instructor"
               ? "View your assigned teaching classes and schedules"
               : "Browse our available classrooms used in training programs"}
           </p>
@@ -305,6 +328,22 @@ const ClassroomPage = () => {
               >
                 <Input />
               </Form.Item>
+              <Form.Item
+                label="Course"
+                name="courseId"
+                rules={[{ required: true, message: "Course is required" }]}
+              >
+                <Select placeholder="Select a course">
+                  {courses.map((course) => (
+                    <Select.Option
+                      key={course.courseId}
+                      value={course.courseId}
+                    >
+                      {course.courseName} - {course.courseId}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
             </Form>
           </Modal>
 
@@ -331,7 +370,7 @@ const ClassroomPage = () => {
                     setIsCreateModalOpen(false);
                     fetchClasses();
                   } catch (err) {
-                    message.error("Creation failed");
+                    message.error("Creation failed", err);
                   }
                 }}
                 className="!px-4 !py-2 !bg-cyan-700 hover:!bg-cyan-800 !text-white rounded-md"
@@ -347,6 +386,22 @@ const ClassroomPage = () => {
                 rules={[{ required: true, message: "Please enter class name" }]}
               >
                 <Input />
+              </Form.Item>
+              <Form.Item
+                label="Course"
+                name="courseId"
+                rules={[{ required: true, message: "Please select a course" }]}
+              >
+                <Select placeholder="Select a course">
+                  {courses.map((course) => (
+                    <Select.Option
+                      key={course.courseId}
+                      value={course.courseId}
+                    >
+                      {course.courseName} - {course.courseId}
+                    </Select.Option>
+                  ))}
+                </Select>
               </Form.Item>
             </Form>
           </Modal>
