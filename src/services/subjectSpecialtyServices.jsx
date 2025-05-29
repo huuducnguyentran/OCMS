@@ -24,7 +24,7 @@ export const getSubjectSpecialtyById = async (id) => {
 };
 
 // Create a new subject specialty
-export const createSubjectSpecialty = async (subjectSpecialtyData) => {
+export const createSubjectSpecialty = async (subjectId,specialtyId) => {
   try {
     const response = await axiosInstance.post(
       `/${API.CREATE_SUBJECT_SPECIALTY}`,
@@ -64,14 +64,14 @@ export const getSubjectsForDropdown = async () => {
 // Helper function to get all specialties for dropdown
 export const getSpecialtiesForDropdown = async () => {
   try {
-    const response = await axiosInstance.get(`/${API.GET_ALL_SPECIALTY}`);
-    console.log('Specialty response:', response.data);
+    const response = await axiosInstance.get(`/${API.GET_ALL_SPECIALTIES}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching specialties for dropdown:", error?.response || error.message);
     throw error;
   }
 };
+
 
 // Get all subjects
 export const getAllSubject = async () => {
@@ -83,5 +83,3 @@ export const getAllSubject = async () => {
     throw error;
   }
 };
-
-
