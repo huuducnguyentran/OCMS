@@ -287,7 +287,7 @@ const AccountPage = () => {
               handleToggleStatus(record.userId, checked, accountStatus)
             }
             disabled={!isAdmin || actionLoading}
-            className={isActive ? "bg-green-500" : "bg-gray-400"}
+            className={isActive ? "!bg-cyan-500" : "bg-gray-400"}
           />
         );
       },
@@ -307,7 +307,7 @@ const AccountPage = () => {
                   icon={<EditOutlined />}
                   size="small"
                   onClick={() => navigateToUpdate(record.userId)}
-                  className="w-full bg-blue-500 hover:bg-blue-600"
+                  className="!w-full !bg-cyan-600 hover:!bg-cyan-700 !border-none"
                 />
               ) : (
                 <Button
@@ -316,7 +316,7 @@ const AccountPage = () => {
                   size="small"
                   onClick={() => handleExportTraineeInfo(record.userId)}
                   disabled={record.roleName !== "Trainee"}
-                  className="bg-green-500 hover:bg-green-600"
+                  className="!w-full !bg-cyan-800 hover:!bg-cyan-700  disabled:opacity-50 !border-none"
                   title={
                     record.roleName !== "Trainee"
                       ? "Only available for Trainee accounts"
@@ -421,41 +421,47 @@ const AccountPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-indigo-200 p-8 animate__animated animate__fadeIn">
-      <div className="max-w-7xl mx-auto bg-white p-8 rounded-lg shadow-xl">
-        <div className="mb-6">
-          <div className="flex justify-between items-center">
-            <Title level={2} className="text-center mb-8 text-gray-800">
-              Account List
-            </Title>
-            <Space size="large">
-              <Search
-                placeholder="Search by ID, Username, Specialty, Name, Email, Phone, Gender, Role, or Date"
-                allowClear
-                enterButton={<SearchOutlined />}
-                size="large"
-                onSearch={handleSearch}
-                onChange={(e) => handleSearch(e.target.value)}
-                style={{ width: 500 }}
-                className="rounded-lg"
-              />
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={fetchAccounts}
-                loading={loading}
-                type="primary"
-                size="large"
-              >
-                Refresh
-              </Button>
-            </Space>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-8 animate__animated animate__fadeIn">
+      <div className="max-w-7xl mx-auto bg-white p-8 rounded-2xl shadow-2xl border border-cyan-600">
+        <div className="mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
+          <Title level={2} className="!text-cyan-800 !mb-0">
+            Account List
+          </Title>
+          <Space size="large" className="flex-wrap">
+            <Search
+              placeholder="Search by ID, Username, Specialty, Name, etc."
+              allowClear
+              enterButton={
+                <Button
+                  type="primary"
+                  style={{
+                    backgroundColor: "#0e7490", // Tailwind's cyan-800
+                    borderColor: "#0e7490",
+                  }}
+                  icon={<SearchOutlined />}
+                />
+              }
+              size="large"
+              onSearch={handleSearch}
+              onChange={(e) => handleSearch(e.target.value)}
+              style={{ width: 400, borderColor: "#155e75" }}
+              className="rounded-lg"
+            />
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={fetchAccounts}
+              loading={loading}
+              size="large"
+              className="!bg-cyan-700 hover:!bg-cyan-800 !text-white !border-none"
+            >
+              Refresh
+            </Button>
+          </Space>
         </div>
 
-        {/* Hiển thị kết quả tìm kiếm chi tiết hơn */}
         {searchText && (
           <div className="mb-4">
-            <Tag color="blue" className="text-sm px-3 py-1">
+            <Tag color="cyan" className="text-sm px-3 py-1 rounded">
               Found {filteredAccounts.length} results for {searchText}
             </Tag>
             <Text type="secondary" className="ml-2">
@@ -478,21 +484,21 @@ const AccountPage = () => {
             onChange: (page, pageSize) => {
               console.log("Page changed to:", page);
               console.log("PageSize changed to:", pageSize);
-              setPagination({ current: page, pageSize: pageSize });
+              setPagination({ current: page, pageSize });
             },
           }}
           bordered
           scroll={{ x: "max-content", y: 500 }}
+          className="rounded-xl overflow-hidden"
         />
 
         {isReviewer && (
           <div className="mt-6 flex justify-end">
             <Button
-              type="primary"
               icon={<DownloadOutlined />}
               size="large"
               onClick={handleExportData}
-              className="bg-green-600 hover:bg-green-700 border-0"
+              className="!bg-cyan-700 hover:!bg-cyan-800 !text-white !border-none"
             >
               Export All Information
             </Button>

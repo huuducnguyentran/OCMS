@@ -470,7 +470,7 @@ const CandidateDetailPage = () => {
                   onClick={handleCreateAccount}
                   loading={creatingAccount}
                   icon={<UserOutlined />}
-                  className="bg-green-500 hover:bg-green-600 text-white border-none"
+                  className="!bg-cyan-600 hover:!bg-cyan-700 !text-white !border-none"
                 >
                   Create Account
                 </Button>
@@ -602,7 +602,7 @@ const CandidateDetailPage = () => {
                         onClick={() =>
                           navigate(`/external-certificate/create/${id}`)
                         }
-                        className="!bg-gradient-to-r from-cyan-950 to-cyan-800 !border-cyan-950 hover:opacity-90"
+                        className="!bg-cyan-700 !border-cyan-950 hover:opacity-90"
                         disabled={userRole === "TrainingStaff"}
                       >
                         Add Certificate

@@ -12,6 +12,7 @@ import {
   Modal,
   Form,
   Button,
+  Select,
 } from "antd";
 import {
   SearchOutlined,
@@ -20,9 +21,13 @@ import {
   DeleteOutlined,
   HomeOutlined,
   PlusOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import "animate.css";
 import ClassroomService from "../../services/classroomService";
+import { getClassSubjectByInstructorId } from "../../services/classSubjectService";
+import { useNavigate } from "react-router-dom";
+import { courseService } from "../../services/courseService";
 
 const { Title } = Typography;
 
@@ -31,21 +36,70 @@ const ClassroomPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [viewClass, setViewClass] = useState(null);
   const [editClass, setEditClass] = useState(null);
   const [deleteClassId, setDeleteClassId] = useState(null);
+  const [courses, setCourses] = useState([]);
   const [form] = Form.useForm();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createForm] = Form.useForm();
+  const navigate = useNavigate();
+  const [userRole, setUserRole] = useState(null);
 
   const pageSize = 6;
+
+  useEffect(() => {
+    const role = sessionStorage.getItem("role");
+    setUserRole(role);
+
+    // Fetch courses
+    courseService
+      .getAllCourses()
+      .then((res) => {
+        if (res?.success) {
+          setCourses(Array.isArray(res.data) ? res.data : []);
+        } else {
+          message.error("Failed to load courses");
+        }
+      })
+      .catch(() => {
+        message.error("Failed to load courses");
+      });
+  }, []);
 
   const fetchClasses = async () => {
     setLoading(true);
     try {
-      const res = await ClassroomService.getAllClassrooms();
-      setClasses(Array.isArray(res.data?.classes) ? res.data.classes : []);
-    } catch {
+      if (userRole === "Instructor") {
+        const instructorId = sessionStorage.getItem("userId");
+        const response = await getClassSubjectByInstructorId(instructorId);
+        console.log("Instructor classes response:", response);
+
+        if (response && response.classSubjects) {
+          // Lấy unique classIds từ các class subjects
+          const uniqueClassIds = [
+            ...new Set(response.classSubjects.map((cs) => cs.classId)),
+          ];
+
+          // Fetch thông tin chi tiết của từng lớp
+          const classesPromises = uniqueClassIds.map((classId) =>
+            ClassroomService.getClassroomById(classId)
+          );
+
+          const classesResults = await Promise.all(classesPromises);
+          const instructorClasses = classesResults
+            .filter((result) => result && result.data)
+            .map((result) => result.data);
+
+          setClasses(instructorClasses);
+        } else {
+          setClasses([]);
+        }
+      } else {
+        const res = await ClassroomService.getAllClassrooms();
+        setClasses(Array.isArray(res.data?.classes) ? res.data.classes : []);
+      }
+    } catch (error) {
+      console.error("Failed to load classrooms:", error);
       message.error("Failed to load classrooms");
     } finally {
       setLoading(false);
@@ -54,13 +108,21 @@ const ClassroomPage = () => {
 
   useEffect(() => {
     fetchClasses();
-  }, []);
+  }, [userRole]);
 
   const handleDelete = (id) => {
+    if (userRole === "Instructor") {
+      message.error("Instructors are not allowed to delete classrooms");
+      return;
+    }
     setDeleteClassId(id);
   };
 
   const handleEditSubmit = async () => {
+    if (userRole === "Instructor") {
+      message.error("Instructors are not allowed to edit classrooms");
+      return;
+    }
     try {
       const values = await form.validateFields();
       await ClassroomService.updateClassroom(editClass.classId, values);
@@ -84,15 +146,69 @@ const ClassroomPage = () => {
     return filtered.slice(start, start + pageSize);
   };
 
+  // Render card actions based on user role
+  const getCardActions = (classroom) => {
+    const actions = [];
+
+    // View action - available for all roles
+    actions.push(
+      <Tooltip title="View Details" key="view">
+        <EyeOutlined
+          onClick={() => navigate(`/classroom/${classroom.classId}/details`)}
+          className="!text-cyan-600 hover:!text-cyan-800"
+        />
+      </Tooltip>
+    );
+
+    // Other actions - only for non-Instructor roles
+    if (userRole !== "Instructor") {
+      actions.push(
+        <Tooltip title="Edit" key="edit">
+          <EditOutlined
+            onClick={() => {
+              form.setFieldsValue(classroom);
+              setEditClass(classroom);
+            }}
+            className="!text-green-500 hover:!text-green-700"
+          />
+        </Tooltip>,
+        <Tooltip title="Create Schedule" key="create-schedule">
+          <CalendarOutlined
+            onClick={() =>
+              navigate(`/classroom/${classroom.classId}/create-schedule`, {
+                state: { courseId: classroom.courseId },
+              })
+            }
+            className="text-purple-500 hover:text-purple-700"
+          />
+        </Tooltip>,
+        <Tooltip title="Delete" key="delete">
+          <DeleteOutlined
+            onClick={() => handleDelete(classroom.classId)}
+            className="!text-red-500 hover:!text-red-700"
+          />
+        </Tooltip>
+      );
+    }
+
+    return actions;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100">
       {/* Header */}
       <div className="bg-gradient-to-r from-cyan-600 to-cyan-800 text-white py-12 mb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center animate__animated animate__fadeIn">
           <HomeOutlined className="text-5xl mb-4" />
-          <h1 className="text-4xl font-bold mb-4">Training Classrooms</h1>
+          <h1 className="text-4xl font-bold mb-4">
+            {userRole === "Instructor"
+              ? "My Teaching Classes"
+              : "Training Classrooms"}
+          </h1>
           <p className="text-xl text-cyan-100 max-w-2xl mx-auto">
-            Browse our available classrooms used in training programs
+            {userRole === "Instructor"
+              ? "View your assigned teaching classes and schedules"
+              : "Browse our available classrooms used in training programs"}
           </p>
         </div>
       </div>
@@ -123,6 +239,8 @@ const ClassroomPage = () => {
                 <p className="text-gray-500 text-lg">
                   {searchText
                     ? `No classrooms matching "${searchText}"`
+                    : userRole === "Instructor"
+                    ? "You are not assigned to any classes yet"
                     : "No classrooms available"}
                 </p>
               </div>
@@ -134,29 +252,7 @@ const ClassroomPage = () => {
               <Card
                 key={c.classId}
                 className="hover:!shadow-xl !transition-shadow !rounded-xl !border !border-cyan-600 !bg-white !overflow-hidden"
-                actions={[
-                  <Tooltip title="View" key="view">
-                    <EyeOutlined
-                      onClick={() => setViewClass(c)}
-                      className="!text-cyan-600 hover:!text-cyan-800"
-                    />
-                  </Tooltip>,
-                  <Tooltip title="Edit" key="edit">
-                    <EditOutlined
-                      onClick={() => {
-                        form.setFieldsValue(c);
-                        setEditClass(c);
-                      }}
-                      className="!text-green-500 hover:!text-green-700"
-                    />
-                  </Tooltip>,
-                  <Tooltip title="Delete" key="delete">
-                    <DeleteOutlined
-                      onClick={() => handleDelete(c.classId)}
-                      className="!text-red-500 hover:!text-red-700"
-                    />
-                  </Tooltip>,
-                ]}
+                actions={getCardActions(c)}
               >
                 <div className="p-4">
                   <Title level={4} className="mb-2" ellipsis>
@@ -184,144 +280,165 @@ const ClassroomPage = () => {
         )}
       </div>
 
-      {/* Floating Create Button */}
-      <Tooltip title="Create New Classroom" placement="left">
-        <button
-          onClick={() => {
-            createForm.resetFields();
-            setIsCreateModalOpen(true);
-          }}
-          className="fixed bottom-8 right-8 w-14 h-14 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 !bg-cyan-700 hover:!bg-cyan-950 !text-white animate__animated animate__bounceIn"
-        >
-          <PlusOutlined className="text-xl" />
-        </button>
-      </Tooltip>
-
-      {/* View Modal */}
-      <Modal
-        title="Classroom Details"
-        open={!!viewClass}
-        onCancel={() => setViewClass(null)}
-        footer={null}
-      >
-        {viewClass && (
-          <div>
-            <p>
-              <strong>Class ID:</strong> {viewClass.classId}
-            </p>
-            <p>
-              <strong>Class Name:</strong> {viewClass.className}
-            </p>
-          </div>
-        )}
-      </Modal>
-
-      {/* Edit Modal */}
-      <Modal
-        title="Edit Classroom"
-        open={!!editClass}
-        onCancel={() => setEditClass(null)}
-        footer={[
-          <Button
-            key="cancel"
-            onClick={() => setEditClass(null)}
-            className="!px-4 !py-2 hover:!border-cyan-600 hover:!text-cyan-600 rounded-md"
-          >
-            Cancel
-          </Button>,
-          <Button
-            key="submit"
-            onClick={handleEditSubmit}
-            className="!px-4 !py-2 !bg-cyan-700 hover:!bg-cyan-800 !text-white rounded-md"
-          >
-            Update
-          </Button>,
-        ]}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            label="Class Name"
-            name="className"
-            rules={[{ required: true, message: "Class name is required" }]}
-          >
-            <Input />
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Create Modal */}
-      <Modal
-        title="Create New Classroom"
-        open={isCreateModalOpen}
-        onCancel={() => setIsCreateModalOpen(false)}
-        footer={[
-          <Button
-            key="cancel"
-            onClick={() => setIsCreateModalOpen(false)}
-            className="!px-4 !py-2 hover:!border-cyan-600 hover:!text-cyan-600 rounded-md"
-          >
-            Cancel
-          </Button>,
-          <Button
-            key="create"
-            onClick={async () => {
-              try {
-                const values = await createForm.validateFields();
-                await ClassroomService.createClassroom(values);
-                message.success("Classroom created");
-                setIsCreateModalOpen(false);
-                fetchClasses();
-              } catch (err) {
-                message.error("Creation failed", err);
-              }
+      {/* Floating Create Button - Only show for non-Instructor roles */}
+      {userRole !== "Instructor" && (
+        <Tooltip title="Create New Classroom" placement="left">
+          <button
+            onClick={() => {
+              createForm.resetFields();
+              setIsCreateModalOpen(true);
             }}
-            className="!px-4 !py-2 !bg-cyan-700 hover:!bg-cyan-800 !text-white rounded-md"
+            className="!fixed !bottom-8 !right-8 !w-14 !h-14 !rounded-full !bg-cyan-600 hover:!bg-cyan-700 !text-white !shadow-lg !flex !items-center !justify-center !transition animate__animated animate__bounceIn"
           >
-            Create
-          </Button>,
-        ]}
-      >
-        <Form form={createForm} layout="vertical">
-          <Form.Item
-            label="Class Name"
-            name="className"
-            rules={[{ required: true, message: "Please enter class name" }]}
-          >
-            <Input />
-          </Form.Item>
-        </Form>
-      </Modal>
+            <PlusOutlined className="text-xl" />
+          </button>
+        </Tooltip>
+      )}
 
-      <Modal
-        open={!!deleteClassId}
-        title="Are you sure you want to delete this classroom?"
-        onCancel={() => setDeleteClassId(null)}
-        footer={[
-          <Button
-            key="cancel"
-            onClick={() => setDeleteClassId(null)}
-            className="!px-4 !py-2 hover:!border-cyan-600 hover:!text-cyan-600 rounded-md"
+      {/* Modals - Only render for non-Instructor roles */}
+      {userRole !== "Instructor" && (
+        <>
+          {/* Edit Modal */}
+          <Modal
+            title="Edit Classroom"
+            open={!!editClass}
+            onCancel={() => setEditClass(null)}
+            footer={[
+              <Button
+                key="cancel"
+                onClick={() => setEditClass(null)}
+                className="!px-4 !py-2 hover:!border-cyan-600 hover:!text-cyan-600 rounded-md"
+              >
+                Cancel
+              </Button>,
+              <Button
+                key="submit"
+                onClick={handleEditSubmit}
+                className="!px-4 !py-2 !bg-cyan-700 hover:!bg-cyan-800 !text-white rounded-md"
+              >
+                Update
+              </Button>,
+            ]}
           >
-            Cancel
-          </Button>,
-          <Button
-            key="delete"
-            onClick={async () => {
-              try {
-                await ClassroomService.deleteClassroom(deleteClassId);
-                message.success("Classroom deleted");
-                setDeleteClassId(null);
-                fetchClasses();
-              } catch {
-                message.error("Delete failed");
-              }
-            }}
-            className="!px-4 !py-2 !bg-red-600 hover:!bg-red-700 !text-white rounded-md"
+            <Form form={form} layout="vertical">
+              <Form.Item
+                label="Class Name"
+                name="className"
+                rules={[{ required: true, message: "Class name is required" }]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                label="Course"
+                name="courseId"
+                rules={[{ required: true, message: "Course is required" }]}
+              >
+                <Select placeholder="Select a course">
+                  {courses.map((course) => (
+                    <Select.Option
+                      key={course.courseId}
+                      value={course.courseId}
+                    >
+                      {course.courseName} - {course.courseId}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Form>
+          </Modal>
+
+          {/* Create Modal */}
+          <Modal
+            title="Create New Classroom"
+            open={isCreateModalOpen}
+            onCancel={() => setIsCreateModalOpen(false)}
+            footer={[
+              <Button
+                key="cancel"
+                onClick={() => setIsCreateModalOpen(false)}
+                className="!px-4 !py-2 hover:!border-cyan-600 hover:!text-cyan-600 rounded-md"
+              >
+                Cancel
+              </Button>,
+              <Button
+                key="create"
+                onClick={async () => {
+                  try {
+                    const values = await createForm.validateFields();
+                    await ClassroomService.createClassroom(values);
+                    message.success("Classroom created");
+                    setIsCreateModalOpen(false);
+                    fetchClasses();
+                  } catch (err) {
+                    message.error("Creation failed", err);
+                  }
+                }}
+                className="!px-4 !py-2 !bg-cyan-700 hover:!bg-cyan-800 !text-white rounded-md"
+              >
+                Create
+              </Button>,
+            ]}
           >
-            Delete
-          </Button>,
-        ]}
-      />
+            <Form form={createForm} layout="vertical">
+              <Form.Item
+                label="Class Name"
+                name="className"
+                rules={[{ required: true, message: "Please enter class name" }]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                label="Course"
+                name="courseId"
+                rules={[{ required: true, message: "Please select a course" }]}
+              >
+                <Select placeholder="Select a course">
+                  {courses.map((course) => (
+                    <Select.Option
+                      key={course.courseId}
+                      value={course.courseId}
+                    >
+                      {course.courseName} - {course.courseId}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Form>
+          </Modal>
+
+          {/* Delete Modal */}
+          <Modal
+            open={!!deleteClassId}
+            title="Are you sure you want to delete this classroom?"
+            onCancel={() => setDeleteClassId(null)}
+            footer={[
+              <Button
+                key="cancel"
+                onClick={() => setDeleteClassId(null)}
+                className="!px-4 !py-2 hover:!border-cyan-600 hover:!text-cyan-600 rounded-md"
+              >
+                Cancel
+              </Button>,
+              <Button
+                key="delete"
+                onClick={async () => {
+                  try {
+                    await ClassroomService.deleteClassroom(deleteClassId);
+                    message.success("Classroom deleted");
+                    setDeleteClassId(null);
+                    fetchClasses();
+                  } catch {
+                    message.error("Delete failed");
+                  }
+                }}
+                className="!px-4 !py-2 !bg-red-600 hover:!bg-red-700 !text-white rounded-md"
+              >
+                Delete
+              </Button>,
+            ]}
+          />
+        </>
+      )}
     </div>
   );
 };

@@ -18,17 +18,12 @@ const ImportDecisionPage = () => {
     formData.append("description", values.description);
     formData.append("templateContent", values.templateContent[0].originFileObj);
 
-    console.log("🔍 Submitted Data:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
-
     setLoading(true);
     try {
       const result = await importDecisionTemplate(formData);
       message.success("Decision template uploaded successfully!");
       navigate("/decision-template");
-      setTemplateUrl(result.templateFile); // If the server returns a previewable link
+      setTemplateUrl(result.templateFile);
       form.resetFields();
     } catch (error) {
       console.error(error);
@@ -49,20 +44,26 @@ const ImportDecisionPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center mb-8 space-x-2">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
+      <div className="max-w-4xl mx-auto bg-white shadow-md rounded-xl p-8">
+        {/* Back Button */}
+        <div className="flex items-center mb-6">
           <Button
             type="link"
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate(-1)}
-            className="text-blue-600 hover:text-blue-800 px-0"
+            className="!text-cyan-600 hover:!text-cyan-800 !border !border-cyan-600 hover:!border-cyan-800 font-medium rounded-lg transition-colors duration-300 px-0"
           >
             Back
           </Button>
         </div>
-        <Title level={3}>Import Decision Template</Title>
 
+        {/* Page Title */}
+        <Title level={3} className="!text-cyan-700">
+          Import Decision Template
+        </Title>
+
+        {/* Form */}
         <Form layout="vertical" form={form} onFinish={handleSubmit}>
           <Form.Item
             label="Template Name"
@@ -79,7 +80,10 @@ const ImportDecisionPage = () => {
             name="description"
             rules={[{ required: true, message: "Please enter a description" }]}
           >
-            <Input.TextArea placeholder="Enter template description..." />
+            <Input.TextArea
+              placeholder="Enter template description..."
+              rows={3}
+            />
           </Form.Item>
 
           <Form.Item
@@ -105,20 +109,28 @@ const ImportDecisionPage = () => {
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loading}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              className="!bg-cyan-600 hover:!bg-cyan-700 !border-none"
+            >
               Upload Template
             </Button>
           </Form.Item>
         </Form>
 
+        {/* Preview Section */}
         {templateUrl && (
-          <div className="mt-8">
-            <Title level={4}>Preview Decision Template</Title>
+          <div className="mt-10">
+            <Title level={4} className="!text-cyan-600 !mb-4">
+              Preview Decision Template
+            </Title>
             <iframe
               src={templateUrl}
               title="Decision Template Preview"
-              className="w-full h-[600px] border rounded shadow"
-            ></iframe>
+              className="!w-full !h-[600px] !border !border-cyan-400 !rounded !shadow"
+            />
           </div>
         )}
       </div>

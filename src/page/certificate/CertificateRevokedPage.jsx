@@ -97,13 +97,22 @@ const CertificateRevokedPage = () => {
   }
 
   return (
-    <div className="p-4">
-      <Title level={3}>Revoked Certificates List</Title>
+    <div className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
+      <Title level={3} className="!text-cyan-800">
+        Revoked Certificates List
+      </Title>
 
       {/* Filters */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+      <Card className="!mb-6 !border !border-cyan-600 !rounded-xl !shadow-sm !bg-white">
+        <Title
+          level={5}
+          className="!mb-4 !flex !items-center !gap-2 !text-cyan-700"
+        >
+          <SearchOutlined />
+          Filter Certificates
+        </Title>
         <Row gutter={[16, 16]} className="mb-4">
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={12} lg={14}>
             <Input
               placeholder="Search by Certificate Code"
               value={searchCode}
@@ -111,19 +120,22 @@ const CertificateRevokedPage = () => {
               prefix={<SearchOutlined />}
               size="large"
               allowClear
+              className="!rounded-md !border-cyan-600 focus:!border-cyan-700 focus:!shadow-cyan-200"
             />
           </Col>
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} sm={12} md={12} lg={10}>
             <RangePicker
-              placeholder={["From Date", "To Date"]}
+              placeholder={["Start Date", "End Date"]}
               value={filterDate}
               onChange={(dates) => setFilterDate(dates)}
               style={{ width: "100%" }}
               allowClear
+              size="large"
+              className="!rounded-md !border-cyan-600 focus:!border-cyan-700 focus:!shadow-cyan-200"
             />
           </Col>
         </Row>
-      </div>
+      </Card>
 
       {/* Certificate List */}
       {filteredCertificates.length === 0 ? (
@@ -139,9 +151,11 @@ const CertificateRevokedPage = () => {
               className="relative cursor-pointer"
             >
               <Card
-                title={cert.certificateCode}
+                title={
+                  <span className="text-cyan-700">{cert.certificateCode}</span>
+                }
                 bordered
-                className="rounded-2xl shadow-md hover:shadow-lg transition"
+                className="rounded-2xl shadow-md hover:shadow-lg transition border-cyan-200"
                 cover={
                   <iframe
                     src={cert.certificateURLwithSas}
@@ -156,18 +170,16 @@ const CertificateRevokedPage = () => {
                 <p>
                   <strong>Course ID:</strong> {cert.courseId}
                 </p>
-                <span
-                  className={`px-2 py-1 rounded-full text-white text-xs ${
-                    cert.status === "Active"
-                      ? "bg-green-500"
-                      : cert.status === "Revoked"
-                      ? "bg-red-500"
-                      : "bg-gray-400"
-                  }`}
-                >
-                  {cert.status}
-                </span>
-
+                <p className="text-sm">
+                  <strong>Status:</strong>{" "}
+                  <span
+                    className={`px-2 py-1 rounded-full text-white text-xs ${
+                      cert.status === "Revoked" ? "bg-cyan-800" : "bg-gray-400"
+                    }`}
+                  >
+                    {cert.status}
+                  </span>
+                </p>
                 <p>
                   <strong>Issue Date:</strong>{" "}
                   {new Date(cert.issueDate).toLocaleDateString()}
@@ -184,9 +196,9 @@ const CertificateRevokedPage = () => {
                   shape="circle"
                   icon={<PlusOutlined />}
                   size="small"
-                  className="absolute bottom-3 right-3 z-10"
+                  className="absolute bottom-3 right-3 z-10 bg-cyan-700 hover:bg-cyan-800 border-none text-white"
                   onClick={(e) => {
-                    e.stopPropagation(); // Stop triggering card click
+                    e.stopPropagation(); // Prevent card click
                     openManualModal(cert.courseId, cert.userId);
                   }}
                 />
@@ -205,7 +217,10 @@ const CertificateRevokedPage = () => {
         cancelText="Cancel"
         confirmLoading={creating}
         centered
-        title="Manually Create Certificate"
+        title={
+          <span className="text-cyan-700">Manually Create Certificate</span>
+        }
+        okButtonProps={{ className: "bg-cyan-700 hover:bg-cyan-800" }}
       >
         <Paragraph>
           You are about to manually create a certificate for:

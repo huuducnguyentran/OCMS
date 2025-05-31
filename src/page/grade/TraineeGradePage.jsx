@@ -11,6 +11,7 @@ import {
   Statistic,
   Empty,
   Input,
+  Button,
 } from "antd";
 import {
   FileExcelOutlined,
@@ -295,69 +296,79 @@ const TraineeGradePage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-indigo-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
       <div className="max-w-7xl mx-auto">
-        <Title level={2} className="text-center mb-6 text-gray-800">
-          <FileExcelOutlined className="text-green-600 mr-2" />
+        {/* Page Title */}
+        <Title level={2} className="!text-center !mb-10 !text-cyan-700">
+          <FileExcelOutlined className="!text-cyan-600 !mr-2" />
           My Grades
         </Title>
 
         {/* Stats Cards */}
-        <Row gutter={16} className="mb-8">
+        <Row gutter={[24, 24]} className="mb-10">
           <Col span={6}>
-            <Card className="bg-white shadow-md">
+            <Card className="!shadow-md hover:!shadow-lg !transition-all !border !border-cyan-400">
               <Statistic
                 title="Total Subjects"
                 value={stats.total}
-                prefix={<BookOutlined className="text-blue-500" />}
+                prefix={<BookOutlined className="!text-cyan-500" />}
               />
             </Card>
           </Col>
           <Col span={6}>
-            <Card className="bg-white shadow-md">
+            <Card className="!shadow-md hover:!shadow-lg !transition-all !border !border-cyan-400">
               <Statistic
                 title="Passed"
                 value={stats.passed}
-                prefix={<CheckCircleOutlined className="text-green-500" />}
+                prefix={<CheckCircleOutlined className="!text-green-500" />}
               />
             </Card>
           </Col>
           <Col span={6}>
-            <Card className="bg-white shadow-md">
+            <Card className="!shadow-md hover:!shadow-lg !transition-all !border !border-cyan-400">
               <Statistic
                 title="Failed"
                 value={stats.failed}
-                prefix={<CloseCircleOutlined className="text-red-500" />}
+                prefix={<CloseCircleOutlined className="!text-red-500" />}
               />
             </Card>
           </Col>
           <Col span={6}>
-            <Card className="bg-white shadow-md">
+            <Card className="!shadow-md hover:!shadow-lg !transition-all !border !border-cyan-400">
               <Statistic
                 title="Average Score"
                 value={stats.avgScore}
                 precision={2}
-                prefix={<TrophyOutlined className="text-yellow-500" />}
+                prefix={<TrophyOutlined className="!text-yellow-500" />}
               />
             </Card>
           </Col>
         </Row>
 
         {/* Search Box */}
-        <Card className="mb-8 bg-white shadow-md">
+        <Card className="!mb-8 !shadow-md border !border-cyan-400">
           <Search
             placeholder="Search by subject name or ID"
             allowClear
-            enterButton={<SearchOutlined />}
+            enterButton={
+              <Button
+                type="primary"
+                style={{
+                  backgroundColor: "#0e7490", // Tailwind's cyan-800
+                  borderColor: "#0e7490",
+                }}
+                icon={<SearchOutlined />}
+              />
+            }
             size="large"
             onSearch={handleSearch}
             onChange={(e) => handleSearch(e.target.value)}
             className="mb-4"
           />
         </Card>
-        <br></br>
+
         {/* Grades Table */}
-        <Card className="bg-white shadow-md">
+        <Card className="!shadow-md border !border-cyan-400">
           {loading ? (
             <div className="flex justify-center items-center p-10">
               <Spin size="large" tip="Loading grades..." />
@@ -372,16 +383,16 @@ const TraineeGradePage = () => {
               pagination={{ pageSize: 10 }}
               scroll={{ x: "max-content" }}
               rowClassName={(record) =>
-                record.gradeStatus === "Pass" ? "bg-green-50" : ""
+                record.gradeStatus === "Pass" ? "bg-cyan-50" : "bg-red-50"
               }
             />
           ) : (
             <Empty
               description={
-                searchText ? "No matching grades found" : "No grades found"
+                searchText ? "No matching grades found" : "No grades available"
               }
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              className="py-10"
+              className="!py-10"
             />
           )}
         </Card>

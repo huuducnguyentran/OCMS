@@ -10,6 +10,7 @@ import {
   Tooltip,
   Select,
   Pagination,
+  Button,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
@@ -40,6 +41,9 @@ const SubjectPage = () => {
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
   const [scheduleData, setScheduleData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deletingSubjectId, setDeletingSubjectId] = useState(null);
+
   const pageSize = 9;
 
   useEffect(() => {
@@ -70,15 +74,17 @@ const SubjectPage = () => {
                 courseId: subject.courseId,
               }))
             );
-            setScheduleData(traineeSchedules);z
+            setScheduleData(traineeSchedules);
           }
         } else if (role === "Instructor") {
           const response = await getAllSubject();
           if (response && response.allSubjects) {
-            const instructorSubjects = response.allSubjects.filter((subject) =>
-              subject.instructors && subject.instructors.some(
-                (instructor) => instructor.instructorId === userId
-              )
+            const instructorSubjects = response.allSubjects.filter(
+              (subject) =>
+                subject.instructors &&
+                subject.instructors.some(
+                  (instructor) => instructor.instructorId === userId
+                )
             );
             setSubjects(instructorSubjects);
             setFilteredSubjects(instructorSubjects);
@@ -113,61 +119,39 @@ const SubjectPage = () => {
     setFilteredSubjects(filtered);
   }, [searchText, subjects]);
 
+  const handleDeleteClick = (id) => {
+    setDeletingSubjectId(id);
+    setDeleteModalVisible(true);
+  };
+
   // Handle delete subject
-  const handleDelete = async (id) => {
-    Modal.confirm({
-      title: "Confirm Delete",
-      content:
-        "Are you sure you want to delete this subject? This action cannot be undone.",
-      okText: "Delete",
-      okType: "danger",
-      cancelText: "Cancel",
-      icon: <QuestionCircleOutlined style={{ color: "red" }} />,
-      okButtonProps: {
-        className:
-          "bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600",
-      },
-      onOk: async () => {
-        try {
-          const response = await deleteSubject(id);
-          
-          if (response && response.message) {
-            // Nếu API trả về danh sách môn học mới
-            if (response.allSubjects) {
-              setSubjects(response.allSubjects);
-              message.success(response.message);
-            } else {
-              // Nếu API không trả về danh sách mới, xóa môn học khỏi danh sách hiện tại
-              setSubjects(subjects.filter((subject) => subject.subjectId !== id));
-              message.success(response.message || "Subject deleted successfully!");
-            }
-          } else {
-            // Trường hợp API không trả về message
-            setSubjects(subjects.filter((subject) => subject.subjectId !== id));
-            message.success("Subject deleted successfully!");
-          }
-        } catch (error) {
-          console.error("Error deleting subject:", error);
-          
-          // Hiển thị thông báo lỗi từ API
-          if (error.response && error.response.data) {
-            const errorData = error.response.data;
-            
-            if (errorData.message && errorData.error) {
-              message.error(`${errorData.message} ${errorData.error}`);
-            } else if (errorData.message) {
-              message.error(errorData.message);
-            } else if (errorData.error) {
-              message.error(errorData.error);
-            } else {
-              message.error("Failed to delete subject.");
-            }
-          } else {
-            message.error(`Failed to delete subject: ${error.message || "Unknown error"}`);
-          }
+  const handleConfirmDelete = async () => {
+    try {
+      const response = await deleteSubject(deletingSubjectId);
+
+      if (response && response.message) {
+        if (response.allSubjects) {
+          setSubjects(response.allSubjects);
+        } else {
+          setSubjects(
+            subjects.filter((s) => s.subjectId !== deletingSubjectId)
+          );
         }
-      },
-    });
+        message.success(response.message || "Subject deleted successfully!");
+      }
+    } catch (error) {
+      console.error("Error deleting subject:", error);
+      const err = error?.response?.data;
+      message.error(err?.message || err?.error || "Failed to delete subject.");
+    } finally {
+      setDeleteModalVisible(false);
+      setDeletingSubjectId(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalVisible(false);
+    setDeletingSubjectId(null);
   };
 
   const handleSubjectChange = async (subjectId) => {
@@ -236,7 +220,8 @@ const SubjectPage = () => {
                     <div className="font-medium">{subject.subjectName}</div>
                     <div className="text-xs text-gray-500">
                       Course: {subject.courseId || "N/A"}
-                      {subject.specialtyId && ` • Specialty: ${subject.specialtyId}`}
+                      {subject.specialtyId &&
+                        ` • Specialty: ${subject.specialtyId}`}
                     </div>
                   </div>
                 </Option>
@@ -266,7 +251,8 @@ const SubjectPage = () => {
                   <div className="font-medium">{subject.subjectName}</div>
                   <div className="text-xs text-gray-500">
                     ID: {subject.subjectId}
-                    {subject.specialtyId && ` • Specialty: ${subject.specialtyId}`}
+                    {subject.specialtyId &&
+                      ` • Specialty: ${subject.specialtyId}`}
                   </div>
                 </div>
               </Option>
@@ -295,34 +281,32 @@ const SubjectPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-12 mb-8">
+      <div className="bg-gradient-to-r from-cyan-600 to-cyan-800 text-white py-12 mb-10 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center animate__animated animate__fadeIn">
             <BookOutlined className="text-5xl mb-4" />
             <h1 className="text-4xl font-bold mb-4">Training Subjects</h1>
-            <p className="text-xl text-blue-100 max-w-2xl mx-auto">
-              Explore our comprehensive collection of training subjects designed
-              to enhance your learning journey
+            <p className="text-lg text-cyan-100 max-w-2xl mx-auto">
+              Explore our curated collection of training subjects to support
+              your learning goals.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        {/* Search and Filter Section */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-8 animate__animated animate__fadeInDown">
-          <div className="max-w-xl mx-auto">
-            <Input
-              prefix={<SearchOutlined className="text-gray-400" />}
-              placeholder="Search subjects by name or ID..."
-              onChange={(e) => setSearchText(e.target.value)}
-              className="text-lg rounded-lg"
-              allowClear
-              size="large"
-            />
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        {/* Search Section */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-8 border border-cyan-600">
+          <Input
+            prefix={<SearchOutlined />}
+            placeholder="Search subjects by name or ID..."
+            onChange={(e) => setSearchText(e.target.value)}
+            className="!border-cyan-400"
+            allowClear
+            size="large"
+          />
         </div>
 
         {/* Subjects Grid */}
@@ -342,7 +326,7 @@ const SubjectPage = () => {
                 </p>
                 <button
                   onClick={() => navigate("/subject-create")}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="bg-cyan-600 text-white px-6 py-2 rounded-lg hover:bg-cyan-700 transition"
                 >
                   Create your first subject
                 </button>
@@ -355,13 +339,14 @@ const SubjectPage = () => {
               {getCurrentPageData().map((subject) => (
                 <Card
                   key={subject.subjectId}
-                  className="hover:shadow-xl transition-shadow duration-300 rounded-xl border-none bg-white overflow-hidden"
+                  className="hover:shadow-xl transition duration-300 rounded-2xl border !border-cyan-600 bg-white overflow-hidden"
                   actions={[
                     <Tooltip title="View Details" key="view-tooltip">
                       <EyeOutlined
-                        key="view"
-                        className="text-blue-500 text-lg hover:text-blue-700"
-                        onClick={() => navigate(`/subject/${subject.subjectId}`)}
+                        className="!text-cyan-600 text-lg hover:!text-cyan-800"
+                        onClick={() =>
+                          navigate(`/subject/${subject.subjectId}`)
+                        }
                       />
                     </Tooltip>,
                     !["Trainee", "Instructor"].includes(
@@ -369,8 +354,7 @@ const SubjectPage = () => {
                     ) && (
                       <Tooltip title="Edit Subject" key="edit-tooltip">
                         <EditOutlined
-                          key="edit"
-                          className="text-green-500 text-lg hover:text-green-700"
+                          className="!text-emerald-500 text-lg hover:!text-emerald-700"
                           onClick={() =>
                             navigate(`/subject-edit/${subject.subjectId}`)
                           }
@@ -382,9 +366,8 @@ const SubjectPage = () => {
                     ) && (
                       <Tooltip title="Delete Subject" key="delete-tooltip">
                         <DeleteOutlined
-                          key="delete"
-                          className="text-red-500 text-lg hover:text-red-700"
-                          onClick={() => handleDelete(subject.subjectId)}
+                          className="!text-rose-500 text-lg hover:!text-rose-700"
+                          onClick={() => handleDeleteClick(subject.subjectId)}
                         />
                       </Tooltip>
                     ),
@@ -395,41 +378,37 @@ const SubjectPage = () => {
                       <div>
                         <Title
                           level={4}
-                          className="text-xl font-bold text-gray-800 mb-2"
-                          ellipsis={{ rows: 2, expandable: false, symbol: '...' }}
+                          className="text-xl font-semibold text-gray-800 mb-2"
+                          ellipsis={{ rows: 2 }}
                         >
-                          {subject.subjectName} 
+                          {subject.subjectName}
                         </Title>
                         <div className="flex gap-2 mb-2">
-                          <Tag color="blue">
-                            {subject.subjectId}
-                          </Tag>
+                          <Tag color="cyan">{subject.subjectId}</Tag>
                           {subject.specialtyId && (
-                            <Tag color="purple">
-                              {subject.specialtyId}
-                            </Tag>
+                            <Tag color="geekblue">{subject.specialtyId}</Tag>
                           )}
                         </div>
                       </div>
-                      <BookOutlined className="text-2xl text-blue-500" />
+                      <BookOutlined className="!text-2xl !text-cyan-500" />
                     </div>
 
                     <Paragraph
                       ellipsis={{ rows: 2 }}
-                      className="text-gray-600 mb-4"
+                      className="!text-gray-600 !mb-4"
                     >
                       {subject.description || "No description provided"}
                     </Paragraph>
 
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                    <div className="flex items-center justify-between pt-4 border-t mt-4">
                       <Tooltip title="Credits">
                         <Tag
                           color={
                             subject.credits <= 3
-                              ? "success"
+                              ? "green"
                               : subject.credits <= 6
-                              ? "warning"
-                              : "error"
+                              ? "orange"
+                              : "red"
                           }
                           className="px-3 py-1 flex items-center gap-1"
                         >
@@ -440,10 +419,10 @@ const SubjectPage = () => {
                         <Tag
                           color={
                             subject.passingScore <= 4
-                              ? "success"
+                              ? "green"
                               : subject.passingScore <= 7
-                              ? "warning"
-                              : "error"
+                              ? "orange"
+                              : "red"
                           }
                           className="px-3 py-1 flex items-center gap-1"
                         >
@@ -455,10 +434,10 @@ const SubjectPage = () => {
                 </Card>
               ))}
             </div>
-            
+
             {/* Pagination */}
             {filteredSubjects.length > pageSize && (
-              <div className="flex justify-center mt-8">
+              <div className="flex justify-center mt-10">
                 <Pagination
                   current={currentPage}
                   onChange={handlePageChange}
@@ -466,27 +445,56 @@ const SubjectPage = () => {
                   pageSize={pageSize}
                   showSizeChanger={false}
                   showQuickJumper
-                  showTotal={(total) => `Tổng cộng ${total} môn học`}
+                  showTotal={(total) => `Total ${total} subjects`}
                 />
               </div>
             )}
           </div>
         )}
 
-        {/* Floating Action Button - Chỉ hiển thị cho Admin/Training Staff */}
+        {/* Floating Action Button */}
         {!["Trainee", "Instructor"].includes(
           sessionStorage.getItem("role")
         ) && (
           <Tooltip title="Create New Subject" placement="left">
             <button
               onClick={() => navigate("/subject-create")}
-              style={{ background: "black", color: "#fff" }}
-              className="fixed bottom-8 right-8 w-14 h-14 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 animate__animated animate__bounceIn"
+              className="!fixed !bottom-8 !right-8 !w-14 !h-14 !rounded-full !bg-cyan-600 hover:!bg-cyan-700 !text-white !shadow-lg !flex !items-center !justify-center !transition animate__animated animate__bounceIn"
             >
               <PlusOutlined className="text-xl" />
             </button>
           </Tooltip>
         )}
+        <Modal
+          title="Confirm Delete"
+          open={deleteModalVisible}
+          onCancel={handleCancelDelete}
+          footer={[
+            <Button
+              key="cancel"
+              onClick={handleCancelDelete}
+              className=" !border-cyan-600 !text-cyan-600  hover:!border-cyan-800 hover:!text-cyan-900"
+            >
+              Cancel
+            </Button>,
+            <Button
+              key="delete"
+              onClick={handleConfirmDelete}
+              className="bg-red-500 border-red-500 text-white hover:bg-red-600 hover:border-red-600"
+              danger
+            >
+              Delete
+            </Button>,
+          ]}
+        >
+          <div className="flex items-start gap-3">
+            <QuestionCircleOutlined className="!text-red-500 !text-xl !mt-1" />
+            <p className="!text-gray-700">
+              Are you sure you want to delete this subject? This action cannot
+              be undone.
+            </p>
+          </div>
+        </Modal>
       </div>
     </div>
   );

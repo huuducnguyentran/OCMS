@@ -265,11 +265,6 @@ export const getTrainingPlanSchema = (isCreate = true) => {
 
 // Subject Validation Schema
 export const SubjectSchema = Yup.object({
-  subjectId: Yup.string()
-    .required("Subject ID is required")
-    .max(50, "Subject ID must not exceed 50 characters")
-    .trim(),
-
   // courseId: Yup.string()
   //   .required("Course ID is required")
   //   .max(50, "Course ID must not exceed 50 characters")

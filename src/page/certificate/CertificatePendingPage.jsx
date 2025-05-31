@@ -31,7 +31,8 @@ const CertificatePendingPage = () => {
   const [filterDate, setFilterDate] = useState(null);
   const [selectedCertificates, setSelectedCertificates] = useState([]);
   const navigate = useNavigate();
-  const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
+
+  const userRole = sessionStorage.getItem("role");
   const isHeadMaster = userRole === "HeadMaster";
 
   useEffect(() => {
@@ -139,14 +140,17 @@ const CertificatePendingPage = () => {
   }
 
   return (
-    <div className="p-6">
-      <Title level={3} className="mb-4">
+    <div className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
+      <Title level={3} className="!text-cyan-800">
         Pending Certificates
       </Title>
 
       {/* Filters */}
-      <Card className="!mb-6 border rounded-xl shadow-sm bg-white">
-        <Title level={5} className="!mb-4 flex items-center gap-2">
+      <Card className="!mb-6 !border !border-cyan-600 !rounded-xl !shadow-sm !bg-white">
+        <Title
+          level={5}
+          className="!mb-4 !flex !items-center !gap-2 !text-cyan-700"
+        >
           <SearchOutlined />
           Filter Certificates
         </Title>
@@ -159,6 +163,7 @@ const CertificatePendingPage = () => {
               prefix={<SearchOutlined />}
               size="middle"
               allowClear
+              className="!rounded-md !border-cyan-600 focus:!border-cyan-700 focus:!shadow-cyan-200"
             />
           </Col>
           <Col xs={24} sm={12} md={8}>
@@ -169,6 +174,7 @@ const CertificatePendingPage = () => {
               style={{ width: "100%" }}
               allowClear
               size="middle"
+              className="!rounded-md !border-cyan-600"
             />
           </Col>
           <Col
@@ -182,6 +188,7 @@ const CertificatePendingPage = () => {
                 setFilterDate(null);
               }}
               size="middle"
+              className="!bg-gray-100 hover:!bg-gray-200 hover:!text-cyan-700 hover:!border-cyan-600  !rounded-md"
             >
               Reset Filters
             </Button>
@@ -195,7 +202,7 @@ const CertificatePendingPage = () => {
                 checked={areAllSelected}
                 onChange={(e) => handleSelectAll(e.target.checked)}
                 disabled={!isHeadMaster || filteredCertificates.length === 0}
-                className="!ml-20"
+                className="!ml-4 !text-cyan-700"
               >
                 Select All
               </Checkbox>
@@ -211,6 +218,7 @@ const CertificatePendingPage = () => {
                 onClick={handleSignCertificates}
                 disabled={!isHeadMaster || selectedCertificates.length === 0}
                 size="middle"
+                className="!bg-cyan-700 hover:!bg-cyan-800 disabled:!opacity-50 !text-white !rounded-md !transition-all"
               >
                 Sign ({selectedCertificates.length})
               </Button>
@@ -229,11 +237,11 @@ const CertificatePendingPage = () => {
           {filteredCertificates.map((cert) => (
             <div
               key={cert.certificateId}
-              className="relative group rounded-2xl border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 bg-white"
+              className="relative group rounded-2xl border border-cyan-200 shadow hover:shadow-lg transition-all duration-300 bg-white"
             >
               <Tooltip
                 title={
-                  isHeadMaster ? "" : "Only HeadMaster can select certificates"
+                  !isHeadMaster ? "Only HeadMaster can select certificates" : ""
                 }
               >
                 <Checkbox
@@ -245,13 +253,14 @@ const CertificatePendingPage = () => {
                   disabled={!isHeadMaster}
                 />
               </Tooltip>
+
               <div
                 onClick={() => navigate(`/certificate/${cert.certificateId}`)}
                 className="cursor-pointer"
               >
                 <Card
                   title={
-                    <span className="text-base font-semibold">
+                    <span className="text-base font-semibold text-cyan-900">
                       {cert.certificateCode}
                     </span>
                   }
@@ -277,7 +286,7 @@ const CertificatePendingPage = () => {
                       <span
                         className={`px-2 py-0.5 rounded-full text-xs font-medium text-white ${
                           cert.status === "Active"
-                            ? "bg-green-500"
+                            ? "bg-cyan-600"
                             : "bg-gray-400"
                         }`}
                       >

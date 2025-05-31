@@ -159,6 +159,7 @@ const CertificateTemplateListPage = () => {
         <Button
           type="link"
           onClick={() => navigate(`/certificate-template/${id}`)}
+          className="!w-full !text-left !border-none !text-cyan-600 hover:!text-cyan-700"
         >
           {id}
         </Button>
@@ -178,6 +179,13 @@ const CertificateTemplateListPage = () => {
       title: "Status",
       dataIndex: "templateStatus",
       key: "templateStatus",
+      render: (status) => (
+        <span
+          className={status === "Active" ? "text-green-600" : "text-yellow-500"}
+        >
+          {status}
+        </span>
+      ),
     },
     {
       title: "Created At",
@@ -192,6 +200,7 @@ const CertificateTemplateListPage = () => {
         <Button
           type="link"
           onClick={() => handlePreview(record.certificateTemplateId)}
+          className="!text-cyan-600 hover:!text-cyan-800 hover:!border-cyan-800"
         >
           View
         </Button>
@@ -214,7 +223,7 @@ const CertificateTemplateListPage = () => {
             >
               Edit
             </Menu.Item>
-            <Menu.Item key="delete">
+            <Menu.Item className="!text-red-600" key="delete">
               <Popconfirm
                 title="Are you sure you want to delete this template?"
                 onConfirm={async () => {
@@ -226,8 +235,7 @@ const CertificateTemplateListPage = () => {
                     const data = await fetchCertificateTemplates();
                     setTemplates(data);
                   } catch (err) {
-                    message.error("Failed to delete template.");
-                    console.error("Delete error:", err);
+                    message.error("Failed to delete template.", err);
                   }
                 }}
                 okText="Yes"
@@ -241,7 +249,10 @@ const CertificateTemplateListPage = () => {
 
         return (
           <Dropdown overlay={menu} trigger={["click"]}>
-            <Button icon={<EllipsisOutlined />} />
+            <Button
+              icon={<EllipsisOutlined />}
+              className="hover:!border-cyan-800"
+            />
           </Dropdown>
         );
       },
@@ -249,75 +260,95 @@ const CertificateTemplateListPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white p-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
       <div className="max-w-7xl mx-auto">
-        <button
-          className="fixed bottom-6 right-6 z-50 bg-blue-500 hover:bg-blue-600 text-white border-none shadow-lg animate__animated animate__bounceIn"
+        {/* Floating Button */}
+        <Button
+          className="!fixed !bottom-6 !right-6 !z-50 !bg-cyan-600 hover:!bg-cyan-700 !text-white !p-5 !shadow-lg !transition-all !duration-300"
           onClick={() => navigate("/certificate-import")}
         >
           <PlusOutlined className="text-xl" />
-        </button>
+        </Button>
 
-        <Title level={3}>Certificate Templates</Title>
+        {/* Title */}
+        <Title level={3} className="!text-cyan-800 !mb-4">
+          Certificate Templates
+        </Title>
 
         {/* Filters */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+        <div className="mb-6 p-4 bg-white rounded-xl border border-cyan-400 shadow">
           <Row gutter={[16, 16]}>
-            <Col xs={24} md={6}>
-              <Input
-                allowClear
-                placeholder="Search by name or description"
-                prefix={<SearchOutlined />}
-                size="large"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-              />
+            <Col xs={24} md={12}>
+              <div className="rounded-lg border border-cyan-300 focus-within:ring-2 focus-within:ring-cyan-500 bg-white">
+                <Input
+                  allowClear
+                  placeholder="Search by name or description"
+                  prefix={<SearchOutlined className="!text-cyan-600" />}
+                  size="large"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="!text-cyan-600 hover:!border-cyan-800"
+                />
+              </div>
             </Col>
-            <Col xs={24} md={6}>
-              <Select
-                allowClear
-                size="large"
-                placeholder="Filter by Status"
-                onChange={setStatusFilter}
-                style={{ width: "100%" }}
-              >
-                <Option value="Active">Active</Option>
-                <Option value="Inactive">Inactive</Option>
-              </Select>
+
+            <Col xs={24} md={4}>
+              <div className="rounded-lg border border-cyan-300 focus-within:ring-2 focus-within:ring-cyan-500 bg-white">
+                <Select
+                  allowClear
+                  size="large"
+                  placeholder="Filter by Status"
+                  onChange={setStatusFilter}
+                  className="w-full !text-cyan-600 hover:!border-cyan-800"
+                  dropdownStyle={{ color: "#155e75" }} // optional styling override
+                >
+                  <Option value="Active">Active</Option>
+                  <Option value="Inactive">Inactive</Option>
+                </Select>
+              </div>
             </Col>
-            <Col xs={24} md={6}>
-              <Select
-                allowClear
-                size="large"
-                placeholder="Description Type"
-                onChange={setDescTypeFilter}
-                style={{ width: "100%" }}
-              >
-                <Option value="initial">Initial</Option>
-                <Option value="recurrent">Recurrent</Option>
-                <Option value="professional">Professional</Option>
-              </Select>
+
+            <Col xs={24} md={4}>
+              <div className="rounded-lg border border-cyan-300 focus-within:ring-2 focus-within:ring-cyan-500 bg-white">
+                <Select
+                  allowClear
+                  size="large"
+                  placeholder="Description Type"
+                  onChange={setDescTypeFilter}
+                  className="w-full !text-cyan-600 hover:!border-cyan-800"
+                  dropdownStyle={{ color: "#155e75" }}
+                >
+                  <Option value="initial">Initial</Option>
+                  <Option value="recurrent">Recurrent</Option>
+                  <Option value="professional">Professional</Option>
+                </Select>
+              </div>
             </Col>
-            <Col xs={24} md={6}>
-              <RangePicker
-                size="large"
-                style={{ width: "100%" }}
-                onChange={(range) => setDateRange(range)}
-                value={dateRange}
-              />
+
+            <Col xs={24} md={4}>
+              <div className="rounded-lg border border-cyan-300 focus-within:ring-2 focus-within:ring-cyan-500 bg-white">
+                <RangePicker
+                  size="large"
+                  className="w-full !text-cyan-800"
+                  onChange={(range) => setDateRange(range)}
+                  value={dateRange}
+                />
+              </div>
             </Col>
           </Row>
         </div>
 
         {/* Table */}
-        <Table
-          columns={columns}
-          dataSource={filteredTemplates}
-          rowKey="certificateTemplateId"
-          pagination={{ pageSize: 5 }}
-          bordered
-          scroll={{ x: "max-content", y: 400 }}
-        />
+        <div className="rounded-xl shadow overflow-hidden bg-white border border-cyan-400">
+          <Table
+            columns={columns}
+            dataSource={filteredTemplates}
+            rowKey="certificateTemplateId"
+            pagination={{ pageSize: 5 }}
+            scroll={{ x: "max-content", y: 400 }}
+            bordered
+          />
+        </div>
       </div>
 
       {/* Preview Modal */}

@@ -64,10 +64,10 @@ const navItems = [
   },
   {
     key: "5",
-    label: "Learning Matrix",
+    label: "Instructor Assignment",
     icon: "BookOutlined",
-    path: "/learning-matrix",
-    roles: ["Admin", "Training staff", "HR", "Reviewer"],
+    path: "/instructor-assignment",
+    roles: ["Training staff", "Instructor"],
   },
   {
     key: "6",
@@ -91,13 +91,6 @@ const navItems = [
         roles: ["Training staff", "Instructor", "Trainee"],
       },
     ],
-  },
-  {
-    key: "8",
-    label: "Plan",
-    icon: "AccountBookOutlined",
-    path: "/plan",
-    roles: ["Training staff", "Trainee", "Reviewer"],
   },
   {
     key: "9",
@@ -261,24 +254,10 @@ const navItems = [
   },
   {
     key: "19",
-    label: "Assign Trainee",
+    label: "Trainee Assignment",
     icon: "DeploymentUnitOutlined",
-    path: "/assign-trainee",
+    path: "/assigned-trainee",
     roles: ["Training staff"],
-    children: [
-      {
-        key: "19-1",
-        label: "Import Assign Trainee",
-        path: "/import-assign-trainee",
-        roles: ["Training staff"],
-      },
-      {
-        key: "19-2",
-        label: "Assigned Trainee",
-        path: "/assigned-trainee",
-        roles: ["Training staff"],
-      },
-    ],
   },
   {
     key: "20",
@@ -313,10 +292,17 @@ const navItems = [
     path: "/export-certificate",
   },
   {
-    key: "23",
-    label: "Classroom",
-    icon: "FileExcelOutlined",
-    path: "/class",
+    key:"23",
+    label:"Classroom",
+    icon:"FileProtectOutlined",
+    path:"/class",
+    roles:["Training staff","Instructor"]
+  },
+  {
+    key: "24",
+    label: "Subject Specialty",
+    icon: "FileProtectOutlined",
+    path: "/subject-specialty",
     roles: ["Training staff"],
   },
 ];

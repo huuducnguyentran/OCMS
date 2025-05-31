@@ -108,7 +108,7 @@ const DecisionDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-cyan-50">
         <Spin size="large" />
       </div>
     );
@@ -116,21 +116,23 @@ const DecisionDetailPage = () => {
 
   if (!decision) {
     return (
-      <div className="min-h-screen p-6 bg-gray-50">
+      <div className="min-h-screen p-6 bg-cyan-50">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center mb-8 space-x-2">
             <Button
               type="link"
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate("/decision-pending")}
-              className="text-blue-600 hover:text-blue-800 px-0"
+              className="!text-cyan-600 hover:!text-cyan-800 !px-0"
             >
               Back
             </Button>
           </div>
-          <Card className="shadow-md rounded-xl text-center py-16">
-            <Title level={3}>Decision not found</Title>
-            <Text className="text-gray-500">
+          <Card className="shadow-xl rounded-xl text-center py-16 bg-white">
+            <Title level={3} className="!text-cyan-700">
+              Decision not found
+            </Title>
+            <Text className="!text-gray-500">
               The decision you are looking for does not exist or has been
               removed.
             </Text>
@@ -141,11 +143,11 @@ const DecisionDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header and Breadcrumb */}
+        {/* Breadcrumb and Header */}
         <div className="mb-6">
-          <Breadcrumb className="mb-2">
+          <Breadcrumb className="!mb-2 !text-cyan-700">
             <Breadcrumb.Item>
               <a onClick={() => navigate("/home")}>Home</a>
             </Breadcrumb.Item>
@@ -164,8 +166,8 @@ const DecisionDetailPage = () => {
               type="link"
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate(getBackPath())}
-              className="flex items-center text-blue-600 hover:text-blue-800 text-lg font-medium 
-                       transition-all duration-300 hover:-translate-x-1 p-0"
+              className="!flex items-center !border !border-cyan-600 hover:!border-cyan-800 !text-cyan-600 hover:!text-cyan-800
+                         !transition-all !duration-300 hover:!-translate-x-1 "
             >
               Back
             </Button>
@@ -178,8 +180,8 @@ const DecisionDetailPage = () => {
                 disabled={!isHeadMaster}
                 className={`text-white ${
                   isHeadMaster
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-gray-400 hover:bg-gray-500 cursor-not-allowed"
+                    ? "!bg-cyan-600 hover:!bg-cyan-700 !border-cyan-600 hover:!border-cyan-700"
+                    : "!bg-gray-400 hover:!bg-gray-500 !cursor-not-allowed"
                 }`}
                 title={
                   isHeadMaster
@@ -193,9 +195,9 @@ const DecisionDetailPage = () => {
           </div>
         </div>
 
-        {/* Main Title Card */}
-        <Card className="mb-6 shadow-md border-0 rounded-xl">
-          <Title level={2} className="mb-2 text-indigo-800">
+        {/* Title Card */}
+        <Card className="!mb-6 !shadow-md !border-0 !rounded-xl !bg-white">
+          <Title level={2} className="!mb-2 !text-cyan-800">
             {decision.title}
           </Title>
           <div className="flex items-center space-x-2 text-gray-500">
@@ -206,42 +208,42 @@ const DecisionDetailPage = () => {
             <Text>{new Date(decision.issueDate).toLocaleDateString()}</Text>
           </div>
         </Card>
-        <br></br>
-        {/* Content in Two Columns */}
-        <Row gutter={16} className="mb-6">
+
+        {/* Info and Preview Section */}
+        <Row gutter={16} className="!mb-6">
+          {/* Decision Info */}
           <Col xs={24} md={8}>
-            <Card className="h-full shadow-md border-0 rounded-xl">
-              <Title level={4} className="mb-4 text-indigo-700">
+            <Card className="!h-full !shadow-md !border-0 !rounded-xl !bg-white">
+              <Title level={4} className="!mb-4 !text-cyan-700">
                 Decision Information
               </Title>
-
               <Space direction="vertical" size="large" className="w-full">
                 <div>
-                  <Text strong className="text-gray-500 block mb-1">
+                  <Text strong className="!text-cyan-600 !block !mb-1">
                     Decision ID
                   </Text>
                   <Text className="text-lg">{decision.decisionId}</Text>
                 </div>
 
                 <div>
-                  <Text strong className="text-gray-500 block mb-1">
+                  <Text strong className="!text-cyan-600 !block !mb-1">
                     Decision Code
                   </Text>
                   <Text className="text-lg">{decision.decisionCode}</Text>
                 </div>
 
                 <div>
-                  <Text strong className="text-gray-500 block mb-1">
+                  <Text strong className="!text-cyan-600 !block !mb-1">
                     Issued By
                   </Text>
                   <div className="flex items-center space-x-2">
-                    <UserOutlined className="text-blue-500" />
+                    <UserOutlined className="!text-cyan-600" />
                     <Text className="text-lg">{decision.issuedBy}</Text>
                   </div>
                 </div>
 
                 <div>
-                  <Text strong className="text-gray-500 block mb-1">
+                  <Text strong className="!text-cyan-600 !block !mb-1">
                     Status
                   </Text>
                   <Tag
@@ -260,11 +262,11 @@ const DecisionDetailPage = () => {
                 </div>
 
                 <div>
-                  <Text strong className="text-gray-500 block mb-1">
+                  <Text strong className="!text-cyan-600 !block !mb-1">
                     Issue Date
                   </Text>
                   <div className="flex items-center space-x-2">
-                    <ClockCircleOutlined className="text-green-500" />
+                    <ClockCircleOutlined className="!text-teal-600" />
                     <Text className="text-lg">
                       {new Date(decision.issueDate).toLocaleString()}
                     </Text>
@@ -274,9 +276,10 @@ const DecisionDetailPage = () => {
             </Card>
           </Col>
 
+          {/* Decision Preview */}
           <Col xs={24} md={16}>
-            <Card className="shadow-md border-0 rounded-xl">
-              <Title level={4} className="mb-4 text-indigo-700">
+            <Card className="!shadow-md !border-0 !rounded-xl !bg-white">
+              <Title level={4} className="!mb-4 !text-cyan-700">
                 Decision Preview
               </Title>
 
@@ -292,12 +295,12 @@ const DecisionDetailPage = () => {
                   />
                 </div>
               ) : (
-                <div className="text-center py-10 bg-gray-50 rounded-lg">
+                <div className="text-center py-10 bg-cyan-50 rounded-lg">
                   <FileTextOutlined
                     style={{ fontSize: "48px" }}
-                    className="text-gray-300 mb-4"
+                    className="!text-gray-300 !mb-4"
                   />
-                  <Text className="text-gray-500 block">
+                  <Text className="!text-cyan-600 !block !mb-1">
                     No preview available
                   </Text>
                 </div>

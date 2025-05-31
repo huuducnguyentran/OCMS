@@ -10,7 +10,9 @@ import {
   Typography,
   Divider,
   Select,
-  Alert,
+  DatePicker,
+  Row,
+  Col,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -19,27 +21,26 @@ import {
 } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import { courseService } from "../../services/courseService";
-import { trainingPlanService } from "../../services/trainingPlanService";
+import dayjs from "dayjs";
 
 const { Option } = Select;
 const { Title, Text } = Typography;
 
+const disabledDate = (current) => {
+  return current && current < dayjs().startOf('day');
+};
+
 const EditCoursePage = () => {
-  // State management
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
   const [loadingCourse, setLoadingCourse] = useState(true);
-  const [trainingPlans, setTrainingPlans] = useState([]);
-  const [loadingPlans, setLoadingPlans] = useState(false);
   const [courses, setCourses] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
 
-  // Fetch course and training plans data
   useEffect(() => {
     fetchCourseData();
-    fetchTrainingPlans();
     fetchCourses();
   }, [id]);
 
@@ -47,227 +48,207 @@ const EditCoursePage = () => {
     try {
       setLoadingCourse(true);
       const response = await courseService.getCourseById(id);
-      console.log("Course data:", response);
-
-      if (response && response.success && response.data) {
-        // Set form values với đầy đủ các trường
+      if (response?.success && response.data) {
         form.setFieldsValue({
           description: response.data.description,
           courseName: response.data.courseName,
           courseRelatedId: response.data.courseRelatedId || "",
+          startDate: response.data.startDate ? dayjs(response.data.startDate) : null,
+          endDate: response.data.endDate ? dayjs(response.data.endDate) : null,
         });
       } else {
-        message.error("Failed to load course data");
+        message.error(response?.message || "Failed to load course data");
       }
     } catch (error) {
       console.error("Failed to fetch course:", error);
-      message.error("Failed to load course data");
+      message.error(error?.response?.data?.message || error?.message || "Failed to load course data");
     } finally {
       setLoadingCourse(false);
     }
   };
 
-  const fetchTrainingPlans = async () => {
-    try {
-      setLoadingPlans(true);
-      const response = await trainingPlanService.getAllTrainingPlans();
-      setTrainingPlans(response.plans || []);
-    } catch (error) {
-      console.error("Failed to fetch training plans:", error);
-      message.error("Failed to load training plans");
-    } finally {
-      setLoadingPlans(false);
-    }
-  };
-
-  // Fetch courses
   const fetchCourses = async () => {
     try {
       setLoadingCourses(true);
       const response = await courseService.getAllCourses();
-      if (response?.data) {
-        // Lọc ra các khóa học khác với khóa học hiện tại
-        const filteredCourses = response.data.filter(course => course.courseId !== id);
-        setCourses(filteredCourses);
-      } else {
-        setCourses([]);
-      }
+      const filteredCourses = response?.data?.filter(
+        (course) => course.courseId !== id
+      );
+      setCourses(filteredCourses || []);
     } catch (error) {
       console.error("Failed to fetch courses:", error);
-      message.error("Failed to load courses");
+      message.error("Failed to load courses for dropdown");
     } finally {
       setLoadingCourses(false);
     }
   };
 
-  // Form submission
   const handleUpdateCourse = async (values) => {
     try {
       setLoading(true);
-
-      // Đảm bảo gửi đúng format data theo API
       const formattedData = {
-        description: values.description?.trim() || "",
-        courseName: values.courseName?.trim() || "",
-        courseRelatedId: values.courseRelatedId || "",
+        description: values.description?.trim() || null,
+        courseName: values.courseName?.trim(),
+        courseRelatedId: values.courseRelatedId || null,
+        startDate: values.startDate ? values.startDate.toISOString() : null,
+        endDate: values.endDate ? values.endDate.toISOString() : null,
       };
 
-
-      // Đảm bảo gọi đúng endpoint với đúng format
+      if (formattedData.startDate && formattedData.endDate && dayjs(formattedData.startDate).isAfter(dayjs(formattedData.endDate))) {
+        message.error("End Date must be after Start Date.");
+        setLoading(false);
+        return;
+      }
+      
       await courseService.updateCourse(id, formattedData);
       message.success("Course updated successfully!");
       navigate("/all-courses", { state: { refresh: true } });
     } catch (error) {
-      
-      if (error.response && error.response.data) {
-        const errorData = error.response.data;
-        
-        if (errorData.message && errorData.error) {
-          message.error(`${errorData.message} ${errorData.error}`);
-        } else if (errorData.message) {
-          message.error(errorData.message);
-        } else if (errorData.error) {
-          message.error(errorData.error);
-        } else {
-          message.error("Failed to update course");
-        }
-      } else {
-        message.error(
-          `Failed to update course: ${error.message || "Unknown error"}`
-        );
-      }
+      const errorData = error?.response?.data || {};
+      message.error(
+        errorData.message || errorData.error || "Failed to update course"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Layout className="min-h-screen bg-gray-50 p-8 sm:p-10">
+    <Layout className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100 !p-6 !sm:p-8">
       <Card
-        className="max-w-5xl mx-auto shadow-xl rounded-xl overflow-hidden border-0"
+        className="!max-w-5xl !mx-auto !rounded-xl !border !border-cyan-600 !shadow-lg"
         title={
-          <div className="flex items-center justify-between py-2">
-            <Title level={2} className="m-0 text-gray-800">
-              Edit Course
+          <div className="flex items-center justify-between">
+            <Title level={3} className="!text-cyan-800 !m-0">
+              Edit Course: {id}
             </Title>
             <Button
-              size="large"
+              size="middle"
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate("/all-courses")}
-              className="flex items-center text-gray-600 hover:text-gray-800 border-gray-300"
+              className="!text-cyan-700 hover:!text-cyan-900 border border-cyan-300 hover:!border-cyan-400"
             >
               Back to Courses
             </Button>
           </div>
         }
-        styles={{
-          header: { borderBottom: "1px solid #f0f0f0" },
-          body: { padding: "16px" },
-        }}
+        bodyStyle={{ padding: "24px" }}
       >
-        <Spin spinning={loading || loadingCourse || loadingPlans || loadingCourses} size="large">
-         
-          
+        <Spin spinning={loading || loadingCourse || loadingCourses}>
           <Form
             form={form}
             layout="vertical"
             onFinish={handleUpdateCourse}
-            className="p-2"
+            className="!space-y-6"
             size="large"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-              <Form.Item
-                name="courseName"
-                label={
-                  <Text strong className="text-lg">
-                    Course Name
-                  </Text>
+            <Form.Item
+              name="courseName"
+              label={<Text strong className="!text-cyan-700">Course Name</Text>}
+              rules={[{ required: true, message: "Course name is required" }]}
+            >
+              <Input placeholder="Enter course name" className="rounded-lg py-3 px-4 text-base" />
+            </Form.Item>
+
+            <Form.Item
+              name="description"
+              label={<Text strong className="!text-cyan-700">Description</Text>}
+              rules={[{ required: true, message: "Description is required" }]}
+            >
+              <Input.TextArea placeholder="Enter course description" rows={4} className="rounded-lg py-3 px-4 text-base" />
+            </Form.Item>
+            
+            <Row gutter={16}>
+                <Col xs={24} sm={12}>
+                    <Form.Item
+                        name="startDate"
+                        label={<Text strong className="!text-cyan-700">Start Date</Text>}
+                        rules={[{ required: true, message: "Start date is required" }]}
+                    >
+                        <DatePicker 
+                            className="w-full rounded-lg py-3 px-4 text-base" 
+                            format="YYYY-MM-DD" 
+                            disabledDate={disabledDate} 
+                        />
+                    </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                    <Form.Item
+                        name="endDate"
+                        label={<Text strong className="!text-cyan-700">End Date</Text>}
+                        rules={[
+                            { required: true, message: "End date is required" },
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                if (!value || !getFieldValue('startDate')) {
+                                    return Promise.resolve();
+                                }
+                                if (dayjs(value).isBefore(dayjs(getFieldValue('startDate')))) {
+                                    return Promise.reject(new Error('End Date must be on or after Start Date!'));
+                                }
+                                return Promise.resolve();
+                                },
+                            }),
+                        ]}
+                    >
+                        <DatePicker 
+                            className="w-full rounded-lg py-3 px-4 text-base" 
+                            format="YYYY-MM-DD" 
+                            disabledDate={disabledDate}
+                        />
+                    </Form.Item>
+                </Col>
+            </Row>
+
+            <Form.Item
+              name="courseRelatedId"
+              label={<Text strong className="!text-cyan-700">Related Course (Optional)</Text>}
+            >
+              <Select
+                placeholder="Select a related course"
+                loading={loadingCourses}
+                showSearch
+                allowClear
+                optionFilterProp="children"
+                filterOption={(input, option) => 
+                    (option?.label ?? '').toLowerCase().includes(input.toLowerCase()) || 
+                    (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
                 }
-                rules={[{ required: true, message: "Course name is required" }]}
-                className="col-span-2"
-              >
-                <Input
-                  placeholder="Enter course name"
-                  className="rounded-lg py-3 px-4 text-lg"
-                  size="large"
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="description"
-                label={
-                  <Text strong className="text-lg">
-                    Description
-                  </Text>
+                className="rounded-lg"
+                 getPopupContainer={triggerNode => triggerNode.parentNode}
+                notFoundContent={
+                  loadingCourses ? (
+                    <div className="text-center py-4"><Spin size="small" /><div className="mt-2">Loading...</div></div>
+                  ) : (
+                    <div className="text-center py-4">No other courses found</div>
+                  )
                 }
-                rules={[{ required: true, message: "Description is required" }]}
-                className="col-span-2"
               >
-                <Input.TextArea
-                  placeholder="Enter course description"
-                  className="rounded-lg py-3 px-4 text-lg"
-                  size="large"
-                  rows={4}
-                />
-              </Form.Item>
+                {courses.map((courseItem) => (
+                  <Option key={courseItem.courseId} value={courseItem.courseId} label={courseItem.courseName}>
+                    {courseItem.courseName} ({courseItem.courseId})
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
 
-              <Form.Item
-                name="courseRelatedId"
-                label={
-                  <Text strong className="text-lg">
-                    Related Course
-                  </Text>
-                }
-                className="col-span-2"
-              >
-                <Select
-                  placeholder="Select a related course"
-                  loading={loadingCourses}
-                  className="rounded-lg"
-                  size="large"
-                  showSearch
-                  allowClear
-                  optionFilterProp="children"
-                  notFoundContent={
-                    loadingCourses ? (
-                      <div className="text-center py-4">
-                        <Spin size="small" />
-                        <div className="mt-2">Loading courses...</div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-4">
-                        <div>No courses found</div>
-                      </div>
-                    )
-                  }
-                >
-                  {courses.map((course) => (
-                    <Option key={course.courseId} value={course.courseId}>
-                      {course.courseName} ({course.courseId})
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </div>
+            <Divider className="!border-cyan-200" />
 
-            <Divider className="my-8 border-gray-200" />
-
-            <div className="flex justify-end space-x-6 mt-8">
+            <div className="flex justify-end gap-4 mt-6">
               <Button
                 icon={<ReloadOutlined />}
                 onClick={fetchCourseData}
-                className="rounded-lg border-gray-300 hover:border-gray-400 hover:text-gray-700 px-6 py-3 h-auto text-base flex items-center"
-                size="large"
+                disabled={loading || loadingCourse}
+                className="!rounded-lg !border-cyan-400 hover:!border-cyan-600 !text-cyan-700 hover:!text-cyan-900 !px-6 !py-2"
               >
-                Reset Changes
+                Reset Form
               </Button>
               <Button
                 type="primary"
                 htmlType="submit"
                 icon={<SaveOutlined />}
                 loading={loading}
-                className="bg-gray-700 hover:bg-gray-800 rounded-lg border-0 px-8 py-3 h-auto text-base flex items-center shadow-md"
-                size="large"
+                className="!bg-cyan-600 hover:!bg-cyan-700 !border-none !text-white !rounded-lg !px-8 !py-2 !shadow-md"
               >
                 {loading ? "Updating..." : "Update Course"}
               </Button>

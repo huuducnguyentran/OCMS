@@ -23,7 +23,7 @@ import {
 import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
 import dayjs from "dayjs";
-import { learningMatrixService } from "../../services/learningMatrixService";
+import { getAllClassSubjects } from "../../services/classSubjectService";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -35,15 +35,14 @@ const CreateSchedulePage = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [instructors, setInstructors] = useState([]);
-  const [courseSubjectSpecialties, setCourseSubjectSpecialties] = useState([]);
+  const [classSubjects, setClassSubjects] = useState([]);
 
   // Fetch subjects and instructors when component mounts
   useEffect(() => {
     fetchInstructors();
-    fetchCourseSubjectSpecialties();
+    fetchClassSubjects();
   }, []);
 
-  // Fetch subjects from API
   // Fetch instructors from API
   const fetchInstructors = async () => {
     try {
@@ -93,20 +92,24 @@ const CreateSchedulePage = () => {
     }
   };
 
-  // Fetch CourseSubjectSpecialtyId list
-  const fetchCourseSubjectSpecialties = async () => {
+  // Fetch ClassSubject list
+  const fetchClassSubjects = async () => {
     try {
       setLoading(true);
-      const response = await learningMatrixService.getAllCourseSubjectSpecialties();
-      if (response && response.data) {
-        setCourseSubjectSpecialties(response.data);
+      const response = await getAllClassSubjects();
+      console.log("ClassSubject API response:", response);
+
+      // Kiểm tra đúng kiểu dữ liệu trả về từ service
+      if (Array.isArray(response) && response.length > 0) {
+        setClassSubjects(response);
       } else {
-        setCourseSubjectSpecialties([]);
+        console.warn("Class subjects data is empty or invalid format");
+        setClassSubjects([]);
       }
     } catch (error) {
-      console.error("Error fetching CourseSubjectSpecialty list:", error);
-      message.error("Unable to load Course-Subject-Specialty list");
-      setCourseSubjectSpecialties([]);
+      console.error("Error fetching ClassSubject list:", error);
+      message.error("Unable to load ClassSubject list");
+      setClassSubjects([]);
     } finally {
       setLoading(false);
     }
@@ -134,8 +137,7 @@ const CreateSchedulePage = () => {
 
       // Create data according to API format
       const scheduleData = {
-        subjectID: values.subjectID,
-        courseSubjectSpecialtyId: values.courseSubjectSpecialtyId,
+        classSubjectId: values.classSubjectId,
         instructorID: values.instructorID,
         location: values.location,
         room: values.room,
@@ -145,7 +147,6 @@ const CreateSchedulePage = () => {
         daysOfWeek: daysOfWeek,
         classTime: classTime,
         subjectPeriod: subjectPeriod,
-        createdBy: sessionStorage.getItem("userId"), // Add creator information
       };
 
       console.log("Submitting schedule data:", scheduleData);
@@ -185,16 +186,16 @@ const CreateSchedulePage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-blue-50 p-6 sm:p-8">
       <div className="max-w-[1200px] mx-auto">
         {/* Header Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-cyan-100">
           <div className="flex items-center gap-4">
-            <div className="p-4 bg-indigo-600 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
+            <div className="p-4 bg-cyan-500 rounded-xl shadow-md hover:scale-105 transition-transform duration-300">
               <CalendarOutlined className="text-3xl text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+              <h2 className="text-2xl font-bold text-cyan-700">
                 Create New Schedule
               </h2>
               <p className="text-gray-600">
@@ -205,7 +206,7 @@ const CreateSchedulePage = () => {
         </div>
 
         {/* Form Section */}
-        <Card className="shadow-xl rounded-2xl">
+        <Card className="!bg-cyan-50 !rounded-2xl !border !border-cyan-400 !shadow-xl">
           <Spin spinning={loading || submitting}>
             <Form
               form={form}
@@ -222,26 +223,33 @@ const CreateSchedulePage = () => {
               <Row gutter={24}>
                 {/* Column 1 */}
                 <Col xs={24} md={12}>
-                  <Title level={4} className="mb-4">
+                  <Title level={4} className="!mb-4 !text-cyan-700">
                     General Information
                   </Title>
 
                   <Form.Item
-                    name="courseSubjectSpecialtyId"
-                    label="CourseSubjectSpecialtyId"
+                    name="classSubjectId"
+                    label="Class Subject"
                     rules={[
-                      { required: true, message: "Please select a courseSubjectSpecialtyId" },
+                      {
+                        required: true,
+                        message: "Please select a classSubjectId",
+                      },
                     ]}
                   >
                     <Select
-                      placeholder="Select courseSubjectSpecialtyId"
+                      placeholder="Select classSubjectId"
                       loading={loading}
                       showSearch
                       optionFilterProp="children"
                     >
-                      {courseSubjectSpecialties.map((item) => (
-                        <Option key={item.id} value={item.id}>
-                          {item.course?.courseName || item.courseId} / {item.subject?.subjectName || item.subjectId} / {item.specialty?.specialtyName || item.specialtyId}
+                      {classSubjects.map((item) => (
+                        <Option
+                          key={item.classSubjectId}
+                          value={item.classSubjectId}
+                        >
+                          {item.className || item.classId} /{" "}
+                          {item.subjectName || item.subjectId}
                         </Option>
                       ))}
                     </Select>
@@ -309,7 +317,7 @@ const CreateSchedulePage = () => {
 
                 {/* Column 2 */}
                 <Col xs={24} md={12}>
-                  <Title level={4} className="mb-4">
+                  <Title level={4} className="!mb-4 !text-cyan-700">
                     Class Schedule
                   </Title>
 
@@ -323,11 +331,47 @@ const CreateSchedulePage = () => {
                           () => ({
                             validator(_, value) {
                               if (!value) return Promise.resolve();
-                              const now = new Date();
-                              if (value.isBefore(dayjs(now))) {
+                              if (value.isBefore(dayjs())) {
+                                return Promise.reject(
+                                  new Error("Start date must be in the future")
+                                );
+                              }
+                              return Promise.resolve();
+                            },
+                          }),
+                        ]}
+                      >
+                        <DatePicker
+                          className="w-full rounded-md"
+                          showTime
+                          format="YYYY-MM-DD HH:mm:ss"
+                          disabledDate={(current) =>
+                            current && current < dayjs().startOf("day")
+                          }
+                        />
+                      </Form.Item>
+                    </Col>
+
+                    <Col span={12}>
+                      <Form.Item
+                        name="endDate"
+                        label={<Text strong>End Date</Text>}
+                        rules={[
+                          { required: true, message: "End date is required" },
+                          ({ getFieldValue }) => ({
+                            validator(_, value) {
+                              const startDate = getFieldValue("startDate");
+                              if (!value) return Promise.resolve();
+                              if (startDate && value.isBefore(startDate)) {
+                                return Promise.reject(
+                                  new Error("End date must be after start date")
+                                );
+                              }
+                              const diffDays = value.diff(startDate, "days");
+                              if (diffDays < 1 || diffDays > 365) {
                                 return Promise.reject(
                                   new Error(
-                                    "Start date and time must be in the future"
+                                    "Training plan must be 1–365 days long"
                                   )
                                 );
                               }
@@ -337,52 +381,7 @@ const CreateSchedulePage = () => {
                         ]}
                       >
                         <DatePicker
-                          className="w-full rounded-lg py-2 px-3 text-base"
-                          showTime
-                          format="YYYY-MM-DD HH:mm:ss"
-                          disabledDate={(current) =>
-                            current && current < dayjs().startOf("day")
-                          }
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item
-                        name="endDate"
-                        label={<Text strong>End Date</Text>}
-                        rules={[
-                          { required: true, message: "End date is required" },
-                          ({ getFieldValue }) => ({
-                            validator(_, value) {
-                              if (!value) return Promise.resolve();
-
-                              // Check if end date is after start date
-                              const startDate = getFieldValue("startDate");
-                              if (startDate && value.isBefore(startDate)) {
-                                return Promise.reject(
-                                  new Error("End date must be after start date")
-                                );
-                              }
-
-                              // Check duration is reasonable
-                              if (startDate) {
-                                const diffDays = value.diff(startDate, "days");
-                                if (diffDays < 1 || diffDays > 365) {
-                                  return Promise.reject(
-                                    new Error(
-                                      "Training plan duration should be between 1 day and 365 days"
-                                    )
-                                  );
-                                }
-                              }
-
-                              return Promise.resolve();
-                            },
-                          }),
-                        ]}
-                      >
-                        <DatePicker
-                          className="w-full rounded-lg py-2 px-3 text-base"
+                          className="w-full rounded-md"
                           showTime
                           format="YYYY-MM-DD HH:mm:ss"
                           disabledDate={(current) => {
@@ -406,25 +405,21 @@ const CreateSchedulePage = () => {
                         rules={[
                           {
                             required: true,
-                            message: "Please select a class time",
+                            message: "Please select class time",
                           },
                         ]}
                       >
-                        <TimePicker
-                          className="w-full"
-                          format="HH:mm"
-                          placeholder="Select class time"
-                        />
+                        <TimePicker className="w-full" format="HH:mm" />
                       </Form.Item>
                     </Col>
+
                     <Col span={12}>
                       <Form.Item name="subjectPeriod" label="Duration">
                         <TimePicker
                           className="w-full"
                           format="HH:mm"
+                          minuteStep={15}
                           placeholder="Select duration"
-                          showNow={false}
-                          minuteStep={15} // Cho phép chọn thời gian theo bước 15 phút
                         />
                       </Form.Item>
                     </Col>
@@ -442,7 +437,7 @@ const CreateSchedulePage = () => {
                   >
                     <Checkbox.Group
                       options={daysOfWeekOptions}
-                      className="grid grid-cols-2 sm:grid-cols-4"
+                      className="grid grid-cols-2 sm:grid-cols-4 gap-2"
                     />
                   </Form.Item>
                 </Col>
@@ -453,6 +448,7 @@ const CreateSchedulePage = () => {
                   icon={<RollbackOutlined />}
                   onClick={() => navigate("/schedule")}
                   size="large"
+                  className="hover:!border-cyan-600 hover:!text-cyan-900"
                 >
                   Back
                 </Button>
@@ -462,7 +458,7 @@ const CreateSchedulePage = () => {
                   htmlType="submit"
                   loading={submitting}
                   size="large"
-                  className="bg-blue-600"
+                  className="!bg-cyan-600 hover:!bg-cyan-700 !border-none"
                 >
                   Create Schedule
                 </Button>

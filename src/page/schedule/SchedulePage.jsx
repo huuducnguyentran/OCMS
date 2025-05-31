@@ -1,5 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { Table, Spin, Empty, message, Select, Button, Tag, Tooltip, Popconfirm } from "antd";
+import {
+  Table,
+  Spin,
+  Empty,
+  message,
+  Select,
+  Button,
+  Tag,
+  Tooltip,
+  Popconfirm,
+} from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   CalendarOutlined,
@@ -152,26 +162,38 @@ const SchedulePage = () => {
         return;
       }
 
-      // Sửa lại phần này để log response và kiểm tra cấu trúc dữ liệu
       let response;
       if (userRole === "Instructor") {
         response = await trainingScheduleService.getInstructorSubjects();
+        console.log("Instructor schedule response:", response);
+        if (response?.schedules) {
+          setScheduleData(response.schedules);
+        } else {
+          setScheduleData([]);
+          message.info("No schedule data found");
+        }
       } else if (userRole === "Trainee") {
         response = await trainingScheduleService.getTraineeSubjects();
-      } else if (userRole === "TrainingStaff" || userRole === "Training staff") {
+        if (response?.schedules) {
+          setScheduleData(response.schedules);
+        } else {
+          setScheduleData([]);
+          message.info("No schedule data found");
+        }
+      } else if (
+        userRole === "TrainingStaff" ||
+        userRole === "Training staff"
+      ) {
         response = await trainingScheduleService.getAllTrainingSchedules();
+        if (response?.schedules) {
+          setScheduleData(response.schedules);
+        } else {
+          setScheduleData([]);
+          message.info("No schedule data found");
+        }
       }
 
-      console.log("API Response:", response); // Thêm log để kiểm tra
-
-      // Sửa lại cách set scheduleData
-      if (response?.schedules && Array.isArray(response.schedules)) {
-        setScheduleData(response.schedules);
-        console.log("Schedule Data after setting:", response.schedules); // Thêm log để kiểm tra
-      } else {
-        setScheduleData([]);
-        message.info("No schedule data found");
-      }
+      console.log("Schedule Data after setting:", scheduleData);
     } catch (error) {
       console.error("Error fetching schedule:", error);
       handleError(error);
@@ -350,8 +372,13 @@ const SchedulePage = () => {
     let filteredData = scheduleData;
 
     // Chỉ lọc theo instructor nếu là Training Staff
-    if ((userRole === "TrainingStaff" || userRole === "Training staff") && selectedInstructor) {
-      filteredData = scheduleData.filter(sch => sch.instructorName === selectedInstructor);
+    if (
+      (userRole === "TrainingStaff" || userRole === "Training staff") &&
+      selectedInstructor
+    ) {
+      filteredData = scheduleData.filter(
+        (sch) => sch.instructorName === selectedInstructor
+      );
     }
 
     if (!Array.isArray(filteredData) || filteredData.length === 0) {
@@ -360,9 +387,11 @@ const SchedulePage = () => {
     }
 
     // Get unique time slots
-    const uniqueTimeSlots = [...new Set(filteredData.map(item => item.classTime))]
+    const uniqueTimeSlots = [
+      ...new Set(filteredData.map((item) => item.classTime)),
+    ]
       .filter(Boolean)
-      .map(time => time.substring(0, 5))
+      .map((time) => time.substring(0, 5))
       .sort();
 
     console.log("Unique time slots:", uniqueTimeSlots);
@@ -373,49 +402,70 @@ const SchedulePage = () => {
         timeFrame: `${timeSlot} - ${addMinutesToTime(timeSlot, 90)}`,
       };
 
-      const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      const daysOfWeek = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ];
 
       daysOfWeek.forEach((day, dayIndex) => {
-        const matchingSchedules = filteredData.filter(schedule => {
-          const scheduleTime = schedule.classTime ? schedule.classTime.substring(0, 5) : "";
-          const scheduleDays = schedule.daysOfWeek ? schedule.daysOfWeek.split(",").map(d => d.trim()) : [];
+        const matchingSchedules = filteredData.filter((schedule) => {
+          const scheduleTime = schedule.classTime
+            ? schedule.classTime.substring(0, 5)
+            : "";
+          const scheduleDays = schedule.daysOfWeek
+            ? schedule.daysOfWeek.split(",").map((d) => d.trim())
+            : [];
           return scheduleDays.includes(day) && scheduleTime === timeSlot;
         });
 
         if (matchingSchedules.length > 0) {
           const schedule = matchingSchedules[0];
-          
-          // Chỉ hiển thị schedule có status Approved cho Instructor
-          if (userRole === "Instructor" && schedule.status !== "Approved") {
-            row[day] = (
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center text-gray-400 p-4 bg-gray-50/50 rounded-xl border border-gray-100 
-                  hover:bg-gray-100/50 transition-colors">
-                  <ClockCircleOutlined className="text-2xl mb-2" />
-                  <div>No Class</div>
-                </div>
-              </div>
-            );
-            return;
-          }
+
+          // Kiểm tra ngày hiện tại có nằm trong khoảng startDateTime và endDateTime không
+          const currentDate = new Date();
+          const startDate = new Date(schedule.startDateTime);
+          const endDate = new Date(schedule.endDateTime);
+          const isActive = currentDate >= startDate && currentDate <= endDate;
 
           row[day] = (
             <div
               key={`schedule-${schedule.scheduleID}`}
-              onClick={() => navigate(`/subject/${schedule.subjectId}`)}
+              onClick={() =>
+                navigate(`/classSubject/${schedule.classSubjectId}`)
+              }
               className="group cursor-pointer transform transition-all duration-300 hover:scale-[1.02]"
             >
-              <div className="p-4 rounded-xl border transition-all duration-300 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:shadow-lg hover:border-green-300">
-                {/* Status Badge - Chỉ hiển thị cho Training Staff hoặc status Approved */}
+              <div
+                className={`p-4 rounded-xl border transition-all duration-300 
+                ${
+                  isActive
+                    ? "border-green-200 bg-gradient-to-br from-green-50 to-emerald-50"
+                    : "border-gray-200 bg-gradient-to-br from-gray-50 to-slate-50"
+                } 
+                hover:shadow-lg hover:border-green-300`}
+              >
+                {/* Status Badge */}
                 <div className="flex justify-between items-center mb-2">
-                  {(userRole === "TrainingStaff" || userRole === "Training staff" || schedule.status === "Approved") && (
-                    <Tag 
-                      className="px-2 py-1 border-0 font-medium bg-green-100 text-green-700"
-                    >
-                      {schedule.status}
-                    </Tag>
-                  )}
-                  
+                  <Tag
+                    className={`px-2 py-1 border-0 font-medium 
+                      ${
+                        schedule.status === "Completed"
+                          ? "bg-blue-100 text-blue-700"
+                          : schedule.status === "Incoming"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : schedule.status === "Pending"
+                          ? "bg-orange-100 text-orange-700"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                  >
+                    {schedule.status}
+                  </Tag>
+
                   {/* Action Buttons */}
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     {getCardActions(schedule)}
@@ -427,39 +477,36 @@ const SchedulePage = () => {
 
                 {/* Subject Name */}
                 <div className="font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                {schedule.subjectName}
-              </div>
+                  {schedule.subjectName}
+                </div>
 
                 {/* Schedule Details */}
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2 text-gray-600">
                     <ClockCircleOutlined className="text-gray-400" />
                     <span>{timeSlot}</span>
-                </div>
-                  
+                  </div>
+
                   <div className="flex items-center gap-2 text-gray-600">
                     <CalendarOutlined className="text-gray-400" />
-                    <span>Room {schedule.room}</span>
-              </div>
+                    <span>Room {schedule.roomName}</span>
+                  </div>
 
-                  {/* Chỉ hiển thị instructor name khi không phải role Instructor */}
                   {userRole !== "Instructor" && (
                     <div className="flex items-center gap-2 text-gray-600">
-                  <UserSwitchOutlined className="text-gray-400" />
+                      <UserSwitchOutlined className="text-gray-400" />
                       <span>{schedule.instructorName}</span>
-                </div>
+                    </div>
                   )}
 
-                  {/* Location with Tooltip */}
                   <Tooltip title={schedule.location}>
                     <div className="flex items-center gap-2 text-gray-600">
                       <EnvironmentOutlined className="text-gray-400" />
-                      <span className="truncate">{schedule.location}</span>
+                      <span className="truncate">{schedule.locationName}</span>
                     </div>
                   </Tooltip>
                 </div>
 
-                {/* Hover Effect Indicator */}
                 <div className="h-1 w-0 group-hover:w-full bg-blue-500 mt-3 transition-all duration-300 rounded-full"></div>
               </div>
             </div>
@@ -467,8 +514,10 @@ const SchedulePage = () => {
         } else {
           row[day] = (
             <div className="h-full flex items-center justify-center">
-              <div className="text-center text-gray-400 p-4 bg-gray-50/50 rounded-xl border border-gray-100 
-                hover:bg-gray-100/50 transition-colors">
+              <div
+                className="text-center text-gray-400 p-4 bg-gray-50/50 rounded-xl border border-gray-100 
+                hover:bg-gray-100/50 transition-colors"
+              >
                 <ClockCircleOutlined className="text-2xl mb-2" />
                 <div>No Class</div>
               </div>
@@ -483,11 +532,14 @@ const SchedulePage = () => {
 
   // Helper function to add minutes to time
   const addMinutesToTime = (time, minutes) => {
-    const [hours, mins] = time.split(':').map(Number);
+    const [hours, mins] = time.split(":").map(Number);
     const totalMinutes = hours * 60 + mins + minutes;
     const newHours = Math.floor(totalMinutes / 60);
     const newMins = totalMinutes % 60;
-    return `${String(newHours).padStart(2, '0')}:${String(newMins).padStart(2, '0')}`;
+    return `${String(newHours).padStart(2, "0")}:${String(newMins).padStart(
+      2,
+      "0"
+    )}`;
   };
 
   // Generate column headers with dates
@@ -496,18 +548,26 @@ const SchedulePage = () => {
 
     const columns = [
       {
-        title: 'Time',
-        dataIndex: 'timeFrame',
-        key: 'timeFrame',
+        title: "Time",
+        dataIndex: "timeFrame",
+        key: "timeFrame",
         width: 150,
-        fixed: 'left',
+        fixed: "left",
       },
-      ...['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => ({
+      ...[
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ].map((day) => ({
         title: day,
         dataIndex: day,
         key: day,
         width: 200,
-      }))
+      })),
     ];
 
     return columns;
@@ -752,7 +812,7 @@ const SchedulePage = () => {
           <div className="w-3 h-3 rounded-full bg-green-500" />
           <span className="text-sm text-gray-600">Approved</span>
         </div>
-        
+
         {/* Chỉ hiển thị Pending status cho Training Staff */}
         {(userRole === "TrainingStaff" || userRole === "Training staff") && (
           <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
@@ -760,7 +820,7 @@ const SchedulePage = () => {
             <span className="text-sm text-gray-600">Pending</span>
           </div>
         )}
-        
+
         <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm">
           <div className="w-3 h-3 rounded-full bg-yellow-500" />
           <span className="text-sm text-gray-600">Pending</span>
@@ -775,8 +835,12 @@ const SchedulePage = () => {
 
   // Update the summary section
   const renderScheduleSummary = () => {
-    const approvedCount = scheduleData.filter(s => s.status === 'Approved').length;
-    const pendingCount = scheduleData.filter(s => s.status === 'Pending').length;
+    const approvedCount = scheduleData.filter(
+      (s) => s.status === "Approved"
+    ).length;
+    const pendingCount = scheduleData.filter(
+      (s) => s.status === "Pending"
+    ).length;
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
@@ -789,7 +853,7 @@ const SchedulePage = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-100">
           <div className="flex items-center gap-3">
             <ClockCircleOutlined className="text-yellow-600 text-xl" />
@@ -805,7 +869,7 @@ const SchedulePage = () => {
 
   const handleEditSchedule = (schedule) => {
     navigate(`/schedule/edit/${schedule.scheduleID}`, {
-      state: { scheduleData: schedule }
+      state: { scheduleData: schedule },
     });
   };
 
@@ -862,17 +926,17 @@ const SchedulePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-10p0 p-6 sm:p-8">
       <div className="max-w-[1500px] mx-auto">
         {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-indigo-600 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
+              <div className="p-4 bg-cyan-600 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
                 <CalendarOutlined className="text-3xl text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent">
                   Weekly Schedule
                 </h2>
                 <p className="text-gray-600">
@@ -883,22 +947,23 @@ const SchedulePage = () => {
               </div>
             </div>
 
-            {/* Create new schedule button */}
             {renderCreateButton()}
           </div>
         </div>
 
-        {/* View Selector, Subject Selector and Date Selector */}
+        {/* Filters */}
         <div className="flex flex-wrap items-center justify-between mb-6">
           <div className="flex flex-wrap gap-4">
             {renderViewSelector()}
             {renderSubjectSelector()}
             {renderDateSelector()}
-            {/* Instructor Dropdown for TrainingStaff */}
+
             {(userRole === "TrainingStaff" ||
               userRole === "Training staff") && (
               <div className="mb-4" style={{ maxWidth: 300 }}>
-                <label className="mr-2 font-medium">Instructor:</label>
+                <label className="mr-2 font-medium text-gray-700">
+                  Instructor:
+                </label>
                 <Select
                   style={{ width: "100%" }}
                   value={selectedInstructor}
@@ -908,12 +973,11 @@ const SchedulePage = () => {
                   optionFilterProp="children"
                 >
                   {Array.from(
-                    new Set(scheduleData.map((item) => item.instructorName))
+                    new Set(scheduleData.map((i) => i.instructorName))
                   )
                     .filter(Boolean)
                     .map((instName) => (
                       <Option key={instName} value={instName}>
-                        {" "}
                         {instName}
                       </Option>
                     ))}
@@ -927,24 +991,17 @@ const SchedulePage = () => {
         <div className="bg-white rounded-2xl shadow-xl p-6 overflow-hidden">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-64 space-y-4">
-              <div className="relative">
-                <Spin size="large" />
-                <div className="absolute -top-2 -right-2">
-                  <div className="animate-ping w-3 h-3 bg-indigo-400 rounded-full"></div>
-                </div>
-              </div>
+              <Spin size="large" />
               <span className="text-gray-500 animate-pulse font-medium">
                 Loading your schedule...
               </span>
             </div>
           ) : error ? (
-            <div className="text-center text-red-500">
-              {error}
-            </div>
+            <div className="text-center text-red-500">{error}</div>
           ) : scheduleData.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-6">
-              <div className="p-6 bg-indigo-50 rounded-full animate-pulse">
-                <CalendarOutlined className="text-5xl text-indigo-400" />
+              <div className="p-6 bg-cyan-50 rounded-full animate-pulse">
+                <CalendarOutlined className="!text-5xl !text-cyan-400" />
               </div>
               <Empty
                 description={
@@ -957,7 +1014,7 @@ const SchedulePage = () => {
                     <p className="text-gray-500 text-sm max-w-md text-center">
                       {userRole === "Instructor"
                         ? "Please contact Training Staff to be assigned a course"
-                        : "Please select a different time period to view your schedule"}
+                        : "Try selecting a different time period"}
                     </p>
                   </div>
                 }
@@ -973,16 +1030,16 @@ const SchedulePage = () => {
                 scroll={{ x: "max-content" }}
                 pagination={false}
                 className="custom-schedule-table"
-                rowClassName="hover:bg-blue-50/50 transition-colors duration-200"
+                rowClassName="hover:!bg-cyan-50 !transition-colors !duration-200"
                 components={{
                   header: {
                     cell: ({ children, ...restProps }) => (
                       <th
                         {...restProps}
-                        className="bg-gradient-to-br from-indigo-50 to-blue-50 
-                                   text-indigo-700 font-semibold py-4 px-6 
+                        className="bg-gradient-to-br from-cyan-50 to-teal-50 
+                                   text-cyan-700 font-semibold py-4 px-6 
                                    first:rounded-tl-xl last:rounded-tr-xl
-                                   border-b border-indigo-100 whitespace-nowrap"
+                                   border-b border-cyan-100 whitespace-nowrap"
                       >
                         {children}
                       </th>
@@ -993,7 +1050,7 @@ const SchedulePage = () => {
                       <td
                         {...restProps}
                         className="p-4 border-b border-gray-100 
-                                   group-hover:bg-blue-50/30 transition-colors duration-200"
+                                   group-hover:bg-cyan-50/50 transition-colors duration-200"
                       >
                         {children}
                       </td>
@@ -1007,25 +1064,25 @@ const SchedulePage = () => {
                 }}
               />
 
-              {/* Status and Legend Section */}
+              {/* Legend & Summary */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
                 {renderStatusLegend()}
                 {renderScheduleSummary()}
-                </div>
+              </div>
 
-                {/* Quick Info */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <InfoCircleOutlined className="text-blue-600 text-lg" />
-                    </div>
-                    <div className="space-y-1">
-                      <h4 className="font-medium text-blue-700">
-                        Schedule Information
-                      </h4>
-                      <p className="text-sm text-blue-600/90">
-                        Click on any class card to view detailed information.
-                        Active classes are highlighted with a green indicator.
+              {/* Info Box */}
+              <div className="bg-gradient-to-r from-cyan-50 to-teal-50 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-cyan-100 rounded-lg">
+                    <InfoCircleOutlined className="!text-cyan-600 !text-lg" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="font-medium text-cyan-700">
+                      Schedule Information
+                    </h4>
+                    <p className="text-sm text-cyan-600/90">
+                      Click on any class to view details. Active classes are
+                      marked with a green indicator.
                     </p>
                   </div>
                 </div>

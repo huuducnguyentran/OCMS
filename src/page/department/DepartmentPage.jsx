@@ -504,7 +504,7 @@ const DepartmentPage = () => {
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => navigate("/department/create")}
-                className="bg-cyan-700 hover:bg-cyan-800 rounded-lg border-0"
+                className="!bg-cyan-700 hover:!bg-cyan-800 rounded-lg border-0"
               >
                 New Department
               </Button>

@@ -9,7 +9,6 @@ import {
   Typography,
   Select,
   Spin,
-  Alert,
 } from "antd";
 import {
   SaveOutlined,
@@ -50,32 +49,36 @@ const EditDepartmentPage = () => {
 
   const fetchUsers = async () => {
     try {
-      // Lấy tất cả users từ API 
+      // Lấy tất cả users từ API
       const response = await getAllUsers();
       console.log("API response for users:", response);
-      
+
       // Kiểm tra cấu trúc dữ liệu trả về
       let allUsers = [];
-      
+
       if (Array.isArray(response)) {
         allUsers = response;
       } else if (response && response.data && Array.isArray(response.data)) {
         allUsers = response.data;
       } else if (response && Array.isArray(response.users)) {
         allUsers = response.users;
-      } else if (response && response.data && Array.isArray(response.data.users)) {
+      } else if (
+        response &&
+        response.data &&
+        Array.isArray(response.data.users)
+      ) {
         allUsers = response.data.users;
       } else {
         console.error("Unexpected response format:", response);
         message.error("Failed to parse users data");
         return;
       }
-      
+
       // Lọc users có roleName là "AOC Manager"
-      const filteredUsers = allUsers.filter(user => 
-        user && user.roleName && user.roleName === "AOC Manager"
+      const filteredUsers = allUsers.filter(
+        (user) => user && user.roleName && user.roleName === "AOC Manager"
       );
-      
+
       setUsers(filteredUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -107,7 +110,7 @@ const EditDepartmentPage = () => {
     try {
       setLoading(true);
       setApiError(null); // Xóa lỗi trước đó (nếu có)
-      
+
       const updateData = {
         departmentName: values.departmentName,
         departmentDescription: values.departmentDescription,
@@ -119,13 +122,13 @@ const EditDepartmentPage = () => {
       navigate("/department");
     } catch (error) {
       console.error("Failed to update department:", error);
-      
+
       // Xử lý thông báo lỗi từ API
       if (error.response && error.response.data) {
         // Lưu thông tin lỗi API vào state
         const errorData = error.response.data;
         setApiError(errorData);
-        
+
         // Nếu có thông báo lỗi cụ thể, hiển thị nó
         if (errorData.message) {
           message.error(errorData.message);
@@ -167,43 +170,53 @@ const EditDepartmentPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
       <div className="max-w-3xl mx-auto">
-        <Card className="shadow-md">
+        <Card className="!shadow-2xl !rounded-2xl !p-6 !bg-white">
           <div className="mb-6">
             <Button
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate("/department")}
-              className="mb-4"
+              className="!mb-4 !text-cyan-700 !border-cyan-500 hover:!border-cyan-600"
             >
               Back to Departments
             </Button>
-            <Title level={2}>Edit Department</Title>
+            <Title level={2} className="!text-cyan-700">
+              Edit Department
+            </Title>
             <Text type="secondary">
               Update department information or delete department
             </Text>
           </div>
 
-
-
           <Form form={form} layout="vertical" onFinish={handleSubmit}>
             <Form.Item
               name="departmentName"
-              label="Department Name"
+              label={<span className="!text-cyan-700">Department Name</span>}
               rules={[
                 { required: true, message: "Please enter department name" },
               ]}
             >
-              <Input placeholder="Enter department name" />
+              <Input
+                placeholder="Enter department name"
+                className="rounded-md"
+              />
             </Form.Item>
 
-            <Form.Item name="departmentDescription" label="Description">
-              <TextArea placeholder="Enter department description" rows={4} />
+            <Form.Item
+              name="departmentDescription"
+              label={<span className="!text-cyan-700">Description</span>}
+            >
+              <TextArea
+                placeholder="Enter department description"
+                rows={4}
+                className="rounded-md"
+              />
             </Form.Item>
 
             <Form.Item
               name="managerId"
-              label="Manager"
+              label={<span className="text-cyan-700">Manager</span>}
               rules={[{ required: true, message: "Please select manager" }]}
             >
               <Select
@@ -211,9 +224,10 @@ const EditDepartmentPage = () => {
                 suffixIcon={<UserOutlined />}
                 showSearch
                 optionFilterProp="children"
+                className="rounded-md"
                 filterOption={(input, option) => {
                   const searchText = option.children.toString().toLowerCase();
-                  return searchText.indexOf(input.toLowerCase()) >= 0;
+                  return searchText.includes(input.toLowerCase());
                 }}
               >
                 {users.map((user) => (
@@ -224,7 +238,6 @@ const EditDepartmentPage = () => {
               </Select>
             </Form.Item>
 
-
             <div className="flex justify-end mt-6">
               <Space>
                 <Button onClick={() => navigate("/department")}>Cancel</Button>
@@ -233,7 +246,7 @@ const EditDepartmentPage = () => {
                   icon={<SaveOutlined />}
                   htmlType="submit"
                   loading={loading}
-                  className="bg-blue-500 hover:bg-blue-600"
+                  className="!bg-cyan-600 hover:!bg-cyan-700 !text-white !border-cyan-600"
                 >
                   Save Changes
                 </Button>

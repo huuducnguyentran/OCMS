@@ -3,30 +3,24 @@ import {
   Popconfirm,
   Layout,
   Card,
-  Table,
   Tag,
   Button,
   Spin,
-  Tabs,
-  Collapse,
-  List,
-  Avatar,
   Empty,
   message,
   Typography,
   Tooltip,
-  Statistic,
   Modal,
   Form,
   Input,
   Select,
   Space,
+  Row,
+  Col,
+  Pagination,
 } from "antd";
 import {
   PlusOutlined,
-  BookOutlined,
-  TeamOutlined,
-  FileTextOutlined,
   ReloadOutlined,
   EditOutlined,
   EyeOutlined,
@@ -38,42 +32,40 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { courseService } from "../../services/courseService";
 import { createRequest } from "../../services/requestService";
 
-const { Panel } = Collapse;
 const { Title, Text, Paragraph } = Typography;
 
 const RequestTypeEnum = {
   NewCourse: 1,
   UpdateCourse: 2,
-  DeleteCourse: 18
+  DeleteCourse: 18,
 };
 
 const RequestTypeLabels = {
   [RequestTypeEnum.NewCourse]: "New Course",
   [RequestTypeEnum.UpdateCourse]: "Update Course",
-  [RequestTypeEnum.DeleteCourse]: "Delete Course"
+  [RequestTypeEnum.DeleteCourse]: "Delete Course",
 };
 
+const ITEMS_PER_PAGE = 6;
+
 const CoursePage = () => {
-  // State management
   const [courses, setCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCourse, setSelectedCourse] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const [sortedInfo, setSortedInfo] = useState({});
   const [requestModalVisible, setRequestModalVisible] = useState(false);
   const [requestForm] = Form.useForm();
-  const [selectedCourseForRequest, setSelectedCourseForRequest] = useState(null);
+  const [selectedCourseForRequest, setSelectedCourseForRequest] =
+    useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [userRole, setUserRole] = useState(sessionStorage.getItem("role"));
   const isReviewer = userRole === "Reviewer";
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch data on mount and when refreshed
   useEffect(() => {
     fetchCourses();
-    // Lấy role người dùng từ sessionStorage
     const role = sessionStorage.getItem("role");
     setUserRole(role);
   }, []);
@@ -85,57 +77,41 @@ const CoursePage = () => {
     }
   }, [location.state, navigate, location.pathname]);
 
-  // Thêm hàm để lọc bỏ các khóa học trùng lặp
-  const removeDuplicateCourses = (courses) => {
+  const removeDuplicateCourses = (coursesToFilter) => {
     const uniqueCourses = [];
     const seen = new Set();
-    
-    courses.forEach(course => {
-      // Sử dụng courseName làm key để kiểm tra trùng lặp
-      if (!seen.has(course.courseName)) {
-        seen.add(course.courseName);
+    coursesToFilter.forEach((course) => {
+      if (!seen.has(course.courseId)) {
+        seen.add(course.courseId);
         uniqueCourses.push(course);
       }
     });
-    
     return uniqueCourses;
   };
 
-  // Effect để lọc khóa học khi có thay đổi về dữ liệu hoặc từ khóa tìm kiếm
   useEffect(() => {
-    if (!searchText) {
-      // Lọc bỏ trùng lặp trước khi set vào state
-      const uniqueCourses = removeDuplicateCourses(courses);
-      setFilteredCourses(uniqueCourses);
-    } else {
+    let currentCourses = courses;
+    if (searchText) {
       const searchLower = searchText.toLowerCase();
-      const filtered = courses.filter(
-        course => 
+      currentCourses = courses.filter(
+        (course) =>
           course.courseName.toLowerCase().includes(searchLower) ||
           course.courseId.toLowerCase().includes(searchLower) ||
           (course.status && course.status.toLowerCase().includes(searchLower))
       );
-      // Lọc bỏ trùng lặp sau khi search
-      const uniqueFiltered = removeDuplicateCourses(filtered);
-      setFilteredCourses(uniqueFiltered);
     }
+    const uniqueFiltered = removeDuplicateCourses(currentCourses);
+    setFilteredCourses(uniqueFiltered);
+    setCurrentPage(1);
   }, [courses, searchText]);
 
-  // API calls
   const fetchCourses = async () => {
     try {
       setLoading(true);
       const response = await courseService.getAllCourses();
-      console.log("Courses data:", response);
       const coursesData = response.data || [];
-      // Lọc bỏ trùng lặp trước khi set vào state
       const uniqueCoursesData = removeDuplicateCourses(coursesData);
       setCourses(uniqueCoursesData);
-      setFilteredCourses(uniqueCoursesData);
-
-      if (uniqueCoursesData.length > 0) {
-        setSelectedCourse(uniqueCoursesData[0]);
-      }
     } catch (error) {
       console.error("Failed to fetch courses:", error);
       message.error("Failed to load courses");
@@ -144,76 +120,32 @@ const CoursePage = () => {
     }
   };
 
-  // Utility functions
   const getStatusColor = (status) => {
     switch (status) {
-      case "Approved":
-        return "green";
-      case "Pending":
-        return "gold";
-      case "Rejected":
-        return "red";
-      default:
-        return "default";
+      case "Approved": return "green";
+      case "Pending": return "gold";
+      case "Rejected": return "red";
+      default: return "default";
     }
   };
 
   const getProgressColor = (progress) => {
     switch (progress) {
-      case "Completed":
-        return "green";
-      case "Ongoing":
-        return "processing";
-      case "NotStarted":
-        return "default";
-      default:
-        return "default";
+      case "Completed": return "green";
+      case "Ongoing": return "processing";
+      case "NotStarted": return "default";
+      default: return "default";
     }
   };
 
-  // Handler cho ô tìm kiếm
   const handleSearch = (e) => {
     setSearchText(e.target.value);
   };
 
-  // Hàm xử lý xóa từ khóa tìm kiếm
   const handleClearSearch = () => {
     setSearchText("");
   };
 
-  // Thêm hàm xử lý thay đổi sorting
-  const handleChange = (pagination, filters, sorter) => {
-    setSortedInfo(sorter);
-  };
-  const handleDelete = async (courseId) => {
-    try {
-      await courseService.deleteCourse(courseId);
-      message.success("Course deleted successfully");
-      fetchCourses();
-    } catch (error) {
-      console.error("Failed to delete course:", error);
-      
-      // Hiển thị thông báo lỗi từ API
-      if (error.response && error.response.data) {
-        const errorData = error.response.data;
-        
-        if (errorData.message && errorData.error) {
-          message.error(`${errorData.message} ${errorData.error}`);
-        } else if (errorData.message) {
-          message.error(errorData.message);
-        } else if (errorData.error) {
-          message.error(errorData.error);
-        } else {
-          message.error("Failed to delete course");
-        }
-      } else {
-        message.error(`Failed to delete course: ${error.message || "Unknown error"}`);
-      }
-    }
-  };
-
-
-  // Thêm hàm xử lý request
   const handleRequest = (course) => {
     setSelectedCourseForRequest(course);
     requestForm.resetFields();
@@ -224,19 +156,16 @@ const CoursePage = () => {
     try {
       const values = await requestForm.validateFields();
       setSubmitting(true);
-
-      // Tạo dữ liệu cho request
       const requestData = {
         requestEntityId: selectedCourseForRequest.courseId,
         requestType: values.requestType,
         description: values.description,
-        notes: values.notes
+        notes: values.notes,
       };
-
-      // Gọi API tạo request từ requestService
       await createRequest(requestData);
-      
-      message.success(`Request sent for course: ${selectedCourseForRequest.courseName}`);
+      message.success(
+        `Request sent for course: ${selectedCourseForRequest.courseName}`
+      );
       setRequestModalVisible(false);
     } catch (error) {
       console.error("Failed to send request:", error);
@@ -246,483 +175,34 @@ const CoursePage = () => {
     }
   };
 
-  // Table configuration
-  const columns = [
-    {
-      title: "Course ID",
-      dataIndex: "courseId",
-      key: "courseId",
-      width: 120,
-      sorter: (a, b) => a.courseId.localeCompare(b.courseId),
-      sortOrder: sortedInfo.columnKey === 'courseId' && sortedInfo.order,
-    },
-    {
-      title: "Course Name",
-      dataIndex: "courseName",
-      key: "courseName",
-      sorter: (a, b) => a.courseName.localeCompare(b.courseName),
-      sortOrder: sortedInfo.columnKey === 'courseName' && sortedInfo.order,
-      render: (text, record) => (
-        <a
-          onClick={() => setSelectedCourse(record)}
-          className="text-gray-700 hover:text-gray-900"
-        >
-          {text}
-        </a>
-      ),
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      width: 120,
-      sorter: (a, b) => a.status.localeCompare(b.status),
-      sortOrder: sortedInfo.columnKey === 'status' && sortedInfo.order,
-      render: (status) => (
-        <Tag color={getStatusColor(status)} className="rounded-full px-3 py-1">
-          {status}
-        </Tag>
-      ),
-    },
-    {
-      title: "Progress",
-      dataIndex: "progress",
-      key: "progress",
-      width: 120,
-      sorter: (a, b) => a.progress.localeCompare(b.progress),
-      sortOrder: sortedInfo.columnKey === 'progress' && sortedInfo.order,
-      render: (progress) => (
-        <Tag
-          color={getProgressColor(progress)}
-          className="rounded-full px-3 py-1"
-        >
-          {progress}
-        </Tag>
-      ),
-    },
-    {
-      title: "Created At",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      width: 180,
-      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-      sortOrder: sortedInfo.columnKey === 'createdAt' && sortedInfo.order,
-      render: (date) => new Date(date).toLocaleDateString(),
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      width: 150,
-      render: (_, record) => {
-        // Ẩn các nút hành động nếu là Reviewer
-        if (isReviewer) {
-          return (
-            <div className="flex space-x-2">
-              <Tooltip title="View Details">
-                <Button
-                  type="primary"
-                  size="small"
-                  icon={<EyeOutlined />}
-                  onClick={() => setSelectedCourse(record)}
-                  className="bg-gray-600 hover:bg-gray-700 border-0"
-                />
-              </Tooltip>
-            </div>
-          );
-        }
-        
-        return (
-          <div className="flex space-x-2">
-            <Tooltip title="View Details">
-              <Button
-                type="primary"
-                size="small"
-                icon={<EyeOutlined />}
-                onClick={() => setSelectedCourse(record)}
-                className="bg-gray-600 hover:bg-gray-700 border-0"
-              />
-            </Tooltip>
-            {record.status !== "Approved" && (
-            <Tooltip title="Edit">
-              <Button
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => navigate(`/course/edit/${record.courseId}`)}
-                className="text-gray-600 hover:text-gray-700"
-              />
-            </Tooltip>
-          )}
-          {record.status !== "Approved" && (
-            <Tooltip title="Delete">
-              <Popconfirm
-                title="Are you sure you want to delete this course?"
-                onConfirm={() => handleDelete(record.courseId)}
-                okText="Yes"
-                cancelText="No"
-              >
-                <Button
-                  size="small"
-                  icon={<DeleteOutlined />}
-                  className="text-gray-600 hover:text-gray-700"
-                />
-              </Popconfirm>
-            </Tooltip>
-          )}
-            <Tooltip title="Send Request">
-              <Button
-                size="small"
-                icon={<SendOutlined />}
-                onClick={() => handleRequest(record)}
-                className="text-blue-600 hover:text-blue-700"
-              />
-            </Tooltip>
-          </div>
-        );
-      },
-    },
-  ];
+  const indexOfLastCourse = currentPage * ITEMS_PER_PAGE;
+  const indexOfFirstCourse = indexOfLastCourse - ITEMS_PER_PAGE;
+  const currentDisplayCourses = filteredCourses.slice(indexOfFirstCourse, indexOfLastCourse);
 
-  // Tab items configuration - Cách mới thay vì sử dụng TabPane
-  const getTabItems = () => {
-    if (!selectedCourse) return [];
-
-    // Thêm hàm lọc subjects trùng lặp
-    const removeDuplicateSubjects = (subjects) => {
-      if (!subjects) return [];
-      const uniqueSubjects = [];
-      const seen = new Set();
-      
-      subjects.forEach(subject => {
-        // Sử dụng subjectName và subjectId để kiểm tra trùng lặp
-        const key = `${subject.subjectName}-${subject.subjectId}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          uniqueSubjects.push(subject);
-        }
-      });
-      
-      return uniqueSubjects;
-    };
-
-    // Lọc bỏ subjects trùng lặp
-    const uniqueSubjects = removeDuplicateSubjects(selectedCourse.subjects);
-
-    return [
-      {
-        key: "1",
-        label: (
-          <span className="flex items-center">
-            <FileTextOutlined className="mr-1" />
-            Overview
-          </span>
-        ),
-        children: (
-          <div className="space-y-6">
-            {/* Status and Actions Row */}
-            <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-center space-x-4">
-                <Tag
-                  color={getStatusColor(selectedCourse.status)}
-                  className="px-4 py-2 text-base"
-                >
-                  {selectedCourse.status}
-                </Tag>
-              </div>
-              {!isReviewer && (
-                <div className="flex space-x-3">
-                {selectedCourse.status !== "Approved" && (
-                  <Button
-                  type="#"
-                    icon={<EditOutlined />}
-                    onClick={() => navigate(`/course/edit/${selectedCourse.courseId}`)}
-                    className="flex items-center  "
-                  >
-                    Edit
-                  </Button>
-                  )}
-                  {selectedCourse.status !== "Approved" && (
-                  <Button
-                  type="#"
-                    icon={<DeleteOutlined />}
-                    onClick={() => handleDelete(selectedCourse.courseId)}
-                    className="flex items-center"
-                  >
-                    Delete
-                  </Button>         
-                  )}
-                  
-                  <Button
-                    type="primary"
-                    icon={<SendOutlined />}
-                    onClick={() => handleRequest(selectedCourse)}
-                    className="flex items-center bg-blue-600 hover:bg-blue-700"
-                  >
-                    Send Request
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Statistics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
-              <div className="space-y-4">
-                <Statistic
-                  title="Course ID"
-                  value={selectedCourse.courseId}
-                  className="bg-gray-50 p-4 rounded-lg"
-                />
-                <Statistic
-                  title="Course Related ID"
-                  value={selectedCourse.courseRelatedId}
-                  className="bg-gray-50 p-4 rounded-lg"
-                />
-                <Statistic
-                  title="Level"
-                  value={
-                    ["Initial", "Recurrent", "Relearn"][
-                      selectedCourse.courseLevel
-                    ] || selectedCourse.courseLevel
-                  }
-                  className="bg-gray-50 p-4 rounded-lg"
-                />
-              </div>
-              <div className="space-y-4">
-                <Statistic
-                  title="Progress"
-                  value={selectedCourse.progress}
-                  valueStyle={{
-                    color:
-                      selectedCourse.progress === "Ongoing"
-                        ? "#1677ff"
-                        : selectedCourse.progress === "Completed"
-                        ? "#52c41a"
-                        : "#8c8c8c",
-                  }}
-                  className="bg-gray-50 p-4 rounded-lg"
-                />
-                <Statistic
-                  title="Created By"
-                  value={selectedCourse.createdByUserId || "N/A"}
-                  className="bg-gray-50 p-4 rounded-lg"
-                />
-                <Statistic
-                  title="Created At"
-                  value={new Date(selectedCourse.createdAt).toLocaleString()}
-                  className="bg-gray-50 p-4 rounded-lg"
-                />
-              </div>
-            </div>
-          </div>
-        ),
-      },
-      {
-        key: "2",
-        label: (
-          <span className="flex items-center">
-            <BookOutlined className="mr-1" />
-            Subjects
-            <span className="ml-2 text-gray-500">
-              ({uniqueSubjects.length || 0})
-            </span>
-          </span>
-        ),
-        children:
-          uniqueSubjects.length > 0 ? (
-            <Collapse
-              accordion
-              bordered={false}
-              className="bg-white custom-collapse"
-            >
-              {uniqueSubjects.map((subject) => (
-                <Panel
-                  header={
-                    <div className="flex justify-between items-center">
-                      <Text strong>{subject.subjectName}</Text>
-                      <Tag color="default" className="rounded-full px-3 py-1">
-                        {subject.credits} Credits
-                      </Tag>
-                    </div>
-                  }
-                  key={subject.subjectId}
-                  className="mb-2 border border-gray-200 rounded-lg overflow-hidden"
-                >
-                  <div className="space-y-3 p-2">
-                    <Paragraph>
-                      <Text strong>ID:</Text> {subject.subjectId}
-                    </Paragraph>
-                    <Paragraph>
-                      <Text strong>Description:</Text> {subject.description}
-                    </Paragraph>
-                    <Paragraph>
-                      <Text strong>Passing Score:</Text> {subject.passingScore}
-                    </Paragraph>
-                    <Paragraph>
-                      <Text strong>Created:</Text>{" "}
-                      {new Date(subject.createdAt).toLocaleString()}
-                    </Paragraph>
-                    
-                    {/* Hiển thị danh sách trainees cho từng subject */}
-                    {subject.courseSubjectSpecialties && subject.courseSubjectSpecialties.map((specialty) => (
-                      <div key={specialty.id} className="mt-4 bg-gray-50 p-3 rounded-lg">
-                        <Title level={5} className="mb-2">
-                          Specialty: {specialty.specialty?.specialtyName || specialty.specialtyId}
-                        </Title>
-                        
-                        {/* Hiển thị danh sách trainees của specialty */}
-                        {specialty.trainees && specialty.trainees.length > 0 ? (
-                          <div className="mb-2">
-                            <Text strong className="block mb-2">Trainees ({specialty.trainees.length}):</Text>
-                            <List
-                              size="small"
-                              itemLayout="horizontal"
-                              dataSource={specialty.trainees}
-                              renderItem={(trainee) => (
-                                <List.Item
-                                  actions={[
-                                    <Tag
-                                      key="requestStatus"
-                                      color={getStatusColor(trainee.requestStatus)}
-                                      className="rounded-full px-2 py-0.5"
-                                    >
-                                      {trainee.requestStatus}
-                                    </Tag>,
-                                  ]}
-                                  className="py-1 px-2"
-                                >
-                                  <List.Item.Meta
-                                    avatar={
-                                      <Avatar size="small" icon={<TeamOutlined />} className="bg-gray-400" />
-                                    }
-                                    title={<Text strong>{trainee.traineeId}</Text>}
-                                    description={`Assigned: ${new Date(trainee.assignDate).toLocaleDateString()}`}
-                                  />
-                                </List.Item>
-                              )}
-                            />
-                          </div>
-                        ) : (
-                          <Empty
-                            description="No trainees assigned"
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            className="my-2"
-                          />
-                        )}
-                      </div>
-                    ))}
-                    
-                    <div className="flex justify-end mt-4">
-                      <Button
-                        type="primary"
-                        size="small"
-                        className="bg-gray-600 hover:bg-gray-700 border-0"
-                        onClick={() => navigate(`/subject/${subject.subjectId}`)}
-                      >
-                        View Subject
-                      </Button>
-                    </div>
-                  </div>
-                </Panel>
-              ))}
-            </Collapse>
-          ) : (
-            <Empty
-              description="No subjects available for this course"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              className="py-12"
-            />
-          ),
-      },
-     
-    ];
-  };
-
-  // Thêm component Modal
-  const renderRequestModal = () => {
-    return (
-      <Modal
-        title={`Send Request for Course: ${selectedCourseForRequest?.courseName || ""}`}
-        open={requestModalVisible}
-        onCancel={() => setRequestModalVisible(false)}
-        onOk={handleRequestSubmit}
-        confirmLoading={submitting}
-        okText="Submit Request"
-        width={600}
-      >
-        <Form
-          form={requestForm}
-          layout="vertical"
-          initialValues={{ requestType: RequestTypeEnum.UpdateCourse }}
-        >
-          <Form.Item
-            name="requestType"
-            label="Request Type"
-            rules={[{ required: true, message: "Please select a request type" }]}
-          >
-            <Select placeholder="Select request type">
-              {Object.entries(RequestTypeLabels).map(([value, label]) => (
-                <Select.Option key={value} value={Number(value)}>
-                  {label}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="description"
-            label="Description"
-            rules={[{ required: true, message: "Please enter a description" }]}
-          >
-            <Input.TextArea rows={4} placeholder="Enter request description" maxLength={100} />
-          </Form.Item>
-
-          <Form.Item
-            name="notes"
-            label="Notes"
-            rules={[{ required: true, message: "Please enter notes" }]}
-          >
-            <Input.TextArea rows={3} placeholder="Additional notes" maxLength={100} />
-          </Form.Item>
-        </Form>
-      </Modal>
-    );
-  };
-
-  // Thêm component tìm kiếm
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
   const renderSearchBox = () => (
-    <div className="mb-4">
+    <div className="mb-6">
       <Input
         placeholder="Search by course name, ID, or status..."
         value={searchText}
         onChange={handleSearch}
         allowClear
         style={{ width: "100%" }}
-        suffix={
-          <Space>
-            {searchText && (
-              <Button
-                type="text"
-                icon={<SearchOutlined />}
-                size="small"
-                onClick={handleClearSearch}
-              />
-            )}
-          </Space>
-        }
-        prefix={<SearchOutlined className="text-gray-400" />}
-        className="rounded-lg"
+        prefix={<SearchOutlined className="!text-cyan-700" />}
+        className="!rounded-lg !border !border-cyan-700 focus:!border-cyan-800 focus:!ring-cyan-700"
       />
     </div>
   );
 
   return (
-    <Layout className="min-h-screen bg-gray-50 p-6 sm:p-8">
-      <Layout.Content className="max-w-7xl mx-auto">
+    <Layout className="!min-h-screen !bg-gradient-to-br from-cyan-50 via-white to-cyan-100 !p-6 !sm:p-8">
+      <Layout.Content className="!max-w-7xl !mx-auto">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <Title level={2} className="m-0 text-gray-800">
+            <Title level={2} className="!m-0 !text-cyan-900">
               Course Management
             </Title>
-            <Text className="text-gray-500">
+            <Text className="!text-cyan-700">
               View and manage your training courses
             </Text>
           </div>
@@ -731,7 +211,7 @@ const CoursePage = () => {
               icon={<ReloadOutlined />}
               onClick={fetchCourses}
               loading={loading}
-              className="border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400"
+              className="!border-cyan-400 !text-cyan-700 hover:!text-cyan-900 hover:!border-cyan-600"
             >
               Refresh
             </Button>
@@ -740,7 +220,7 @@ const CoursePage = () => {
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => navigate("/course/create")}
-                className="bg-gray-700 hover:bg-gray-800 border-0"
+                className="!bg-cyan-700 hover:!bg-cyan-800 !border-0"
               >
                 Create New Course
               </Button>
@@ -748,90 +228,99 @@ const CoursePage = () => {
           </div>
         </div>
 
-        <Spin spinning={loading}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Courses List - Left Column */}
-            <div className="lg:col-span-1">
-              <Card
-                title={
-                  <Title level={4} className="m-0">
-                    Courses
-                  </Title>
-                }
-                className="h-full shadow-md rounded-lg overflow-hidden"
-                extra={
-                  <Text className="text-gray-500">Total: {filteredCourses.length}</Text>
-                }
-              >
-                {renderSearchBox()}
-                
-                {filteredCourses.length === 0 ? (
-                  <Empty
-                    description={searchText ? "No courses matching your search" : "No courses available"}
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  />
-                ) : (
-                  <Table
-                    columns={columns.filter((col) =>
-                      ["courseId", "courseName", "status"].includes(col.key)
-                    )}
-                    dataSource={filteredCourses}
-                    rowKey="courseId"
-                    pagination={{ pageSize: 5 }}
-                    size="small"
-                    scroll={{ x: "max-content" }}
-                    onRow={(record) => ({
-                      onClick: () => setSelectedCourse(record),
-                      className: `cursor-pointer hover:bg-gray-50 transition-colors ${
-                        selectedCourse?.courseId === record.courseId
-                          ? "bg-gray-100"
-                          : ""
-                      }`,
-                    })}
-                    className="custom-table"
-                  />
-                )}
-              </Card>
-            </div>
+        {renderSearchBox()}
 
-            {/* Course Details - Right Column */}
-            <div className="lg:col-span-2">
-              {selectedCourse ? (
-                <Card
-                  title={
-                    <div className="flex items-center">
-                      <Title level={4} className="m-0 mr-3">
-                        {selectedCourse.courseName}
-                      </Title>
-                      <Tag
-                        color={getStatusColor(selectedCourse.status)}
-                        className="rounded-full px-3 py-1"
-                      >
-                        {selectedCourse.status}
-                      </Tag>
-                    </div>
-                  }
-                >
-                  <Tabs
-                    defaultActiveKey="1"
-                    type="card"
-                    items={getTabItems()}
-                  />
-                </Card>
-              ) : (
-                <Card className="shadow-md rounded-lg h-full flex items-center justify-center">
+        <Spin spinning={loading}>
+          {filteredCourses.length === 0 && !loading ? (
+            <Card className="!shadow-md !rounded-lg !h-full !flex !items-center !justify-center !bg-white !border !border-cyan-100">
                   <Empty
-                    description="Select a course to view details"
+                description={searchText ? "No courses matching your search" : "No courses available"}
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                   />
+            </Card>
+          ) : (
+            <Row gutter={[24, 24]}>
+              {currentDisplayCourses.map((course) => (
+                <Col key={course.courseId} xs={24} sm={12} md={8}>
+                <Card
+                    hoverable
+                    className="!rounded-lg !shadow-md hover:!shadow-xl !transition-shadow !border !border-cyan-200 h-full flex flex-col"
+                    title={<Tooltip title={course.courseName}><Text ellipsis className="text-cyan-700 font-semibold text-lg">{course.courseName}</Text></Tooltip>}
+                    extra={<Tag color={getStatusColor(course.status)}>{course.status}</Tag>}
+                    actions={[
+                      <Tooltip title="View Details" key={`view-${course.courseId}`}>
+                        <Button type="text" icon={<EyeOutlined />} onClick={() => navigate(`/course/${course.courseId}`)} className="text-blue-500 hover:text-blue-700" />
+                      </Tooltip>,
+                      <Tooltip title="Send Request" key={`request-${course.courseId}`}>
+                         <Button type="text" icon={<SendOutlined />} onClick={() => handleRequest(course)} className="text-green-500 hover:text-green-700" />
+                      </Tooltip>,
+                    ]}
+                  >
+                    <div className="flex-grow">
+                        <Paragraph><Text strong>ID:</Text> {course.courseId}</Paragraph>
+                        <Paragraph ellipsis={{ rows: 2, expandable: false }}>
+                            <Text strong>Description:</Text> {course.description || "N/A"}
+                        </Paragraph>
+                        <Paragraph><Text strong>Level:</Text> {course.courseLevel}</Paragraph>
+                        <Paragraph><Text strong>Progress:</Text> <Tag color={getProgressColor(course.progress)}>{course.progress}</Tag></Paragraph>
+                    </div>
+                    <Text type="secondary" className="block text-xs mt-auto pt-2 border-t border-gray-100">
+                        Created: {new Date(course.createdAt).toLocaleDateString()}
+                    </Text>
                 </Card>
-              )}
+                </Col>
+              ))}
+            </Row>
+          )}
+          {filteredCourses.length > ITEMS_PER_PAGE && (
+            <div className="mt-8 flex justify-center">
+              <Pagination
+                current={currentPage}
+                total={filteredCourses.length}
+                pageSize={ITEMS_PER_PAGE}
+                onChange={paginate}
+                showSizeChanger={false}
+              />
             </div>
-          </div>
+          )}
         </Spin>
       </Layout.Content>
 
-      {renderRequestModal()}
+      <Modal
+        title={
+          <span className="!text-cyan-700 !font-semibold">
+            Send Request for Course: {selectedCourseForRequest?.courseName || ""}
+          </span>
+        }
+        open={requestModalVisible}
+        onCancel={() => setRequestModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setRequestModalVisible(false)} className="!rounded-md !border !border-cyan-700 !text-cyan-700 hover:!bg-cyan-50">
+            Cancel
+          </Button>,
+          <Button key="submit" type="primary" loading={submitting} onClick={handleRequestSubmit} className="!bg-cyan-700 hover:!bg-cyan-800 !border-cyan-700">
+            Submit Request
+          </Button>,
+        ]}
+        width={600}
+        className="!rounded-lg"
+      >
+        <Form form={requestForm} layout="vertical" initialValues={{ requestType: RequestTypeEnum.UpdateCourse }}>
+          <Form.Item name="requestType" label={<span className="!text-cyan-800">Request Type</span>} rules={[{ required: true, message: "Please select a request type" }]}>
+            <Select placeholder="Select request type">
+              {Object.entries(RequestTypeLabels).map(([value, label]) => (
+                <Select.Option key={value} value={Number(value)}>{label}</Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="description" label={<span className="!text-cyan-800">Description</span>} rules={[{ required: true, message: "Please enter a description" }]}>
+            <Input.TextArea rows={4} placeholder="Enter request description" maxLength={100} className="!border-cyan-700 focus:!border-cyan-800 focus:!ring-cyan-700" />
+          </Form.Item>
+          <Form.Item name="notes" label={<span className="!text-cyan-800">Notes</span>} rules={[{ required: true, message: "Please enter notes" }]}>
+            <Input.TextArea rows={3} placeholder="Additional notes" maxLength={100} className="!border-cyan-700 focus:!border-cyan-800 focus:!ring-cyan-700" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </Layout>
   );
 };

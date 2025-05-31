@@ -4,7 +4,8 @@ import {
   Routes,
   Navigate,
 } from "react-router-dom";
-
+import CourseDetailPage from "./page/course/CourseDetailPage";
+import ClassSubjectDetailPage from "./page/classSubject/ClassSubjectDetailPage";
 import ProtectedRoute from "./component/ProtectedRoute";
 import AvatarProvider from "./context/AvatarProvider";
 import { AuthProvider } from "./context/AuthContext";
@@ -31,9 +32,6 @@ import SubjectPage from "./page/subject/SubjectPage";
 import CreateSubjectPage from "./page/subject/CreateSubjectPage";
 import SubjectDetailPage from "./page/subject/SubjectDetailPage";
 import AssignedTraineePage from "./page/assigned_trainee/AssignedTraineePage";
-import PlanPage from "./page/training_plan/PlanPage";
-import CreateTrainingPlanPage from "./page/training_plan/CreateTrainingPlanPage";
-import EditPlanPage from "./page/training_plan/EditPlanPage";
 import CreateCoursePage from "./page/course/CreateCoursePage";
 import CoursePage from "./page/course/CoursePage";
 import EditCoursePage from "./page/course/EditCoursePage";
@@ -49,7 +47,6 @@ import UpdateCertificateTemplatePage from "./page/certificate/UpdateCertificateT
 import GradeImportPage from "./page/grade/GradeImportPage";
 import ViewGradePage from "./page/grade/ViewGradePage";
 import CertificateTemplateDetailPage from "./page/certificate/CertificateTemplateDetailPage";
-import PlanDetailPage from "./page/training_plan/PlanDetailPage";
 import UpdateGradePage from "./page/grade/UpdateGradePage";
 import SpecialtyPage from "./page/specialty/SpecialtyPage";
 import EditSpecialtyPage from "./page/specialty/EditSpecialtyPage";
@@ -62,12 +59,8 @@ import RegulationsPage from "./page/Regulations/RegulationsPage";
 import CreateExCertificatePage from "./page/candidate/CreateExCertificatePage";
 import ImportDecisionPage from "./page/decision/ImportDecisionPage";
 import DecisionTemplateListPage from "./page/decision/DecisionTemplatePage";
-import CreateAccountPage from "./page/user/CreateAccountPage";
-import LearningMatrixPage from "./page/learning_matrix/LearningMatrixPage";
-import CreateLearningMatrixPage from "./page/learning_matrix/CreateLearningMatrixPage";
 import UpdateAccountPage from "./page/user/UpdateAccountPage";
 import ExportCertificatePage from "./page/report/ExportCertificatePage";
-
 import DecisionTemplateDetailPage from "./page/decision/DecisionTemplateDetailPage";
 import UpdateDecisionTemplatePage from "./page/decision/UpdateDecisionTemplatePage";
 import DecisionActivePage from "./page/decision/DecisionActivePage";
@@ -82,6 +75,14 @@ import AssignDepartmentPage from "./page/department/AssignDepartment";
 import TraineeGradePage from "./page/grade/TraineeGradePage";
 import EditSchedule from "./page/schedule/EditSchedule";
 import ClassroomPage from "./page/classroom/ClassroomPage";
+import CreateScheduleForClassPage from "./page/schedule/CreateScheduleForClassPage";
+import InstructorAssPage from "./page/instructor_assignment/instructor_assPage";
+import CreateAccountPage from "./page/user/CreateAccountPage";
+import InstructorAssignmentCreate from "./page/instructor_assignment/InstructorAssignmentCreate";
+import SubjectSpecialtyPage from "./page/subject_specialty/SubjectSpecialtyPage";
+import SubjectSpecialtyCreate from "./page/subject_specialty/SubjectSpecialtyCreate";
+import ClassroomDetailPage from "./page/classroom/ClassroomDetailPage";
+// import SubjectSpecialtyEdit from "./page/subject_specialty/SubjectSpecialtyEdit";
 
 function App() {
   return (
@@ -137,7 +138,10 @@ function App() {
                             path="/course/edit/:id"
                             element={<EditCoursePage />}
                           />
-
+                          <Route
+                            path="/classroom/:classId/details"
+                            element={<ClassroomDetailPage />}
+                          />
                           {/*  Schedule Management */}
                           <Route path="/schedule" element={<SchedulePage />} />
                           <Route
@@ -147,21 +151,6 @@ function App() {
                           <Route
                             path="/schedule/edit/:id"
                             element={<EditSchedule />}
-                          />
-
-                          {/*  Training Plans */}
-                          <Route path="/plan" element={<PlanPage />} />
-                          <Route
-                            path="/plan/create"
-                            element={<CreateTrainingPlanPage />}
-                          />
-                          <Route
-                            path="/plan/edit/:planId"
-                            element={<EditPlanPage />}
-                          />
-                          <Route
-                            path="/plan/details/:planId"
-                            element={<PlanDetailPage />}
                           />
 
                           {/*  Candidates */}
@@ -185,6 +174,23 @@ function App() {
                             path="/external-certificate/edit/:id"
                             element={<EditExternalCertiPage />}
                           />
+                          {/*  Instructor Assignment */}
+                          <Route
+                            path="/instructor-assignment"
+                            element={<InstructorAssPage />}
+                          />
+                          <Route path="/instructor-assignment/create" element={<InstructorAssignmentCreate />} />
+
+                          {/*  Subject Specialty */}
+                          <Route
+                            path="/subject-specialty"
+                            element={<SubjectSpecialtyPage />}
+                          />
+                          <Route
+                            path="/subject-specialty/create"
+                            element={<SubjectSpecialtyCreate />}
+                          />
+                          {/* <Route path="/subject-specialty/edit/:id" element={<SubjectSpecialtyEdit />} /> */}
 
                           {/*  Subjects */}
                           <Route path="/subject" element={<SubjectPage />} />
@@ -200,7 +206,7 @@ function App() {
                             path="/subject-edit/:subjectId"
                             element={<UpdateSubjectPage />}
                           />
-
+  <Route path="/classSubject/:classSubjectId" element = {<ClassSubjectDetailPage />}/>
                           {/*  Trainees */}
                           <Route
                             path="/import-assign-trainee"
@@ -217,14 +223,6 @@ function App() {
                           <Route
                             path="/assigned-trainee-courses"
                             element={<AssignedTraineeCoursePage />}
-                          />
-                          <Route
-                            path="/learning-matrix"
-                            element={<LearningMatrixPage />}
-                          />
-                          <Route
-                            path="/learning-matrix/create"
-                            element={<CreateLearningMatrixPage />}
                           />
                           {/*  Accomplishments & Grades */}
                           <Route
@@ -368,10 +366,10 @@ function App() {
                             path="/plan/:planId"
                             element={<TrainingPlanDetailPage />}
                           /> */}
-                          {/* <Route
-                            path="/course/:id"
+                          { <Route
+                            path="/course/:courseId"
                             element={<CourseDetailPage />}
-                          /> */}
+                          /> }
                           {/* Department */}
                           <Route
                             path="/department"
@@ -390,6 +388,10 @@ function App() {
                             element={<AssignDepartmentPage />}
                           />
                           <Route path="/class" element={<ClassroomPage />} />
+                          <Route
+                            path="/classroom/:classId/create-schedule"
+                            element={<CreateScheduleForClassPage />}
+                          />
                         </Routes>
                         <Footer />
                       </Layout>
