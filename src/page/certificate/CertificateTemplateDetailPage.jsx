@@ -30,29 +30,44 @@ const CertificateTemplateDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-cyan-50">
         <Spin size="large" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center mb-8 space-x-2">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
+      <div className="max-w-5xl mx-auto bg-white rounded-xl shadow p-8">
+        {/* Back button */}
+        <div className="flex items-center mb-6">
           <Button
             type="link"
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate("/certificate")}
-            className="text-blue-600 hover:text-blue-800 px-0"
+            className="!text-cyan-600 hover:!text-cyan-800 !border !border-cyan-600 hover:!border-cyan-800 font-medium rounded-lg transition-colors duration-300 px-0"
           >
-            Back
+            Back to Templates
           </Button>
         </div>
 
-        <Title level={3}>Certificate Template Detail</Title>
+        {/* Title */}
+        <Title level={3} className="!text-cyan-700">
+          Certificate Template Detail
+        </Title>
 
-        <Descriptions bordered column={1} size="middle" className="mb-8">
+        {/* Template Info */}
+        <Descriptions
+          bordered
+          column={1}
+          size="middle"
+          className="!mb-8 !rounded-md !overflow-hidden !border-cyan-400"
+          labelStyle={{
+            width: 160,
+            fontWeight: "500",
+            backgroundColor: "#ECFEFF",
+          }}
+        >
           <Descriptions.Item label="Template ID">
             {template.certificateTemplateId}
           </Descriptions.Item>
@@ -63,7 +78,7 @@ const CertificateTemplateDetailPage = () => {
             {template.description}
           </Descriptions.Item>
           <Descriptions.Item label="Status">
-            {template.templateStatus}
+            {template.templateStatus === 1 ? "Active" : "Inactive"}
           </Descriptions.Item>
           <Descriptions.Item label="Created By">
             {template.createdByUserName || template.createdByUserId}
@@ -79,18 +94,21 @@ const CertificateTemplateDetailPage = () => {
           </Descriptions.Item>
         </Descriptions>
 
+        {/* Preview Section */}
         {template.templateFileWithSas && (
-          <>
-            <Title level={4}>Template Preview</Title>
+          <div>
+            <Title level={4} className="!text-cyan-600 mb-4">
+              Template Preview
+            </Title>
             <iframe
               src={template.templateFileWithSas}
               title="Certificate Preview"
-              className="w-full h-[600px] border rounded shadow"
+              className="w-full h-[600px] border border-cyan-400 rounded shadow"
               onError={() =>
                 message.error("Failed to load certificate preview.")
               }
             />
-          </>
+          </div>
         )}
       </div>
     </div>

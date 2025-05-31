@@ -66,9 +66,12 @@ const UpdateDecisionTemplatePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto bg-white p-8 rounded shadow">
-        <Title level={3}>Update Decision Template</Title>
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
+      <div className="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-md">
+        <Title level={3} className="!text-cyan-700">
+          Update Decision Template
+        </Title>
+
         <Form
           layout="vertical"
           form={form}
@@ -80,7 +83,10 @@ const UpdateDecisionTemplatePage = () => {
             name="templateName"
             rules={[{ required: true, message: "Please enter template name" }]}
           >
-            <Input />
+            <Input
+              placeholder="Enter template name"
+              className="!border-cyan-400"
+            />
           </Form.Item>
 
           <Form.Item
@@ -88,7 +94,11 @@ const UpdateDecisionTemplatePage = () => {
             name="description"
             rules={[{ required: true, message: "Please enter description" }]}
           >
-            <Input.TextArea rows={4} />
+            <Input.TextArea
+              rows={4}
+              placeholder="Enter template description"
+              className="!h-32 !border-cyan-400"
+            />
           </Form.Item>
 
           <Form.Item label="Upload New Template File" name="templateContent">
@@ -99,17 +109,32 @@ const UpdateDecisionTemplatePage = () => {
               onChange={({ fileList }) => setFileList(fileList)}
               accept=".html"
             >
-              <Button icon={<UploadOutlined />}>Select File</Button>
+              <Button
+                icon={<UploadOutlined />}
+                className="!bg-cyan-400 hover:!border-cyan-600 !text-white"
+              >
+                Select HTML File
+              </Button>
             </Upload>
           </Form.Item>
 
-          <div className="flex space-x-3 mt-4">
-            <Button type="primary" htmlType="submit">
+          <div className="flex flex-wrap gap-3 mt-6">
+            <Button
+              type="primary"
+              htmlType="submit"
+              className="!bg-cyan-600 hover:!bg-cyan-700 !border-none"
+            >
               Update
             </Button>
-            <Button onClick={handleReset}>Reset</Button>
+
             <Button danger onClick={() => navigate(-1)}>
               Cancel
+            </Button>
+            <Button
+              onClick={handleReset}
+              className="!ml-auto !text-cyan-600 hover:!text-cyan-800 hover:!border-cyan-600"
+            >
+              Reset
             </Button>
           </div>
         </Form>
