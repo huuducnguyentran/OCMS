@@ -235,10 +235,10 @@ const DepartmentPage = () => {
     const users = departmentUsers[record.departmentId] || [];
 
     return (
-      <Card className="bg-gray-50 border-0">
-        <div className="py-2">
-          <div className="flex justify-between items-center mb-3">
-            <Text strong className="text-blue-700">
+      <Card className="bg-cyan-50 border border-cyan-100 rounded-xl shadow-sm">
+        <div className="py-3 px-4">
+          <div className="flex justify-between items-center mb-4">
+            <Text strong className="text-cyan-800 text-lg">
               Department Users ({users.length})
             </Text>
           </div>
@@ -248,17 +248,17 @@ const DepartmentPage = () => {
               size="small"
               dataSource={users}
               renderItem={(user) => (
-                <List.Item className="py-2 px-3 hover:bg-blue-50 rounded-lg">
+                <List.Item className="py-2 px-3 hover:bg-cyan-100 rounded-lg transition-all">
                   <List.Item.Meta
                     avatar={
                       <Avatar
                         size="small"
-                        style={{ backgroundColor: "#1890ff" }}
+                        style={{ backgroundColor: "#06b6d4" }}
                         icon={<UserOutlined />}
                       />
                     }
                     title={
-                      <div className="flex items-center justify-between">
+                      <div className="flex justify-between items-center">
                         <Text strong>{user.fullName || user.username}</Text>
                         <Tooltip title="Export Trainee Information">
                           <Button
@@ -267,14 +267,14 @@ const DepartmentPage = () => {
                             icon={<DownloadOutlined />}
                             loading={downloadLoading[user.userId]}
                             onClick={() => handleExportTraineeInfo(user.userId)}
-                            className="text-blue-600 hover:text-blue-800"
+                            className="text-cyan-600 hover:text-cyan-800"
                           />
                         </Tooltip>
                       </div>
                     }
                     description={
                       <Space size="small" className="text-xs">
-                        <Tag color="blue">{user.userId}</Tag>
+                        <Tag color="cyan">{user.userId}</Tag>
                         <Tag color="green">{user.roleName}</Tag>
                         <Text type="secondary">{user.email}</Text>
                       </Space>
@@ -283,10 +283,10 @@ const DepartmentPage = () => {
                 </List.Item>
               )}
               pagination={users.length > 5 ? { pageSize: 5 } : false}
-              className="bg-white rounded-lg shadow-sm"
+              className="bg-white rounded-lg"
             />
           ) : (
-            <div className="text-center py-4 bg-white rounded-lg shadow-sm">
+            <div className="text-center py-4 bg-white rounded-lg">
               <Text type="secondary">No users found in this department</Text>
             </div>
           )}
@@ -301,14 +301,12 @@ const DepartmentPage = () => {
       dataIndex: "departmentId",
       key: "departmentId",
       render: (text) => (
-        <div className="flex items-center">
-          <Text
-            copyable={{ tooltips: ["Copy ID", "Copied!"] }}
-            style={{ fontSize: "14px", fontWeight: 500 }}
-          >
-            {text}
-          </Text>
-        </div>
+        <Text
+          copyable={{ tooltips: ["Copy ID", "Copied!"] }}
+          className="!text-sm !font-medium !text-cyan-800"
+        >
+          {text}
+        </Text>
       ),
       width: "15%",
       ellipsis: true,
@@ -319,10 +317,9 @@ const DepartmentPage = () => {
       key: "departmentName",
       render: (text, record) => (
         <div className="flex items-center">
-          <Text strong className="text-blue-800 mr-2">
+          <Text strong className="text-cyan-900 mr-2">
             {text}
           </Text>
-          {/* Add dropdown trigger button */}
           <Button
             type="text"
             size="small"
@@ -332,7 +329,7 @@ const DepartmentPage = () => {
               const expanded = expandedRowKeys.includes(record.departmentId);
               handleExpandRow(!expanded, record);
             }}
-            className="text-blue-600 hover:text-blue-800"
+            className="!text-cyan-600 hover:!text-cyan-800"
           >
             <DownOutlined style={{ fontSize: "10px" }} />
           </Button>
@@ -347,7 +344,7 @@ const DepartmentPage = () => {
       key: "departmentDescription",
       render: (text) => (
         <Tooltip placement="topLeft" title={text}>
-          <div className="max-w-md truncate">{text}</div>
+          <div className="max-w-md truncate text-gray-700">{text}</div>
         </Tooltip>
       ),
       width: "20%",
@@ -358,7 +355,10 @@ const DepartmentPage = () => {
       dataIndex: "specialtyId",
       key: "specialtyId",
       render: (text) => (
-        <Tag color="blue" className="text-center px-3 py-1 rounded-full">
+        <Tag
+          color="cyan"
+          className="!px-3 !py-1 !text-sm !font-medium !rounded-full"
+        >
           {text}
         </Tag>
       ),
@@ -373,10 +373,10 @@ const DepartmentPage = () => {
         <div className="flex items-center space-x-2">
           <Avatar
             size="small"
-            style={{ backgroundColor: "#1890ff" }}
+            style={{ backgroundColor: "#06b6d4" }}
             icon={<UserOutlined />}
           />
-          <Text>{text}</Text>
+          <Text className="!text-gray-700">{text}</Text>
         </div>
       ),
       width: "12%",
@@ -393,27 +393,25 @@ const DepartmentPage = () => {
               checked={status === 0}
               onChange={() => handleStatusChange(record.departmentId, status)}
               size="small"
-              className="mr-2"
+              className="!mr-2 !bg-cyan-500"
               loading={loading && record.loading}
-              disabled={!isAdmin}
             />
           )}
-
           {status === 0 ? (
             <Tag
               icon={<CheckCircleOutlined />}
-              color="success"
-              className="px-2 py-1 flex items-center space-x-1 rounded-full"
+              color="cyan"
+              className="!px-2 !py-1 !rounded-full  !font-medium"
             >
-              <span>Active</span>
+              Active
             </Tag>
           ) : (
             <Tag
               icon={<CloseCircleOutlined />}
-              color="error"
-              className="px-2 py-1 flex items-center space-x-1 rounded-full"
+              color="red"
+              className="!px-2 !py-1 !rounded-full  !font-medium"
             >
-              <span>Inactive</span>
+              Inactive
             </Tag>
           )}
         </div>
@@ -440,13 +438,11 @@ const DepartmentPage = () => {
               }
               type="primary"
               size="small"
-              ghost
-              className="flex items-center"
+              className="!bg-cyan-600 hover:!bg-cyan-700 !border-none !text-white"
             >
               Edit
             </Button>
           )}
-
           <Button
             icon={<UserSwitchOutlined />}
             onClick={() =>
@@ -454,7 +450,7 @@ const DepartmentPage = () => {
             }
             type="default"
             size="small"
-            className="flex items-center text-purple-600 border-purple-300"
+            className="!text-cyan-600 !border-cyan-300 hover:!border-cyan-500 hover:!text-cyan-800"
           >
             Assign
           </Button>

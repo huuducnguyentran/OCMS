@@ -412,7 +412,7 @@ const ViewGradePage = () => {
       state: {
         gradeData: {
           gradeId: record.gradeId,
-          traineeAssignID: record.traineeAssignID,
+          traineeAssignId: record.traineeAssignId,
           subjectId: record.subjectId,
           participantScore: record.participantScore,
           assignmentScore: record.assignmentScore,
