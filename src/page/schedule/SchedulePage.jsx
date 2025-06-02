@@ -49,6 +49,21 @@ const SchedulePage = () => {
   // const [searchLoading, setSearchLoading] = useState(false);
   const searchTimeoutRef = useRef(null);
   const [columns, setColumns] = useState([]);
+  const [tableData, setTableData] = useState([]);
+
+  // Helper function to add minutes to a time string (format: HH:mm)
+  const addMinutesToTime = (time, minutes) => {
+    try {
+      const [hours, mins] = time.split(":").map(Number);
+      const totalMinutes = hours * 60 + mins + minutes;
+      const newHours = Math.floor(totalMinutes / 60) % 24;
+      const newMins = totalMinutes % 60;
+      return `${String(newHours).padStart(2, "0")}:${String(newMins).padStart(2, "0")}`;
+    } catch (error) {
+      console.error("Error in addMinutesToTime:", error);
+      return time; // Return original time if there's an error
+    }
+  };
   const [error, setError] = useState(null);
 
   // Initialize current week and generate week options when component mounts
@@ -92,15 +107,41 @@ const SchedulePage = () => {
 
   // Get start and end dates for a specific week in a year
   const getWeekDates = (weekNumber, year) => {
-    const startOfYear = new Date(year, 0, 1);
-    const daysOffset =
-      (startOfYear.getDay() > 0 ? 7 - startOfYear.getDay() : 0) +
-      (weekNumber - 1) * 7;
-    const startDate = new Date(year, 0, 1 + daysOffset);
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + 6);
+    try {
+      // Ensure valid inputs
+      const validYear = parseInt(year);
+      const validWeek = parseInt(weekNumber);
+      
+      if (isNaN(validYear) || isNaN(validWeek) || validWeek < 1 || validWeek > 53) {
+        console.error(`Invalid week or year: week=${weekNumber}, year=${year}`);
+        // Return a default week range
+        const today = new Date();
+        const startDate = new Date(today);
+        startDate.setDate(today.getDate() - today.getDay());
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+        return { start: startDate, end: endDate };
+      }
+      
+      const startOfYear = new Date(validYear, 0, 1);
+      const daysOffset =
+        (startOfYear.getDay() > 0 ? 7 - startOfYear.getDay() : 0) +
+        (validWeek - 1) * 7;
+      const startDate = new Date(validYear, 0, 1 + daysOffset);
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
 
-    return { start: startDate, end: endDate };
+      return { start: startDate, end: endDate };
+    } catch (error) {
+      console.error("Error calculating week dates:", error);
+      // Return a default week range
+      const today = new Date();
+      const startDate = new Date(today);
+      startDate.setDate(today.getDate() - today.getDay());
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+      return { start: startDate, end: endDate };
+    }
   };
 
   // Format date as DD/MM
@@ -151,15 +192,22 @@ const SchedulePage = () => {
     }
   }, [userRole, viewMode]);
   
-  // Update table when year changes
+  // Update table when year changes or when scheduleData updates
   useEffect(() => {
-    if (scheduleData.length > 0) {
-      // Regenerate the table with the filtered data for the selected year
-      setColumns(generateColumns());
-      const tableData = processScheduleData();
-      setTableData(tableData);
-    }
-  }, [currentYear]);
+    const updateTable = () => {
+      try {
+        console.log(`Processing data for year: ${currentYear}`);
+        setColumns(generateColumns());
+        const processedData = processScheduleData();
+        setTableData(Array.isArray(processedData) ? processedData : []);
+      } catch (error) {
+        console.error('Error updating table:', error);
+        setTableData([]);
+      }
+    };
+
+    updateTable();
+  }, [currentYear, scheduleData]);
 
   const fetchScheduleData = async () => {
     try {
@@ -273,7 +321,8 @@ const SchedulePage = () => {
 
   // Generate dates for current week based on selected week
   const generateWeekDates = (weekString) => {
-    if (!weekString) {
+    // Helper function to get default week dates
+    const getDefaultWeekDates = () => {
       const today = new Date();
       const monday = new Date(today);
       const day = today.getDay();
@@ -288,10 +337,13 @@ const SchedulePage = () => {
         dates.push(date);
       }
       console.log(
-        "Generated current week dates:",
+        "Generated default week dates:",
         dates.map((d) => d.toDateString())
       );
       return dates;
+    };
+    if (!weekString) {
+      return getDefaultWeekDates();
     }
 
     try {
@@ -310,14 +362,21 @@ const SchedulePage = () => {
       
       const [startDay, startMonth] = parts.map(Number);
       
-      if (isNaN(startDay) || isNaN(startMonth)) {
+      if (isNaN(startDay) || isNaN(startMonth) || startMonth < 1 || startMonth > 12 || startDay < 1 || startDay > 31) {
         console.error("Invalid date numbers:", startDay, startMonth);
         return getDefaultWeekDates();
       }
 
-      // Create date for Monday
+      // Create date for Monday using the current year from state
       const startDate = new Date(currentYear, startMonth - 1, startDay);
-      console.log("Start date from string:", startDate.toDateString());
+      
+      // Validate the date
+      if (isNaN(startDate.getTime())) {
+        console.error("Invalid date created:", startDate);
+        return getDefaultWeekDates();
+      }
+
+      console.log("Start date from string:", startDate.toDateString(), "(Year:", currentYear, ")");
 
       // Generate dates for the week
       const dates = [];
@@ -328,7 +387,7 @@ const SchedulePage = () => {
       }
 
       console.log(
-        "Generated week dates from string:",
+        `Generated week dates for ${currentYear}:`,
         dates.map((d) => d.toDateString())
       );
       return dates;
@@ -349,89 +408,114 @@ const SchedulePage = () => {
 
   // Check if a course is active on a specific date
   const isCourseActiveOnDate = (schedule, date) => {
-    if (!schedule.startDateTime || !schedule.endDateTime) {
+    if (!schedule?.startDateTime || !schedule?.endDateTime) {
       console.log("Schedule missing date range:", schedule);
       return false;
     }
 
-    // Format dates consistently
-    const startDate = new Date(schedule.startDateTime);
-    const endDate = new Date(schedule.endDateTime);
-    const checkDate = new Date(date);
+    try {
+      // Format dates consistently
+      const startDate = new Date(schedule.startDateTime);
+      const endDate = new Date(schedule.endDateTime);
+      const checkDate = new Date(date);
 
-    // Reset time components
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
-    checkDate.setHours(12, 0, 0, 0);
+      // Validate dates
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || isNaN(checkDate.getTime())) {
+        console.error("Invalid date in schedule:", { startDate, endDate, checkDate });
+        return false;
+      }
 
-    const isActive = checkDate >= startDate && checkDate <= endDate;
-    console.log(
-      `Date check: ${checkDate.toDateString()} is ${
-        isActive ? "within" : "outside"
-      } range ${startDate.toDateString()} - ${endDate.toDateString()}`
-    );
+      // Reset time components for accurate date comparison
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+      checkDate.setHours(12, 0, 0, 0);
 
-    return isActive;
+      const isActive = checkDate >= startDate && checkDate <= endDate;
+      
+      // Only log if debugging is needed - too verbose for production
+      if (process.env.NODE_ENV === 'development') {
+        console.log(
+          `Date check for ${schedule.subjectName || 'unknown'}: ${checkDate.toDateString()} is ` +
+          `${isActive ? 'within' : 'outside'} range ${startDate.toDateString()} - ${endDate.toDateString()}`
+        );
+      }
+      
+      return isActive;
+    } catch (error) {
+      console.error('Error checking course active date:', error, 'Schedule:', schedule);
+      return false;
+    }
   };
-
-  // const checkScheduleConflict = (schedule1, schedule2) => {
-  //   // Kiểm tra trùng thời gian
-  //   if (schedule1.classTime !== schedule2.classTime) return false;
-
-  //   // Kiểm tra trùng ngày
-  //   const days1 = parseDaysOfWeek(schedule1.daysOfWeek);
-  //   const days2 = parseDaysOfWeek(schedule2.daysOfWeek);
-
-  //   return days1.some((day) => days2.includes(day));
-  // };
-
-  // // Lấy danh sách unique instructor từ scheduleData
-  // const getInstructorOptions = () => {
-  //   const map = new Map();
-  //   scheduleData.forEach((item) => {
-  //     if (item.instructorID && !map.has(item.instructorID)) {
-  //       map.set(item.instructorID, true);
-  //     }
-  //   });
-  //   return Array.from(map.keys());
-  // };
 
   // Process schedule data into time slots
   const processScheduleData = () => {
-    console.log("Processing schedule data. Total items:", scheduleData.length);
+    console.log("Processing schedule data. Total items:", scheduleData?.length || 0);
 
-    let filteredData = scheduleData;
+    // If no schedule data, return empty array
+    if (!Array.isArray(scheduleData) || scheduleData.length === 0) {
+      console.log("No schedule data available");
+      return [];
+    }
 
     // Filter data based on the selected year
-    filteredData = scheduleData.filter((schedule) => {
-      if (!schedule.startDateTime) return false;
-      
-      const scheduleYear = new Date(schedule.startDateTime).getFullYear();
-      return scheduleYear === currentYear;
-    });
+    let filteredData = [];
+    try {
+      filteredData = scheduleData.filter((schedule) => {
+        try {
+          if (!schedule?.startDateTime) return false;
+          
+          // Parse the start date
+          const startDate = new Date(schedule.startDateTime);
+          if (isNaN(startDate.getTime())) {
+            console.warn("Invalid start date in schedule:", schedule.startDateTime, schedule);
+            return false;
+          }
+          
+          // Get the year from the start date
+          const scheduleYear = startDate.getFullYear();
+          
+          // Also check if the schedule is active in the current week
+          const weekDates = generateWeekDates(currentWeek);
+          const isActiveInCurrentWeek = weekDates.some(date => 
+            isCourseActiveOnDate(schedule, date)
+          );
+          
+          return scheduleYear === currentYear && isActiveInCurrentWeek;
+          
+        } catch (error) {
+          console.error("Error processing schedule item:", error, schedule);
+          return false;
+        }
+      });
+    } catch (error) {
+      console.error("Error filtering schedule data by year:", error);
+      return [];
+    }
     
     console.log(`Filtered data for year ${currentYear}:`, filteredData.length);
-
-    // Chỉ lọc theo instructor nếu là Training Staff
-    if (
-      (userRole === "TrainingStaff" || userRole === "Training staff") &&
-      selectedInstructor
-    ) {
+    
+    // If no data for selected year, return empty array
+    if (filteredData.length === 0) {
+      console.log(`No schedule data available for year ${currentYear} in the current week`);
+      return [];
+    }
+    
+    // Filter by instructor if user is Training Staff
+    if ((userRole === "TrainingStaff" || userRole === "Training staff") && selectedInstructor) {
       filteredData = filteredData.filter(
         (sch) => sch.instructorName === selectedInstructor
       );
     }
 
-    if (!Array.isArray(filteredData) || filteredData.length === 0) {
-      console.log("No schedule data to process");
+    if (filteredData.length === 0) {
+      console.log("No schedule data to process after filtering");
       return [];
     }
 
     // Get unique time slots
     const uniqueTimeSlots = [
-      ...new Set(filteredData.map((item) => item.classTime)),
+      ...new Set(filteredData.map((item) => item.classTime).filter(Boolean))
     ]
-      .filter(Boolean)
       .map((time) => time.substring(0, 5))
       .sort();
 
@@ -450,7 +534,7 @@ const SchedulePage = () => {
         "Thursday",
         "Friday",
         "Saturday",
-        "Sunday",
+        "Sunday"
       ];
 
       // Get the dates for the current week
@@ -566,14 +650,13 @@ const SchedulePage = () => {
                     </div>
                   </Tooltip>
                 </div>
-
                 <div className="h-1 w-0 group-hover:w-full bg-cyan-500 mt-3 transition-all duration-300 rounded-full"></div>
               </div>
             </div>
           );
         } else {
           row[day] = (
-            <div className="h-full flex items-center justify-center">
+            <div key={`empty-${day}-${timeIndex}`} className="h-full flex items-center justify-center">
               <div
                 className="text-center text-gray-400 p-4 bg-gray-50/50 rounded-xl border border-gray-100 
                 hover:bg-gray-100/50 transition-colors"
@@ -590,17 +673,7 @@ const SchedulePage = () => {
     });
   };
 
-  // Helper function to add minutes to time
-  const addMinutesToTime = (time, minutes) => {
-    const [hours, mins] = time.split(":").map(Number);
-    const totalMinutes = hours * 60 + mins + minutes;
-    const newHours = Math.floor(totalMinutes / 60);
-    const newMins = totalMinutes % 60;
-    return `${String(newHours).padStart(2, "0")}:${String(newMins).padStart(
-      2,
-      "0"
-    )}`;
-  };
+
 
   // Generate column headers with dates
   const generateColumns = () => {
@@ -671,7 +744,7 @@ const SchedulePage = () => {
       // Also regenerate the table data when week changes
       if (scheduleData.length > 0) {
         const tableData = processScheduleData();
-        setTableData(tableData);
+        tableData(tableData);
       }
     } catch (error) {
       console.error("Error updating columns:", error);
@@ -835,21 +908,38 @@ const SchedulePage = () => {
               <Select
                 value={currentYear}
                 onChange={(value) => {
-                  setCurrentYear(value);
-                  generateWeekOptions(value);
-                  
-                  // When year changes, update the current week for that year
-                  const newDate = new Date(value, 5, 2); // June 2 of selected year
-                  const startOfYear = new Date(value, 0, 1);
-                  const weekNumber = Math.ceil(
-                    ((newDate - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7
-                  );
-                  const currentWeekDates = getWeekDates(weekNumber, value);
-                  setCurrentWeek(
-                    `${formatDateShort(currentWeekDates.start)} To ${formatDateShort(
-                      currentWeekDates.end
-                    )}`
-                  );
+                  try {
+                    console.log(`Changing year to: ${value}`);
+                    setCurrentYear(value);
+                    generateWeekOptions(value);
+                    
+                    // When year changes, update the current week for that year
+                    // Use a safe date in the middle of the year
+                    const newDate = new Date(value, 5, 15); // June 15 of selected year
+                    const startOfYear = new Date(value, 0, 1);
+                    const weekNumber = Math.ceil(
+                      ((newDate - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7
+                    );
+                    
+                    console.log(`Calculated week number: ${weekNumber} for year ${value}`);
+                    const currentWeekDates = getWeekDates(weekNumber, value);
+                    
+                    if (currentWeekDates && currentWeekDates.start && currentWeekDates.end) {
+                      setCurrentWeek(
+                        `${formatDateShort(currentWeekDates.start)} To ${formatDateShort(
+                          currentWeekDates.end
+                        )}`
+                      );
+                    } else {
+                      console.error('Invalid week dates returned');
+                      // Set a default week
+                      setCurrentWeek('01/01 To 07/01');
+                    }
+                  } catch (error) {
+                    console.error('Error changing year:', error);
+                    // Set a default week
+                    setCurrentWeek('01/01 To 07/01');
+                  }
                 }}
                 size="large"
                 className="w-full"
