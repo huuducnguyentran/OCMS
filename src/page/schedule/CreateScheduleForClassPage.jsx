@@ -979,8 +979,8 @@ const CreateScheduleForClassPage = () => {
                                     <Col xs={24} sm={12}><Form.Item name="room" label="Room/Platform" rules={[{ required: true}]}><Select placeholder="Select">{Object.entries(RoomEnum).map(([n,v])=><Option key={v} value={v}>{n}</Option>)}</Select></Form.Item></Col>
                                 </Row>
                                 <Row gutter={16}>
-                                    <Col xs={24} sm={12}><Form.Item name="startDate" label="Start Date" rules={[{ required: true}]}><DatePicker className="w-full" format="YYYY-MM-DD" disabledDate={disabledDate}/></Form.Item></Col>
-                                    <Col xs={24} sm={12}><Form.Item name="endDate" label="End Date" rules={[{ required: true}, ({getFieldValue})=>({validator(_,v){if(!v||!getFieldValue('startDate'))return Promise.resolve(); if(v.isBefore(getFieldValue('startDate')))return Promise.reject(new Error('Must be after start')); return Promise.resolve();}})]}><DatePicker className="w-full" format="YYYY-MM-DD" disabledDate={disabledDate}/></Form.Item></Col>
+                                    <Col xs={24} sm={12}><Form.Item name="startDate" label="Start Date" rules={[{ required: true}]}><DatePicker className="w-full" format="YYYY-MM-DD HH:mm" showTime disabledDate={disabledDate}/></Form.Item></Col>
+                                    <Col xs={24} sm={12}><Form.Item name="endDate" label="End Date" rules={[{ required: true}, ({getFieldValue})=>({validator(_,v){if(!v||!getFieldValue('startDate'))return Promise.resolve(); if(v.isBefore(getFieldValue('startDate')))return Promise.reject(new Error('Must be after start')); return Promise.resolve();}})]}><DatePicker className="w-full" format="YYYY-MM-DD HH:mm" showTime disabledDate={disabledDate}/></Form.Item></Col>
                                 </Row>
                                 <Row gutter={16}>
                                     <Col xs={24} sm={12}>

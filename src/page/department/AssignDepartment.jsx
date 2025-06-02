@@ -283,7 +283,7 @@ const AssignDepartment = () => {
   const columns = [
     {
       title: () => (
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div className="flex items-center space-x-2">
           <Checkbox
             checked={
               users.length > 0 &&
@@ -304,7 +304,6 @@ const AssignDepartment = () => {
             onChange={(e) => {
               const checked = e.target.checked;
               if (checked) {
-                // Select all
                 const availableUsers = users
                   .filter((u) => !u.departmentId)
                   .map((u) => u.userId);
@@ -314,17 +313,16 @@ const AssignDepartment = () => {
                 setSelectedUsers(availableUsers);
                 setSelectedUsersToRemove(assignedUsers);
               } else {
-                // Deselect all
                 setSelectedUsers([]);
                 setSelectedUsersToRemove([]);
               }
             }}
           />
-          <span style={{ marginLeft: "8px" }}>Select</span>
+          <span className="text-cyan-700 font-medium">Select</span>
         </div>
       ),
       key: "select",
-      width: "5%",
+      width: "6%",
       render: (_, record) => (
         <Checkbox
           checked={
@@ -333,33 +331,19 @@ const AssignDepartment = () => {
               : selectedUsers.includes(record.userId)
           }
           onChange={(e) => {
-            if (record.departmentId) {
-              // Only allow removal if department matches
-              if (record.departmentId !== departmentId) {
-                message.warning(
-                  "Cannot remove user from a different department"
-                );
-                return;
-              }
-
-              // Handle for remove
-              if (e.target.checked) {
-                setSelectedUsersToRemove((prev) => [...prev, record.userId]);
-              } else {
-                setSelectedUsersToRemove((prev) =>
-                  prev.filter((id) => id !== record.userId)
-                );
-              }
-            } else {
-              // Handle for assign
-              if (e.target.checked) {
-                setSelectedUsers((prev) => [...prev, record.userId]);
-              } else {
-                setSelectedUsers((prev) =>
-                  prev.filter((id) => id !== record.userId)
-                );
-              }
+            if (record.departmentId && record.departmentId !== departmentId) {
+              message.warning("Cannot remove user from a different department");
+              return;
             }
+            const setFunc = record.departmentId
+              ? setSelectedUsersToRemove
+              : setSelectedUsers;
+
+            setFunc((prev) =>
+              e.target.checked
+                ? [...prev, record.userId]
+                : prev.filter((id) => id !== record.userId)
+            );
           }}
           disabled={record.departmentId && record.departmentId !== departmentId}
         />
@@ -371,6 +355,7 @@ const AssignDepartment = () => {
       key: "userId",
       width: "12%",
       sorter: (a, b) => a.userId.localeCompare(b.userId),
+      render: (text) => <span className="text-gray-700">{text}</span>,
     },
     {
       title: "Name",
@@ -378,6 +363,9 @@ const AssignDepartment = () => {
       key: "fullName",
       width: "18%",
       sorter: (a, b) => a.fullName.localeCompare(b.fullName),
+      render: (text) => (
+        <span className="font-semibold text-cyan-800">{text}</span>
+      ),
     },
     {
       title: "Email",
@@ -385,6 +373,7 @@ const AssignDepartment = () => {
       key: "email",
       width: "22%",
       sorter: (a, b) => a.email.localeCompare(b.email),
+      render: (text) => <span className="text-gray-600">{text}</span>,
     },
     {
       title: "Role",
@@ -392,7 +381,11 @@ const AssignDepartment = () => {
       key: "roleName",
       width: "12%",
       sorter: (a, b) => a.roleName.localeCompare(b.roleName),
-      render: (roleName) => <Tag color="purple">{roleName}</Tag>,
+      render: (roleName) => (
+        <Tag color="cyan" className="font-medium !text-cyan-700">
+          {roleName}
+        </Tag>
+      ),
     },
     {
       title: "Specialty",
@@ -401,10 +394,13 @@ const AssignDepartment = () => {
       width: "12%",
       sorter: (a, b) => a.specialtyId.localeCompare(b.specialtyId),
       render: (specialtyId) => (
-        <Tag color={specialtyId === department?.specialtyId ? "green" : "red"}>
+        <Tag
+          color={specialtyId === department?.specialtyId ? "green" : "red"}
+          className="flex items-center"
+        >
           {specialtyId}
           {specialtyId === department?.specialtyId && (
-            <CheckCircleOutlined style={{ marginLeft: 8 }} />
+            <CheckCircleOutlined className="ml-1" />
           )}
         </Tag>
       ),
@@ -415,7 +411,16 @@ const AssignDepartment = () => {
       width: "10%",
       sorter: (a, b) => (a.departmentId ? 1 : 0) - (b.departmentId ? 1 : 0),
       render: (_, record) => (
-        <Tag color={record.departmentId ? "blue" : "orange"}>
+        <Tag
+          color={
+            record.departmentId
+              ? record.departmentId === departmentId
+                ? "blue"
+                : "geekblue"
+              : "orange"
+          }
+          className="text-xs font-semibold"
+        >
           {record.departmentId
             ? record.departmentId === departmentId
               ? "Assigned"
@@ -433,6 +438,7 @@ const AssignDepartment = () => {
           {!record.departmentId ? (
             <Button
               type="primary"
+              className="!bg-cyan-600 hover:!bg-cyan-700"
               onClick={() => {
                 form.setFieldsValue({ userId: record.userId });
                 handleUserSelect(record.userId);
@@ -457,7 +463,12 @@ const AssignDepartment = () => {
             </Popconfirm>
           ) : (
             <Tooltip title="User belongs to another department">
-              <Button disabled icon={<InfoCircleOutlined />} size="middle">
+              <Button
+                disabled
+                icon={<InfoCircleOutlined />}
+                size="middle"
+                className="!text-gray-400 !border-gray-300"
+              >
                 Cannot Remove
               </Button>
             </Tooltip>
@@ -493,7 +504,11 @@ const AssignDepartment = () => {
                     </Tag>
                   )}
                 </Space>
-                <Button type="link" onClick={() => navigate("/department")}>
+                <Button
+                  type="link"
+                  onClick={() => navigate("/department")}
+                  className="!text-cyan-600 !border !border-cyan-400 hover:!border-cyan-600 hover:!text-cyan-600"
+                >
                   Back to Departments
                 </Button>
               </div>
@@ -501,7 +516,11 @@ const AssignDepartment = () => {
               {/* Department Info */}
               {department && (
                 <Alert
-                  message="Department Information"
+                  message={
+                    <span className="text-cyan-700 font-medium">
+                      Department Information
+                    </span>
+                  }
                   description={
                     <Space direction="vertical">
                       <Text>
@@ -522,6 +541,7 @@ const AssignDepartment = () => {
                   }
                   type="info"
                   showIcon
+                  className="!border-l-4 !border-cyan-500 !bg-cyan-50"
                 />
               )}
 
@@ -571,7 +591,7 @@ const AssignDepartment = () => {
                     loading={loading}
                     disabled={!selectedUser}
                     size="large"
-                    className="bg-cyan-600 hover:bg-cyan-700 border-cyan-600 text-white w-48 h-10"
+                    className="!bg-cyan-600 hover:!bg-cyan-700 !border-cyan-600 !text-white !w-48 !h-10"
                   >
                     Assign User
                   </Button>
@@ -581,7 +601,7 @@ const AssignDepartment = () => {
               {/* Users Table */}
               <div className="mt-4">
                 <div className="flex justify-between items-center mb-4">
-                  <Title level={4} className="text-cyan-700">
+                  <Title level={4} className="!text-cyan-700">
                     Available Users (Excluding AOC Manager)
                   </Title>
                   <Space>
@@ -620,19 +640,19 @@ const AssignDepartment = () => {
                     showSizeChanger: true,
                     pageSizeOptions: ["5", "10", "20", "50"],
                   }}
-                  className="shadow-lg rounded-xl overflow-hidden"
+                  className="!shadow-lg !rounded-xl !overflow-hidden"
                   scroll={{ x: 1200 }}
                   rowClassName={(record) => {
                     if (record.departmentId) {
                       if (record.departmentId !== departmentId) {
-                        return "bg-gray-200";
+                        return "!bg-gray-200";
                       }
                       return selectedUsersToRemove.includes(record.userId)
-                        ? "bg-red-50"
-                        : "bg-cyan-50";
+                        ? "!bg-red-50"
+                        : "!bg-cyan-50";
                     }
                     return selectedUsers.includes(record.userId)
-                      ? "bg-cyan-100"
+                      ? "!bg-cyan-100"
                       : "";
                   }}
                 />

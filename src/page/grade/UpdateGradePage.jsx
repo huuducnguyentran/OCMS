@@ -48,7 +48,7 @@ const UpdateGradePage = () => {
     }
 
     const formattedData = {
-      traineeAssignID: gradeData.traineeAssignID,
+      traineeAssignId: gradeData.traineeAssignId,
       subjectId: gradeData.subjectId,
       participantScore: parseFloat(gradeData.participantScore) || 0,
       assignmentScore: parseFloat(gradeData.assignmentScore) || 0,
@@ -98,12 +98,12 @@ const UpdateGradePage = () => {
   const onFinish = async (values) => {
     try {
       setLoading(true);
-      if (!id || !gradeData?.traineeAssignID) {
+      if (!id || !gradeData?.traineeAssignId) {
         throw new Error("Required IDs are missing");
       }
 
       const updateData = {
-        traineeAssignID: gradeData.traineeAssignID,
+        traineeAssignId: gradeData.traineeAssignId,
         subjectId: gradeData.subjectId,
         participantScore: Number(values.participantScore),
         assignmentScore: Number(values.assignmentScore),
@@ -112,13 +112,15 @@ const UpdateGradePage = () => {
         remarks: values.remarks || "",
       };
 
-      console.log("Updating grade:", { gradeId: id, data: updateData });
-
-      await gradeServices.updateGrade(id, updateData);
-      message.success("Grade updated successfully");
+      const response = await gradeServices.updateGrade(id, updateData);
+      message.success(response.message || "Grade updated successfully");
       navigate("/grade-view");
     } catch (error) {
-      message.error(JSON.stringify(error, null, 2));
+      const errMsg =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update grade";
+      message.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -170,7 +172,7 @@ const UpdateGradePage = () => {
       </div>
 
       <Card
-        className="max-w-3xl mx-auto shadow-xl border border-cyan-200 rounded-lg"
+        className="max-w-3xl !mx-auto shadow-xl border border-cyan-400 rounded-lg"
         bordered={false}
       >
         <Form
@@ -182,14 +184,14 @@ const UpdateGradePage = () => {
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Form.Item
-              name="traineeAssignID"
+              name="traineeAssignId"
               label="Trainee Assign ID"
               className="text-cyan-700 font-medium"
             >
               <Input
                 disabled
-                prefix={<BookOutlined className="text-cyan-400" />}
-                className="border-cyan-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-400 rounded-md"
+                prefix={<BookOutlined className="!text-cyan-400" />}
+                className="!border-cyan-400 focus:!border-cyan-600 focus:!ring-1 focus:!ring-cyan-400 rounded-md"
               />
             </Form.Item>
 
@@ -200,8 +202,8 @@ const UpdateGradePage = () => {
             >
               <Input
                 disabled
-                prefix={<FileExcelOutlined className="text-cyan-400" />}
-                className="border-cyan-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-400 rounded-md"
+                prefix={<FileExcelOutlined className="!text-cyan-400" />}
+                className="!border-cyan-400 focus:!border-cyan-600 focus:!ring-1 focus:!ring-cyan-400 rounded-md"
               />
             </Form.Item>
           </div>
@@ -222,7 +224,7 @@ const UpdateGradePage = () => {
               className="text-cyan-700 font-medium"
             >
               <InputNumber
-                className="w-full border-cyan-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-400 rounded-md"
+                className="!w-full !border-cyan-400 focus:!border-cyan-600 focus:!ring-1 focus:!ring-cyan-400 rounded-md"
                 step={0.1}
                 precision={1}
                 placeholder="Enter participant score"
@@ -241,10 +243,10 @@ const UpdateGradePage = () => {
                   message: "Score must be between 0 and 10!",
                 },
               ]}
-              className="text-cyan-700 font-medium"
+              className="!text-cyan-700 font-medium"
             >
               <InputNumber
-                className="w-full border-cyan-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-400 rounded-md"
+                className="!w-full !border-cyan-400 focus:!border-cyan-600 focus:!ring-1 focus:!ring-cyan-400 rounded-md"
                 step={0.1}
                 precision={1}
                 placeholder="Enter assignment score"
@@ -280,7 +282,7 @@ const UpdateGradePage = () => {
               className="text-cyan-700 font-medium"
             >
               <InputNumber
-                className="w-full border-cyan-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-400 rounded-md"
+                className="!w-full !border-cyan-400 focus:!border-cyan-600 focus:!ring-1 focus:!ring-cyan-400 rounded-md"
                 step={0.1}
                 precision={1}
                 placeholder="Enter final exam score"
@@ -295,7 +297,7 @@ const UpdateGradePage = () => {
                 <span>
                   Resit
                   {!resitEnabled && (
-                    <span className="text-cyan-400 ml-2 text-sm font-normal">
+                    <span className="text-cyan-600 ml-2 text-sm font-normal">
                       (Disabled when Final Exam &gt; 0)
                     </span>
                   )}
@@ -316,7 +318,7 @@ const UpdateGradePage = () => {
               className="text-cyan-700 font-medium"
             >
               <InputNumber
-                className="w-full border-cyan-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-400 rounded-md"
+                className="!w-full !border-cyan-400 focus:!border-cyan-600 focus:!ring-1 focus:!ring-cyan-400 rounded-md"
                 step={0.1}
                 precision={1}
                 placeholder="Enter resit score"
@@ -329,12 +331,12 @@ const UpdateGradePage = () => {
           <Form.Item
             name="remarks"
             label="Remarks"
-            className="text-cyan-700 font-medium"
+            className="!text-cyan-700 !font-medium"
           >
             <Input.TextArea
               rows={4}
               placeholder="Enter remarks (optional)"
-              className="w-full border-cyan-300 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-400 rounded-md resize-none"
+              className="!w-full !border-cyan-400 focus:!border-cyan-600 focus:!ring-1 focus:!ring-cyan-400 resize-none"
             />
           </Form.Item>
 
@@ -342,7 +344,7 @@ const UpdateGradePage = () => {
             <div className="flex justify-end space-x-4">
               <Button
                 onClick={() => navigate("/grade-view")}
-                className="min-w-[100px] border border-cyan-400 text-cyan-700 hover:bg-cyan-100 hover:border-cyan-600"
+                className="!min-w-[100px] !border !border-cyan-400 !text-cyan-700 hover:!bg-cyan-100 hover:!border-cyan-600"
               >
                 Cancel
               </Button>
@@ -350,7 +352,7 @@ const UpdateGradePage = () => {
                 type="primary"
                 htmlType="submit"
                 loading={loading}
-                className="min-w-[100px] bg-cyan-600 hover:bg-cyan-700 border-cyan-600"
+                className="!min-w-[100px] !bg-cyan-600 hover:!bg-cyan-700 !border !border-cyan-600"
               >
                 Update
               </Button>

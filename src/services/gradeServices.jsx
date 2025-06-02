@@ -46,17 +46,33 @@ export const gradeServices = {
     }
   },
 
+  getGradeByGradeId: async (Id) => {
+    try {
+      const response = await axiosInstance.get(
+        `${API.GET_GRADES_BY_GRADE_ID}/${Id}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("API Error:", error.response?.data);
+      throw error.response?.data?.message || "Failed to fetch trainee grades";
+    }
+  },
+
   updateGrade: async (gradeId, gradeData) => {
     try {
-      // Sử dụng gradeId trong URL và giữ nguyên payload
       const response = await axiosInstance.put(
         `${API.UPDATE_GRADE}/${gradeId}`,
         gradeData
       );
       return response.data;
     } catch (error) {
-      console.error("API Error:", error.response?.data);
-      throw error.response?.data?.message || "Failed to update grade";
+      console.error("Full API error:", error); // <-- Log full error object here
+      // fallback error message
+      throw (
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update grade"
+      );
     }
   },
 
