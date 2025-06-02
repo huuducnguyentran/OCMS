@@ -39,7 +39,6 @@ import AssignedTraineeDetailPage from "./page/assigned_trainee/AssignedTraineeDe
 import AssignedTraineeCoursePage from "./page/assigned_trainee/AssignedTraineeCoursePage";
 import SendRequestPage from "./page/request/SendRequestPage";
 import UpdateSubjectPage from "./page/subject/UpdateSubjectPage";
-import CreateSchedulePage from "./page/schedule/CreateSchedulePage";
 import NotificationPage from "./page/user/NotificationPage";
 import ImportCertificatePage from "./page/certificate/ImportCertificatePage";
 import CertificateTemplateListPage from "./page/certificate/CertificateTemplatePage";
@@ -144,10 +143,6 @@ function App() {
                           />
                           {/*  Schedule Management */}
                           <Route path="/schedule" element={<SchedulePage />} />
-                          <Route
-                            path="/schedule/create"
-                            element={<CreateSchedulePage />}
-                          />
                           <Route
                             path="/schedule/edit/:id"
                             element={<EditSchedule />}

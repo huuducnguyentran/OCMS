@@ -150,6 +150,16 @@ const SchedulePage = () => {
       fetchScheduleData();
     }
   }, [userRole, viewMode]);
+  
+  // Update table when year changes
+  useEffect(() => {
+    if (scheduleData.length > 0) {
+      // Regenerate the table with the filtered data for the selected year
+      setColumns(generateColumns());
+      const tableData = processScheduleData();
+      setTableData(tableData);
+    }
+  }, [currentYear]);
 
   const fetchScheduleData = async () => {
     try {
@@ -284,27 +294,48 @@ const SchedulePage = () => {
       return dates;
     }
 
-    // Parse week string (format: "DD/MM To DD/MM")
-    const [startStr] = weekString.split(" To ");
-    const [startDay, startMonth] = startStr.split("/").map(Number);
+    try {
+      // Parse week string (format: "DD/MM To DD/MM")
+      const [startStr] = weekString.split(" To ");
+      if (!startStr) {
+        console.error("Invalid week string format:", weekString);
+        return getDefaultWeekDates();
+      }
+      
+      const parts = startStr.split("/");
+      if (parts.length !== 2) {
+        console.error("Invalid date format in week string:", startStr);
+        return getDefaultWeekDates();
+      }
+      
+      const [startDay, startMonth] = parts.map(Number);
+      
+      if (isNaN(startDay) || isNaN(startMonth)) {
+        console.error("Invalid date numbers:", startDay, startMonth);
+        return getDefaultWeekDates();
+      }
 
-    // Create date for Monday
-    const startDate = new Date(currentYear, startMonth - 1, startDay);
-    console.log("Start date from string:", startDate.toDateString());
+      // Create date for Monday
+      const startDate = new Date(currentYear, startMonth - 1, startDay);
+      console.log("Start date from string:", startDate.toDateString());
 
-    // Generate dates for the week
-    const dates = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i);
-      dates.push(date);
+      // Generate dates for the week
+      const dates = [];
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
+        dates.push(date);
+      }
+
+      console.log(
+        "Generated week dates from string:",
+        dates.map((d) => d.toDateString())
+      );
+      return dates;
+    } catch (error) {
+      console.error("Error in generateWeekDates:", error);
+      return getDefaultWeekDates();
     }
-
-    console.log(
-      "Generated week dates from string:",
-      dates.map((d) => d.toDateString())
-    );
-    return dates;
   };
 
   // Get formatted date string (DD/MM)
@@ -371,12 +402,22 @@ const SchedulePage = () => {
 
     let filteredData = scheduleData;
 
+    // Filter data based on the selected year
+    filteredData = scheduleData.filter((schedule) => {
+      if (!schedule.startDateTime) return false;
+      
+      const scheduleYear = new Date(schedule.startDateTime).getFullYear();
+      return scheduleYear === currentYear;
+    });
+    
+    console.log(`Filtered data for year ${currentYear}:`, filteredData.length);
+
     // Chỉ lọc theo instructor nếu là Training Staff
     if (
       (userRole === "TrainingStaff" || userRole === "Training staff") &&
       selectedInstructor
     ) {
-      filteredData = scheduleData.filter(
+      filteredData = filteredData.filter(
         (sch) => sch.instructorName === selectedInstructor
       );
     }
@@ -412,21 +453,40 @@ const SchedulePage = () => {
         "Sunday",
       ];
 
+      // Get the dates for the current week
+      let weekDates;
+      try {
+        weekDates = generateWeekDates(currentWeek);
+      } catch (error) {
+        console.error("Error generating week dates:", error);
+        weekDates = getDefaultWeekDates();
+      }
+      
       daysOfWeek.forEach((day, dayIndex) => {
+        // Get the date for this day in the current week
+        const currentWeekDate = weekDates[dayIndex];
+        
         const matchingSchedules = filteredData.filter((schedule) => {
+          // Check if schedule time matches
           const scheduleTime = schedule.classTime
             ? schedule.classTime.substring(0, 5)
             : "";
+          
+          // Check if day of week matches
           const scheduleDays = schedule.daysOfWeek
             ? schedule.daysOfWeek.split(",").map((d) => d.trim())
             : [];
-          return scheduleDays.includes(day) && scheduleTime === timeSlot;
+          
+          // Check if the current date falls within the schedule's start and end dates
+          const isWithinDateRange = isCourseActiveOnDate(schedule, currentWeekDate);
+          
+          return scheduleDays.includes(day) && scheduleTime === timeSlot && isWithinDateRange;
         });
 
         if (matchingSchedules.length > 0) {
           const schedule = matchingSchedules[0];
 
-          // Kiểm tra ngày hiện tại có nằm trong khoảng startDateTime và endDateTime không
+          // Check if today's date is within the schedule's date range
           const currentDate = new Date();
           const startDate = new Date(schedule.startDateTime);
           const endDate = new Date(schedule.endDateTime);
@@ -544,7 +604,13 @@ const SchedulePage = () => {
 
   // Generate column headers with dates
   const generateColumns = () => {
-    const weekDates = generateWeekDates(currentWeek);
+    let weekDates;
+    try {
+      weekDates = generateWeekDates(currentWeek);
+    } catch (error) {
+      console.error("Error generating week dates for columns:", error);
+      weekDates = getDefaultWeekDates();
+    }
 
     const columns = [
       {
@@ -562,8 +628,15 @@ const SchedulePage = () => {
         "Friday",
         "Saturday",
         "Sunday",
-      ].map((day) => ({
-        title: day,
+      ].map((day, index) => ({
+        title: (
+          <div>
+            <div>{day}</div>
+            <div className="text-xs text-gray-500">
+              {weekDates[index] ? getFormattedDate(weekDates[index]) : ""}
+            </div>
+          </div>
+        ),
         dataIndex: day,
         key: day,
         width: 200,
@@ -573,10 +646,37 @@ const SchedulePage = () => {
     return columns;
   };
 
-  // Update columns when currentWeek changes
+  // Get default week dates (current week)
+  const getDefaultWeekDates = () => {
+    const today = new Date();
+    const monday = new Date(today);
+    const day = today.getDay();
+    // Adjust to get Monday (adjust 0 (Sunday) to be 6, otherwise subtract 1)
+    const daysFromMonday = day === 0 ? 6 : day - 1;
+    monday.setDate(today.getDate() - daysFromMonday);
+
+    const dates = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
+      dates.push(date);
+    }
+    return dates;
+  };
+
+  // Update columns when currentWeek or scheduleData changes
   useEffect(() => {
-    setColumns(generateColumns());
-  }, [currentWeek]);
+    try {
+      setColumns(generateColumns());
+      // Also regenerate the table data when week changes
+      if (scheduleData.length > 0) {
+        const tableData = processScheduleData();
+        setTableData(tableData);
+      }
+    } catch (error) {
+      console.error("Error updating columns:", error);
+    }
+  }, [currentWeek, scheduleData]);
 
   // View selector for Training Staff
   const renderViewSelector = () => {
@@ -737,6 +837,19 @@ const SchedulePage = () => {
                 onChange={(value) => {
                   setCurrentYear(value);
                   generateWeekOptions(value);
+                  
+                  // When year changes, update the current week for that year
+                  const newDate = new Date(value, 5, 2); // June 2 of selected year
+                  const startOfYear = new Date(value, 0, 1);
+                  const weekNumber = Math.ceil(
+                    ((newDate - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7
+                  );
+                  const currentWeekDates = getWeekDates(weekNumber, value);
+                  setCurrentWeek(
+                    `${formatDateShort(currentWeekDates.start)} To ${formatDateShort(
+                      currentWeekDates.end
+                    )}`
+                  );
                 }}
                 size="large"
                 className="w-full"
