@@ -24,10 +24,36 @@ import { trainingScheduleService } from "../../services/trainingScheduleService"
 import dayjs from "dayjs";
 import axiosInstance from "../../../utils/axiosInstance";
 import { API } from "../../../api/apiUrl";
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(isSameOrBefore);
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault(dayjs.tz.guess());
 
 const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
+
+// Enums for Location and Room
+const LocationEnum = {
+  SectionA: 0,
+  SectionB: 1,
+};
+
+const RoomEnum = {
+  R001: 0, R002: 1, R003: 2, R004: 3, R005: 4, R006: 5, R007: 6, R008: 7, R009: 8,
+  R101: 9, R102: 10, R103: 11, R104: 12, R105: 13, R106: 14, R107: 15, R108: 16, R109: 17,
+  R201: 18, R202: 19, R203: 20, R204: 21, R205: 22, R206: 23, R207: 24, R208: 25, R209: 26,
+  R301: 27, R302: 28, R303: 29, R304: 30, R305: 31, R306: 32, R307: 33, R308: 34, R309: 35,
+  R401: 36, R402: 37, R403: 38, R404: 39, R405: 40, R406: 41, R407: 42, R408: 43, R409: 44,
+  R501: 45, R502: 46, R503: 47, R504: 48, R505: 49, R506: 50, R507: 51, R508: 52, R509: 53,
+};
+
+const getLocationName = (value) => Object.keys(LocationEnum).find(key => LocationEnum[key] === value);
+const getRoomName = (value) => Object.keys(RoomEnum).find(key => RoomEnum[key] === value);
 
 const EditSchedule = () => {
   const [form] = Form.useForm();
@@ -38,7 +64,6 @@ const EditSchedule = () => {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [courseSubjectSpecialties, setCourseSubjectSpecialties] = useState([]);
   const [instructors, setInstructors] = useState([]);
 
   // Fetch additional data
@@ -56,17 +81,14 @@ const EditSchedule = () => {
         }
 
         // Fetch instructors và course subject specialties
-        const [instructorsRes, courseSubjectSpecialtiesRes] = await Promise.all(
-          [
-            axiosInstance.get(API.GET_ALL_USER, {
-              headers: {
-                Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-              },
-              params: { roleName: "Instructor" },
-            }),
-            learningMatrixService.getAllCourseSubjectSpecialties(),
-          ]
-        );
+        const [instructorsRes] = await Promise.all([
+          axiosInstance.get(API.GET_ALL_USER, {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+            },
+            params: { roleName: "Instructor" },
+          })
+        ]);
 
         // Process instructors data giống như trong CreateSchedulePage
         if (instructorsRes.data && instructorsRes.data.users) {
@@ -103,11 +125,6 @@ const EditSchedule = () => {
           setInstructors([]);
         }
 
-        // Process course subject specialties data
-        if (courseSubjectSpecialtiesRes && courseSubjectSpecialtiesRes.data) {
-          setCourseSubjectSpecialties(courseSubjectSpecialtiesRes.data);
-        }
-
         // Set form values từ scheduleData
         if (scheduleData) {
           // Convert daysOfWeek string thành mảng số
@@ -142,7 +159,10 @@ const EditSchedule = () => {
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        message.error("Unable to load schedule data");
+        message.error(
+          "Unable to load schedule data: " + 
+          (error.response?.data?.message || error.message || "Unknown error")
+        );
         // Fallback data for instructors in case of error
         setInstructors([]);
       } finally {
@@ -157,22 +177,16 @@ const EditSchedule = () => {
     try {
       setSubmitting(true);
 
-      // Format daysOfWeek thành mảng số nguyên
-      const daysOfWeekNumbers = values.daysOfWeek.map((day) => parseInt(day));
-
       const formattedData = {
-        scheduleID: id,
-        courseSubjectSpecialtyId: values.courseSubjectSpecialtyId,
-        instructorID: values.instructorID,
+        classSubjectId: initialSchedule?.classSubjectId,
         location: values.location,
         room: values.room,
         notes: values.notes || "",
-        daysOfWeek: daysOfWeekNumbers,
+        daysOfWeek: values.daysOfWeek,
         classTime: values.classTime.format("HH:mm:ss"),
         subjectPeriod: values.subjectPeriod.format("HH:mm:ss"),
         startDay: values.startDateTime.format("YYYY-MM-DDTHH:mm:ss.SSS"),
         endDay: values.endDateTime.format("YYYY-MM-DDTHH:mm:ss.SSS"),
-        status: initialSchedule?.status || "Pending",
       };
 
       const response = await axiosInstance.put(
@@ -225,7 +239,38 @@ const EditSchedule = () => {
     }
   };
 
-  // Cập nhật options cho daysOfWeek để sử dụng số thay vì chuỗi
+  const getDisabledHours = () => {
+    const hours = [];
+    for (let i = 0; i < 24; i++) {
+      if (i < 7 || i > 20) {
+        hours.push(i);
+      }
+    }
+    return hours;
+  };
+
+  const getDisabledMinutes = (selectedHour) => {
+    if (selectedHour === null || selectedHour === undefined) return [];
+    const minutes = [];
+    for (let i = 1; i < 60; i++) {
+      minutes.push(i);
+    }
+    return minutes;
+  };
+  
+  const getDisabledSeconds = (selectedHour, selectedMinute) => {
+     if (selectedHour === null || selectedMinute === null) return [];
+     const seconds = [];
+     for (let i = 1; i < 60; i++) {
+       seconds.push(i);
+     }
+     return seconds;
+  };
+
+  const disabledDate = (current) => {
+    return current && current < dayjs().startOf("day");
+  };
+
   const daysOfWeekOptions = [
     { label: "Monday", value: 1 },
     { label: "Tuesday", value: 2 },
@@ -286,68 +331,6 @@ const EditSchedule = () => {
                 </Col>
               </Row>
 
-              {/* Editable Fields */}
-              <Row gutter={16}>
-                <Col span={24}>
-                  <Form.Item
-                    name="courseSubjectSpecialtyId"
-                    label="Course Subject Specialty"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Please select a course subject specialty",
-                      },
-                    ]}
-                  >
-                    <Select
-                      placeholder="Select course subject specialty"
-                      loading={loading}
-                      showSearch
-                      optionFilterProp="children"
-                    >
-                      {courseSubjectSpecialties.map((item) => (
-                        <Option key={item.id} value={item.id}>
-                          {item.course?.courseName || item.courseId} /{" "}
-                          {item.subject?.subjectName || item.subjectId} /{" "}
-                          {item.specialty?.specialtyId}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-              </Row>
-
-              <Row gutter={16}>
-                <Col span={24}>
-                  <Form.Item
-                    name="instructorID"
-                    label="Instructor"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Please select an instructor",
-                      },
-                    ]}
-                  >
-                    <Select
-                      placeholder="Select instructor"
-                      loading={loading}
-                      showSearch
-                      optionFilterProp="children"
-                    >
-                      {instructors.map((instructor) => (
-                        <Option key={instructor.id} value={instructor.id}>
-                          {instructor.name}{" "}
-                          {instructor.specialtyId
-                            ? `(${instructor.specialtyId})`
-                            : ""}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-              </Row>
-
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
@@ -355,7 +338,11 @@ const EditSchedule = () => {
                     label="Location"
                     rules={[{ required: true }]}
                   >
-                    <Input />
+                    <Select placeholder="Select">
+                      {Object.entries(LocationEnum).map(([n,v]) => (
+                        <Option key={v} value={v}>{n}</Option>
+                      ))}
+                    </Select>
                   </Form.Item>
                 </Col>
                 <Col span={12}>
@@ -364,7 +351,11 @@ const EditSchedule = () => {
                     label="Room"
                     rules={[{ required: true }]}
                   >
-                    <Input />
+                    <Select placeholder="Select">
+                      {Object.entries(RoomEnum).map(([n,v]) => (
+                        <Option key={v} value={v}>{n}</Option>
+                      ))}
+                    </Select>
                   </Form.Item>
                 </Col>
               </Row>
@@ -376,7 +367,15 @@ const EditSchedule = () => {
                     label="Class Time"
                     rules={[{ required: true }]}
                   >
-                    <TimePicker format="HH:mm" className="w-full" />
+                    <TimePicker 
+                      format="HH:00" 
+                      className="w-full"
+                      showNow={false}
+                      disabledHours={getDisabledHours}
+                      disabledMinutes={getDisabledMinutes}
+                      disabledSeconds={getDisabledSeconds}
+                      hideDisabledOptions
+                    />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
@@ -385,7 +384,13 @@ const EditSchedule = () => {
                     label="Duration"
                     rules={[{ required: true }]}
                   >
-                    <TimePicker format="HH:mm" className="w-full" />
+                    <TimePicker 
+                      format="HH:mm" 
+                      className="w-full" 
+                      placeholder="HH:mm (e.g. 01:30)" 
+                      showNow={false} 
+                      minuteStep={15}
+                    />
                   </Form.Item>
                 </Col>
               </Row>
@@ -414,6 +419,7 @@ const EditSchedule = () => {
                       showTime
                       format="YYYY-MM-DD HH:mm"
                       className="w-full"
+                      disabledDate={disabledDate}
                     />
                   </Form.Item>
                 </Col>
@@ -441,6 +447,7 @@ const EditSchedule = () => {
                       showTime
                       format="YYYY-MM-DD HH:mm"
                       className="w-full"
+                      disabledDate={disabledDate}
                     />
                   </Form.Item>
                 </Col>
@@ -455,13 +462,6 @@ const EditSchedule = () => {
                     validator: (_, value) => {
                       if (!value || value.length === 0) {
                         return Promise.reject("Please select at least one day");
-                      }
-                      // Kiểm tra xem tất cả các giá trị có phải là số không
-                      const allNumbers = value.every(
-                        (v) => !isNaN(parseInt(v))
-                      );
-                      if (!allNumbers) {
-                        return Promise.reject("Days of week must be numbers");
                       }
                       return Promise.resolve();
                     },
