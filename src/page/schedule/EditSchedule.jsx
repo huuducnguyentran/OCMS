@@ -50,18 +50,23 @@ const EditSchedule = () => {
         // Nếu không có initialSchedule, fetch từ API
         let scheduleData = initialSchedule;
         if (!scheduleData) {
-          const response = await trainingScheduleService.getTrainingScheduleById(id);
+          const response =
+            await trainingScheduleService.getTrainingScheduleById(id);
           scheduleData = response;
         }
 
         // Fetch instructors và course subject specialties
-        const [instructorsRes, courseSubjectSpecialtiesRes] = await Promise.all([
-          axiosInstance.get(API.GET_ALL_USER, {
-            headers: { Authorization: `Bearer ${sessionStorage.getItem("token")}` },
-            params: { roleName: "Instructor" },
-          }),
-          learningMatrixService.getAllCourseSubjectSpecialties()
-        ]);
+        const [instructorsRes, courseSubjectSpecialtiesRes] = await Promise.all(
+          [
+            axiosInstance.get(API.GET_ALL_USER, {
+              headers: {
+                Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+              },
+              params: { roleName: "Instructor" },
+            }),
+            learningMatrixService.getAllCourseSubjectSpecialties(),
+          ]
+        );
 
         // Process instructors data giống như trong CreateSchedulePage
         if (instructorsRes.data && instructorsRes.data.users) {
@@ -71,7 +76,8 @@ const EditSchedule = () => {
           setInstructors(
             instructorData.map((instructor) => ({
               id: instructor.userId || instructor.id,
-              name: instructor.fullName || instructor.name || instructor.userName,
+              name:
+                instructor.fullName || instructor.name || instructor.userName,
               roleName: instructor.roleName,
               specialtyId: instructor.specialtyId,
             }))
@@ -83,13 +89,17 @@ const EditSchedule = () => {
           setInstructors(
             filteredInstructors.map((instructor) => ({
               id: instructor.userId || instructor.id,
-              name: instructor.fullName || instructor.name || instructor.userName,
+              name:
+                instructor.fullName || instructor.name || instructor.userName,
               roleName: instructor.roleName,
               specialtyId: instructor.specialtyId,
             }))
           );
         } else {
-          console.warn("Unexpected instructor data format:", instructorsRes.data);
+          console.warn(
+            "Unexpected instructor data format:",
+            instructorsRes.data
+          );
           setInstructors([]);
         }
 
@@ -103,19 +113,19 @@ const EditSchedule = () => {
           // Convert daysOfWeek string thành mảng số
           const daysOfWeek = scheduleData.daysOfWeek
             .split(",")
-            .map(day => {
+            .map((day) => {
               const dayNumber = {
-                "Sunday": 0,
-                "Monday": 1,
-                "Tuesday": 2,
-                "Wednesday": 3,
-                "Thursday": 4,
-                "Friday": 5,
-                "Saturday": 6
+                Sunday: 0,
+                Monday: 1,
+                Tuesday: 2,
+                Wednesday: 3,
+                Thursday: 4,
+                Friday: 5,
+                Saturday: 6,
               }[day.trim()];
               return dayNumber;
             })
-            .filter(day => day !== undefined);
+            .filter((day) => day !== undefined);
 
           form.setFieldsValue({
             courseSubjectSpecialtyId: scheduleData.courseSubjectSpecialtyId,
@@ -127,7 +137,7 @@ const EditSchedule = () => {
             classTime: dayjs(scheduleData.classTime, "HH:mm:ss"),
             subjectPeriod: dayjs(scheduleData.subjectPeriod, "HH:mm:ss"),
             startDateTime: dayjs(scheduleData.startDateTime),
-            endDateTime: dayjs(scheduleData.endDateTime)
+            endDateTime: dayjs(scheduleData.endDateTime),
           });
         }
       } catch (error) {
@@ -148,7 +158,7 @@ const EditSchedule = () => {
       setSubmitting(true);
 
       // Format daysOfWeek thành mảng số nguyên
-      const daysOfWeekNumbers = values.daysOfWeek.map(day => parseInt(day));
+      const daysOfWeekNumbers = values.daysOfWeek.map((day) => parseInt(day));
 
       const formattedData = {
         scheduleID: id,
@@ -162,7 +172,7 @@ const EditSchedule = () => {
         subjectPeriod: values.subjectPeriod.format("HH:mm:ss"),
         startDay: values.startDateTime.format("YYYY-MM-DDTHH:mm:ss.SSS"),
         endDay: values.endDateTime.format("YYYY-MM-DDTHH:mm:ss.SSS"),
-        status: initialSchedule?.status || "Pending"
+        status: initialSchedule?.status || "Pending",
       };
 
       const response = await axiosInstance.put(
@@ -182,28 +192,33 @@ const EditSchedule = () => {
       }
     } catch (error) {
       console.error("Error updating schedule:", error);
-      
+
       // Xử lý và hiển thị lỗi validation
       if (error.response?.data?.errors) {
         const errorData = error.response.data.errors;
-        
+
         // Hiển thị lỗi cụ thể cho từng trường
         Object.entries(errorData).forEach(([field, messages]) => {
-          const fieldName = field.replace('$.', ''); // Loại bỏ tiền tố '$.' nếu có
+          const fieldName = field.replace("$.", ""); // Loại bỏ tiền tố '$.' nếu có
           const errorMessage = Array.isArray(messages) ? messages[0] : messages;
-          
+
           message.error(`${fieldName}: ${errorMessage}`);
-          
+
           // Set lỗi trực tiếp vào form field nếu có
-          if (field !== 'dto') {
-            form.setFields([{
-              name: fieldName,
-              errors: [errorMessage]
-            }]);
+          if (field !== "dto") {
+            form.setFields([
+              {
+                name: fieldName,
+                errors: [errorMessage],
+              },
+            ]);
           }
         });
       } else {
-        message.error("Failed to update schedule: " + (error.response?.data?.title || error.message));
+        message.error(
+          "Failed to update schedule: " +
+            (error.response?.data?.title || error.message)
+        );
       }
     } finally {
       setSubmitting(false);
@@ -218,7 +233,7 @@ const EditSchedule = () => {
     { label: "Thursday", value: 4 },
     { label: "Friday", value: 5 },
     { label: "Saturday", value: 6 },
-    { label: "Sunday", value: 0 }
+    { label: "Sunday", value: 0 },
   ];
 
   return (
@@ -230,7 +245,9 @@ const EditSchedule = () => {
               <CalendarOutlined className="text-2xl text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Edit Schedule</h1>
+              <h1 className="text-2xl font-bold text-gray-800">
+                Edit Schedule
+              </h1>
               <p className="text-gray-600">
                 {initialSchedule?.subjectName || "Update schedule information"}
               </p>
@@ -255,9 +272,16 @@ const EditSchedule = () => {
                 <Col span={24}>
                   <Title level={5}>Subject Information</Title>
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <p><strong>Subject:</strong> {initialSchedule?.subjectName}</p>
-                    <p><strong>Current Instructor:</strong> {initialSchedule?.instructorName}</p>
-                    <p><strong>Status:</strong> {initialSchedule?.status}</p>
+                    <p>
+                      <strong>Subject:</strong> {initialSchedule?.subjectName}
+                    </p>
+                    <p>
+                      <strong>Current Instructor:</strong>{" "}
+                      {initialSchedule?.instructorName}
+                    </p>
+                    <p>
+                      <strong>Status:</strong> {initialSchedule?.status}
+                    </p>
                   </div>
                 </Col>
               </Row>
@@ -268,7 +292,12 @@ const EditSchedule = () => {
                   <Form.Item
                     name="courseSubjectSpecialtyId"
                     label="Course Subject Specialty"
-                    rules={[{ required: true, message: "Please select a course subject specialty" }]}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select a course subject specialty",
+                      },
+                    ]}
                   >
                     <Select
                       placeholder="Select course subject specialty"
@@ -278,7 +307,9 @@ const EditSchedule = () => {
                     >
                       {courseSubjectSpecialties.map((item) => (
                         <Option key={item.id} value={item.id}>
-                          {item.course?.courseName || item.courseId} / {item.subject?.subjectName || item.subjectId} / {item.specialty?.specialtyId}
+                          {item.course?.courseName || item.courseId} /{" "}
+                          {item.subject?.subjectName || item.subjectId} /{" "}
+                          {item.specialty?.specialtyId}
                         </Option>
                       ))}
                     </Select>
@@ -291,7 +322,12 @@ const EditSchedule = () => {
                   <Form.Item
                     name="instructorID"
                     label="Instructor"
-                    rules={[{ required: true, message: "Please select an instructor" }]}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select an instructor",
+                      },
+                    ]}
                   >
                     <Select
                       placeholder="Select instructor"
@@ -301,7 +337,10 @@ const EditSchedule = () => {
                     >
                       {instructors.map((instructor) => (
                         <Option key={instructor.id} value={instructor.id}>
-                          {instructor.name} {instructor.specialtyId ? `(${instructor.specialtyId})` : ""}
+                          {instructor.name}{" "}
+                          {instructor.specialtyId
+                            ? `(${instructor.specialtyId})`
+                            : ""}
                         </Option>
                       ))}
                     </Select>
@@ -361,15 +400,17 @@ const EditSchedule = () => {
                       ({ getFieldValue }) => ({
                         validator(_, value) {
                           if (!value) return Promise.resolve();
-                          if (value.isBefore(dayjs(), 'day')) {
-                            return Promise.reject('Start date cannot be in the past');
+                          if (value.isBefore(dayjs(), "day")) {
+                            return Promise.reject(
+                              "Start date cannot be in the past"
+                            );
                           }
                           return Promise.resolve();
                         },
                       }),
                     ]}
                   >
-                    <DatePicker 
+                    <DatePicker
                       showTime
                       format="YYYY-MM-DD HH:mm"
                       className="w-full"
@@ -385,16 +426,18 @@ const EditSchedule = () => {
                       ({ getFieldValue }) => ({
                         validator(_, value) {
                           if (!value) return Promise.resolve();
-                          const startDate = getFieldValue('startDateTime');
+                          const startDate = getFieldValue("startDateTime");
                           if (startDate && value.isBefore(startDate)) {
-                            return Promise.reject('End date must be after start date');
+                            return Promise.reject(
+                              "End date must be after start date"
+                            );
                           }
                           return Promise.resolve();
                         },
                       }),
                     ]}
                   >
-                    <DatePicker 
+                    <DatePicker
                       showTime
                       format="YYYY-MM-DD HH:mm"
                       className="w-full"
@@ -414,13 +457,15 @@ const EditSchedule = () => {
                         return Promise.reject("Please select at least one day");
                       }
                       // Kiểm tra xem tất cả các giá trị có phải là số không
-                      const allNumbers = value.every(v => !isNaN(parseInt(v)));
+                      const allNumbers = value.every(
+                        (v) => !isNaN(parseInt(v))
+                      );
                       if (!allNumbers) {
                         return Promise.reject("Days of week must be numbers");
                       }
                       return Promise.resolve();
-                    }
-                  }
+                    },
+                  },
                 ]}
               >
                 <Checkbox.Group

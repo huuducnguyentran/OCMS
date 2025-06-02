@@ -30,7 +30,6 @@ const UpdateAccountPage = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     fetchUserData();
@@ -40,9 +39,7 @@ const UpdateAccountPage = () => {
     try {
       setLoading(true);
       const data = await getUserById(userId);
-      setUserData(data);
 
-      // Format the date for DatePicker
       const formattedData = {
         fullName: data.fullName,
         gender: data.gender,
@@ -64,7 +61,6 @@ const UpdateAccountPage = () => {
     try {
       setSubmitting(true);
 
-      // Format the date of birth to ISO string
       const formattedValues = {
         fullName: values.fullName,
         gender: values.gender,
@@ -87,34 +83,34 @@ const UpdateAccountPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8 animate__animated animate__fadeIn">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-cyan-50 via-white to-cyan-100 py-12 px-4 sm:px-6 lg:px-8 animate__animated animate__fadeIn">
       <Card
-        className="w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border-0"
+        className="w-full max-w-2xl rounded-3xl shadow-xl overflow-hidden border-0"
         bodyStyle={{ padding: 0 }}
       >
-        {/* Header with gradient background */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6 text-white">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-cyan-600 to-cyan-800 px-8 py-6 text-white">
           <div className="flex items-center justify-between">
             <Button
               type="text"
               icon={<ArrowLeftOutlined />}
               onClick={() => navigate("/accounts")}
-              className="text-white hover:text-blue-100 border-0 hover:bg-blue-800/30 flex items-center"
+              className="!text-white hover:!text-cyan-100 hover:!bg-cyan-900/20 border-0 hover:!border-cyan-600"
             >
               Back
             </Button>
-            <Title level={3} className="m-0 text-white">
+            <Title level={3} className="!text-white m-0">
               Update Account
             </Title>
-            <div style={{ width: 75 }}></div> {/* Spacer for alignment */}
+            <div className="w-20" /> {/* Spacer for alignment */}
           </div>
-          <Text className="text-blue-100 mt-2 block opacity-90">
+          <Text className="!text-cyan-100 !mt-2 !block !opacity-90">
             Update details for user ID: {userId}
           </Text>
         </div>
 
-        {/* Main content */}
-        <div className="px-8 py-6">
+        {/* Form Content */}
+        <div className="px-8 py-6 bg-white">
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <Spin size="large" />
@@ -131,7 +127,9 @@ const UpdateAccountPage = () => {
                 <Form.Item
                   name="fullName"
                   label={
-                    <span className="text-gray-700 font-medium">Full Name</span>
+                    <span className="text-cyan-700 font-semibold">
+                      Full Name
+                    </span>
                   }
                   rules={[
                     { required: true, message: "Please enter full name" },
@@ -140,7 +138,7 @@ const UpdateAccountPage = () => {
                   className="col-span-2"
                 >
                   <Input
-                    prefix={<UserOutlined className="text-gray-400" />}
+                    prefix={<UserOutlined className="!text-cyan-600" />}
                     placeholder="Enter full name"
                     className="h-11 rounded-lg"
                   />
@@ -149,13 +147,13 @@ const UpdateAccountPage = () => {
                 <Form.Item
                   name="gender"
                   label={
-                    <span className="text-gray-700 font-medium">Gender</span>
+                    <span className="text-cyan-700 font-semibold">Gender</span>
                   }
                   rules={[{ required: true, message: "Please select gender" }]}
                 >
                   <Select
                     placeholder="Select gender"
-                    className="h-11 rounded-lg"
+                    className="!h-11 rounded-lg"
                     dropdownClassName="rounded-lg shadow-lg"
                   >
                     <Option value="Male">Male</Option>
@@ -167,7 +165,7 @@ const UpdateAccountPage = () => {
                 <Form.Item
                   name="dateOfBirth"
                   label={
-                    <span className="text-gray-700 font-medium">
+                    <span className="text-cyan-700 font-semibold">
                       Date of Birth
                     </span>
                   }
@@ -176,17 +174,16 @@ const UpdateAccountPage = () => {
                     {
                       validator: (_, value) => {
                         if (!value) return Promise.resolve();
-                        
-                        // Tính tuổi (lấy thời điểm hiện tại trừ đi ngày sinh)
                         const today = dayjs();
                         const birthDate = dayjs(value);
-                        const age = today.diff(birthDate, 'year');
-                        
+                        const age = today.diff(birthDate, "year");
                         if (age < 18) {
-                          return Promise.reject('User must be at least 18 years old');
+                          return Promise.reject(
+                            "User must be at least 18 years old"
+                          );
                         }
                         return Promise.resolve();
-                      }
+                      },
                     },
                   ]}
                 >
@@ -195,21 +192,16 @@ const UpdateAccountPage = () => {
                     placeholder="Select date of birth"
                     className="w-full h-11 rounded-lg"
                     showToday={false}
-                    disabledDate={(current) => {
-                      // Vô hiệu hóa các ngày trong tương lai
-                      if (current > dayjs().endOf('day')) {
-                        return true;
-                      }
-                      // Vô hiệu hóa các ngày sinh cho người dưới 18 tuổi
-                      return current > dayjs().subtract(18, 'year');
-                    }}
+                    disabledDate={(current) =>
+                      current > dayjs().subtract(18, "year")
+                    }
                   />
                 </Form.Item>
 
                 <Form.Item
                   name="phoneNumber"
                   label={
-                    <span className="text-gray-700 font-medium">
+                    <span className="text-cyan-700 font-semibold">
                       Phone Number
                     </span>
                   }
@@ -220,10 +212,9 @@ const UpdateAccountPage = () => {
                       message: "Please enter a valid phone number",
                     },
                   ]}
-                  className="col-span-2 md:col-span-1"
                 >
                   <Input
-                    prefix={<PhoneOutlined className="text-gray-400" />}
+                    prefix={<PhoneOutlined className="!text-cyan-600" />}
                     placeholder="Enter phone number"
                     className="h-11 rounded-lg"
                   />
@@ -232,7 +223,7 @@ const UpdateAccountPage = () => {
                 <Form.Item
                   name="address"
                   label={
-                    <span className="text-gray-700 font-medium">Address</span>
+                    <span className="text-cyan-700 font-semibold">Address</span>
                   }
                   rules={[{ required: true, message: "Please enter address" }]}
                   className="col-span-2"
@@ -252,7 +243,7 @@ const UpdateAccountPage = () => {
                   <Button
                     type="default"
                     onClick={() => navigate("/accounts")}
-                    className="mr-4 h-11 px-6 rounded-lg"
+                    className="mr-4 h-11 !px-6 !rounded-lg hover:!border-cyan-700 hover:!text-cyan-700 !shadow-md"
                   >
                     Cancel
                   </Button>
@@ -261,7 +252,7 @@ const UpdateAccountPage = () => {
                     htmlType="submit"
                     icon={<SaveOutlined />}
                     loading={submitting}
-                    className="h-11 px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-lg border-0 shadow-md"
+                    className="h-11 px-8 !rounded-lg !bg-gradient-to-r from-cyan-600 to-cyan-700 hover:!from-cyan-700 hover:!to-cyan-800 !border-0 !shadow-md"
                   >
                     Save Changes
                   </Button>

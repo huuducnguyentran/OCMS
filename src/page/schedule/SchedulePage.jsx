@@ -455,12 +455,12 @@ const SchedulePage = () => {
                     className={`px-2 py-1 border-0 font-medium 
                       ${
                         schedule.status === "Completed"
-                          ? "bg-blue-100 text-blue-700"
+                          ? "!bg-blue-100 !text-blue-700"
                           : schedule.status === "Incoming"
-                          ? "bg-yellow-100 text-yellow-700"
+                          ? "!bg-yellow-100 !text-yellow-700"
                           : schedule.status === "Pending"
-                          ? "bg-orange-100 text-orange-700"
-                          : "bg-gray-100 text-gray-700"
+                          ? "!bg-orange-100 !text-orange-700"
+                          : "!bg-gray-100 !text-gray-700"
                       }`}
                   >
                     {schedule.status}
@@ -470,13 +470,13 @@ const SchedulePage = () => {
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     {getCardActions(schedule)}
                     <Tooltip title="View Subject Details">
-                      <BookOutlined className="text-blue-500" />
+                      <BookOutlined className="!text-cyan-500" />
                     </Tooltip>
                   </div>
                 </div>
 
                 {/* Subject Name */}
-                <div className="font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                <div className="font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-cyan-600 transition-colors">
                   {schedule.subjectName}
                 </div>
 
@@ -507,7 +507,7 @@ const SchedulePage = () => {
                   </Tooltip>
                 </div>
 
-                <div className="h-1 w-0 group-hover:w-full bg-blue-500 mt-3 transition-all duration-300 rounded-full"></div>
+                <div className="h-1 w-0 group-hover:w-full bg-cyan-500 mt-3 transition-all duration-300 rounded-full"></div>
               </div>
             </div>
           );
@@ -643,27 +643,27 @@ const SchedulePage = () => {
   // };
 
   // Handle navigation to create schedule page
-  const handleCreateSchedule = () => {
-    navigate("/schedule/create");
-  };
+  // const handleCreateSchedule = () => {
+  //   navigate("/schedule/create");
+  // };
 
   // Render create button (only for Training Staff)
-  const renderCreateButton = () => {
-    if (userRole === "TrainingStaff" || userRole === "Training staff") {
-      return (
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleCreateSchedule}
-          className="bg-green-600 hover:bg-green-700"
-          size="large"
-        >
-          Create Schedule
-        </Button>
-      );
-    }
-    return null;
-  };
+  // const renderCreateButton = () => {
+  //   if (userRole === "TrainingStaff" || userRole === "Training staff") {
+  //     return (
+  //       <Button
+  //         type="primary"
+  //         icon={<PlusOutlined />}
+  //         onClick={handleCreateSchedule}
+  //         className="bg-green-600 hover:bg-green-700"
+  //         size="large"
+  //       >
+  //         Create Schedule
+  //       </Button>
+  //     );
+  //   }
+  //   return null;
+  // };
 
   // Handle subject change
   // Render subject selector
@@ -718,10 +718,10 @@ const SchedulePage = () => {
       <div className="mb-6 bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300">
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <CalendarOutlined className="text-xl text-indigo-600" />
+            <div className="p-2 bg-cyan-100 rounded-lg">
+              <CalendarOutlined className="text-xl !text-cyan-600" />
             </div>
-            <span className="text-lg font-semibold text-gray-700">
+            <span className="text-lg font-semibold text-cyan-700">
               Select Period
             </span>
           </div>
@@ -745,7 +745,7 @@ const SchedulePage = () => {
                 {[2023, 2024, 2025, 2026].map((year) => (
                   <Option key={year} value={year}>
                     <div className="flex items-center gap-2">
-                      <CalendarOutlined className="text-indigo-600" />
+                      <CalendarOutlined className="text-cyan-600" />
                       <span>{year}</span>
                     </div>
                   </Option>
@@ -888,7 +888,7 @@ const SchedulePage = () => {
               e.stopPropagation();
               handleEditSchedule(schedule);
             }}
-            className="text-blue-500 hover:text-blue-700"
+            className="!text-cyan-500 hover:!text-cyan-700 hover:!border-cyan-700"
           />
           <Popconfirm
             title="Are you sure you want to delete this schedule?"
@@ -903,7 +903,7 @@ const SchedulePage = () => {
               type="text"
               icon={<DeleteOutlined />}
               onClick={(e) => e.stopPropagation()}
-              className="text-red-500 hover:text-red-700"
+              className="!text-red-500 hover:!text-red-700 hover:!border-red-700"
             />
           </Popconfirm>
         </div>
@@ -926,7 +926,7 @@ const SchedulePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-10p0 p-6 sm:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6 sm:p-8">
       <div className="max-w-[1500px] mx-auto">
         {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
@@ -947,7 +947,7 @@ const SchedulePage = () => {
               </div>
             </div>
 
-            {renderCreateButton()}
+            {/* {renderCreateButton()} */}
           </div>
         </div>
 
@@ -1019,7 +1019,7 @@ const SchedulePage = () => {
                   </div>
                 }
               />
-              {renderCreateButton()}
+              {/* {renderCreateButton()} */}
             </div>
           ) : (
             <div className="space-y-6">
