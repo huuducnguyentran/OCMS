@@ -228,14 +228,23 @@ const ViewGradePage = () => {
       sorter: (a, b) => a.gradeStatus.localeCompare(b.gradeStatus),
       sortOrder:
         sortedInfo.columnKey === "gradeStatus" ? sortedInfo.order : null,
-      render: (status) => (
-        <Tag
-          color={status === "Pass" ? "success" : "error"}
-          className="px-4 py-1"
-        >
-          {status}
-        </Tag>
-      ),
+      render: (_, record) => {
+        const isPending =
+          record.participantScore === -1 ||
+          record.assignmentScore === -1 ||
+          record.finalExamScore === -1;
+
+        if (isPending) return null;
+
+        const status = record.totalScore >= 5 ? "Pass" : "Fail";
+        const color = status === "Pass" ? "success" : "error";
+
+        return (
+          <Tag color={color} className="px-4 py-1">
+            {status}
+          </Tag>
+        );
+      },
     },
     {
       title: "Remarks",
@@ -358,10 +367,24 @@ const ViewGradePage = () => {
       const response = await gradeServices.getAllGrades();
 
       if (response && Array.isArray(response)) {
-        const formattedGrades = response.map((grade) => ({
-          ...grade,
-          key: grade.gradeId,
-        }));
+        const formattedGrades = response.map((grade) => {
+          // Kiểm tra điểm có hợp lệ không
+          const isPending =
+            grade.participantScore === -1 ||
+            grade.assignmentScore === -1 ||
+            grade.finalExamScore === -1;
+
+          let gradeStatus = "Pending";
+          if (!isPending) {
+            gradeStatus = grade.totalScore >= 5 ? "Pass" : "Fail";
+          }
+
+          return {
+            ...grade,
+            key: grade.gradeId,
+            gradeStatus, // Ghi đè status
+          };
+        });
         setGrades(formattedGrades);
         setFilteredGrades(formattedGrades);
         setSearchText("");

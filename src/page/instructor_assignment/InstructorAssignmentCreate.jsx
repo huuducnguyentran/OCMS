@@ -31,6 +31,7 @@ const InstructorAssignmentCreate = () => {
   const [subjects, setSubjects] = useState([]);
   const [instructors, setInstructors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [subjectError, setSubjectError] = useState("");
 
   useEffect(() => {
     const loadOptions = async () => {
@@ -114,8 +115,17 @@ const InstructorAssignmentCreate = () => {
                     label={
                       <span className="text-cyan-800 font-medium">Subject</span>
                     }
+                    validateTrigger="onChange"
                     rules={[
                       { required: true, message: "Please select a subject" },
+                      {
+                        validator: (_, value) => {
+                          if (value && /^-\d+$/.test(value)) {
+                            return Promise.reject("Subject ID cannot be a negative number");
+                          }
+                          return Promise.resolve();
+                        },
+                      },
                     ]}
                   >
                     <Select
@@ -124,7 +134,14 @@ const InstructorAssignmentCreate = () => {
                       size="large"
                       suffixIcon={<BookOutlined className="!text-cyan-600" />}
                       showSearch
-                      optionFilterProp="children"
+                      onSearch={value => {
+                        if (/^-?\d+$/.test(value)) {
+                          setSubjectError("Subject ID cannot be a number");
+                        } else {
+                          setSubjectError("");
+                        }
+                      }}
+                      onBlur={() => setSubjectError("")}
                     >
                       {subjects.map((s) => (
                         <Option key={s.subjectId} value={s.subjectId}>
@@ -132,6 +149,7 @@ const InstructorAssignmentCreate = () => {
                         </Option>
                       ))}
                     </Select>
+                    {subjectError && <div style={{ color: "red" }}>{subjectError}</div>}
                   </Form.Item>
                 </Card>
               </Col>
@@ -145,10 +163,19 @@ const InstructorAssignmentCreate = () => {
                         Instructor
                       </span>
                     }
+                    validateTrigger="onChange"
                     rules={[
                       {
                         required: true,
                         message: "Please select an instructor",
+                      },
+                      {
+                        validator: (_, value) => {
+                          if (value && /^-\d+$/.test(value)) {
+                            return Promise.reject("Instructor ID cannot be a negative number");
+                          }
+                          return Promise.resolve();
+                        },
                       },
                     ]}
                   >
@@ -183,14 +210,16 @@ const InstructorAssignmentCreate = () => {
                     label={
                       <span className="!text-cyan-800 font-medium">Notes</span>
                     }
-                    required
+                    rules={[
+                      { required: true, message: "Please enter notes for this assignment" },
+                      { min: 5, message: "Notes must be at least 5 characters" },
+                    ]}
                   >
                     <Input.TextArea
                       rows={4}
                       placeholder="Enter any additional notes about this assignment"
                       className="rounded-lg"
                       size="large"
-                      required
                     />
                   </Form.Item>
                 </Card>
