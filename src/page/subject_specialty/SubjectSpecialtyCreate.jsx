@@ -19,12 +19,9 @@ import {
   BookOutlined,
   TagsOutlined,
 } from "@ant-design/icons";
-import {
-  createSubjectSpecialty,
-  getSpecialtiesForDropdown,
-  getAllSubject,
-} from "../../services/subjectSpecialtyServices";
-
+import { createSubjectSpecialty } from "../../services/subjectSpecialtyServices";
+import { getAllSubject } from "../../services/subjectService";
+import { specialtyService } from "../../services/specialtyServices";
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -42,10 +39,10 @@ const SubjectSpecialtyCreate = () => {
       try {
         const [subjectsRes, specialtiesRes] = await Promise.all([
           getAllSubject(),
-          getSpecialtiesForDropdown(),
+          specialtyService.getAllSpecialties(),
         ]);
 
-        console.log('Raw specialties response:', specialtiesRes);
+        console.log("Raw specialties response:", specialtiesRes);
 
         let subjectsList = [];
         if (Array.isArray(subjectsRes)) {
@@ -67,27 +64,37 @@ const SubjectSpecialtyCreate = () => {
           specialtiesList = specialtiesRes.data;
         }
 
-        console.log('Processed specialties list:', specialtiesList);
-        
+        console.log("Processed specialties list:", specialtiesList);
+
         // Check if specialties have the expected properties
         if (specialtiesList.length > 0) {
-          console.log('First specialty item:', specialtiesList[0]);
-          console.log('specialtyId exists:', 'specialtyId' in specialtiesList[0]);
-          console.log('specialtyName exists:', 'specialtyName' in specialtiesList[0]);
-          
+          console.log("First specialty item:", specialtiesList[0]);
+          console.log(
+            "specialtyId exists:",
+            "specialtyId" in specialtiesList[0]
+          );
+          console.log(
+            "specialtyName exists:",
+            "specialtyName" in specialtiesList[0]
+          );
+
           // Try to find the correct property names
           const firstItem = specialtiesList[0];
-          const possibleIdKeys = Object.keys(firstItem).filter(key => key.toLowerCase().includes('id'));
-          const possibleNameKeys = Object.keys(firstItem).filter(key => key.toLowerCase().includes('name'));
-          
-          console.log('Possible ID keys:', possibleIdKeys);
-          console.log('Possible Name keys:', possibleNameKeys);
+          const possibleIdKeys = Object.keys(firstItem).filter((key) =>
+            key.toLowerCase().includes("id")
+          );
+          const possibleNameKeys = Object.keys(firstItem).filter((key) =>
+            key.toLowerCase().includes("name")
+          );
+
+          console.log("Possible ID keys:", possibleIdKeys);
+          console.log("Possible Name keys:", possibleNameKeys);
         }
-        
+
         setSubjects(subjectsList);
         setSpecialties(specialtiesList);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
         message.error("Failed to load subjects or specialties");
       } finally {
         setLoading(false);
@@ -221,20 +228,31 @@ const SubjectSpecialtyCreate = () => {
                       size="large"
                       className="w-full"
                     >
-                      {specialties.length > 0 ? specialties.map((specialty) => {
-                        // Handle different property naming conventions
-                        const id = specialty.specialtyId || specialty.id || specialty.specialty_id || '';
-                        const name = specialty.specialtyName || specialty.name || specialty.specialty_name || id;
-                        
-                        return (
-                          <Option
-                            key={id}
-                            value={id}
-                          >
-                            {name}
-                          </Option>
-                        );
-                      }) : <Option value="" disabled>No data</Option>}
+                      {specialties.length > 0 ? (
+                        specialties.map((specialty) => {
+                          // Handle different property naming conventions
+                          const id =
+                            specialty.specialtyId ||
+                            specialty.id ||
+                            specialty.specialty_id ||
+                            "";
+                          const name =
+                            specialty.specialtyName ||
+                            specialty.name ||
+                            specialty.specialty_name ||
+                            id;
+
+                          return (
+                            <Option key={id} value={id}>
+                              {name}
+                            </Option>
+                          );
+                        })
+                      ) : (
+                        <Option value="" disabled>
+                          No data
+                        </Option>
+                      )}
                     </Select>
                   </Form.Item>
                 </Card>
