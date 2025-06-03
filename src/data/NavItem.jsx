@@ -33,7 +33,7 @@ const navItems = [
     ],
   },
 
-  // 2. Learning Activities
+  // 2. Learning Management
   {
     key: "3",
     label: "Specialty",
@@ -63,6 +63,20 @@ const navItems = [
     ],
   },
   {
+    key: "6",
+    label: "Subject",
+    icon: "ReadOutlined",
+    path: "/subject",
+    roles: ["Training staff", "user"],
+  },
+  {
+    key: "24",
+    label: "Subject Specialty",
+    icon: "FileProtectOutlined",
+    path: "/subject-specialty",
+    roles: ["Training staff"],
+  },
+  {
     key: "5",
     label: "Instructor Assignment",
     icon: "BookOutlined",
@@ -70,13 +84,14 @@ const navItems = [
     roles: ["Training staff", "Instructor"],
   },
   {
-    key: "6",
-    label: "Subject",
-    icon: "ReadOutlined",
-    path: "/subject",
-    roles: ["Training staff", "user"],
+    key: "23",
+    label: "Classroom",
+    icon: "FileProtectOutlined",
+    path: "/class",
+    roles: ["Training staff", "Instructor"],
   },
 
+  // 3. Scheduling & Attendance
   {
     key: "7",
     label: "Schedule",
@@ -92,6 +107,8 @@ const navItems = [
       },
     ],
   },
+
+  // 4. Assessment & Accomplishment
   {
     key: "9",
     label: "Accomplishments",
@@ -99,8 +116,6 @@ const navItems = [
     path: "/accomplishments",
     roles: ["Trainee"],
   },
-
-  // 3. Assessment & Grades
   {
     key: "10",
     label: "Grade",
@@ -129,7 +144,7 @@ const navItems = [
     ],
   },
 
-  // 4. Requests
+  // 5. Requests
   {
     key: "11",
     label: "Request",
@@ -145,7 +160,7 @@ const navItems = [
     roles: ["Trainee", "AOC Manager", "Instructor"],
   },
 
-  // 5. Certification & Decisions
+  // 6. Certification & Decisions
   {
     key: "13",
     label: "Certificate",
@@ -209,7 +224,7 @@ const navItems = [
     roles: ["Admin"],
   },
 
-  // 6. Admin & HR
+  // 7. Users & Roles
   {
     key: "17",
     label: "Accounts",
@@ -259,6 +274,8 @@ const navItems = [
     path: "/assigned-trainee",
     roles: ["Training staff"],
   },
+
+  // 8. Organization Management
   {
     key: "20",
     label: "Department",
@@ -267,8 +284,7 @@ const navItems = [
     roles: ["HR", "AOC Manager", "Admin", "Reviewer"],
   },
 
-  // 7. System/Other
-
+  // 9. System & Tools
   {
     key: "21",
     label: "Regulations",
@@ -290,20 +306,6 @@ const navItems = [
     label: "Reports",
     icon: "FileExcelOutlined",
     path: "/export-certificate",
-  },
-  {
-    key:"23",
-    label:"Classroom",
-    icon:"FileProtectOutlined",
-    path:"/class",
-    roles:["Training staff","Instructor"]
-  },
-  {
-    key: "24",
-    label: "Subject Specialty",
-    icon: "FileProtectOutlined",
-    path: "/subject-specialty",
-    roles: ["Training staff"],
   },
 ];
 
