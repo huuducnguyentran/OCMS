@@ -201,6 +201,50 @@ const getDaysOfWeekArray = (daysOfWeekStr) => {
   return daysOfWeekStr.split(',').map(d => d.trim());
 };
 
+// Helper: get week dates (Monday - Sunday) for selected week/year
+const getWeekDates = (weekNumber, year) => {
+  const startOfYear = new Date(year, 0, 1);
+  const daysOffset = (startOfYear.getDay() > 0 ? 7 - startOfYear.getDay() : 0) + (weekNumber - 1) * 7;
+  const startDate = new Date(year, 0, 1 + daysOffset);
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + i);
+    dates.push(date);
+  }
+  return dates;
+};
+
+// Helper: get week options for a year
+const getWeekOptions = (year) => {
+  const options = [];
+  for (let week = 1; week <= 52; week++) {
+    const weekDates = getWeekDates(week, year);
+    options.push({
+      value: week,
+      label: `${dayjs(weekDates[0]).format("DD/MM")} To ${dayjs(weekDates[6]).format("DD/MM")}`,
+    });
+  }
+  return options;
+};
+
+// Helper: get current week number in year
+const getCurrentWeekNumber = () => {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  return Math.ceil(
+    ((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7
+  );
+};
+
+// Thay thế constant cho daysOfWeek select
+const recurringDayOptions = [
+  { label: "Monday - Thursday", value: "1-4", days: [1, 4] },
+  { label: "Tuesday - Friday", value: "2-5", days: [2, 5] },
+  { label: "Wednesday - Saturday", value: "3-6", days: [3, 6] },
+  { label: "Sunday", value: "0", days: [0] },
+];
+
 const CreateScheduleForClassPage = () => {
   const navigate = useNavigate();
   const { classId } = useParams();
@@ -253,6 +297,11 @@ const CreateScheduleForClassPage = () => {
   const [excelPreviewColumns, setExcelPreviewColumns] = useState([]);
   const [excelPreviewError, setExcelPreviewError] = useState(null);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
+
+  // State cho tuần/năm Instructor Conflicts
+  const [conflictYear, setConflictYear] = useState(new Date().getFullYear());
+  const [conflictWeek, setConflictWeek] = useState(getCurrentWeekNumber());
+  const [conflictWeekOptions, setConflictWeekOptions] = useState(getWeekOptions(conflictYear));
 
   const isStep1Completed = createdClassSubjectId !== null && currentStep === 1;
   const isEditingStep1 = currentStep === 0 && !createdClassSubjectId;
@@ -362,6 +411,11 @@ const CreateScheduleForClassPage = () => {
       setEligibleManualTrainees([]);
     }
   }, [traineeAssignMethod, isStep1Completed, selectedSubjectSpecialty]);
+
+  useEffect(() => {
+    setConflictWeekOptions(getWeekOptions(conflictYear));
+    setConflictWeek(getCurrentWeekNumber());
+  }, [conflictYear]);
 
   const fetchAllSubjectSpecialtiesList = async () => {
     setLoading((prev) => ({ ...prev, subjects: true }));
@@ -687,16 +741,6 @@ const CreateScheduleForClassPage = () => {
   const disabledTime = (now, type) => {
     return {};
   };
-
-  const daysOfWeekOptions = [
-    { label: "Monday", value: "1" },
-    { label: "Tuesday", value: "2" },
-    { label: "Wednesday", value: "3" },
-    { label: "Thursday", value: "4" },
-    { label: "Friday", value: "5" },
-    { label: "Saturday", value: "6" },
-    { label: "Sunday", value: "0" },
-  ];
 
   const handleProceedToStep2 = (newClassSubjectId, newTrainingScheduleId) => {
     setCreatedClassSubjectId(newClassSubjectId);
@@ -1099,13 +1143,12 @@ const CreateScheduleForClassPage = () => {
     return hours;
   };
 
-  const getDisabledMinutes = (selectedHour) => {
-    if (selectedHour === null || selectedHour === undefined) return [];
-    const minutes = [];
-    for (let i = 1; i < 60; i++) {
-      minutes.push(i);
+  const getDisabledMinutesForHalfHour = () => {
+    const arr = [];
+    for (let i = 0; i < 60; i++) {
+      if (i !== 0 && i !== 30) arr.push(i);
     }
-    return minutes;
+    return arr;
   };
 
   const getDisabledSeconds = (selectedHour, selectedMinute) => {
@@ -1350,114 +1393,156 @@ const CreateScheduleForClassPage = () => {
                 loading.instructorSchedules
               }
             >
-                <Spin spinning={submittingStep1 || loading.subjects || loading.instructors || loading.instructorSchedules}>
-                    <Form form={form} layout="vertical" initialValues={{ startDate: dayjs().startOf('day'), endDate: dayjs().add(7, 'day').startOf('day') }} disabled={(isStep1Completed && !isEditingScheduleDetails) || submittingStep1}>
-                        <Row gutter={24}> 
-                            {/* Phần Selection sẽ chiếm toàn bộ chiều rộng */}
-                            <Col xs={24} md={24}>
-                                <Title level={5} className="mb-3 text-gray-700"><BookOutlined className="mr-2"/>Selection</Title>
-                                {/* Loại bỏ Row con, để mỗi Form.Item chiếm một dòng */} 
-                                <Form.Item name="subjectSpecialtyId" label="Subject" rules={[{ required: true, message: "Required" }]}>
-                                    <Select placeholder="Select subject" loading={loading.subjects} onChange={handleSubjectSpecialtyChange} showSearch optionFilterProp="children" style={{ width: '100%' }} disabled={createdClassSubjectId !== null || submittingStep1}>
-                                        {subjectSpecialties.map(s => (
-                                            <Option key={s.subjectSpecialtyId} value={s.subjectSpecialtyId}>
-                                                {s.subjectName || s.subject?.subjectName || 'Unknown Subject'} 
-                                            </Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                                <Form.Item name="instructorId" label="Instructor" rules={[{ required: true, message: "Required" }]}>
-                                    <Select placeholder="Select instructor" loading={loading.instructors} onChange={handleInstructorChange} showSearch optionFilterProp="children" style={{ width: '100%' }} disabled={createdClassSubjectId !== null || submittingStep1}>
-                                        {availableInstructors.map(i => <Option key={i.id} value={i.id}>{i.instructorName} ({i.id})</Option>)}
-                                    </Select>
-                                </Form.Item>
-                                {conflictMessages.length > 0 && !isStep1Completed && (
-                                  <div className="my-4">
-                                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-                                      <div className="font-semibold text-yellow-800 mb-2 flex items-center">
-                                        <InfoCircleOutlined className="mr-2" /> Instructor Conflicts
-                                      </div>
-                                      {/* Schedule Grid Start */}
-                                      <div className="overflow-x-auto">
-                                        {(() => {
-                                          const schedules = instructorExistingSchedules.filter(sch => sch.status !== 'Canceled');
-                                          if (schedules.length === 0) {
-                                            return <div className="text-yellow-700 py-2">No active schedules found for this instructor.</div>;
+              <Form form={form} layout="vertical" initialValues={{ startDate: dayjs().startOf('day'), endDate: dayjs().add(7, 'day').startOf('day') }} disabled={(isStep1Completed && !isEditingScheduleDetails) || submittingStep1}>
+                <Row gutter={24}> 
+                  {/* Phần Selection sẽ chiếm toàn bộ chiều rộng */}
+                  <Col xs={24} md={24}>
+                    <Title level={5} className="mb-3 text-gray-700"><BookOutlined className="mr-2"/>Selection</Title>
+                    {/* Loại bỏ Row con, để mỗi Form.Item chiếm một dòng */} 
+                    <Form.Item name="subjectSpecialtyId" label="Subject" rules={[{ required: true, message: "Required" }]}>
+                      <Select placeholder="Select subject" loading={loading.subjects} onChange={handleSubjectSpecialtyChange} showSearch optionFilterProp="children" style={{ width: '100%' }} disabled={createdClassSubjectId !== null || submittingStep1}>
+                        {subjectSpecialties.map(s => (
+                          <Option key={s.subjectSpecialtyId} value={s.subjectSpecialtyId}>
+                            {s.subjectName || s.subject?.subjectName || 'Unknown Subject'} 
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                    <Form.Item name="instructorId" label="Instructor" rules={[{ required: true, message: "Required" }]}>
+                      <Select placeholder="Select instructor" loading={loading.instructors} onChange={handleInstructorChange} showSearch optionFilterProp="children" style={{ width: '100%' }} disabled={createdClassSubjectId !== null || submittingStep1}>
+                        {availableInstructors.map(i => <Option key={i.id} value={i.id}>{i.instructorName} ({i.id})</Option>)}
+                      </Select>
+                    </Form.Item>
+                    {conflictMessages.length > 0 && !isStep1Completed && (
+                      <div className="my-4">
+                        <div className="bg-cyan-50 border-l-4 border-cyan-400 p-4 rounded">
+                          <div className="font-semibold text-cyan-800 mb-2 flex items-center">
+                            <InfoCircleOutlined className="mr-2" /> Instructor Conflicts
+                          </div>
+                          {/* Dropdown chọn năm và tuần */}
+                          <div className="flex flex-wrap gap-4 mb-4">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">Academic Year</label>
+                              <Select
+                                value={conflictYear}
+                                onChange={setConflictYear}
+                                size="small"
+                                style={{ minWidth: 100 }}
+                              >
+                                {[2023, 2024, 2025, 2026].map((year) => (
+                                  <Option key={year} value={year}>{year}</Option>
+                                ))}
+                              </Select>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">Week Period</label>
+                              <Select
+                                value={conflictWeek}
+                                onChange={setConflictWeek}
+                                size="small"
+                                style={{ minWidth: 160 }}
+                              >
+                                {conflictWeekOptions.map((opt, idx) => (
+                                  <Option key={opt.value} value={opt.value}>{opt.label}</Option>
+                                ))}
+                              </Select>
+                            </div>
+                          </div>
+                          {/* Schedule Grid Start */}
+                          <div className="overflow-x-auto">
+                            {(() => {
+                              const schedules = instructorExistingSchedules.filter(sch => sch.status !== 'Canceled');
+                              if (schedules.length === 0) {
+                                return <div className="text-cyan-700 py-2">No active schedules found for this instructor.</div>;
+                              }
+                              const weekDates = getWeekDates(conflictWeek, conflictYear);
+                              const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+                              // Lọc time slot chỉ lấy slot có class thực sự trong tuần này
+                              const timeSlots = [...new Set(
+                                schedules.flatMap(sch => {
+                                  // Lấy ra các ngày thực sự active trong tuần này
+                                  return daysOfWeek.map((day, idx) => {
+                                    const scheduleDays = getDaysOfWeekArray(sch.daysOfWeek);
+                                    const scheduleTime = sch.classTime ? sch.classTime.substring(0, 5) : "";
+                                    const currentDate = weekDates[idx];
+                                    if (scheduleDays.includes(day) && isScheduleActiveOnDate(sch, currentDate)) {
+                                      return scheduleTime;
+                                    }
+                                    return null;
+                                  }).filter(Boolean);
+                                })
+                              )].sort();
+                              if (timeSlots.length === 0) {
+                                return <div className="text-cyan-700 py-2">No time slots found.</div>;
+                              }
+                              return (
+                                <table className="min-w-full text-xs border border-cyan-200 bg-white rounded-xl">
+                                  <thead className="bg-cyan-100">
+                                    <tr>
+                                      <th className="px-2 py-2 border">Time</th>
+                                      {daysOfWeek.map((day, idx) => (
+                                        <th key={day} className="px-2 py-2 border text-center">
+                                          <div>{day}</div>
+                                          <div className="text-[10px] text-gray-500">{weekDates[idx] ? dayjs(weekDates[idx]).format("DD/MM") : ""}</div>
+                                        </th>
+                                      ))}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {timeSlots.map((slot, slotIdx) => (
+                                      <tr key={slotIdx}>
+                                        <td className="border px-2 py-2 font-semibold text-gray-700 whitespace-nowrap">{slot} - {addMinutesToTime(slot, 90)}</td>
+                                        {daysOfWeek.map((day, dayIdx) => {
+                                          // Tìm schedule phù hợp
+                                          const currentDate = weekDates[dayIdx];
+                                          const sch = schedules.find(sch => {
+                                            const scheduleDays = getDaysOfWeekArray(sch.daysOfWeek);
+                                            const scheduleTime = sch.classTime ? sch.classTime.substring(0, 5) : "";
+                                            return scheduleDays.includes(day) && scheduleTime === slot && isScheduleActiveOnDate(sch, currentDate);
+                                          });
+                                          if (sch) {
+                                            return (
+                                              <td key={day} className="border px-2 py-2 align-top">
+                                                <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-2 shadow-sm">
+                                                  <div className="flex items-center gap-2 mb-1">
+                                                    <span className={`px-2 py-1 rounded text-xs font-medium 
+                                                      ${sch.status === 'Completed' ? 'bg-blue-100 text-blue-700' :
+                                                        sch.status === 'Incoming' ? 'bg-cyan-100 text-cyan-700' :
+                                                        sch.status === 'Pending' ? 'bg-cyan-200 text-cyan-800' :
+                                                        'bg-gray-100 text-gray-700'}`}>{sch.status}</span>
+                                                  </div>
+                                                  <div className="font-semibold text-gray-800 text-xs mb-1 line-clamp-2">{sch.subjectName}</div>
+                                                  <div className="flex items-center gap-1 text-gray-600 text-xs mb-1"><ClockCircleOutlined className="text-gray-400" />{slot}</div>
+                                                  <div className="flex items-center gap-1 text-gray-600 text-xs mb-1"><BookOutlined className="text-gray-400" />Room: {sch.roomName || getRoomName(sch.room) || sch.room}</div>
+                                                  <div className="flex items-center gap-1 text-gray-600 text-xs mb-1"><InfoCircleOutlined className="text-gray-400" />Location: {sch.locationName || getLocationName(sch.location) || sch.location}</div>
+                                                  <div className="flex items-center gap-1 text-gray-600 text-xs mb-1"><TagOutlined className="text-gray-400" />Days: {sch.daysOfWeek}</div>
+                                                  <div className="flex items-center gap-1 text-gray-600 text-xs"><CalendarOutlined className="text-gray-400" />{sch.startDateTime ? dayjs(sch.startDateTime).format('YYYY-MM-DD') : ''} - {sch.endDateTime ? dayjs(sch.endDateTime).format('YYYY-MM-DD') : ''}</div>
+                                                </div>
+                                              </td>
+                                            );
+                                          } else {
+                                            return (
+                                              <td key={day} className="border px-2 py-2 align-top">
+                                                <div className="flex flex-col items-center justify-center h-full text-gray-400 text-xs">
+                                                  <ClockCircleOutlined className="text-lg mb-1" />
+                                                  No Class
+                                                </div>
+                                              </td>
+                                            );
                                           }
-                                          const weekDates = getCurrentWeekDates();
-                                          const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-                                          const timeSlots = getUniqueTimeSlots(schedules);
-                                          if (timeSlots.length === 0) {
-                                            return <div className="text-yellow-700 py-2">No time slots found.</div>;
-                                          }
-                                          return (
-                                            <table className="min-w-full text-xs border border-yellow-200 bg-white rounded-xl">
-                                              <thead className="bg-yellow-100">
-                                                <tr>
-                                                  <th className="px-2 py-2 border">Time</th>
-                                                  {daysOfWeek.map((day, idx) => (
-                                                    <th key={day} className="px-2 py-2 border text-center">
-                                                      <div>{day}</div>
-                                                      <div className="text-[10px] text-gray-500">{weekDates[idx] ? dayjs(weekDates[idx]).format("DD/MM") : ""}</div>
-                                                    </th>
-                                                  ))}
-                                                </tr>
-                                              </thead>
-                                              <tbody>
-                                                {timeSlots.map((slot, slotIdx) => (
-                                                  <tr key={slotIdx}>
-                                                    <td className="border px-2 py-2 font-semibold text-gray-700 whitespace-nowrap">{slot} - {addMinutesToTime(slot, 90)}</td>
-                                                    {daysOfWeek.map((day, dayIdx) => {
-                                                      // Tìm schedule phù hợp
-                                                      const currentDate = weekDates[dayIdx];
-                                                      const sch = schedules.find(sch => {
-                                                        const scheduleDays = getDaysOfWeekArray(sch.daysOfWeek);
-                                                        const scheduleTime = sch.classTime ? sch.classTime.substring(0, 5) : "";
-                                                        return scheduleDays.includes(day) && scheduleTime === slot && isScheduleActiveOnDate(sch, currentDate);
-                                                      });
-                                                      if (sch) {
-                                                        return (
-                                                          <td key={day} className="border px-2 py-2 align-top">
-                                                            <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-2 shadow-sm">
-                                                              <div className="flex items-center gap-2 mb-1">
-                                                                <span className={`px-2 py-1 rounded text-xs font-medium 
-                                                                  ${sch.status === 'Completed' ? 'bg-blue-100 text-blue-700' :
-                                                                    sch.status === 'Incoming' ? 'bg-yellow-100 text-yellow-700' :
-                                                                    sch.status === 'Pending' ? 'bg-orange-100 text-orange-700' :
-                                                                    'bg-gray-100 text-gray-700'}`}>{sch.status}</span>
-                                                              </div>
-                                                              <div className="font-semibold text-gray-800 text-xs mb-1 line-clamp-2">{sch.subjectName}</div>
-                                                              <div className="flex items-center gap-1 text-gray-600 text-xs mb-1"><ClockCircleOutlined className="text-gray-400" />{slot}</div>
-                                                              <div className="flex items-center gap-1 text-gray-600 text-xs mb-1"><BookOutlined className="text-gray-400" />Room: {sch.roomName || getRoomName(sch.room) || sch.room}</div>
-                                                              <div className="flex items-center gap-1 text-gray-600 text-xs mb-1"><InfoCircleOutlined className="text-gray-400" />Location: {sch.locationName || getLocationName(sch.location) || sch.location}</div>
-                                                              <div className="flex items-center gap-1 text-gray-600 text-xs mb-1"><TagOutlined className="text-gray-400" />Days: {sch.daysOfWeek}</div>
-                                                              <div className="flex items-center gap-1 text-gray-600 text-xs"><CalendarOutlined className="text-gray-400" />{sch.startDateTime ? dayjs(sch.startDateTime).format('YYYY-MM-DD') : ''} - {sch.endDateTime ? dayjs(sch.endDateTime).format('YYYY-MM-DD') : ''}</div>
-                                                            </div>
-                                                          </td>
-                                                        );
-                                                      } else {
-                                                        return (
-                                                          <td key={day} className="border px-2 py-2 align-top">
-                                                            <div className="flex flex-col items-center justify-center h-full text-gray-400 text-xs">
-                                                              <ClockCircleOutlined className="text-lg mb-1" />
-                                                              No Class
-                                                            </div>
-                                                          </td>
-                                                        );
-                                                      }
-                                                    })}
-                                                  </tr>
-                                                ))}
-                                              </tbody>
-                                            </table>
-                                          );
-                                        })()}
-                                      </div>
-                                      {/* Schedule Grid End */}
-                                    </div>
-                                  </div>
-                                )}
-                            </Col>
+                                        })}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              );
+                            })()}
+                          </div>
+                          {/* Schedule Grid End */}
+                        </div>
+                      </div>
+                    )}
+                  </Col>
 
                   {/* Phần Details sẽ nằm bên dưới và cũng chiếm toàn bộ chiều rộng */}
                   <Col xs={24} md={24} className="mt-6">
@@ -1563,47 +1648,35 @@ const CreateScheduleForClassPage = () => {
                         >
                           <TimePicker
                             className="w-full"
-                            format="HH:00"
+                            format="HH:mm"
                             showNow={false}
                             disabledHours={getDisabledHours}
-                            disabledMinutes={getDisabledMinutes}
+                            disabledMinutes={getDisabledMinutesForHalfHour}
                             disabledSeconds={getDisabledSeconds}
                             hideDisabledOptions
                           />
                         </Form.Item>
                       </Col>
-                      <Col xs={24} sm={12}>
-                        <Form.Item
-                          name="subjectPeriod"
-                          label="Duration"
-                          rules={[
-                            {
-                              required: true,
-                              message: "Please select a time duration",
-                            },
-                          ]}
-                        >
-                          <TimePicker
-                            className="w-full"
-                            format="HH:mm"
-                            placeholder="HH:mm (e.g. 01:30)"
-                            showNow={false}
-                            minuteStep={15}
-                          />
-                        </Form.Item>
-                      </Col>
                     </Row>
+                    {/* Recurring Days select box */}
                     <Form.Item
                       name="daysOfWeek"
                       label="Recurring Days"
                       rules={[
-                        { required: true, message: "Select at least one day" },
+                        { required: true, message: "Select recurring days" },
                       ]}
                     >
-                      <Checkbox.Group
-                        options={daysOfWeekOptions}
-                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2"
-                      />
+                      <Select
+                        placeholder="Select recurring days"
+                        onChange={val => {
+                          const opt = recurringDayOptions.find(o => o.value === val);
+                          form.setFieldsValue({ daysOfWeek: opt ? opt.days : [] });
+                        }}
+                      >
+                        {recurringDayOptions.map(opt => (
+                          <Option key={opt.value} value={opt.value}>{opt.label}</Option>
+                        ))}
+                      </Select>
                     </Form.Item>
                     <Form.Item
                       name="notes"

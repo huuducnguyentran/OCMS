@@ -18,7 +18,7 @@ import {
   SaveOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
-import { createUser, getAllSpecialties } from "../../services/userService";
+import { createUser } from "../../services/userService";
 import { getAllDepartments } from "../../services/departmentServices";
 import dayjs from "dayjs";
 import {
