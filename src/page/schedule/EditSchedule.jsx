@@ -55,6 +55,13 @@ const RoomEnum = {
 const getLocationName = (value) => Object.keys(LocationEnum).find(key => LocationEnum[key] === value);
 const getRoomName = (value) => Object.keys(RoomEnum).find(key => RoomEnum[key] === value);
 
+const recurringDayOptions = [
+  { label: "Monday - Thursday", value: "1-4", days: [1, 4] },
+  { label: "Tuesday - Friday", value: "2-5", days: [2, 5] },
+  { label: "Wednesday - Saturday", value: "3-6", days: [3, 6] },
+  { label: "Sunday", value: "0", days: [0] },
+];
+
 const EditSchedule = () => {
   const [form] = Form.useForm();
   const { id } = useParams();
@@ -128,7 +135,7 @@ const EditSchedule = () => {
         // Set form values từ scheduleData
         if (scheduleData) {
           // Convert daysOfWeek string thành mảng số
-          const daysOfWeek = scheduleData.daysOfWeek
+          const daysOfWeekArr = scheduleData.daysOfWeek
             .split(",")
             .map((day) => {
               const dayNumber = {
@@ -144,13 +151,25 @@ const EditSchedule = () => {
             })
             .filter((day) => day !== undefined);
 
+          // Convert sang value của select recurringDayOptions
+          let recurringValue = null;
+          for (const opt of recurringDayOptions) {
+            if (
+              opt.days.length === daysOfWeekArr.length &&
+              opt.days.every((d, idx) => d === daysOfWeekArr[idx])
+            ) {
+              recurringValue = opt.value;
+              break;
+            }
+          }
+
           form.setFieldsValue({
             courseSubjectSpecialtyId: scheduleData.courseSubjectSpecialtyId,
             instructorID: scheduleData.instructorID,
             location: scheduleData.location,
             room: scheduleData.room,
             notes: scheduleData.notes,
-            daysOfWeek: daysOfWeek, // Sử dụng mảng số
+            daysOfWeek: recurringValue, // Sử dụng value của select
             classTime: dayjs(scheduleData.classTime, "HH:mm:ss"),
             subjectPeriod: dayjs(scheduleData.subjectPeriod, "HH:mm:ss"),
             startDateTime: dayjs(scheduleData.startDateTime),
@@ -177,12 +196,16 @@ const EditSchedule = () => {
     try {
       setSubmitting(true);
 
+      // Convert daysOfWeek value sang mảng số
+      const opt = recurringDayOptions.find(o => o.value === values.daysOfWeek);
+      const daysOfWeekArr = opt ? opt.days : [];
+
       const formattedData = {
         classSubjectId: initialSchedule?.classSubjectId,
         location: values.location,
         room: values.room,
         notes: values.notes || "",
-        daysOfWeek: values.daysOfWeek,
+        daysOfWeek: daysOfWeekArr,
         classTime: values.classTime.format("HH:mm:ss"),
         subjectPeriod: values.subjectPeriod.format("HH:mm:ss"),
         startDay: values.startDateTime.format("YYYY-MM-DDTHH:mm:ss.SSS"),
@@ -271,15 +294,13 @@ const EditSchedule = () => {
     return current && current < dayjs().startOf("day");
   };
 
-  const daysOfWeekOptions = [
-    { label: "Monday", value: 1 },
-    { label: "Tuesday", value: 2 },
-    { label: "Wednesday", value: 3 },
-    { label: "Thursday", value: 4 },
-    { label: "Friday", value: 5 },
-    { label: "Saturday", value: 6 },
-    { label: "Sunday", value: 0 },
-  ];
+  const getDisabledMinutesForHalfHour = () => {
+    const arr = [];
+    for (let i = 0; i < 60; i++) {
+      if (i !== 0 && i !== 30) arr.push(i);
+    }
+    return arr;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6">
@@ -309,7 +330,7 @@ const EditSchedule = () => {
                 endDateTime: dayjs().add(30, "day"),
                 classTime: dayjs("08:00:00", "HH:mm:ss"),
                 subjectPeriod: dayjs("01:30:00", "HH:mm:ss"),
-                daysOfWeek: [0, 2, 4], // Default days
+                daysOfWeek: "1-4", // Default days
               }}
             >
               {/* Subject Information - Readonly */}
@@ -336,7 +357,7 @@ const EditSchedule = () => {
                   <Form.Item
                     name="location"
                     label="Location"
-                    rules={[{ required: true }]}
+                    rules={[{ required: true , message: "Location is required" }]}
                   >
                     <Select placeholder="Select">
                       {Object.entries(LocationEnum).map(([n,v]) => (
@@ -349,10 +370,17 @@ const EditSchedule = () => {
                   <Form.Item
                     name="room"
                     label="Room"
-                    rules={[{ required: true }]}
+                    rules={[{ required: true, message: "Room is required" }]}
                   >
-                    <Select placeholder="Select">
-                      {Object.entries(RoomEnum).map(([n,v]) => (
+                    <Select
+                      placeholder="Select"
+                      showSearch
+                      optionFilterProp="children"
+                      filterOption={(input, option) =>
+                        (option?.children ?? "").toLowerCase().includes(input.toLowerCase())
+                      }
+                    >
+                      {Object.entries(RoomEnum).map(([n, v]) => (
                         <Option key={v} value={v}>{n}</Option>
                       ))}
                     </Select>
@@ -365,34 +393,20 @@ const EditSchedule = () => {
                   <Form.Item
                     name="classTime"
                     label="Class Time"
-                    rules={[{ required: true }]}
+                    rules={[{ required: true , message: "Class time is required" }]}
                   >
                     <TimePicker 
-                      format="HH:00" 
+                      format="HH:mm" 
                       className="w-full"
                       showNow={false}
                       disabledHours={getDisabledHours}
-                      disabledMinutes={getDisabledMinutes}
+                      disabledMinutes={getDisabledMinutesForHalfHour}
                       disabledSeconds={getDisabledSeconds}
                       hideDisabledOptions
                     />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
-                  <Form.Item
-                    name="subjectPeriod"
-                    label="Duration"
-                    rules={[{ required: true }]}
-                  >
-                    <TimePicker 
-                      format="HH:mm" 
-                      className="w-full" 
-                      placeholder="HH:mm (e.g. 01:30)" 
-                      showNow={false} 
-                      minuteStep={15}
-                    />
-                  </Form.Item>
-                </Col>
+               
               </Row>
 
               <Row gutter={16}>
@@ -455,23 +469,22 @@ const EditSchedule = () => {
 
               <Form.Item
                 name="daysOfWeek"
-                label="Days of Week"
+                label="Recurring Days"
                 rules={[
-                  { required: true, message: "Please select at least one day" },
-                  {
-                    validator: (_, value) => {
-                      if (!value || value.length === 0) {
-                        return Promise.reject("Please select at least one day");
-                      }
-                      return Promise.resolve();
-                    },
-                  },
+                  { required: true, message: "Please select recurring days" },
                 ]}
               >
-                <Checkbox.Group
-                  options={daysOfWeekOptions}
-                  className="grid grid-cols-2 sm:grid-cols-4"
-                />
+                <Select
+                  placeholder="Select recurring days"
+                  onChange={val => {
+                    const opt = recurringDayOptions.find(o => o.value === val);
+                    form.setFieldsValue({ daysOfWeek: opt ? opt.value : null });
+                  }}
+                >
+                  {recurringDayOptions.map(opt => (
+                    <Option key={opt.value} value={opt.value}>{opt.label}</Option>
+                  ))}
+                </Select>
               </Form.Item>
 
               <Form.Item name="notes" label="Notes">

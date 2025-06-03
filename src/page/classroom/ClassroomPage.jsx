@@ -17,8 +17,8 @@ import {
 import {
   SearchOutlined,
   EyeOutlined,
-  EditOutlined,
   DeleteOutlined,
+  EditOutlined,
   HomeOutlined,
   PlusOutlined,
   CalendarOutlined,
@@ -333,7 +333,7 @@ const ClassroomPage = () => {
                 name="courseId"
                 rules={[{ required: true, message: "Course is required" }]}
               >
-                <Select placeholder="Select a course">
+                <Select placeholder="Select a course" disabled>
                   {courses.map((course) => (
                     <Select.Option
                       key={course.courseId}

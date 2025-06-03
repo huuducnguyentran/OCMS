@@ -263,7 +263,7 @@ const CreateScheduleForClassPage = () => {
   });
   const [submittingStep1, setSubmittingStep1] = useState(false);
   const [submittingStep2, setSubmittingStep2] = useState(false);
-
+  
   const [currentStep, setCurrentStep] = useState(0);
   const [createdClassSubjectId, setCreatedClassSubjectId] = useState(null);
   const [createdTrainingScheduleId, setCreatedTrainingScheduleId] =
@@ -281,7 +281,7 @@ const CreateScheduleForClassPage = () => {
 
   const [availableInstructors, setAvailableInstructors] = useState([]);
   const [selectedInstructor, setSelectedInstructor] = useState(null);
-
+  
   const [instructorExistingSchedules, setInstructorExistingSchedules] =
     useState([]);
   const [conflictMessages, setConflictMessages] = useState([]);
@@ -309,7 +309,7 @@ const CreateScheduleForClassPage = () => {
   useEffect(() => {
     const handleBeforeUnload = (event) => {
       const isStep1FormTouched = isEditingStep1 && form.isFieldsTouched();
-
+      
       let hasFormValues = false;
       if (isEditingStep1) {
         const currentValues = form.getFieldsValue();
@@ -464,8 +464,8 @@ const CreateScheduleForClassPage = () => {
 
   const fetchInstructorsForSubject = async (specialty) => {
     setLoading((prev) => ({ ...prev, instructors: true }));
-    if (!createdClassSubjectId) {
-      setSelectedInstructor(null);
+    if (!createdClassSubjectId) { 
+      setSelectedInstructor(null); 
       form.setFieldsValue({ instructorId: null });
     }
     try {
@@ -482,8 +482,8 @@ const CreateScheduleForClassPage = () => {
         const filteredAssignments = allAssignments.filter((assign) => {
           const isMatch =
             assign.courseSubjectSpecialtyId === specialty.subjectId;
-          return isMatch;
-        });
+            return isMatch;
+          });
         const instructorNamesMap = {};
         if (
           scheduleResponse &&
@@ -506,7 +506,7 @@ const CreateScheduleForClassPage = () => {
             );
           }
           return {
-            id: assign.instructorId,
+            id: assign.instructorId, 
             instructorName:
               instructorNamesMap[assign.instructorId] ||
               `Instructor ${assign.instructorId}`,
@@ -540,12 +540,12 @@ const CreateScheduleForClassPage = () => {
       setLoading((prev) => ({ ...prev, instructors: false }));
     }
   };
-
+  
   const fetchInstructorSchedules = async (instructorId) => {
     setLoading((prev) => ({ ...prev, instructorSchedules: true }));
-    setConflictMessages([]);
+    setConflictMessages([]); 
     try {
-      const response = await trainingScheduleService.getAllTrainingSchedules();
+      const response = await trainingScheduleService.getAllTrainingSchedules(); 
       let currentSchedules = [];
       if (response && response.schedules && Array.isArray(response.schedules)) {
         currentSchedules = response.schedules.filter(
@@ -623,7 +623,7 @@ const CreateScheduleForClassPage = () => {
       (s) => s.subjectSpecialtyId === value
     );
     setSelectedSubjectSpecialty(selectedSpecialty);
-    form.setFieldsValue({
+    form.setFieldsValue({ 
       subjectSpecialtyId: value,
       instructorId: null,
     });
@@ -634,27 +634,27 @@ const CreateScheduleForClassPage = () => {
       const instructor = availableInstructors.find(
         (inst) => inst.id === option.key
       );
-      if (instructor) {
-        setSelectedInstructor(instructor);
-      } else {
-        setSelectedInstructor({
-          id: option.key,
-          instructorName: option.children,
+        if (instructor) {
+            setSelectedInstructor(instructor); 
+        } else {
+            setSelectedInstructor({
+                id: option.key,
+                instructorName: option.children, 
           assignmentId: null,
-        });
-      }
+            });
+        }
     } else {
-      setSelectedInstructor(null);
+        setSelectedInstructor(null);
     }
   };
-
+  
   const isSlotFree = (date, timeRange) => {
     if (!selectedInstructor || instructorExistingSchedules.length === 0) {
-      return true;
+      return true; 
     }
 
-    const targetDayOfWeek = date.day();
-    const targetStartTime = dayjs(timeRange[0]);
+    const targetDayOfWeek = date.day(); 
+    const targetStartTime = dayjs(timeRange[0]); 
     const targetEndTime = dayjs(timeRange[1]);
 
     for (const schedule of instructorExistingSchedules) {
@@ -684,12 +684,12 @@ const CreateScheduleForClassPage = () => {
         .filter((dayNum) => dayNum !== -1);
 
       if (!scheduleDays.includes(targetDayOfWeek)) {
-        continue;
+        continue; 
       }
 
-      const scheduleStartTime = dayjs(schedule.classTime, "HH:mm:ss");
-      const schedulePeriod = schedule.subjectPeriod;
-
+      const scheduleStartTime = dayjs(schedule.classTime, "HH:mm:ss"); 
+      const schedulePeriod = schedule.subjectPeriod; 
+      
       let scheduleEndTime = scheduleStartTime;
       if (schedulePeriod) {
         const [h, m, s] = schedulePeriod.split(":").map(Number);
@@ -702,7 +702,7 @@ const CreateScheduleForClassPage = () => {
       const existingSchStartDate = dayjs(
         schedule.startDateTime || schedule.startDay
       );
-      const existingSchEndDate = dayjs(schedule.endDateTime || schedule.endDay);
+      const existingSchEndDate = dayjs(schedule.endDateTime || schedule.endDay); 
 
       if (
         !(
@@ -714,7 +714,7 @@ const CreateScheduleForClassPage = () => {
           date.isBefore(existingSchEndDate, "day")
         )
       ) {
-        continue;
+          continue; 
       }
 
       if (
@@ -728,16 +728,16 @@ const CreateScheduleForClassPage = () => {
             "HH:mm"
           )} to ${scheduleEndTime.format("HH:mm")}`
         );
-        return false;
+        return false; 
       }
     }
-    return true;
+    return true; 
   };
 
   const disabledDate = (current) => {
     return current && current < dayjs().startOf("day");
   };
-
+  
   const disabledTime = (now, type) => {
     return {};
   };
@@ -751,13 +751,13 @@ const CreateScheduleForClassPage = () => {
       "Step 1 Completed: Schedule created! Please proceed to Step 2."
     );
   };
-
+  
   const hardResetAndRollback = async () => {
     console.log("hardResetAndRollback function CALLED!");
     const csIdToRollback = createdClassSubjectId;
 
-    form.resetFields();
-    traineeForm.resetFields();
+    form.resetFields(); 
+    traineeForm.resetFields(); 
 
     setSelectedSubjectSpecialty(null);
     setSelectedInstructor(null);
@@ -777,19 +777,19 @@ const CreateScheduleForClassPage = () => {
       assigningTrainee: false,
       eligibleTrainees: false,
     }));
-
+    
     if (csIdToRollback) {
-      try {
-        setSubmittingStep1(true);
+        try {
+            setSubmittingStep1(true); 
         console.log(
           `HardReset: Attempting to delete ClassSubject ID: ${csIdToRollback}`
         );
-        await deleteClassSubject(csIdToRollback);
+            await deleteClassSubject(csIdToRollback);
         message.success(
           `Rolled back: ClassSubject ${csIdToRollback} has been deleted during page reset.`
         );
-      } catch (deleteError) {
-        console.error("HardReset: Error deleting ClassSubject:", deleteError);
+        } catch (deleteError) {
+            console.error("HardReset: Error deleting ClassSubject:", deleteError);
         const delErrMsg =
           deleteError.response?.data?.message ||
           deleteError.message ||
@@ -800,16 +800,16 @@ const CreateScheduleForClassPage = () => {
           )}`,
           7
         );
-      } finally {
-        setSubmittingStep1(false);
-      }
+        } finally {
+            setSubmittingStep1(false);
+        }
     }
     message.info("Page has been completely reset.");
   };
 
   const resetPageForNewScheduleCycle = () => {
     console.log("resetPageForNewScheduleCycle function CALLED!");
-    form.resetFields();
+    form.resetFields(); 
     traineeForm.resetFields();
 
     setSelectedSubjectSpecialty(null);
@@ -877,14 +877,14 @@ const CreateScheduleForClassPage = () => {
         setSubmittingStep1(false);
         return;
       }
-
-      const scheduleData = {
-        classSubjectId: newClassSubjectId,
-        location: values.location,
-        room: values.room,
+      
+      const scheduleData = { 
+        classSubjectId: newClassSubjectId, 
+        location: values.location, 
+        room: values.room, 
         notes: values.notes,
-        startDay: values.startDate?.toISOString(),
-        endDay: values.endDate?.toISOString(),
+        startDay: values.startDate?.toISOString(), 
+        endDay: values.endDate?.toISOString(), 
         daysOfWeek: values.daysOfWeek?.map((d) => parseInt(d, 10)) || [],
         classTime: values.classTime?.format("HH:00:00"),
         subjectPeriod: values.subjectPeriod?.format("HH:mm:ss"),
@@ -919,8 +919,8 @@ const CreateScheduleForClassPage = () => {
                 (delError.response?.data?.message || delError.message)
             );
           }
-          setSubmittingStep1(false);
-          return;
+            setSubmittingStep1(false);
+            return;
         }
         handleProceedToStep2(newClassSubjectId, newTrainingScheduleId);
       } catch (tsError) {
@@ -959,31 +959,31 @@ const CreateScheduleForClassPage = () => {
       message.error(
         "Cannot assign trainees without a created schedule (ClassSubject ID is missing). Please complete Step 1."
       );
-      return;
+        return;
     }
     setSubmittingStep2(true);
     setLoading((prev) => ({ ...prev, assigningTrainee: true }));
 
     try {
       if (traineeAssignMethod === "import") {
-        if (excelPreviewData.length === 0 && fileList.length > 0) {
+            if (excelPreviewData.length === 0 && fileList.length > 0) {
           message.info(
             "Attempting to import with selected file. If preview was not shown, check console."
           );
-        } else if (fileList.length === 0) {
-          message.error("Please select and preview an Excel file to import.");
+            } else if (fileList.length === 0) {
+                message.error("Please select and preview an Excel file to import.");
           setSubmittingStep2(false);
           setLoading((prev) => ({ ...prev, assigningTrainee: false }));
           return;
-        }
-        await assignTrainee(fileList[0]);
-        message.success("Trainees imported successfully from file!");
-        setFileList([]);
-        setExcelPreviewData([]);
-        setExcelPreviewColumns([]);
-        setExcelPreviewError(null);
-      } else {
-        await traineeForm.validateFields();
+            }
+            await assignTrainee(fileList[0]); 
+            message.success("Trainees imported successfully from file!");
+            setFileList([]); 
+            setExcelPreviewData([]);
+            setExcelPreviewColumns([]);
+            setExcelPreviewError(null);
+        } else {
+            await traineeForm.validateFields();
         const manualValues = traineeForm.getFieldValue("trainees");
         if (
           !manualValues ||
@@ -996,30 +996,30 @@ const CreateScheduleForClassPage = () => {
           setSubmittingStep2(false);
           setLoading((prev) => ({ ...prev, assigningTrainee: false }));
           return;
-        }
+            }
 
-        const assignments = manualValues
+            const assignments = manualValues
           .filter((trainee) => trainee.traineeId)
           .map((trainee) => ({
-            traineeId: trainee.traineeId,
-            classId: classId,
-            notes: trainee.notes || "",
-            classSubjectId: createdClassSubjectId,
-          }));
-
-        if (assignments.length === 0) {
-          message.error("No valid trainee data to assign.");
+                    traineeId: trainee.traineeId,
+                    classId: classId, 
+                    notes: trainee.notes || "",
+                    classSubjectId: createdClassSubjectId,
+            }));
+            
+            if (assignments.length === 0) {
+                message.error("No valid trainee data to assign.");
           setSubmittingStep2(false);
           setLoading((prev) => ({ ...prev, assigningTrainee: false }));
           return;
-        }
+            }
 
-        let allSuccessful = true;
-        for (const assignment of assignments) {
-          try {
-            await assignTraineeManual(assignment);
-          } catch (manualError) {
-            allSuccessful = false;
+            let allSuccessful = true;
+            for (const assignment of assignments) {
+                try {
+                    await assignTraineeManual(assignment);
+                } catch (manualError) {
+                    allSuccessful = false;
             const errMsg =
               manualError.response?.data?.message ||
               manualError.message ||
@@ -1029,20 +1029,20 @@ const CreateScheduleForClassPage = () => {
                 errMsg
               )}`
             );
-          }
-        }
-        if (allSuccessful) {
+                }
+            }
+            if (allSuccessful) {
           message.success(
             "All selected trainees assigned manually successfully!"
           );
-        } else {
+            } else {
           message.warning(
             "Some trainees could not be assigned. Please check the details. The schedule itself is created."
           );
+            }
         }
-      }
     } catch (error) {
-      console.error("Error assigning trainees:", error);
+        console.error("Error assigning trainees:", error);
       const mainErrMsg =
         error.response?.data?.message ||
         error.message ||
@@ -1053,7 +1053,7 @@ const CreateScheduleForClassPage = () => {
           (error.errors ? " Check validation." : "")
       );
     } finally {
-      setSubmittingStep2(false);
+        setSubmittingStep2(false);
       setLoading((prev) => ({ ...prev, assigningTrainee: false }));
     }
   };
@@ -1125,7 +1125,7 @@ const CreateScheduleForClassPage = () => {
     } finally {
       setIsProcessingFile(false);
     }
-
+    
     return false;
   };
 
@@ -1150,14 +1150,14 @@ const CreateScheduleForClassPage = () => {
     }
     return arr;
   };
-
+  
   const getDisabledSeconds = (selectedHour, selectedMinute) => {
-    if (selectedHour === null || selectedMinute === null) return [];
-    const seconds = [];
-    for (let i = 1; i < 60; i++) {
-      seconds.push(i);
-    }
-    return seconds;
+     if (selectedHour === null || selectedMinute === null) return [];
+     const seconds = [];
+     for (let i = 1; i < 60; i++) {
+       seconds.push(i);
+     }
+     return seconds;
   };
 
   const handleEditScheduleDetails = () => {
@@ -1181,11 +1181,11 @@ const CreateScheduleForClassPage = () => {
       return;
     }
     try {
-      await form.validateFields();
+      await form.validateFields(); 
       setSubmittingStep1(true);
 
       const values = form.getFieldsValue(true);
-
+      
       const scheduleDetailsData = {
         location: values.location,
         room: values.room,
@@ -1197,7 +1197,7 @@ const CreateScheduleForClassPage = () => {
         subjectPeriod: values.subjectPeriod?.format("HH:mm:ss"),
         classSubjectId: createdClassSubjectId,
       };
-
+      
       console.log(
         "Updating Training Schedule with ID:",
         createdTrainingScheduleId,
@@ -1213,14 +1213,14 @@ const CreateScheduleForClassPage = () => {
       setIsEditingScheduleDetails(false);
     } catch (errorInfo) {
       if (errorInfo.errorFields) {
-        message.error("Please fill all required schedule details correctly.");
+          message.error("Please fill all required schedule details correctly.");
       } else {
-        console.error("Error updating training schedule:", errorInfo);
+          console.error("Error updating training schedule:", errorInfo);
         const errMsg =
           errorInfo.response?.data?.message ||
           errorInfo.message ||
           "An unexpected error occurred while updating schedule.";
-        message.error(`Failed to update schedule: ${String(errMsg)}`, 7);
+          message.error(`Failed to update schedule: ${String(errMsg)}`, 7);
       }
     } finally {
       setSubmittingStep1(false);
@@ -1239,13 +1239,13 @@ const CreateScheduleForClassPage = () => {
       if (response && Array.isArray(response.data)) {
         users = response.data;
       } else if (response && Array.isArray(response)) {
-        users = response;
+         users = response;
       } else if (
         response &&
         response.data &&
         Array.isArray(response.data.users)
       ) {
-        users = response.data.users;
+         users = response.data.users;
       } else {
         console.warn("Unexpected format for getAllUsers response:", response);
       }
@@ -1288,29 +1288,29 @@ const CreateScheduleForClassPage = () => {
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-cyan-600 to-cyan-400 p-6 text-white">
-          <div className="flex items-center gap-4">
-            <CalendarOutlined className="text-4xl opacity-80" />
-            <div>
+            <div className="flex items-center gap-4">
+                <CalendarOutlined className="text-4xl opacity-80" />
+                <div>
               <Title level={2} style={{ color: "white", margin: 0 }}>
                 Create Class Schedule & Assign Trainees
               </Title>
               <Text style={{ color: "rgba(255,255,255,0.85)" }}>
                 Class ID: {classId}
               </Text>
+                </div>
             </div>
-          </div>
         </div>
 
         <div className="p-6 sm:p-8">
           {/* Stepper */}
-          <div className="flex justify-center">
-            <div className="w-full max-w-xl">
-              <Steps
-                current={currentStep}
-                className="mb-10 pb-2 border-b border-gray-200"
-              >
-                <Step
-                  title="Create Schedule"
+        <div className="flex justify-center">
+  <div className="w-full max-w-xl">
+    <Steps
+      current={currentStep}
+      className="mb-10 pb-2 border-b border-gray-200"
+    >
+      <Step
+        title="Create Schedule"
                   icon={
                     isStep1Completed ? (
                       <CheckCircleFilled
@@ -1322,42 +1322,42 @@ const CreateScheduleForClassPage = () => {
                       </div>
                     )
                   }
-                  description=" "
-                  status={
-                    currentStep > 0
-                      ? createdClassSubjectId
+        description=" "
+        status={
+          currentStep > 0
+            ? createdClassSubjectId
                         ? "finish"
                         : "error"
-                      : currentStep === 0
+            : currentStep === 0
                       ? "process"
                       : "wait"
-                  }
-                />
-                <Step
-                  title="Assign Trainees"
-                  icon={
+        }
+      />
+      <Step
+        title="Assign Trainees"
+        icon={
                     <div className="w-6 h-6 border-2 border-cyan-500 rounded-full flex items-center justify-center text-sm text-cyan-500 mt-1">
-                      2
-                    </div>
-                  }
-                  disabled={!isStep1Completed}
+              2
+            </div>
+          }
+        disabled={!isStep1Completed}
                   description=" "
                   status={currentStep === 1 ? "process" : "wait"}
-                />
-              </Steps>
-            </div>
-          </div>
-          {/* ----- STEP 1: CREATE SCHEDULE ----- */}
-          <Card
+      />
+    </Steps>
+  </div>
+</div>
+            {/* ----- STEP 1: CREATE SCHEDULE ----- */}
+            <Card 
             className={`!shadow-lg !rounded-xl !mb-8 !border-2 !transition-all !duration-500 ${
               isStep1Completed
                 ? "!border-cyan-300 !opacity-80"
                 : "!border-cyan-600"
             }`}
-            bordered
-            title={
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
+                bordered
+                title={
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
                   <SolutionOutlined
                     className={`mr-3 text-2xl ${
                       isStep1Completed ? "!text-cyan-500" : "!text-cyan-700"
@@ -1371,20 +1371,20 @@ const CreateScheduleForClassPage = () => {
                   >
                     Step 1: Create Training Schedule
                   </Title>
-                </div>
-                {isStep1Completed && !isEditingScheduleDetails && (
+                        </div>
+                        {isStep1Completed && !isEditingScheduleDetails && (
                   <Button
                     icon={<EditOutlined />}
                     onClick={handleEditScheduleDetails}
                     type="link"
                     className="!text-cyan-700 hover:!text-cyan-500"
                   >
-                    Edit Schedule Details
-                  </Button>
-                )}
-              </div>
-            }
-          >
+                                Edit Schedule Details
+                            </Button>
+                        )}
+                    </div>
+                }
+            >
             <Spin
               spinning={
                 submittingStep1 ||
@@ -1393,27 +1393,27 @@ const CreateScheduleForClassPage = () => {
                 loading.instructorSchedules
               }
             >
-              <Form form={form} layout="vertical" initialValues={{ startDate: dayjs().startOf('day'), endDate: dayjs().add(7, 'day').startOf('day') }} disabled={(isStep1Completed && !isEditingScheduleDetails) || submittingStep1}>
-                <Row gutter={24}> 
-                  {/* Phần Selection sẽ chiếm toàn bộ chiều rộng */}
-                  <Col xs={24} md={24}>
-                    <Title level={5} className="mb-3 text-gray-700"><BookOutlined className="mr-2"/>Selection</Title>
-                    {/* Loại bỏ Row con, để mỗi Form.Item chiếm một dòng */} 
-                    <Form.Item name="subjectSpecialtyId" label="Subject" rules={[{ required: true, message: "Required" }]}>
-                      <Select placeholder="Select subject" loading={loading.subjects} onChange={handleSubjectSpecialtyChange} showSearch optionFilterProp="children" style={{ width: '100%' }} disabled={createdClassSubjectId !== null || submittingStep1}>
-                        {subjectSpecialties.map(s => (
-                          <Option key={s.subjectSpecialtyId} value={s.subjectSpecialtyId}>
-                            {s.subjectName || s.subject?.subjectName || 'Unknown Subject'} 
-                          </Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                    <Form.Item name="instructorId" label="Instructor" rules={[{ required: true, message: "Required" }]}>
-                      <Select placeholder="Select instructor" loading={loading.instructors} onChange={handleInstructorChange} showSearch optionFilterProp="children" style={{ width: '100%' }} disabled={createdClassSubjectId !== null || submittingStep1}>
-                        {availableInstructors.map(i => <Option key={i.id} value={i.id}>{i.instructorName} ({i.id})</Option>)}
-                      </Select>
-                    </Form.Item>
-                    {conflictMessages.length > 0 && !isStep1Completed && (
+                    <Form form={form} layout="vertical" initialValues={{ startDate: dayjs().startOf('day'), endDate: dayjs().add(7, 'day').startOf('day') }} disabled={(isStep1Completed && !isEditingScheduleDetails) || submittingStep1}>
+                        <Row gutter={24}> 
+                            {/* Phần Selection sẽ chiếm toàn bộ chiều rộng */}
+                            <Col xs={24} md={24}>
+                                <Title level={5} className="mb-3 text-gray-700"><BookOutlined className="mr-2"/>Selection</Title>
+                                {/* Loại bỏ Row con, để mỗi Form.Item chiếm một dòng */} 
+                                <Form.Item name="subjectSpecialtyId" label="Subject" rules={[{ required: true, message: "Required" }]}>
+                                    <Select placeholder="Select subject" loading={loading.subjects} onChange={handleSubjectSpecialtyChange} showSearch optionFilterProp="children" style={{ width: '100%' }} disabled={createdClassSubjectId !== null || submittingStep1}>
+                                        {subjectSpecialties.map(s => (
+                                            <Option key={s.subjectSpecialtyId} value={s.subjectSpecialtyId}>
+                                                {s.subjectName || s.subject?.subjectName || 'Unknown Subject'} 
+                                            </Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                                <Form.Item name="instructorId" label="Instructor" rules={[{ required: true, message: "Required" }]}>
+                                    <Select placeholder="Select instructor" loading={loading.instructors} onChange={handleInstructorChange} showSearch optionFilterProp="children" style={{ width: '100%' }} disabled={createdClassSubjectId !== null || submittingStep1}>
+                                        {availableInstructors.map(i => <Option key={i.id} value={i.id}>{i.instructorName} ({i.id})</Option>)}
+                                    </Select>
+                                </Form.Item>
+                                {conflictMessages.length > 0 && !isStep1Completed && (
                       <div className="my-4">
                         <div className="bg-cyan-50 border-l-4 border-cyan-400 p-4 rounded">
                           <div className="font-semibold text-cyan-800 mb-2 flex items-center">
@@ -1541,10 +1541,10 @@ const CreateScheduleForClassPage = () => {
                           {/* Schedule Grid End */}
                         </div>
                       </div>
-                    )}
-                  </Col>
+                                )}
+                            </Col>
 
-                  {/* Phần Details sẽ nằm bên dưới và cũng chiếm toàn bộ chiều rộng */}
+                            {/* Phần Details sẽ nằm bên dưới và cũng chiếm toàn bộ chiều rộng */}
                   <Col xs={24} md={24} className="mt-6">
                     {" "}
                     {/* Thêm class mt-6 (margin-top) để tạo khoảng cách */}
@@ -1552,7 +1552,7 @@ const CreateScheduleForClassPage = () => {
                       <CalendarOutlined className="mr-2" />
                       Details
                     </Title>
-                    <Row gutter={16}>
+                                <Row gutter={16}>
                       <Col xs={24} sm={12}>
                         <Form.Item
                           name="location"
@@ -1578,7 +1578,14 @@ const CreateScheduleForClassPage = () => {
                             { required: true, message: "Room is required" },
                           ]}
                         >
-                          <Select placeholder="Select">
+                          <Select
+                            placeholder="Select"
+                            showSearch
+                            optionFilterProp="children"
+                            filterOption={(input, option) =>
+                              (option?.children ?? "").toLowerCase().includes(input.toLowerCase())
+                            }
+                          >
                             {Object.entries(RoomEnum).map(([n, v]) => (
                               <Option key={v} value={v}>
                                 {n}
@@ -1587,8 +1594,8 @@ const CreateScheduleForClassPage = () => {
                           </Select>
                         </Form.Item>
                       </Col>
-                    </Row>
-                    <Row gutter={16}>
+                                </Row>
+                                <Row gutter={16}>
                       <Col xs={24} sm={12}>
                         <Form.Item
                           name="startDate"
@@ -1633,9 +1640,9 @@ const CreateScheduleForClassPage = () => {
                           />
                         </Form.Item>
                       </Col>
-                    </Row>
-                    <Row gutter={16}>
-                      <Col xs={24} sm={12}>
+                                </Row>
+                                <Row gutter={16}>
+                                    <Col xs={24} sm={12}>
                         <Form.Item
                           name="classTime"
                           label="Start Time"
@@ -1646,18 +1653,18 @@ const CreateScheduleForClassPage = () => {
                             },
                           ]}
                         >
-                          <TimePicker
-                            className="w-full"
+                                            <TimePicker 
+                                                className="w-full" 
                             format="HH:mm"
-                            showNow={false}
-                            disabledHours={getDisabledHours}
+                                                showNow={false}
+                                                disabledHours={getDisabledHours}
                             disabledMinutes={getDisabledMinutesForHalfHour}
-                            disabledSeconds={getDisabledSeconds}
-                            hideDisabledOptions
-                          />
-                        </Form.Item>
-                      </Col>
-                    </Row>
+                                                disabledSeconds={getDisabledSeconds}
+                                                hideDisabledOptions
+                                            />
+                                        </Form.Item>
+                                    </Col>
+                                </Row>
                     {/* Recurring Days select box */}
                     <Form.Item
                       name="daysOfWeek"
@@ -1687,10 +1694,10 @@ const CreateScheduleForClassPage = () => {
                     >
                       <TextArea rows={3} placeholder="Notes for this class" />
                     </Form.Item>
-                  </Col>
-                </Row>
-                {!createdClassSubjectId && !isEditingScheduleDetails && (
-                  <div className="flex justify-end mt-6 pt-6 border-t border-gray-200">
+                            </Col>
+                        </Row>
+                        {!createdClassSubjectId && !isEditingScheduleDetails && (
+                            <div className="flex justify-end mt-6 pt-6 border-t border-gray-200">
                     <Button
                       icon={<RollbackOutlined />}
                       onClick={() => navigate("/class")}
@@ -1707,11 +1714,11 @@ const CreateScheduleForClassPage = () => {
                       size="large"
                       className="!bg-cyan-600 hover:!bg-cyan-700 !border-none"
                     >
-                      Save Schedule & Proceed to Step 2
-                    </Button>
-                  </div>
-                )}
-                {createdClassSubjectId && !isEditingScheduleDetails && (
+                                    Save Schedule & Proceed to Step 2
+                                </Button>
+                            </div>
+                        )}
+                         {createdClassSubjectId && !isEditingScheduleDetails && (
                   <Alert
                     message="Step 1 Completed"
                     description={`Schedule created with Class Subject ID: ${createdClassSubjectId}. Training Schedule ID: ${createdTrainingScheduleId}. You can now proceed to Step 2 below, or edit schedule details.`}
@@ -1719,15 +1726,15 @@ const CreateScheduleForClassPage = () => {
                     showIcon
                     className="mt-4"
                   />
-                )}
-                {isEditingScheduleDetails && createdClassSubjectId && (
-                  <div className="flex justify-end mt-6 pt-6 border-t border-gray-200 gap-4">
+                        )}
+                        {isEditingScheduleDetails && createdClassSubjectId && (
+                            <div className="flex justify-end mt-6 pt-6 border-t border-gray-200 gap-4">
                     <Button
                       onClick={handleCancelUpdateScheduleDetails}
                       size="large"
                     >
-                      Cancel Update
-                    </Button>
+                                    Cancel Update
+                                </Button>
                     <Button
                       type="primary"
                       icon={<SaveOutlined />}
@@ -1736,24 +1743,24 @@ const CreateScheduleForClassPage = () => {
                       size="large"
                       className="!bg-cyan-600 hover:!bg-cyan-700"
                     >
-                      Update Schedule Details
-                    </Button>
-                  </div>
-                )}
-              </Form>
-            </Spin>
-          </Card>
+                                    Update Schedule Details
+                                </Button>
+                            </div>
+                        )}
+                    </Form>
+                </Spin>
+            </Card>
           <br />
-          {/* ----- STEP 2: ASSIGN TRAINEES ----- */}
-          <Card
+            {/* ----- STEP 2: ASSIGN TRAINEES ----- */}
+            <Card 
             className={`!transition-all !duration-500 !shadow-xl !rounded-xl !border ${
               !isStep1Completed
                 ? "!opacity-50 !cursor-not-allowed"
                 : "!border-cyan-500"
             }`}
-            bordered
-            title={
-              <div className="flex items-center">
+                bordered
+                title={
+                    <div className="flex items-center">
                 <TeamOutlined
                   className={`!mr-3 !text-2xl ${
                     !isStep1Completed ? "!text-gray-400" : "!text-cyan-600"
@@ -1768,9 +1775,9 @@ const CreateScheduleForClassPage = () => {
                 >
                   Step 2: Assign Trainees to Class
                 </Title>
-              </div>
-            }
-          >
+                    </div>
+                }
+            >
             <Spin
               spinning={loading.assigningTrainee || loading.eligibleTrainees}
             >
@@ -1779,7 +1786,7 @@ const CreateScheduleForClassPage = () => {
               >
                 {" "}
                 {/* Overlay để chặn tương tác khi Bước 1 chưa xong */}
-                <Form.Item label="Assign Trainee Method" className="mb-6">
+                        <Form.Item label="Assign Trainee Method" className="mb-6">
                   <Radio.Group
                     onChange={(e) => setTraineeAssignMethod(e.target.value)}
                     value={traineeAssignMethod}
@@ -1791,10 +1798,10 @@ const CreateScheduleForClassPage = () => {
                     <Radio.Button value="manual">
                       <UserAddOutlined className="mr-1" /> Add Manually
                     </Radio.Button>
-                  </Radio.Group>
-                </Form.Item>
+                            </Radio.Group>
+                        </Form.Item>
                 {traineeAssignMethod === "import" && (
-                  <Form.Item label="Upload Excel File (.xlsx, .xls)">
+                            <Form.Item label="Upload Excel File (.xlsx, .xls)">
                     <Upload
                       fileList={fileList}
                       beforeUpload={beforeUpload}
@@ -1811,8 +1818,8 @@ const CreateScheduleForClassPage = () => {
                         {isProcessingFile
                           ? "Processing..."
                           : "Select File (Max 5MB)"}
-                      </Button>
-                    </Upload>
+                                    </Button>
+                                </Upload>
                     <Text
                       type="secondary"
                       className="!block !mt-2 !text-sm !text-gray-600"
@@ -1826,7 +1833,7 @@ const CreateScheduleForClassPage = () => {
                       <Spin tip="Generating preview..." className="!mt-2" />
                     )}
 
-                    {excelPreviewError && (
+                                {excelPreviewError && (
                       <Alert
                         message="File Preview Error"
                         description={excelPreviewError}
@@ -1834,26 +1841,26 @@ const CreateScheduleForClassPage = () => {
                         showIcon
                         className="!mt-4"
                       />
-                    )}
+                                )}
 
-                    {excelPreviewData.length > 0 && !excelPreviewError && (
-                      <div className="mt-6">
+                                {excelPreviewData.length > 0 && !excelPreviewError && (
+                                    <div className="mt-6">
                         <Title level={5} className="!text-cyan-700">
                           Preview Data ({excelPreviewData.length} records)
                         </Title>
-                        <Table
-                          columns={excelPreviewColumns}
-                          dataSource={excelPreviewData}
-                          bordered
-                          size="small"
+                                        <Table 
+                                            columns={excelPreviewColumns}
+                                            dataSource={excelPreviewData}
+                                            bordered
+                                            size="small"
                           scroll={{ x: "max-content" }}
                           pagination={false}
                           className="!mt-2"
-                        />
-                      </div>
-                    )}
-                  </Form.Item>
-                )}
+                                        />
+                                    </div>
+                                )}
+                            </Form.Item>
+                        )}
                 {traineeAssignMethod === "manual" && (
                   <Form
                     form={traineeForm}
@@ -1875,18 +1882,18 @@ const CreateScheduleForClassPage = () => {
                           "N/A"}
                       </Text>
                       .
-                    </Paragraph>
-                    <Form.List name="trainees">
-                      {(fields, { add, remove }) => (
-                        <>
-                          {fields.map(({ key, name, ...restField }) => (
+                                </Paragraph>
+                                <Form.List name="trainees">
+                                    {(fields, { add, remove }) => (
+                                        <>
+                                            {fields.map(({ key, name, ...restField }) => (
                             <Space
                               key={key}
                               style={{ display: "flex", marginBottom: 8 }}
                               align="baseline"
                             >
-                              <Form.Item
-                                {...restField}
+                                                    <Form.Item 
+                                                        {...restField} 
                                 name={[name, "traineeId"]}
                                 rules={[
                                   {
@@ -1895,13 +1902,13 @@ const CreateScheduleForClassPage = () => {
                                   },
                                 ]}
                                 style={{ width: "300px" }}
-                              >
-                                <Select
-                                  placeholder="Select Trainee"
-                                  loading={loading.eligibleTrainees}
-                                  showSearch
-                                  optionFilterProp="children"
-                                  filterOption={(input, option) =>
+                                                    >
+                                                        <Select 
+                                                            placeholder="Select Trainee" 
+                                                            loading={loading.eligibleTrainees}
+                                                            showSearch
+                                                            optionFilterProp="children"
+                                                            filterOption={(input, option) => 
                                     (option?.label ?? "")
                                       .toLowerCase()
                                       .includes(input.toLowerCase()) ||
@@ -1919,12 +1926,11 @@ const CreateScheduleForClassPage = () => {
                                       value={trainee.userId}
                                       label={`${trainee.fullName} (${trainee.userId})`}
                                     >
-                                      {trainee.fullName} ({trainee.userId}) -{" "}
-                                      {trainee.specialtyId}
-                                    </Option>
-                                  ))}
-                                </Select>
-                              </Form.Item>
+                                      {trainee.fullName} ({trainee.userId})
+                                                                </Option>
+                                                            ))}
+                                                        </Select>
+                                                    </Form.Item>
                               <Form.Item
                                 {...restField}
                                 name={[name, "notes"]}
@@ -1950,9 +1956,9 @@ const CreateScheduleForClassPage = () => {
                                   Remove
                                 </Button>
                               ) : null}
-                            </Space>
-                          ))}
-                          <Form.Item>
+                                                </Space>
+                                            ))}
+                                            <Form.Item>
                             <Button
                               type="dashed"
                               onClick={() => add()}
@@ -1963,14 +1969,14 @@ const CreateScheduleForClassPage = () => {
                             >
                               Add Another Trainee
                             </Button>
-                          </Form.Item>
-                        </>
-                      )}
-                    </Form.List>
-                  </Form>
-                )}
+                                            </Form.Item>
+                                        </>
+                                    )}
+                                </Form.List>
+                            </Form>
+                        )}
                 <Divider className="!border-cyan-200" />
-                <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
+                        <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
                   <Button
                     icon={<DeleteOutlined />}
                     onClick={hardResetAndRollback}
@@ -1979,8 +1985,8 @@ const CreateScheduleForClassPage = () => {
                     className="!mr-auto"
                     disabled={submittingStep1 || submittingStep2}
                   >
-                    Reset All & Start Over
-                  </Button>
+                                Reset All & Start Over
+                            </Button>
 
                   <Button
                     icon={<ReloadOutlined />}
@@ -1989,9 +1995,9 @@ const CreateScheduleForClassPage = () => {
                     className="!mr-4 !border-cyan-500 !text-cyan-700 hover:!bg-cyan-50"
                     disabled={submittingStep1 || submittingStep2}
                   >
-                    Start New Schedule Cycle
-                  </Button>
-
+                                Start New Schedule Cycle
+                            </Button>
+                          
                   <Button
                     type="primary"
                     icon={<SaveOutlined />}
@@ -2007,12 +2013,12 @@ const CreateScheduleForClassPage = () => {
                         fileList.length > 0)
                     }
                   >
-                    Assign Trainees & Finish
-                  </Button>
-                </div>
-              </div>
-            </Spin>
-          </Card>
+                                Assign Trainees & Finish
+                            </Button>
+                        </div>
+                    </div>
+                </Spin>
+            </Card>
         </div>
       </div>
     </div>
