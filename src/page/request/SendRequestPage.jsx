@@ -32,6 +32,7 @@ const SendRequestPage = () => {
   const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [userRole, setUserRole] = useState("");
   const [apiError, setApiError] = useState(null);
+  const [form] = Form.useForm();
 
   useEffect(() => {
     // Get user role from sessionStorage
@@ -218,49 +219,25 @@ const SendRequestPage = () => {
   };
 
   const handleSendRequest = async () => {
-    // Validate fields based on role
-    if (userRole === "AOC Manager") {
-      if (
-        !requestData.description ||
-        requestData.description.trim() === "" ||
-        !requestData.notes ||
-        requestData.notes.trim() === ""
-      ) {
-        message.error("Please fill in all required fields!");
-        return;
-      }
-    } else {
-      if (
-        !requestData.requestEntityId ||
-        requestData.requestEntityId.trim() === "" ||
-        !requestData.description ||
-        requestData.description.trim() === "" ||
-        !requestData.notes ||
-        requestData.notes.trim() === ""
-      ) {
-        message.error("Please fill in all required fields!");
-        return;
-      }
-    }
-
-    setLoading(true);
-    setApiError(null);
     try {
+      const values = await form.validateFields(); // validate all fields
+      setLoading(true);
+      setApiError(null);
       let payload;
 
       if (userRole === "AOC Manager") {
         // Create payload without requestEntityId for AOC Manager
         payload = {
-          requestType: requestData.requestType, // 6, 7, or 8 based on selection
-          description: requestData.description,
-          notes: requestData.notes,
+          requestType: values.requestType, // 6, 7, or 8 based on selection
+          description: values.description,
+          notes: values.notes,
         };
       } else {
         payload = {
           requestType: 3,
-          requestEntityId: requestData.requestEntityId,
-          description: requestData.description,
-          notes: requestData.notes,
+          requestEntityId: values.requestEntityId,
+          description: values.description,
+          notes: values.notes,
         };
       }
 
@@ -288,21 +265,9 @@ const SendRequestPage = () => {
           notes: "",
         });
       }
-    } catch (error) {
-      console.error("Request error:", error);
-
-      // Xử lý lỗi API và lưu vào trạng thái
-      if (error.response && error.response.data) {
-        // Lưu thông tin lỗi từ API vào state
-        setApiError(error.response.data);
-      } else {
-        // Trường hợp không có response.data, vẫn hiển thị thông báo lỗi chung
-        const errorMessage =
-          userRole === "AOC Manager"
-            ? "Failed to send plan request. Please try again."
-            : "Failed to send complaint. Please try again.";
-        message.error(errorMessage);
-      }
+    } catch (errorInfo) {
+      // Nếu có lỗi, Ant Design sẽ tự động hiển thị dưới các trường
+      return;
     } finally {
       setLoading(false);
     }
@@ -375,7 +340,7 @@ const SendRequestPage = () => {
 
         {renderErrorDetails()}
 
-        <Form layout="vertical">
+        <Form form={form} layout="vertical">
           {userRole === "AOC Manager" && (
             <Form.Item
               label={
@@ -467,7 +432,6 @@ const SendRequestPage = () => {
             ]}
           >
             <Input
-              name="description"
               placeholder={
                 userRole === "AOC Manager"
                   ? "Brief description of the plan request"
@@ -496,7 +460,6 @@ const SendRequestPage = () => {
           >
             <TextArea
               rows={4}
-              name="notes"
               placeholder={
                 userRole === "AOC Manager"
                   ? "Additional details for your plan request"

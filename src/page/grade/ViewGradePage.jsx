@@ -85,10 +85,13 @@ const ViewGradePage = () => {
       sorter: (a, b) => a.traineeAssignID.localeCompare(b.traineeAssignID),
       sortOrder:
         sortedInfo.columnKey === "traineeAssignId" ? sortedInfo.order : null,
-      // filteredValue: [searchText],
-      // onFilter: (value, record) => {
-      //   return record.subjectId.toLowerCase().includes(value.toLowerCase());
-      // },
+      render: (_, record) => {
+        const isPending =
+          record.participantScore === -1 ||
+          record.assignmentScore === -1 ||
+          record.finalExamScore === -1;
+        return isPending ? null : record.traineeAssignId;
+      },
     },
     {
       title: "Trainee",
@@ -97,10 +100,13 @@ const ViewGradePage = () => {
       width: 120,
       sorter: (a, b) => a.fullname.localeCompare(b.fullname),
       sortOrder: sortedInfo.columnKey === "fullname" ? sortedInfo.order : null,
-      // filteredValue: [searchText],
-      // onFilter: (value, record) => {
-      //   return record.subjectId.toLowerCase().includes(value.toLowerCase());
-      // },
+      render: (_, record) => {
+        const isPending =
+          record.participantScore === -1 ||
+          record.assignmentScore === -1 ||
+          record.finalExamScore === -1;
+        return isPending ? null : record.fullname;
+      },
     },
     {
       title: "Subject ID",
@@ -109,10 +115,13 @@ const ViewGradePage = () => {
       width: 120,
       sorter: (a, b) => a.fullname.localeCompare(b.fullname),
       sortOrder: sortedInfo.columnKey === "fullname" ? sortedInfo.order : null,
-      // filteredValue: [searchText],
-      // onFilter: (value, record) => {
-      //   return record.subjectId.toLowerCase().includes(value.toLowerCase());
-      // },
+      render: (_, record) => {
+        const isPending =
+          record.participantScore === -1 ||
+          record.assignmentScore === -1 ||
+          record.finalExamScore === -1;
+        return isPending ? null : record.subjectId;
+      },
     },
     {
       title: "Progress Scores",
@@ -127,14 +136,15 @@ const ViewGradePage = () => {
             sortedInfo.columnKey === "participantScore"
               ? sortedInfo.order
               : null,
-          render: (score) => (
-            <Tag
-              color={score >= 5 ? "success" : "error"}
-              className="w-16 text-center"
-            >
-              {score}
-            </Tag>
-          ),
+          render: (score) =>
+            score === -1 ? null : (
+              <Tag
+                color={score >= 5 ? "success" : "error"}
+                className="w-16 text-center"
+              >
+                {score}
+              </Tag>
+            ),
         },
         {
           title: "Assignment",
@@ -146,14 +156,15 @@ const ViewGradePage = () => {
             sortedInfo.columnKey === "assignmentScore"
               ? sortedInfo.order
               : null,
-          render: (score) => (
-            <Tag
-              color={score >= 5 ? "success" : "error"}
-              className="w-16 text-center"
-            >
-              {score}
-            </Tag>
-          ),
+          render: (score) =>
+            score === -1 ? null : (
+              <Tag
+                color={score >= 5 ? "success" : "error"}
+                className="w-16 text-center"
+              >
+                {score}
+              </Tag>
+            ),
         },
       ],
     },
@@ -168,14 +179,15 @@ const ViewGradePage = () => {
           sorter: (a, b) => a.finalExamScore - b.finalExamScore,
           sortOrder:
             sortedInfo.columnKey === "finalExamScore" ? sortedInfo.order : null,
-          render: (score) => (
-            <Tag
-              color={score >= 5 ? "success" : "error"}
-              className="w-16 text-center"
-            >
-              {score}
-            </Tag>
-          ),
+          render: (score) =>
+            score === -1 ? null : (
+              <Tag
+                color={score >= 5 ? "success" : "error"}
+                className="w-16 text-center"
+              >
+                {score}
+              </Tag>
+            ),
         },
         {
           title: "Resit",
@@ -187,14 +199,17 @@ const ViewGradePage = () => {
             sortedInfo.columnKey === "finalResitScore"
               ? sortedInfo.order
               : null,
-          render: (score) => (
-            <Tag
-              color={score === 0 ? "default" : score >= 5 ? "success" : "error"}
-              className="w-16 text-center"
-            >
-              {score || "-"}
-            </Tag>
-          ),
+          render: (score) =>
+            score === -1
+              ? null
+              : (
+                <Tag
+                  color={score === 0 ? "default" : score >= 5 ? "success" : "error"}
+                  className="w-16 text-center"
+                >
+                  {score || "-"}
+                </Tag>
+              ),
         },
       ],
     },
@@ -207,6 +222,7 @@ const ViewGradePage = () => {
       sortOrder:
         sortedInfo.columnKey === "totalScore" ? sortedInfo.order : null,
       render: (score) => {
+        if (score === -1) return null;
         const roundedScore = Number(score).toFixed(2);
         const formattedScore = parseFloat(roundedScore);
 
@@ -252,6 +268,13 @@ const ViewGradePage = () => {
       key: "remarks",
       width: 200,
       ellipsis: true,
+      render: (_, record) => {
+        const isPending =
+          record.participantScore === -1 ||
+          record.assignmentScore === -1 ||
+          record.finalExamScore === -1;
+        return isPending ? null : record.remarks;
+      },
     },
     {
       title: "Graded By",
@@ -264,6 +287,13 @@ const ViewGradePage = () => {
         sortedInfo.columnKey === "gradedByInstructorId"
           ? sortedInfo.order
           : null,
+      render: (_, record) => {
+        const isPending =
+          record.participantScore === -1 ||
+          record.assignmentScore === -1 ||
+          record.finalExamScore === -1;
+        return isPending ? null : record.gradedByInstructorId;
+      },
     },
     {
       title: "Evaluation Date",
@@ -273,7 +303,12 @@ const ViewGradePage = () => {
       sorter: (a, b) => new Date(a.evaluationDate) - new Date(b.evaluationDate),
       sortOrder:
         sortedInfo.columnKey === "evaluationDate" ? sortedInfo.order : null,
-      render: (date) => {
+      render: (date, record) => {
+        const isPending =
+          record.participantScore === -1 ||
+          record.assignmentScore === -1 ||
+          record.finalExamScore === -1;
+        if (isPending) return null;
         if (!date) return "";
         return new Date(date).toLocaleString("en-US", {
           year: "numeric",
@@ -291,8 +326,11 @@ const ViewGradePage = () => {
       fixed: "right",
       width: 80,
       render: (_, record) => {
-        // Nếu người dùng là Reviewer, không hiển thị nút hành động
-        if (userRole === "Reviewer") {
+        const isPending =
+          record.participantScore === -1 ||
+          record.assignmentScore === -1 ||
+          record.finalExamScore === -1;
+        if (isPending || userRole === "Reviewer") {
           return null;
         }
 
@@ -830,11 +868,21 @@ const ViewGradePage = () => {
         <Table
           loading={loading}
           columns={getTableColumns()}
-          dataSource={filteredGrades}
+          dataSource={filteredGrades.filter(
+            (record) =>
+              record.participantScore !== -1 &&
+              record.assignmentScore !== -1 &&
+              record.finalExamScore !== -1
+          )}
           onChange={handleChange}
           pagination={{
             ...pagination,
-            total: filteredGrades.length,
+            total: filteredGrades.filter(
+              (record) =>
+                record.participantScore !== -1 &&
+                record.assignmentScore !== -1 &&
+                record.finalExamScore !== -1
+            ).length,
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} records`,
           }}
