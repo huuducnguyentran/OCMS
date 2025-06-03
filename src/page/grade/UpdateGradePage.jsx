@@ -153,7 +153,7 @@ const UpdateGradePage = () => {
                   Grades
                 </a>
               </Breadcrumb.Item>
-              <Breadcrumb.Item className="text-white font-semibold">
+              <Breadcrumb.Item className="!text-white !font-semibold">
                 Update Grade
               </Breadcrumb.Item>
             </Breadcrumb>
@@ -161,11 +161,11 @@ const UpdateGradePage = () => {
 
           <Title
             level={2}
-            className="text-white mb-2 font-semibold tracking-wide"
+            className="!text-white !mb-2 !font-semibold !tracking-wide"
           >
             Update Grade
           </Title>
-          <Text className="text-white/80 text-lg">
+          <Text className="!text-white/80 text-lg">
             Update grade information for trainee
           </Text>
         </div>

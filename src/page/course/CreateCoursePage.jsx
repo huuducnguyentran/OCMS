@@ -33,7 +33,7 @@ const CreateCoursePage = () => {
   const [initialCourses, setInitialCourses] = useState([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [mode, setMode] = useState("manual");
+  const [mode, setMode] = useState("import");
 
   useEffect(() => {
     fetchInitialCourses();
@@ -119,12 +119,12 @@ const CreateCoursePage = () => {
           className="mb-6"
           tabBarStyle={{ color: "#0891b2", fontWeight: "500" }}
         >
+          <Tabs.TabPane key="import" tab="Import from File" />
           <Tabs.TabPane
             key="manual"
             className="active:!text-cyan-700"
             tab="Create Manually"
           />
-          <Tabs.TabPane key="import" tab="Import from File" />
         </Tabs>
 
         <Spin spinning={loading || loadingCourses} size="large">
