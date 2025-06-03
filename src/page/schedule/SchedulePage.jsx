@@ -15,12 +15,10 @@ import {
   CalendarOutlined,
   ClockCircleOutlined,
   UserSwitchOutlined,
-  PlusOutlined,
   BookOutlined,
   InfoCircleOutlined,
   TagsOutlined,
   CheckCircleOutlined,
-  TagOutlined,
   EnvironmentOutlined,
   EditOutlined,
   DeleteOutlined,
@@ -58,7 +56,10 @@ const SchedulePage = () => {
       const totalMinutes = hours * 60 + mins + minutes;
       const newHours = Math.floor(totalMinutes / 60) % 24;
       const newMins = totalMinutes % 60;
-      return `${String(newHours).padStart(2, "0")}:${String(newMins).padStart(2, "0")}`;
+      return `${String(newHours).padStart(2, "0")}:${String(newMins).padStart(
+        2,
+        "0"
+      )}`;
     } catch (error) {
       console.error("Error in addMinutesToTime:", error);
       return time; // Return original time if there's an error
@@ -111,8 +112,13 @@ const SchedulePage = () => {
       // Ensure valid inputs
       const validYear = parseInt(year);
       const validWeek = parseInt(weekNumber);
-      
-      if (isNaN(validYear) || isNaN(validWeek) || validWeek < 1 || validWeek > 53) {
+
+      if (
+        isNaN(validYear) ||
+        isNaN(validWeek) ||
+        validWeek < 1 ||
+        validWeek > 53
+      ) {
         console.error(`Invalid week or year: week=${weekNumber}, year=${year}`);
         // Return a default week range
         const today = new Date();
@@ -122,7 +128,7 @@ const SchedulePage = () => {
         endDate.setDate(startDate.getDate() + 6);
         return { start: startDate, end: endDate };
       }
-      
+
       const startOfYear = new Date(validYear, 0, 1);
       const daysOffset =
         (startOfYear.getDay() > 0 ? 7 - startOfYear.getDay() : 0) +
@@ -191,7 +197,7 @@ const SchedulePage = () => {
       fetchScheduleData();
     }
   }, [userRole, viewMode]);
-  
+
   // Update table when year changes or when scheduleData updates
   useEffect(() => {
     const updateTable = () => {
@@ -201,7 +207,7 @@ const SchedulePage = () => {
         const processedData = processScheduleData();
         setTableData(Array.isArray(processedData) ? processedData : []);
       } catch (error) {
-        console.error('Error updating table:', error);
+        console.error("Error updating table:", error);
         setTableData([]);
       }
     };
@@ -221,37 +227,42 @@ const SchedulePage = () => {
       }
 
       let response;
+      let schedules = [];
+
       if (userRole === "Instructor") {
         response = await trainingScheduleService.getInstructorSubjects();
         console.log("Instructor schedule response:", response);
-        if (response?.schedules) {
-          setScheduleData(response.schedules);
-        } else {
-          setScheduleData([]);
-          message.info("No schedule data found");
-        }
       } else if (userRole === "Trainee") {
         response = await trainingScheduleService.getTraineeSubjects();
-        if (response?.schedules) {
-          setScheduleData(response.schedules);
-        } else {
-          setScheduleData([]);
-          message.info("No schedule data found");
-        }
       } else if (
         userRole === "TrainingStaff" ||
         userRole === "Training staff"
       ) {
         response = await trainingScheduleService.getAllTrainingSchedules();
-        if (response?.schedules) {
-          setScheduleData(response.schedules);
-        } else {
-          setScheduleData([]);
-          message.info("No schedule data found");
-        }
       }
 
-      console.log("Schedule Data after setting:", scheduleData);
+      if (response?.schedules) {
+        schedules = response.schedules;
+
+        // Apply filtering only for Instructor or Trainee
+        if (userRole === "Instructor" || userRole === "Trainee") {
+          schedules = schedules.filter(
+            (schedule) =>
+              schedule.status !== "Pending" && schedule.status !== "Canceled"
+          );
+        }
+
+        setScheduleData(schedules);
+
+        if (schedules.length === 0) {
+          message.info("No schedule data found");
+        }
+      } else {
+        setScheduleData([]);
+        message.info("No schedule data found");
+      }
+
+      console.log("Schedule Data after setting:", schedules);
     } catch (error) {
       console.error("Error fetching schedule:", error);
       handleError(error);
@@ -353,30 +364,43 @@ const SchedulePage = () => {
         console.error("Invalid week string format:", weekString);
         return getDefaultWeekDates();
       }
-      
+
       const parts = startStr.split("/");
       if (parts.length !== 2) {
         console.error("Invalid date format in week string:", startStr);
         return getDefaultWeekDates();
       }
-      
+
       const [startDay, startMonth] = parts.map(Number);
-      
-      if (isNaN(startDay) || isNaN(startMonth) || startMonth < 1 || startMonth > 12 || startDay < 1 || startDay > 31) {
+
+      if (
+        isNaN(startDay) ||
+        isNaN(startMonth) ||
+        startMonth < 1 ||
+        startMonth > 12 ||
+        startDay < 1 ||
+        startDay > 31
+      ) {
         console.error("Invalid date numbers:", startDay, startMonth);
         return getDefaultWeekDates();
       }
 
       // Create date for Monday using the current year from state
       const startDate = new Date(currentYear, startMonth - 1, startDay);
-      
+
       // Validate the date
       if (isNaN(startDate.getTime())) {
         console.error("Invalid date created:", startDate);
         return getDefaultWeekDates();
       }
 
-      console.log("Start date from string:", startDate.toDateString(), "(Year:", currentYear, ")");
+      console.log(
+        "Start date from string:",
+        startDate.toDateString(),
+        "(Year:",
+        currentYear,
+        ")"
+      );
 
       // Generate dates for the week
       const dates = [];
@@ -420,8 +444,16 @@ const SchedulePage = () => {
       const checkDate = new Date(date);
 
       // Validate dates
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || isNaN(checkDate.getTime())) {
-        console.error("Invalid date in schedule:", { startDate, endDate, checkDate });
+      if (
+        isNaN(startDate.getTime()) ||
+        isNaN(endDate.getTime()) ||
+        isNaN(checkDate.getTime())
+      ) {
+        console.error("Invalid date in schedule:", {
+          startDate,
+          endDate,
+          checkDate,
+        });
         return false;
       }
 
@@ -431,25 +463,37 @@ const SchedulePage = () => {
       checkDate.setHours(12, 0, 0, 0);
 
       const isActive = checkDate >= startDate && checkDate <= endDate;
-      
+
       // Only log if debugging is needed - too verbose for production
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV === "development") {
         console.log(
-          `Date check for ${schedule.subjectName || 'unknown'}: ${checkDate.toDateString()} is ` +
-          `${isActive ? 'within' : 'outside'} range ${startDate.toDateString()} - ${endDate.toDateString()}`
+          `Date check for ${
+            schedule.subjectName || "unknown"
+          }: ${checkDate.toDateString()} is ` +
+            `${
+              isActive ? "within" : "outside"
+            } range ${startDate.toDateString()} - ${endDate.toDateString()}`
         );
       }
-      
+
       return isActive;
     } catch (error) {
-      console.error('Error checking course active date:', error, 'Schedule:', schedule);
+      console.error(
+        "Error checking course active date:",
+        error,
+        "Schedule:",
+        schedule
+      );
       return false;
     }
   };
 
   // Process schedule data into time slots
   const processScheduleData = () => {
-    console.log("Processing schedule data. Total items:", scheduleData?.length || 0);
+    console.log(
+      "Processing schedule data. Total items:",
+      scheduleData?.length || 0
+    );
 
     // If no schedule data, return empty array
     if (!Array.isArray(scheduleData) || scheduleData.length === 0) {
@@ -463,25 +507,28 @@ const SchedulePage = () => {
       filteredData = scheduleData.filter((schedule) => {
         try {
           if (!schedule?.startDateTime) return false;
-          
+
           // Parse the start date
           const startDate = new Date(schedule.startDateTime);
           if (isNaN(startDate.getTime())) {
-            console.warn("Invalid start date in schedule:", schedule.startDateTime, schedule);
+            console.warn(
+              "Invalid start date in schedule:",
+              schedule.startDateTime,
+              schedule
+            );
             return false;
           }
-          
+
           // Get the year from the start date
           const scheduleYear = startDate.getFullYear();
-          
+
           // Also check if the schedule is active in the current week
           const weekDates = generateWeekDates(currentWeek);
-          const isActiveInCurrentWeek = weekDates.some(date => 
+          const isActiveInCurrentWeek = weekDates.some((date) =>
             isCourseActiveOnDate(schedule, date)
           );
-          
+
           return scheduleYear === currentYear && isActiveInCurrentWeek;
-          
         } catch (error) {
           console.error("Error processing schedule item:", error, schedule);
           return false;
@@ -491,17 +538,22 @@ const SchedulePage = () => {
       console.error("Error filtering schedule data by year:", error);
       return [];
     }
-    
+
     console.log(`Filtered data for year ${currentYear}:`, filteredData.length);
-    
+
     // If no data for selected year, return empty array
     if (filteredData.length === 0) {
-      console.log(`No schedule data available for year ${currentYear} in the current week`);
+      console.log(
+        `No schedule data available for year ${currentYear} in the current week`
+      );
       return [];
     }
-    
+
     // Filter by instructor if user is Training Staff
-    if ((userRole === "TrainingStaff" || userRole === "Training staff") && selectedInstructor) {
+    if (
+      (userRole === "TrainingStaff" || userRole === "Training staff") &&
+      selectedInstructor
+    ) {
       filteredData = filteredData.filter(
         (sch) => sch.instructorName === selectedInstructor
       );
@@ -514,7 +566,7 @@ const SchedulePage = () => {
 
     // Get unique time slots
     const uniqueTimeSlots = [
-      ...new Set(filteredData.map((item) => item.classTime).filter(Boolean))
+      ...new Set(filteredData.map((item) => item.classTime).filter(Boolean)),
     ]
       .map((time) => time.substring(0, 5))
       .sort();
@@ -534,7 +586,7 @@ const SchedulePage = () => {
         "Thursday",
         "Friday",
         "Saturday",
-        "Sunday"
+        "Sunday",
       ];
 
       // Get the dates for the current week
@@ -545,26 +597,33 @@ const SchedulePage = () => {
         console.error("Error generating week dates:", error);
         weekDates = getDefaultWeekDates();
       }
-      
+
       daysOfWeek.forEach((day, dayIndex) => {
         // Get the date for this day in the current week
         const currentWeekDate = weekDates[dayIndex];
-        
+
         const matchingSchedules = filteredData.filter((schedule) => {
           // Check if schedule time matches
           const scheduleTime = schedule.classTime
             ? schedule.classTime.substring(0, 5)
             : "";
-          
+
           // Check if day of week matches
           const scheduleDays = schedule.daysOfWeek
             ? schedule.daysOfWeek.split(",").map((d) => d.trim())
             : [];
-          
+
           // Check if the current date falls within the schedule's start and end dates
-          const isWithinDateRange = isCourseActiveOnDate(schedule, currentWeekDate);
-          
-          return scheduleDays.includes(day) && scheduleTime === timeSlot && isWithinDateRange;
+          const isWithinDateRange = isCourseActiveOnDate(
+            schedule,
+            currentWeekDate
+          );
+
+          return (
+            scheduleDays.includes(day) &&
+            scheduleTime === timeSlot &&
+            isWithinDateRange
+          );
         });
 
         if (matchingSchedules.length > 0) {
@@ -656,7 +715,10 @@ const SchedulePage = () => {
           );
         } else {
           row[day] = (
-            <div key={`empty-${day}-${timeIndex}`} className="h-full flex items-center justify-center">
+            <div
+              key={`empty-${day}-${timeIndex}`}
+              className="h-full flex items-center justify-center"
+            >
               <div
                 className="text-center text-gray-400 p-4 bg-gray-50/50 rounded-xl border border-gray-100 
                 hover:bg-gray-100/50 transition-colors"
@@ -672,8 +734,6 @@ const SchedulePage = () => {
       return row;
     });
   };
-
-
 
   // Generate column headers with dates
   const generateColumns = () => {
@@ -912,33 +972,42 @@ const SchedulePage = () => {
                     console.log(`Changing year to: ${value}`);
                     setCurrentYear(value);
                     generateWeekOptions(value);
-                    
+
                     // When year changes, update the current week for that year
                     // Use a safe date in the middle of the year
                     const newDate = new Date(value, 5, 15); // June 15 of selected year
                     const startOfYear = new Date(value, 0, 1);
                     const weekNumber = Math.ceil(
-                      ((newDate - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7
+                      ((newDate - startOfYear) / 86400000 +
+                        startOfYear.getDay() +
+                        1) /
+                        7
                     );
-                    
-                    console.log(`Calculated week number: ${weekNumber} for year ${value}`);
+
+                    console.log(
+                      `Calculated week number: ${weekNumber} for year ${value}`
+                    );
                     const currentWeekDates = getWeekDates(weekNumber, value);
-                    
-                    if (currentWeekDates && currentWeekDates.start && currentWeekDates.end) {
+
+                    if (
+                      currentWeekDates &&
+                      currentWeekDates.start &&
+                      currentWeekDates.end
+                    ) {
                       setCurrentWeek(
-                        `${formatDateShort(currentWeekDates.start)} To ${formatDateShort(
-                          currentWeekDates.end
-                        )}`
+                        `${formatDateShort(
+                          currentWeekDates.start
+                        )} To ${formatDateShort(currentWeekDates.end)}`
                       );
                     } else {
-                      console.error('Invalid week dates returned');
+                      console.error("Invalid week dates returned");
                       // Set a default week
-                      setCurrentWeek('01/01 To 07/01');
+                      setCurrentWeek("01/01 To 07/01");
                     }
                   } catch (error) {
-                    console.error('Error changing year:', error);
+                    console.error("Error changing year:", error);
                     // Set a default week
-                    setCurrentWeek('01/01 To 07/01');
+                    setCurrentWeek("01/01 To 07/01");
                   }
                 }}
                 size="large"

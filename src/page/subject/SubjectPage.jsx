@@ -43,6 +43,12 @@ const SubjectPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deletingSubjectId, setDeletingSubjectId] = useState(null);
+  const [selectedCourseId, setSelectedCourseId] = useState(null);
+  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState(null);
+  const [minCredits, setMinCredits] = useState(null);
+  const [maxCredits, setMaxCredits] = useState(null);
+  const [minScore, setMinScore] = useState(null);
+  const [maxScore, setMaxScore] = useState(null);
 
   const pageSize = 9;
 

@@ -32,6 +32,7 @@ const SendRequestPage = () => {
   const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [userRole, setUserRole] = useState("");
   const [apiError, setApiError] = useState(null);
+  const [form] = Form.useForm();
 
   useEffect(() => {
     // Get user role from sessionStorage
@@ -57,20 +58,28 @@ const SendRequestPage = () => {
       console.log("Subjects API response:", response);
 
       // Kiểm tra cấu trúc response theo cách mới như trong CreateLearningMatrixPage
-      if (response && response.allSubjects && Array.isArray(response.allSubjects)) {
+      if (
+        response &&
+        response.allSubjects &&
+        Array.isArray(response.allSubjects)
+      ) {
         console.log("Using response.allSubjects array");
         // Map dữ liệu theo cấu trúc mới
-        const formattedSubjects = response.allSubjects.map(subject => ({
+        const formattedSubjects = response.allSubjects.map((subject) => ({
           subjectId: subject.subjectId,
           subjectName: subject.subjectName,
           description: subject.description,
           credits: subject.credits,
-          passingScore: subject.passingScore
+          passingScore: subject.passingScore,
         }));
         setSubjects(formattedSubjects);
       }
       // Duy trì các kiểm tra cũ cho các trường hợp khác
-      else if (response && response.subjects && Array.isArray(response.subjects)) {
+      else if (
+        response &&
+        response.subjects &&
+        Array.isArray(response.subjects)
+      ) {
         console.log("Using response.subjects array");
         setSubjects(response.subjects);
       } else if (response && Array.isArray(response)) {
@@ -94,12 +103,12 @@ const SendRequestPage = () => {
         Array.isArray(response.data.allSubjects)
       ) {
         console.log("Using response.data.allSubjects as subjects list");
-        const formattedSubjects = response.data.allSubjects.map(subject => ({
+        const formattedSubjects = response.data.allSubjects.map((subject) => ({
           subjectId: subject.subjectId,
           subjectName: subject.subjectName,
           description: subject.description,
           credits: subject.credits,
-          passingScore: subject.passingScore
+          passingScore: subject.passingScore,
         }));
         setSubjects(formattedSubjects);
       } else {
@@ -150,28 +159,36 @@ const SendRequestPage = () => {
           response.data.allSubjects &&
           Array.isArray(response.data.allSubjects)
         ) {
-          console.log("Setting subjects from direct API call (data.allSubjects)");
-          const formattedSubjects = response.data.allSubjects.map(subject => ({
-            subjectId: subject.subjectId,
-            subjectName: subject.subjectName,
-            description: subject.description,
-            credits: subject.credits,
-            passingScore: subject.passingScore
-          }));
+          console.log(
+            "Setting subjects from direct API call (data.allSubjects)"
+          );
+          const formattedSubjects = response.data.allSubjects.map(
+            (subject) => ({
+              subjectId: subject.subjectId,
+              subjectName: subject.subjectName,
+              description: subject.description,
+              credits: subject.credits,
+              passingScore: subject.passingScore,
+            })
+          );
           setSubjects(formattedSubjects);
         } else if (
           response.data.data &&
           response.data.data.allSubjects &&
           Array.isArray(response.data.data.allSubjects)
         ) {
-          console.log("Setting subjects from direct API call (data.data.allSubjects)");
-          const formattedSubjects = response.data.data.allSubjects.map(subject => ({
-            subjectId: subject.subjectId,
-            subjectName: subject.subjectName,
-            description: subject.description,
-            credits: subject.credits,
-            passingScore: subject.passingScore
-          }));
+          console.log(
+            "Setting subjects from direct API call (data.data.allSubjects)"
+          );
+          const formattedSubjects = response.data.data.allSubjects.map(
+            (subject) => ({
+              subjectId: subject.subjectId,
+              subjectName: subject.subjectName,
+              description: subject.description,
+              credits: subject.credits,
+              passingScore: subject.passingScore,
+            })
+          );
           setSubjects(formattedSubjects);
         } else {
           console.error("Unexpected direct response format:", response.data);
@@ -202,49 +219,25 @@ const SendRequestPage = () => {
   };
 
   const handleSendRequest = async () => {
-    // Validate fields based on role
-    if (userRole === "AOC Manager") {
-      if (
-        !requestData.description ||
-        requestData.description.trim() === "" ||
-        !requestData.notes ||
-        requestData.notes.trim() === ""
-      ) {
-        message.error("Please fill in all required fields!");
-        return;
-      }
-    } else {
-      if (
-        !requestData.requestEntityId ||
-        requestData.requestEntityId.trim() === "" ||
-        !requestData.description ||
-        requestData.description.trim() === "" ||
-        !requestData.notes ||
-        requestData.notes.trim() === ""
-      ) {
-        message.error("Please fill in all required fields!");
-        return;
-      }
-    }
-
-    setLoading(true);
-    setApiError(null);
     try {
+      const values = await form.validateFields(); // validate all fields
+      setLoading(true);
+      setApiError(null);
       let payload;
 
       if (userRole === "AOC Manager") {
         // Create payload without requestEntityId for AOC Manager
         payload = {
-          requestType: requestData.requestType, // 6, 7, or 8 based on selection
-          description: requestData.description,
-          notes: requestData.notes,
+          requestType: values.requestType, // 6, 7, or 8 based on selection
+          description: values.description,
+          notes: values.notes,
         };
       } else {
         payload = {
           requestType: 3,
-          requestEntityId: requestData.requestEntityId,
-          description: requestData.description,
-          notes: requestData.notes,
+          requestEntityId: values.requestEntityId,
+          description: values.description,
+          notes: values.notes,
         };
       }
 
@@ -272,21 +265,9 @@ const SendRequestPage = () => {
           notes: "",
         });
       }
-    } catch (error) {
-      console.error("Request error:", error);
-
-      // Xử lý lỗi API và lưu vào trạng thái
-      if (error.response && error.response.data) {
-        // Lưu thông tin lỗi từ API vào state
-        setApiError(error.response.data);
-      } else {
-        // Trường hợp không có response.data, vẫn hiển thị thông báo lỗi chung
-        const errorMessage =
-          userRole === "AOC Manager"
-            ? "Failed to send plan request. Please try again."
-            : "Failed to send complaint. Please try again.";
-        message.error(errorMessage);
-      }
+    } catch (errorInfo) {
+      // Nếu có lỗi, Ant Design sẽ tự động hiển thị dưới các trường
+      return;
     } finally {
       setLoading(false);
     }
@@ -349,30 +330,35 @@ const SendRequestPage = () => {
   };
 
   return (
-    <Layout className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
-      <div className="bg-white p-10 shadow-xl rounded-lg w-full max-w-3xl space-y-6">
-        <Title level={2} className="text-center text-gray-800 mb-6">
+    <Layout className="!min-h-screen !flex !items-center !justify-center !bg-gradient-to-br from-cyan-50 via-white to-cyan-100 !p-6 sm:p-8">
+      <div className="bg-white p-10 shadow-2xl rounded-xl w-full max-w-3xl space-y-6 border border-cyan-200">
+        <Title level={2} className="!text-center !text-cyan-700">
           {userRole === "AOC Manager"
-            ? "Request create plan"
+            ? "Request to Create Plan"
             : "Send a Complaint"}
         </Title>
 
-        {/* Hiển thị chi tiết lỗi API nếu có */}
         {renderErrorDetails()}
 
-        <Form layout="vertical">
+        <Form form={form} layout="vertical">
           {userRole === "AOC Manager" && (
             <Form.Item
               label={
-                <span className="text-lg font-semibold">Request Type</span>
+                <span className="text-base font-semibold text-cyan-700">
+                  Request Type
+                </span>
               }
               required
+              rules={[
+                {
+                  required: true,
+                  message: "Please select a request type",
+                },
+              ]}
             >
               <Select
-                placeholder="Select request type"
                 value={requestData.requestType}
                 onChange={handleRequestTypeChange}
-                className="w-full"
                 size="large"
               >
                 <Option value={6}>Create New</Option>
@@ -384,36 +370,43 @@ const SendRequestPage = () => {
 
           {userRole !== "AOC Manager" && (
             <Form.Item
-              label={<span className="text-lg font-semibold">Subject</span>}
+              label={
+                <span className="text-base font-semibold text-cyan-700">
+                  Subject
+                </span>
+              }
               required
+              rules={[
+                {
+                  required: true,
+                  message: "Please select a subject",
+                },
+              ]}
             >
               {subjectsLoading ? (
                 <div className="flex justify-center p-3">
-                  <Spin size="small" />
+                  <Spin />
                 </div>
               ) : (
                 <Select
                   placeholder="Select subject"
                   value={requestData.requestEntityId || undefined}
                   onChange={handleSubjectChange}
-                  className="w-full"
                   size="large"
                   showSearch
                   optionFilterProp="label"
                   filterOption={(input, option) =>
-                    (option?.label?.toLowerCase() ?? "").includes(
-                      input.toLowerCase()
-                    )
+                    option?.label?.toLowerCase().includes(input.toLowerCase())
                   }
                 >
                   {subjects.length > 0 ? (
-                    subjects.map((subject) => (
+                    subjects.map((s) => (
                       <Option
-                        key={subject.subjectId}
-                        value={subject.subjectId}
-                        label={`${subject.subjectName} (${subject.subjectId})`}
+                        key={s.subjectId}
+                        value={s.subjectId}
+                        label={`${s.subjectName} (${s.subjectId})`}
                       >
-                        {subject.subjectName} ({subject.subjectId})
+                        {s.subjectName} ({s.subjectId})
                       </Option>
                     ))
                   ) : (
@@ -425,41 +418,56 @@ const SendRequestPage = () => {
           )}
 
           <Form.Item
-            label={<span className="text-lg font-semibold">Description</span>}
+            label={
+              <span className="text-base font-semibold text-cyan-700">
+                Description
+              </span>
+            }
             required
+            rules={[
+              {
+                required: true,
+                message: "Please enter a description",
+              },
+            ]}
           >
             <Input
-              name="description"
               placeholder={
                 userRole === "AOC Manager"
-                  ? "Brief description of your plan request"
-                  : "Brief description of your complaint"
+                  ? "Brief description of the plan request"
+                  : "Brief description of the complaint"
               }
               value={requestData.description}
               onChange={handleChange}
-              className="p-3 text-lg rounded-lg border border-gray-300 w-full"
+              className="p-3 rounded-md border border-gray-300 w-full"
               maxLength={100}
             />
           </Form.Item>
 
           <Form.Item
             label={
-              <span className="text-lg font-semibold">Additional Details</span>
+              <span className="text-base font-semibold text-cyan-700">
+                Additional Notes
+              </span>
             }
             required
+            rules={[
+              {
+                required: true,
+                message: "Please enter additional notes",
+              },
+            ]}
           >
             <TextArea
               rows={4}
-              name="notes"
               placeholder={
                 userRole === "AOC Manager"
-                  ? "Provide any additional details for your plan request"
-                  : "Provide any additional details or context for your complaint"
+                  ? "Additional details for your plan request"
+                  : "Additional context for your complaint"
               }
               value={requestData.notes}
               onChange={handleChange}
-              className="p-3 text-lg rounded-lg border border-gray-300 w-full"
-              required
+              className="p-3 rounded-md border border-gray-300 w-full"
               maxLength={100}
             />
           </Form.Item>
@@ -467,11 +475,11 @@ const SendRequestPage = () => {
           <Form.Item>
             <Button
               type="primary"
-              className="mt-6 px-6 py-3 text-lg bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full"
+              className="!w-full !text-lg !bg-cyan-600 hover:!bg-cyan-700 !border-none !rounded-lg !py-2"
               onClick={handleSendRequest}
               loading={loading}
             >
-              {loading ? "Sending..." : "Submit"}
+              {loading ? "Submitting..." : "Submit"}
             </Button>
           </Form.Item>
         </Form>

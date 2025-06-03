@@ -113,33 +113,36 @@ const GradeImportPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <Title level={2} className="mb-6 flex items-center gap-2">
-            <FileExcelOutlined className="text-green-600" />
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <Title
+            level={2}
+            className="!mb-6 !lex !items-center !gap-3 !text-cyan-700"
+          >
+            <FileExcelOutlined className="text-3xl text-cyan-600" />
             Import Grades from Excel
           </Title>
 
           {!excelData.length && (
             <div
-              className={`border-2 border-dashed rounded-lg p-12 mb-6 text-center transition-all duration-200 ${
+              className={`border-4 border-dashed rounded-xl p-12 mb-6 text-center transition-all duration-200 ${
                 isDragging
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-300 hover:border-blue-400"
+                  ? "border-cyan-500 bg-cyan-100"
+                  : "border-gray-300 hover:border-cyan-400"
               }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
               <div className="flex flex-col items-center justify-center space-y-4">
-                <UploadOutlined className="text-5xl text-gray-400" />
+                <UploadOutlined className="!text-5xl !text-cyan-400" />
                 <div className="space-y-2">
                   <p className="text-lg text-gray-600">
                     Drag and drop Excel file here or
                   </p>
-                  <label className="inline-flex items-center px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg cursor-pointer transition-colors duration-200 shadow-md">
-                    <UploadOutlined className="mr-2" />
+                  <label className="inline-flex items-center px-6 py-3 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg cursor-pointer transition-colors duration-200 shadow-md">
+                    <UploadOutlined className="!mr-2" />
                     <span>Choose File</span>
                     <input
                       type="file"
@@ -157,7 +160,7 @@ const GradeImportPage = () => {
           )}
 
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
+            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg
@@ -173,7 +176,7 @@ const GradeImportPage = () => {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-red-700">{error}</p>
+                  <p className="text-sm text-red-700 font-medium">{error}</p>
                 </div>
               </div>
             </div>
@@ -188,10 +191,10 @@ const GradeImportPage = () => {
           {excelData.length > 0 && (
             <div>
               <div className="flex justify-between items-center mb-6">
-                <Title level={4} className="!mb-0">
-                  Preview Data ({excelData.length} records)
+                <Title level={4} className="!mb-0 !text-cyan-700">
+                  Preview Data
                 </Title>
-                <div className="space-x-4">
+                <div className="space-x-3">
                   <Button
                     icon={<ReloadOutlined />}
                     onClick={() => {
@@ -199,6 +202,7 @@ const GradeImportPage = () => {
                       setColumns([]);
                       setError(null);
                     }}
+                    className="!text-cyan-600 !border-cyan-600 hover:!text-cyan-800 hover:!border-cyan-800"
                   >
                     Upload Another File
                   </Button>
@@ -207,6 +211,7 @@ const GradeImportPage = () => {
                     icon={<FileExcelOutlined />}
                     onClick={handleImportGrades}
                     loading={loading}
+                    className="!bg-cyan-600 hover:!bg-cyan-700 !border-cyan-600"
                   >
                     Import Grades
                   </Button>
