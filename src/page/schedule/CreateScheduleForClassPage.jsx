@@ -39,6 +39,8 @@ import {
   CheckCircleFilled,
   DeleteOutlined,
   ReloadOutlined,
+  ClockCircleOutlined,
+  TagOutlined,
 } from "@ant-design/icons";
 import { trainingScheduleService } from "../../services/trainingScheduleService";
 import { getAllSubjectSpecialties } from "../../services/subjectSpecialtyServices";
@@ -80,6 +82,68 @@ const RoomEnum = {
 
 const getLocationName = (value) => Object.keys(LocationEnum).find(key => LocationEnum[key] === value);
 const getRoomName = (value) => Object.keys(RoomEnum).find(key => RoomEnum[key] === value);
+
+// Helper function: add minutes to time string (HH:mm)
+const addMinutesToTime = (time, minutes) => {
+  try {
+    const [hours, mins] = time.split(":").map(Number);
+    const totalMinutes = hours * 60 + mins + minutes;
+    const newHours = Math.floor(totalMinutes / 60) % 24;
+    const newMins = totalMinutes % 60;
+    return `${String(newHours).padStart(2, "0")}:${String(newMins).padStart(2, "0")}`;
+  } catch (error) {
+    return time;
+  }
+};
+
+// Helper: get all unique time slots from schedules
+const getUniqueTimeSlots = (schedules) => {
+  return [
+    ...new Set(
+      schedules
+        .filter(sch => sch.status !== 'Canceled' && sch.classTime)
+        .map(sch => sch.classTime.substring(0, 5))
+    )
+  ].sort();
+};
+
+// Helper: get week dates (Monday - Sunday) for current week
+const getCurrentWeekDates = () => {
+  const today = new Date();
+  const monday = new Date(today);
+  const day = today.getDay();
+  const daysFromMonday = day === 0 ? 6 : day - 1;
+  monday.setDate(today.getDate() - daysFromMonday);
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
+    dates.push(date);
+  }
+  return dates;
+};
+
+// Helper: check if a schedule is active on a date
+const isScheduleActiveOnDate = (schedule, date) => {
+  if (!schedule?.startDateTime || !schedule?.endDateTime) return false;
+  try {
+    const startDate = new Date(schedule.startDateTime);
+    const endDate = new Date(schedule.endDateTime);
+    const checkDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+    checkDate.setHours(12, 0, 0, 0);
+    return checkDate >= startDate && checkDate <= endDate;
+  } catch {
+    return false;
+  }
+};
+
+// Helper: get days of week from schedule (string)
+const getDaysOfWeekArray = (daysOfWeekStr) => {
+  if (!daysOfWeekStr) return [];
+  return daysOfWeekStr.split(',').map(d => d.trim());
+};
 
 const CreateScheduleForClassPage = () => {
   const navigate = useNavigate();
@@ -957,17 +1021,90 @@ const CreateScheduleForClassPage = () => {
                                     </Select>
                                 </Form.Item>
                                 {conflictMessages.length > 0 && !isStep1Completed && (
-                                    <Alert 
-                                        message="Instructor Conflicts" 
-                                        description={
-                                            <Space direction="vertical" style={{width: '100%'}}>
-                                                {conflictMessages.map((msgComponent, idx) => <Paragraph key={idx} style={{fontSize: '12px', marginBottom: '4px'}}>{msgComponent}</Paragraph>)}
-                                            </Space>
-                                        } 
-                                        type="warning" 
-                                        showIcon 
-                                        className="my-4"
-                                    />
+                                  <div className="my-4">
+                                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                                      <div className="font-semibold text-yellow-800 mb-2 flex items-center">
+                                        <InfoCircleOutlined className="mr-2" /> Instructor Conflicts
+                                      </div>
+                                      {/* Schedule Grid Start */}
+                                      <div className="overflow-x-auto">
+                                        {(() => {
+                                          const schedules = instructorExistingSchedules.filter(sch => sch.status !== 'Canceled');
+                                          if (schedules.length === 0) {
+                                            return <div className="text-yellow-700 py-2">No active schedules found for this instructor.</div>;
+                                          }
+                                          const weekDates = getCurrentWeekDates();
+                                          const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+                                          const timeSlots = getUniqueTimeSlots(schedules);
+                                          if (timeSlots.length === 0) {
+                                            return <div className="text-yellow-700 py-2">No time slots found.</div>;
+                                          }
+                                          return (
+                                            <table className="min-w-full text-xs border border-yellow-200 bg-white rounded-xl">
+                                              <thead className="bg-yellow-100">
+                                                <tr>
+                                                  <th className="px-2 py-2 border">Time</th>
+                                                  {daysOfWeek.map((day, idx) => (
+                                                    <th key={day} className="px-2 py-2 border text-center">
+                                                      <div>{day}</div>
+                                                      <div className="text-[10px] text-gray-500">{weekDates[idx] ? dayjs(weekDates[idx]).format("DD/MM") : ""}</div>
+                                                    </th>
+                                                  ))}
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                                {timeSlots.map((slot, slotIdx) => (
+                                                  <tr key={slotIdx}>
+                                                    <td className="border px-2 py-2 font-semibold text-gray-700 whitespace-nowrap">{slot} - {addMinutesToTime(slot, 90)}</td>
+                                                    {daysOfWeek.map((day, dayIdx) => {
+                                                      // Tìm schedule phù hợp
+                                                      const currentDate = weekDates[dayIdx];
+                                                      const sch = schedules.find(sch => {
+                                                        const scheduleDays = getDaysOfWeekArray(sch.daysOfWeek);
+                                                        const scheduleTime = sch.classTime ? sch.classTime.substring(0, 5) : "";
+                                                        return scheduleDays.includes(day) && scheduleTime === slot && isScheduleActiveOnDate(sch, currentDate);
+                                                      });
+                                                      if (sch) {
+                                                        return (
+                                                          <td key={day} className="border px-2 py-2 align-top">
+                                                            <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-2 shadow-sm">
+                                                              <div className="flex items-center gap-2 mb-1">
+                                                                <span className={`px-2 py-1 rounded text-xs font-medium 
+                                                                  ${sch.status === 'Completed' ? 'bg-blue-100 text-blue-700' :
+                                                                    sch.status === 'Incoming' ? 'bg-yellow-100 text-yellow-700' :
+                                                                    sch.status === 'Pending' ? 'bg-orange-100 text-orange-700' :
+                                                                    'bg-gray-100 text-gray-700'}`}>{sch.status}</span>
+                                                              </div>
+                                                              <div className="font-semibold text-gray-800 text-xs mb-1 line-clamp-2">{sch.subjectName}</div>
+                                                              <div className="flex items-center gap-1 text-gray-600 text-xs mb-1"><ClockCircleOutlined className="text-gray-400" />{slot}</div>
+                                                              <div className="flex items-center gap-1 text-gray-600 text-xs mb-1"><BookOutlined className="text-gray-400" />Room: {sch.roomName || getRoomName(sch.room) || sch.room}</div>
+                                                              <div className="flex items-center gap-1 text-gray-600 text-xs mb-1"><InfoCircleOutlined className="text-gray-400" />Location: {sch.locationName || getLocationName(sch.location) || sch.location}</div>
+                                                              <div className="flex items-center gap-1 text-gray-600 text-xs mb-1"><TagOutlined className="text-gray-400" />Days: {sch.daysOfWeek}</div>
+                                                              <div className="flex items-center gap-1 text-gray-600 text-xs"><CalendarOutlined className="text-gray-400" />{sch.startDateTime ? dayjs(sch.startDateTime).format('YYYY-MM-DD') : ''} - {sch.endDateTime ? dayjs(sch.endDateTime).format('YYYY-MM-DD') : ''}</div>
+                                                            </div>
+                                                          </td>
+                                                        );
+                                                      } else {
+                                                        return (
+                                                          <td key={day} className="border px-2 py-2 align-top">
+                                                            <div className="flex flex-col items-center justify-center h-full text-gray-400 text-xs">
+                                                              <ClockCircleOutlined className="text-lg mb-1" />
+                                                              No Class
+                                                            </div>
+                                                          </td>
+                                                        );
+                                                      }
+                                                    })}
+                                                  </tr>
+                                                ))}
+                                              </tbody>
+                                            </table>
+                                          );
+                                        })()}
+                                      </div>
+                                      {/* Schedule Grid End */}
+                                    </div>
+                                  </div>
                                 )}
                             </Col>
 
