@@ -417,7 +417,7 @@ const ViewGradePage = () => {
       filtered = filtered.filter(
         (grade) =>
           grade.gradeId.toLowerCase().includes(search.toLowerCase()) ||
-          grade.traineeAssignID.toLowerCase().includes(search.toLowerCase()) ||
+          grade.traineeAssignId.toLowerCase().includes(search.toLowerCase()) ||
           grade.subjectId.toLowerCase().includes(search.toLowerCase()) ||
           grade.fullname.toLowerCase().includes(search.toLowerCase())
       );

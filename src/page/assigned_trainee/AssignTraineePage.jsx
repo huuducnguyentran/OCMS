@@ -120,8 +120,11 @@ const AssignTraineePage = () => {
   };
 
   const handleAssignTrainee = async () => {
-    if (!selectedTraineeId || !selectedClassSubjectId) {
-      message.error("Please select a trainee and a class-subject.");
+    if (!selectedTraineeId) {
+      message.error("Please select a trainee");
+      return;
+    } else if (!selectedClassSubjectId) {
+      message.error("Please select a class-subject.");
       return;
     }
 
@@ -308,8 +311,8 @@ const AssignTraineePage = () => {
                   value={item.classSubjectId}
                   label={`${item.className} / ${item.subjectSpecialtyId} / ${item.classSubjectId}`}
                 >
-                  {item.className} / {item.subjectSpecialtyId} /{" "}
-                  {item.classSubjectId}
+                  {item.className} - {item.subjectSpecialtyId} - (
+                  {item.classSubjectId})
                 </Option>
               ))}
             </Select>
@@ -332,7 +335,7 @@ const AssignTraineePage = () => {
                   value={t.userId}
                   label={`${t.fullName} (${t.userId})`}
                 >
-                  {t.fullName} ({t.userId}) ({t.specialtyId})
+                  {t.fullName} - ({t.userId}) - ({t.specialtyId})
                 </Option>
               ))}
             </Select>
