@@ -183,6 +183,7 @@ const SubjectSpecialtyCreate = () => {
                     <Select
                       placeholder="Select a subject"
                       showSearch
+                      allowClear
                       optionFilterProp="children"
                       size="large"
                       className="w-full"
@@ -224,6 +225,7 @@ const SubjectSpecialtyCreate = () => {
                     <Select
                       placeholder="Select a specialty"
                       showSearch
+                      allowClear
                       optionFilterProp="children"
                       size="large"
                       className="w-full"

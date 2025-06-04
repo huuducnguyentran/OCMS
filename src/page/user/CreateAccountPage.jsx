@@ -472,6 +472,8 @@ const CreateAccountPage = () => {
                         placeholder="Select role"
                         className="rounded-lg"
                         size="large"
+                        allowClear
+                        showSearch
                       >
                         {roleOptions.map((role) => (
                           <Option key={role.value} value={role.value}>
@@ -498,6 +500,7 @@ const CreateAccountPage = () => {
                         placeholder="Select specialty"
                         loading={loadingSpecialties}
                         showSearch
+                        allowClear
                         optionFilterProp="children"
                         className="rounded-lg"
                         size="large"
@@ -520,6 +523,7 @@ const CreateAccountPage = () => {
                         placeholder="Select department"
                         loading={loadingDepartments}
                         showSearch
+                        allowClear
                         optionFilterProp="children"
                         className="rounded-lg"
                         size="large"
