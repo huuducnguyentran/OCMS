@@ -129,7 +129,7 @@ const InstructorAssignmentCreate = () => {
                     >
                       {subjects.map((s) => (
                         <Option key={s.subjectId} value={s.subjectId}>
-                          {s.subjectName || s.subjectId}
+                          {s.subjectName} - ({s.subjectId})
                         </Option>
                       ))}
                     </Select>
@@ -180,7 +180,8 @@ const InstructorAssignmentCreate = () => {
                           {i.fullName ||
                             i.username ||
                             i.userId ||
-                            i.instructorId}
+                            i.instructorId}{" "}
+                          - ({i.userId})
                         </Option>
                       ))}
                     </Select>
