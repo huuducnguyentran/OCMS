@@ -51,18 +51,7 @@ const SchedulePage = () => {
 
   // Helper function to add minutes to a time string (format: HH:mm)
   const addMinutesToTime = (timeStr, durationStr) => {
-  //   try {
-  //     const [hours, mins] = time.split(":").map(Number);
-  //     const totalMinutes = hours * 60 + mins + minutes;
-  //     const newHours = Math.floor(totalMinutes / 60) % 24;
-  //     const newMins = totalMinutes % 60;
-  //     return `${String(newHours).padStart(2, "0")}:${String(newMins).padStart(2, "0")}`;
-  //   } catch (error) {
-  //     console.error("Error in addMinutesToTime:", error);
-  //     return time; // Return original time if there's an error
-  //   }
-  // };
-   try {
+  try {
       const [startHours, startMinutes] = timeStr.split(":" ).map(Number);
       const [durHours, durMinutes, durSeconds = 0] = durationStr.split(":" ).map(Number);
 
@@ -70,12 +59,12 @@ const SchedulePage = () => {
       startDate.setHours(startHours);
       startDate.setMinutes(startMinutes);
       startDate.setSeconds(0);
+      startDate.setMilliseconds(0);
 
-      const endDate = new Date(startDate.getTime() +
-        durHours * 60 * 60 * 1000 +
-        durMinutes * 60 * 1000 +
-        durSeconds * 1000
-      );
+      const endDate = new Date(startDate);
+      endDate.setHours(startDate.getHours() + durHours);
+      endDate.setMinutes(startDate.getMinutes() + durMinutes);
+      endDate.setSeconds(startDate.getSeconds() + durSeconds);
 
       const endHours = endDate.getHours();
       const endMinutes = endDate.getMinutes();
@@ -110,17 +99,6 @@ const SchedulePage = () => {
     setCurrentWeek(`${formatDateShort(startOfWeek)} To ${formatDateShort(endOfWeek)}`);
   }, []);
 
-    // Generate week options for the entire year
-  //   generateWeekOptions(now.getFullYear());
-
-  //   // Set the current week in format "DD/MM To DD/MM"
-  //   const currentWeekDates = getWeekDates(weekNumber, now.getFullYear());
-  //   setCurrentWeek(
-  //     `${formatDateShort(currentWeekDates.start)} To ${formatDateShort(
-  //       currentWeekDates.end
-  //     )}`
-  //   );
-  // }, []);
 
   // Generate week options for dropdown
   const generateWeekOptions = (year) => {
@@ -612,7 +590,15 @@ const SchedulePage = () => {
     //     timeFrame: `${timeSlot} - ${addMinutesToTime(timeSlot, 90)}`,
     //   };
    return uniqueTimeSlots.map((timeSlot, timeIndex) => {
-      const matchingEntry = filteredData.find(i => i.classTime?.substring(0, 5) === timeSlot);
+    const matchingEntry = filteredData
+  .filter(i => i.classTime?.substring(0, 5) === timeSlot && i.subjectPeriod)
+  .sort((a, b) => {
+    const toMinutes = (str) => {
+      const [h, m, s = 0] = str.split(":" ).map(Number);
+      return h * 60 + m + s / 60;
+    };
+    return toMinutes(b.subjectPeriod) - toMinutes(a.subjectPeriod);
+  })[0];
 
       const timeFrame = matchingEntry?.subjectPeriod && matchingEntry?.classTime
         ? `${matchingEntry.classTime.substring(0, 5)} - ${addMinutesToTime(matchingEntry.classTime.substring(0, 5), matchingEntry.subjectPeriod)}`
@@ -1300,6 +1286,9 @@ const SchedulePage = () => {
                 </Select>
               </div>
             )}
+            <Button type="primary" onClick={() => navigate("/schedule/create")}>
+              Create Schedule
+            </Button>
           </div>
         </div>
 
