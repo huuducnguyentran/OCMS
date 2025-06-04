@@ -376,7 +376,7 @@ const TraineeGradePage = () => {
           ) : filteredGrades.length > 0 ? (
             <Table
               columns={columns}
-              dataSource={filteredGrades}
+              dataSource={filteredGrades.filter(g => Number(g.totalScore) !== -1)}
               rowKey="key"
               bordered
               size="middle"
