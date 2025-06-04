@@ -39,6 +39,7 @@ import {
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
 import { CandidateDetailSchema } from "../../../utils/validationSchemas";
+import { specialtyService } from "../../services/specialtyServices";
 
 const { Title, Text } = Typography;
 
@@ -48,6 +49,7 @@ const CandidateDetailPage = () => {
   const location = useLocation();
   const [candidate, setCandidate] = useState(null);
   const [certificates, setCertificates] = useState([]);
+  const [specialties, setSpecialties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [certLoading, setCertLoading] = useState(true);
   const [creatingAccount, setCreatingAccount] = useState(false);
@@ -101,6 +103,25 @@ const CandidateDetailPage = () => {
     fetchCandidate();
     fetchCertificates();
   }, [id]);
+
+  useEffect(() => {
+    const fetchSpecialties = async () => {
+      try {
+        setLoading(true);
+        const response = await specialtyService.getAllSpecialties();
+        if (response.success) {
+          setSpecialties(response.data);
+        }
+      } catch (error) {
+        message.error("Failed to fetch specialties");
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSpecialties();
+  }, []);
 
   const handleCreateAccount = async () => {
     if (!candidate) return;
@@ -310,6 +331,19 @@ const CandidateDetailPage = () => {
                 allowClear={false}
                 inputReadOnly
               />
+            ) : field === "specialtyId" ? (
+              <Select
+                value={editValue}
+                showSearch
+                onChange={(value) => setEditValue(value)}
+                size="small"
+                style={{ minWidth: 150 }}
+                options={specialties.map((spec) => ({
+                  label: spec.specialtyId,
+                  value: spec.specialtyId,
+                }))}
+                placeholder="Select specialty"
+              />
             ) : (
               <Input
                 value={editValue}
@@ -329,6 +363,13 @@ const CandidateDetailPage = () => {
         ) : field === "dateOfBirth" ? (
           candidate[field] ? (
             new Date(candidate[field]).toLocaleDateString()
+          ) : (
+            "-"
+          )
+        ) : field === "specialtyId" ? (
+          Array.isArray(specialties) ? (
+            specialties.find((s) => s.specialtyId === candidate[field])
+              ?.specialtyId || "-"
           ) : (
             "-"
           )
