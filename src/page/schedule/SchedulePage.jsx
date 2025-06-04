@@ -1249,7 +1249,14 @@ const SchedulePage = () => {
               </div>
             </div>
 
-            {/* {renderCreateButton()} */}
+            {/* Nút Create Schedule chỉ cho TrainingStaff */}
+            {(userRole === "TrainingStaff" || userRole === "Training staff") && (
+              <Button type="primary" onClick={() => navigate("/schedule/create")}
+                className="bg-cyan-600 hover:bg-cyan-700"
+              >
+                Create Schedule
+              </Button>
+            )}
           </div>
         </div>
 
@@ -1286,9 +1293,6 @@ const SchedulePage = () => {
                 </Select>
               </div>
             )}
-            <Button type="primary" onClick={() => navigate("/schedule/create")}>
-              Create Schedule
-            </Button>
           </div>
         </div>
 

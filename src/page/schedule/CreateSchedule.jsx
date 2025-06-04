@@ -28,123 +28,116 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
+const LocationEnum = {
+  SectionA: 0,
+  SectionB: 1,
+};
+const RoomEnum = {
+  R001: 0, R002: 1, R003: 2, R004: 3, R005: 4, R006: 5, R007: 6, R008: 7, R009: 8,
+  R101: 9, R102: 10, R103: 11, R104: 12, R105: 13, R106: 14, R107: 15, R108: 16, R109: 17,
+  R201: 18, R202: 19, R203: 20, R204: 21, R205: 22, R206: 23, R207: 24, R208: 25, R209: 26,
+  R301: 27, R302: 28, R303: 29, R304: 30, R305: 31, R306: 32, R307: 33, R308: 34, R309: 35,
+  R401: 36, R402: 37, R403: 38, R404: 39, R405: 40, R406: 41, R407: 42, R408: 43, R409: 44,
+  R501: 45, R502: 46, R503: 47, R504: 48, R505: 49, R506: 50, R507: 51, R508: 52, R509: 53,
+};
+
 const CreateSchedulePage = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [instructors, setInstructors] = useState([]);
-  const [courseSubjectSpecialties, setCourseSubjectSpecialties] = useState([]);
+  const [classSubjects, setClassSubjects] = useState([]);
 
-  // Fetch subjects and instructors when component mounts
   useEffect(() => {
-    fetchInstructors();
+    fetchClassSubjects();
   }, []);
 
-  // Fetch subjects from API
-  // Fetch instructors from API
-  const fetchInstructors = async () => {
+  const fetchClassSubjects = async () => {
     try {
       setLoading(true);
       const token = sessionStorage.getItem("token");
-      const response = await axiosInstance.get(API.GET_ALL_USER, {
+      const response = await axiosInstance.get(API.GET_ALL_CLASS_SUBJECT, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { roleName: "Instructor" },
       });
-
-      console.log("Instructor API response:", response.data);
-
-      if (response.data && response.data.users) {
-        const instructorData = response.data.users.filter(
-          (user) => user.roleName === "Instructor"
-        );
-        setInstructors(
-          instructorData.map((instructor) => ({
-            id: instructor.userId || instructor.id,
-            name: instructor.fullName || instructor.name || instructor.userName,
-            roleName: instructor.roleName,
-            specialtyId: instructor.specialtyId,
-          }))
-        );
-      } else if (response.data && Array.isArray(response.data)) {
-        const filteredInstructors = response.data.filter(
-          (user) => user.roleName === "Instructor"
-        );
-        setInstructors(
-          filteredInstructors.map((instructor) => ({
-            id: instructor.userId || instructor.id,
-            name: instructor.fullName || instructor.name || instructor.userName,
-            roleName: instructor.roleName,
-            specialtyId: instructor.specialtyId,
-          }))
-        );
+      if (response.data && Array.isArray(response.data)) {
+        setClassSubjects(response.data);
+      } else if (response.data && Array.isArray(response.data.classSubjects)) {
+        setClassSubjects(response.data.classSubjects);
       } else {
-        console.warn("Unexpected instructor data format:", response.data);
-        setInstructors([]);
+        setClassSubjects([]);
       }
     } catch (error) {
-      console.error("Error fetching instructors:", error);
-      message.error("Unable to load instructor list");
-      setInstructors([]);
+      message.error("Unable to load class subjects");
+      setClassSubjects([]);
     } finally {
       setLoading(false);
     }
   };
 
-  
+  const recurringDayOptions = [
+    { label: "Monday - Thursday", value: "1-4", days: [1, 4] },
+    { label: "Tuesday - Friday", value: "2-5", days: [2, 5] },
+    { label: "Wednesday - Saturday", value: "3-6", days: [3, 6] },
+    { label: "Sunday", value: "0", days: [0] },
+  ];
 
-  // Handle form submission
+  const getRecurringDayValueFromDays = (daysArr) => {
+    if (!Array.isArray(daysArr)) return daysArr;
+    const found = recurringDayOptions.find(opt =>
+      Array.isArray(opt.days) &&
+      opt.days.length === daysArr.length &&
+      opt.days.every((d, i) => d === daysArr[i])
+    );
+    return found ? found.value : daysArr.join('-');
+  };
+
+  const getDisabledHours = () => {
+    const hours = [];
+    for (let i = 0; i < 24; i++) {
+      if (i < 7 || i > 20) {
+        hours.push(i);
+      }
+    }
+    return hours;
+  };
+  const getDisabledMinutesForHalfHour = () => {
+    const arr = [];
+    for (let i = 0; i < 60; i++) {
+      if (i !== 0 && i !== 30) arr.push(i);
+    }
+    return arr;
+  };
+
   const handleSubmit = async (values) => {
     try {
       setSubmitting(true);
-
-      // Format dates to ISO string
-      const startDate = values.startDate.format("YYYY-MM-DD");
-      const endDate = values.endDate.format("YYYY-MM-DD");
-
-      // Format time to string
-      const classTime = values.classTime.format("HH:mm:ss");
-
-      // Format subjectPeriod để lưu chính xác thời gian học
-      const subjectPeriod = values.subjectPeriod
-        ? values.subjectPeriod.format("HH:mm:ss")
-        : "01:30:00"; // Mặc định 1 tiếng 30 phút
-
-      // Convert daysOfWeek to array of integers
-      const daysOfWeek = values.daysOfWeek.map((day) => parseInt(day));
-
-      // Create data according to API format
+      // Validate daysOfWeek
+      let daysOfWeekArr = [];
+      const opt = recurringDayOptions.find(o => o.value === values.daysOfWeek);
+      if (opt) daysOfWeekArr = opt.days;
+      else if (Array.isArray(values.daysOfWeek)) daysOfWeekArr = values.daysOfWeek;
+      else if (typeof values.daysOfWeek === 'string') daysOfWeekArr = values.daysOfWeek.split('-').map(Number);
+      // Format
       const scheduleData = {
-        subjectID: values.subjectID,
-        courseSubjectSpecialtyId: values.courseSubjectSpecialtyId,
-        instructorID: values.instructorID,
+        classSubjectId: values.classSubjectId,
         location: values.location,
         room: values.room,
         notes: values.notes || "",
-        startDay: `${startDate}T${classTime}`,
-        endDay: `${endDate}T${classTime}`,
-        daysOfWeek: daysOfWeek,
-        classTime: classTime,
-        subjectPeriod: subjectPeriod,
-        createdBy: sessionStorage.getItem("userId"), // Add creator information
+        startDay: values.startDate?.toISOString(),
+        endDay: values.endDate?.toISOString(),
+        daysOfWeek: daysOfWeekArr,
+        classTime: values.classTime?.format("HH:00:00"),
+        subjectPeriod: values.subjectPeriod?.format("HH:mm:ss"),
       };
-
-      console.log("Submitting schedule data:", scheduleData);
-
-      // Call API to create schedule
       const response = await axiosInstance.post(
         API.CREATE_TRAINING_SCHEDULE,
         scheduleData
       );
-
       if (response.data) {
         message.success("Schedule created successfully!");
-        // Navigate to "created" view in SchedulePage
         navigate("/schedule", { state: { viewMode: "created" } });
       }
     } catch (error) {
-      console.error("Error creating schedule:", error);
-
       if (error.response?.data?.message) {
         message.error(`Error: ${error.response.data.message}`);
       } else {
@@ -155,20 +148,9 @@ const CreateSchedulePage = () => {
     }
   };
 
-  const daysOfWeekOptions = [
-    { label: "Monday", value: "1" },
-    { label: "Tuesday", value: "2" },
-    { label: "Wednesday", value: "3" },
-    { label: "Thursday", value: "4" },
-    { label: "Friday", value: "5" },
-    { label: "Saturday", value: "6" },
-    { label: "Sunday", value: "0" },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 sm:p-8">
       <div className="max-w-[1200px] mx-auto">
-        {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
           <div className="flex items-center gap-4">
             <div className="p-4 bg-indigo-600 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300">
@@ -184,8 +166,6 @@ const CreateSchedulePage = () => {
             </div>
           </div>
         </div>
-
-        {/* Form Section */}
         <Card className="shadow-xl rounded-2xl">
           <Spin spinning={loading || submitting}>
             <Form
@@ -193,242 +173,180 @@ const CreateSchedulePage = () => {
               layout="vertical"
               onFinish={handleSubmit}
               initialValues={{
-                startDate: dayjs(),
-                endDate: dayjs().add(30, "day"),
-                classTime: dayjs("08:00:00", "HH:mm:ss"),
-                subjectPeriod: dayjs("01:30:00", "HH:mm:ss"),
-                daysOfWeek: ["0", "2", "4"],
+                startDate: dayjs().startOf('day'),
+                endDate: dayjs().add(7, 'day').startOf('day'),
+                daysOfWeek: recurringDayOptions[0].value
               }}
             >
               <Row gutter={24}>
-                {/* Column 1 */}
-                <Col xs={24} md={12}>
+                <Col xs={24} md={24}>
                   <Title level={4} className="mb-4">
-                    General Information
+                    Schedule Details
                   </Title>
-
                   <Form.Item
-                    name="courseSubjectSpecialtyId"
-                    label="CourseSubjectSpecialtyId"
+                    name="classSubjectId"
+                    label="Class Subject"
                     rules={[
-                      { required: true, message: "Please select a courseSubjectSpecialtyId" },
+                      { required: true, message: "Please select a class subject" },
                     ]}
                   >
                     <Select
-                      placeholder="Select courseSubjectSpecialtyId"
+                      placeholder="Select class subject"
                       loading={loading}
                       showSearch
                       optionFilterProp="children"
                     >
-                      {courseSubjectSpecialties.map((item) => (
-                        <Option key={item.id} value={item.id}>
-                          {item.course?.courseName || item.courseId} / {item.subject?.subjectName || item.subjectId} / {item.specialty?.specialtyName || item.specialtyId}
+                      {classSubjects.map((item) => (
+                        <Option key={item.classSubjectId} value={item.classSubjectId}>
+                          {item.subjectName || item.classSubjectId}
                         </Option>
                       ))}
                     </Select>
                   </Form.Item>
-
-                  <Form.Item
-                    name="instructorID"
-                    label="Instructor"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Please select an instructor",
-                      },
-                    ]}
-                  >
-                    <Select
-                      placeholder="Select instructor"
-                      loading={loading}
-                      showSearch
-                      optionFilterProp="children"
-                    >
-                      {instructors.map((instructor) => (
-                        <Option key={instructor.id} value={instructor.id}>
-                          {instructor.name}{" "}
-                          {instructor.specialtyId
-                            ? `(${instructor.specialtyId})`
-                            : ""}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-
                   <Row gutter={16}>
-                    <Col span={12}>
+                    <Col xs={24} sm={12}>
                       <Form.Item
                         name="location"
                         label="Location"
                         rules={[
-                          {
-                            required: true,
-                            message: "Please enter a location",
-                          },
+                          { required: true, message: "Location is required" },
                         ]}
                       >
-                        <Input placeholder="Example: ABC Campus" />
+                        <Select placeholder="Select">
+                          {Object.entries(LocationEnum).map(([n, v]) => (
+                            <Option key={v} value={v}>{n}</Option>
+                          ))}
+                        </Select>
                       </Form.Item>
                     </Col>
-                    <Col span={12}>
+                    <Col xs={24} sm={12}>
                       <Form.Item
                         name="room"
-                        label="Room"
+                        label="Room/Platform"
                         rules={[
-                          { required: true, message: "Please enter a room" },
+                          { required: true, message: "Room is required" },
                         ]}
                       >
-                        <Input placeholder="Example: 101" />
+                        <Select
+                          placeholder="Select"
+                          showSearch
+                          optionFilterProp="children"
+                          filterOption={(input, option) =>
+                            (option?.children ?? "").toLowerCase().includes(input.toLowerCase())
+                          }
+                        >
+                          {Object.entries(RoomEnum).map(([n, v]) => (
+                            <Option key={v} value={v}>{n}</Option>
+                          ))}
+                        </Select>
                       </Form.Item>
                     </Col>
                   </Row>
-
-                  <Form.Item name="notes" label="Notes">
-                    <TextArea rows={3} placeholder="Notes about the schedule" />
-                  </Form.Item>
-                </Col>
-
-                {/* Column 2 */}
-                <Col xs={24} md={12}>
-                  <Title level={4} className="mb-4">
-                    Class Schedule
-                  </Title>
-
                   <Row gutter={16}>
-                    <Col span={12}>
+                    <Col xs={24} sm={12}>
                       <Form.Item
                         name="startDate"
-                        label={<Text strong>Start Date</Text>}
+                        label="Start Date"
                         rules={[
                           { required: true, message: "Start date is required" },
-                          () => ({
-                            validator(_, value) {
-                              if (!value) return Promise.resolve();
-                              const now = new Date();
-                              if (value.isBefore(dayjs(now))) {
-                                return Promise.reject(
-                                  new Error(
-                                    "Start date and time must be in the future"
-                                  )
-                                );
-                              }
-                              return Promise.resolve();
-                            },
-                          }),
-                        ]}
-                      >
-                        <DatePicker
-                          className="w-full rounded-lg py-2 px-3 text-base"
-                          showTime
-                          format="YYYY-MM-DD HH:mm:ss"
-                          disabledDate={(current) =>
-                            current && current < dayjs().startOf("day")
-                          }
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item
-                        name="endDate"
-                        label={<Text strong>End Date</Text>}
-                        rules={[
-                          { required: true, message: "End date is required" },
-                          ({ getFieldValue }) => ({
-                            validator(_, value) {
-                              if (!value) return Promise.resolve();
-
-                              // Check if end date is after start date
-                              const startDate = getFieldValue("startDate");
-                              if (startDate && value.isBefore(startDate)) {
-                                return Promise.reject(
-                                  new Error("End date must be after start date")
-                                );
-                              }
-
-                              // Check duration is reasonable
-                              if (startDate) {
-                                const diffDays = value.diff(startDate, "days");
-                                if (diffDays < 1 || diffDays > 365) {
-                                  return Promise.reject(
-                                    new Error(
-                                      "Training plan duration should be between 1 day and 365 days"
-                                    )
-                                  );
-                                }
-                              }
-
-                              return Promise.resolve();
-                            },
-                          }),
-                        ]}
-                      >
-                        <DatePicker
-                          className="w-full rounded-lg py-2 px-3 text-base"
-                          showTime
-                          format="YYYY-MM-DD HH:mm:ss"
-                          disabledDate={(current) => {
-                            const startDate = form.getFieldValue("startDate");
-                            return (
-                              current &&
-                              (current < dayjs().startOf("day") ||
-                                (startDate && current < startDate))
-                            );
-                          }}
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item
-                        name="classTime"
-                        label="Class Time"
-                        rules={[
                           {
-                            required: true,
-                            message: "Please select a class time",
+                            validator(_, value) {
+                              if (!value) return Promise.resolve();
+                              if (value.isBefore(dayjs(), 'minute')) {
+                                return Promise.reject(new Error('Start date must be in the future'));
+                              }
+                              return Promise.resolve();
+                            },
                           },
                         ]}
                       >
-                        <TimePicker
+                        <DatePicker
                           className="w-full"
-                          format="HH:mm"
-                          placeholder="Select class time"
+                          format="YYYY-MM-DD HH:mm"
+                          showTime={{ format: "HH:mm" }}
                         />
                       </Form.Item>
                     </Col>
-                    <Col span={12}>
-                      <Form.Item name="subjectPeriod" label="Duration">
-                        <TimePicker
+                    <Col xs={24} sm={12}>
+                      <Form.Item
+                        name="endDate"
+                        label="End Date"
+                        rules={[
+                          { required: true, message: "End date is required" },
+                          {
+                            validator(_, value) {
+                              const start = form.getFieldValue('startDate');
+                              if (!value || !start) return Promise.resolve();
+                              if (value.isSameOrBefore(start, 'minute')) {
+                                return Promise.reject(new Error('End date must be after start date'));
+                              }
+                              return Promise.resolve();
+                            },
+                          },
+                        ]}
+                      >
+                        <DatePicker
                           className="w-full"
-                          format="HH:mm"
-                          placeholder="Select duration"
-                          showNow={false}
-                          minuteStep={15} // Cho phép chọn thời gian theo bước 15 phút
+                          format="YYYY-MM-DD HH:mm"
+                          showTime={{ format: "HH:mm" }}
                         />
                       </Form.Item>
                     </Col>
                   </Row>
-
+                  <Row gutter={16}>
+                    <Col xs={24} sm={12}>
+                      <Form.Item
+                        name="classTime"
+                        label="Start Time"
+                        rules={[
+                          { required: true, message: "Start time is required" },
+                        ]}
+                      >
+                        <TimePicker
+                          className="w-full"
+                          format="HH:mm"
+                          disabledHours={getDisabledHours}
+                          disabledMinutes={getDisabledMinutesForHalfHour}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} sm={12}>
+                      <Form.Item
+                        name="subjectPeriod"
+                        label="Duration"
+                        rules={[]}
+                      >
+                        <TimePicker
+                          className="w-full"
+                          format="HH:mm"
+                          minuteStep={15}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
                   <Form.Item
                     name="daysOfWeek"
-                    label="Days of Week"
+                    label="Recurring Days"
                     rules={[
-                      {
-                        required: true,
-                        message: "Please select at least one day",
-                      },
+                      { required: true, message: "Select recurring days" },
                     ]}
                   >
-                    <Checkbox.Group
-                      options={daysOfWeekOptions}
-                      className="grid grid-cols-2 sm:grid-cols-4"
+                    <Select
+                      placeholder="Select recurring days"
+                      options={recurringDayOptions}
                     />
+                  </Form.Item>
+                  <Form.Item
+                    name="notes"
+                    label="Notes"
+                    rules={[
+                      { required: true, message: "please enter some notes" },
+                    ]}
+                  >
+                    <TextArea rows={3} placeholder="Notes for this class" />
                   </Form.Item>
                 </Col>
               </Row>
-
               <div className="flex justify-end mt-6 gap-4">
                 <Button
                   icon={<RollbackOutlined />}
