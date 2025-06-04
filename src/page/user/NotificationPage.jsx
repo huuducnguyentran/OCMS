@@ -316,17 +316,22 @@ const NotificationPage = () => {
   // Hàm xử lý điều hướng dựa vào loại thông báo
   const handleNavigateByType = (notification) => {
     console.log("Notification for navigation:", notification);
-
     if (
-      notification.title &&
-      notification.title.includes("CertificateSignature")
+      notification.notificationType === "CertificateSignature" && userRole === "HeadMaster"
     ) {
-      navigate("/certificates/pending");
+      navigate("/certificate-pending");
     } else if (
-      notification.title &&
-      notification.title.includes("DecisionSignature")
+      notification.notificationType === "DecisionSignature" && userRole === "HeadMaster"
     ) {
-      navigate("/decisions/pending");
+      navigate("/decision-pending");
+    } else if (
+      notification.title && notification.title.includes("CertificateSignature")
+    ) {
+      navigate("/certificate-pending");
+    } else if (
+      notification.title && notification.title.includes("DecisionSignature")
+    ) {
+      navigate("/decision-pending");
     } else if (
       (notification.title && notification.title.includes("Request")) ||
       notification.notificationType === "Request" ||
@@ -334,8 +339,7 @@ const NotificationPage = () => {
     ) {
       navigate("/request");
     } else if (
-      notification.title &&
-      notification.title.includes("Trainee Assignment")
+      notification.title && notification.title.includes("Trainee Assignment")
     ) {
       navigate("/assign-trainee");
     } else {
@@ -347,6 +351,11 @@ const NotificationPage = () => {
 
   // Kiểm tra liệu thông báo có thể điều hướng được không
   const canNavigate = (notification) => {
+    if (
+      (notification.notificationType === "CertificateSignature" || notification.notificationType === "DecisionSignature") && userRole !== "HeadMaster"
+    ) {
+      return false;
+    }
     return (
       notification.title &&
       (notification.title.includes("CertificateSignature") ||
@@ -355,7 +364,9 @@ const NotificationPage = () => {
         (notification.message &&
           notification.message.toLowerCase().includes("request")) ||
         notification.notificationType === "Request" ||
-        notification.title.includes("Trainee Assignment"))
+        notification.title.includes("Trainee Assignment") ||
+        notification.notificationType === "CertificateSignature" ||
+        notification.notificationType === "DecisionSignature")
     );
   };
 
@@ -673,13 +684,13 @@ const NotificationPage = () => {
                   className="bg-cyan-600 hover:bg-cyan-700 text-white"
                   onClick={() => handleNavigateByType(selectedNotification)}
                 >
-                  {selectedNotification.title?.includes("CertificateSignature")
-                    ? "Đến Certificate Pending"
-                    : selectedNotification.title?.includes("DecisionSignature")
-                    ? "Đến Decision Pending"
-                    : selectedNotification.title?.includes("Trainee Assignment")
-                    ? "Đến Assign Trainee"
-                    : "Đến trang Request"}
+                  {selectedNotification.notificationType?.includes("CertificateSignature")
+                    ? "Go to Certificate Pending"
+                    : selectedNotification.notificationType?.includes("DecisionSignature")
+                    ? "Go to Decision Pending"
+                    : selectedNotification.notificationType?.includes("Trainee Assignment")
+                    ? "Go to Assign Trainee"
+                    : "Go to Request"}
                 </Button>
               )}
             </div>

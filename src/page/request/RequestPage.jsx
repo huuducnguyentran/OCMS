@@ -34,6 +34,7 @@ import {
   UserOutlined,
   IdcardOutlined,
   WarningOutlined,
+  ScheduleOutlined,
 } from "@ant-design/icons";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -46,6 +47,7 @@ import {
 } from "../../services/requestService";
 import { getUserById } from "../../services/userService";
 import { getCandidateByRequestId } from "../../services/candidateService";
+import { trainingScheduleService } from '../../services/trainingScheduleService';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -180,6 +182,97 @@ const isTraineeAssignType = (requestType) => {
   return Number(requestType) === 12 || Number(requestType) === 13;
 };
 
+// Helper function to parse "HH:mm:ss" or "HH:mm" period to total minutes
+const parsePeriodToMinutes = (periodString) => {
+  if (!periodString) return null;
+  const parts = periodString.split(':').map(Number);
+  if (parts.length < 2 || parts.some(isNaN)) return null; // Must have at least HH and mm
+
+  let hours = 0, minutes = 0;
+  if (parts.length === 3) { // HH:mm:ss
+    [hours, minutes] = parts;
+  } else if (parts.length === 2) { // HH:mm
+    [hours, minutes] = parts;
+  } else {
+    return null;
+  }
+  return hours * 60 + minutes;
+};
+
+// Helper function to add minutes to a time string (format: HH:mm)
+const addMinutesToTime = (time, minutes) => {
+  if (!time || typeof minutes !== 'number') return time;
+  try {
+    const [hours, mins] = time.split(":").map(Number);
+    if (isNaN(hours) || isNaN(mins)) return time;
+
+    const totalMinutes = hours * 60 + mins + minutes;
+    const newHours = Math.floor(totalMinutes / 60) % 24;
+    const newMins = totalMinutes % 60;
+    return `${String(newHours).padStart(2, "0")}:${String(newMins).padStart(
+      2,
+      "0"
+    )}`;
+  } catch (error) {
+    console.error("Error in addMinutesToTime:", error);
+    return time; // Return original time if there's an error
+  }
+};
+
+const SingleScheduleTimetable = ({ schedule }) => {
+  if (!schedule) return <div className="text-gray-500">No schedule data to display.</div>;
+
+  const startTime = schedule.classTime ? schedule.classTime.substring(0, 5) : 'N/A';
+  let timeFrame = startTime;
+
+  if (schedule.classTime && schedule.subjectPeriod) {
+    const durationMinutes = parsePeriodToMinutes(schedule.subjectPeriod);
+    if (durationMinutes !== null && startTime !== 'N/A') {
+      const endTime = addMinutesToTime(startTime, durationMinutes);
+      timeFrame = `${startTime} - ${endTime}`;
+    }
+  }
+
+  const scheduleDaysRaw = schedule.daysOfWeek || "";
+  // Handle both comma-separated strings and single day strings correctly
+  const scheduleDays = scheduleDaysRaw.split(',').map(d => d.trim()).filter(Boolean);
+
+
+  const tableRow = { key: 'schedule-row', timeFrame };
+  const daysOfWeekColumns = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+  daysOfWeekColumns.forEach(day => {
+    if (scheduleDays.includes(day)) {
+      tableRow[day] = (
+        <div className="text-xs p-1">
+          <div className="font-semibold text-cyan-700">{schedule.subjectName}</div>
+          {schedule.roomName && <div>Room: {schedule.roomName}</div>}
+          {schedule.locationName && <div>Location: {schedule.locationName}</div>}
+          {schedule.instructorName && <div>Instructor: {schedule.instructorName}</div>}
+          {schedule.notes && <div className="text-gray-500 italic">Notes: {schedule.notes}</div>}
+        </div>
+      );
+    } else {
+      tableRow[day] = <div style={{ textAlign: 'center', color: '#aaa' }}>-</div>;
+    }
+  });
+
+  const dataSource = [tableRow];
+  const columns = [
+    { title: 'Time', dataIndex: 'timeFrame', key: 'timeFrame', width: 100, fixed: 'left', className: "bg-gray-50 font-medium" },
+    ...daysOfWeekColumns.map(day => ({
+      title: day,
+      dataIndex: day,
+      key: day,
+      width: 130,
+      className: scheduleDays.includes(day) ? "bg-cyan-50" : "",
+      render: (text) => <div style={{ minHeight: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{text}</div>
+    }))
+  ];
+
+  return <Table columns={columns} dataSource={dataSource} pagination={false} bordered size="small" scroll={{ x: 'max-content' }} />;
+};
+
 const RequestList = () => {
   const storedRole = sessionStorage.getItem("role");
   const isAdmin = storedRole === "Admin";
@@ -223,6 +316,9 @@ const RequestList = () => {
   const [traineesData, setTraineesData] = useState([]);
   const [traineesLoading, setTraineesLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
+  const [scheduleData, setScheduleData] = useState(null);
+  const [loadingSchedule, setLoadingSchedule] = useState(false);
 
   const toggleFilters = () => {
     setShowFilters(!showFilters);
@@ -910,6 +1006,26 @@ const RequestList = () => {
     },
   ];
 
+  useEffect(() => {
+    if (
+      detailsVisible &&
+      currentRequest &&
+      (currentRequest.requestType === 5 || currentRequest.requestType === 'ClassSchedule') &&
+      currentRequest.requestEntityId
+    ) {
+      setLoadingSchedule(true);
+      trainingScheduleService.getTrainingScheduleById(currentRequest.requestEntityId)
+        .then((res) => {
+          console.log("Schedule API response:", res);
+          setScheduleData(res.schedule);
+        })
+        .catch(() => setScheduleData(null))
+        .finally(() => setLoadingSchedule(false));
+    } else {
+      setScheduleData(null);
+    }
+  }, [detailsVisible, currentRequest]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-cyan-100 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
@@ -1321,6 +1437,23 @@ const RequestList = () => {
                         </div>
                       )}
 
+                    {/* Course detail button for NewCourse */}
+                    {currentRequest.requestEntityId &&
+                      (
+                        currentRequest.requestType === 6 ||
+                        currentRequest.requestType === "Create New" ||
+                        currentRequest.requestType === "CreateNew" ||
+                        currentRequest.requestType === "NewCourse"
+                      ) && (
+                        <Button
+                          type="primary"
+                          className="!bg-cyan-700 hover:!bg-cyan-800"
+                          onClick={() => navigate(`/course/${currentRequest.requestEntityId}`)}
+                        >
+                          View Course
+                        </Button>
+                      )}
+
                     <div className="flex items-center gap-2 text-gray-600">
                       <FileTextOutlined className="text-indigo-500" />
                       <span className="text-sm font-medium">
@@ -1395,6 +1528,26 @@ const RequestList = () => {
                         {currentRequest.status || "Unknown"}
                       </Tag>
                     </div>
+
+                    {/* Hiển thị section lịch học nhỏ nếu là ClassSchedule */}
+                    {currentRequest &&
+                      (Number(currentRequest.requestType) === 5 || currentRequest.requestType === 'ClassSchedule') && (
+                        <div className="border-t border-gray-200 pt-4 mt-4">
+                          <div className="flex items-center gap-2 text-gray-700 mb-3">
+                            <ScheduleOutlined className="!text-indigo-600 text-lg" />
+                            <span className="text-md font-semibold">Training Schedule</span>
+                          </div>
+                          {loadingSchedule ? (
+                            <div className="flex justify-center py-4"><Spin /></div>
+                          ) : scheduleData ? (
+                            <SingleScheduleTimetable schedule={scheduleData} />
+                          ) : (
+                            <div className="text-gray-500 p-3 bg-gray-50 rounded-md">
+                              No schedule data found for this request. (ID: {currentRequest.requestEntityId || 'N/A'})
+                            </div>
+                          )}
+                        </div>
+                      )}
                   </div>
                 </Card>
 
