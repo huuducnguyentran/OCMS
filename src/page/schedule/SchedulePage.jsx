@@ -51,7 +51,7 @@ const SchedulePage = () => {
 
   // Helper function to add minutes to a time string (format: HH:mm)
   const addMinutesToTime = (timeStr, durationStr) => {
-   try {
+  try {
       const [startHours, startMinutes] = timeStr.split(":" ).map(Number);
       const [durHours, durMinutes, durSeconds = 0] = durationStr.split(":" ).map(Number);
 
@@ -59,12 +59,12 @@ const SchedulePage = () => {
       startDate.setHours(startHours);
       startDate.setMinutes(startMinutes);
       startDate.setSeconds(0);
+      startDate.setMilliseconds(0);
 
-      const endDate = new Date(startDate.getTime() +
-        durHours * 60 * 60 * 1000 +
-        durMinutes * 60 * 1000 +
-        durSeconds * 1000
-      );
+      const endDate = new Date(startDate);
+      endDate.setHours(startDate.getHours() + durHours);
+      endDate.setMinutes(startDate.getMinutes() + durMinutes);
+      endDate.setSeconds(startDate.getSeconds() + durSeconds);
 
       const endHours = endDate.getHours();
       const endMinutes = endDate.getMinutes();
@@ -590,7 +590,15 @@ const SchedulePage = () => {
     //     timeFrame: `${timeSlot} - ${addMinutesToTime(timeSlot, 90)}`,
     //   };
    return uniqueTimeSlots.map((timeSlot, timeIndex) => {
-      const matchingEntry = filteredData.find(i => i.classTime?.substring(0, 5) === timeSlot);
+    const matchingEntry = filteredData
+  .filter(i => i.classTime?.substring(0, 5) === timeSlot && i.subjectPeriod)
+  .sort((a, b) => {
+    const toMinutes = (str) => {
+      const [h, m, s = 0] = str.split(":" ).map(Number);
+      return h * 60 + m + s / 60;
+    };
+    return toMinutes(b.subjectPeriod) - toMinutes(a.subjectPeriod);
+  })[0];
 
       const timeFrame = matchingEntry?.subjectPeriod && matchingEntry?.classTime
         ? `${matchingEntry.classTime.substring(0, 5)} - ${addMinutesToTime(matchingEntry.classTime.substring(0, 5), matchingEntry.subjectPeriod)}`
@@ -1278,6 +1286,9 @@ const SchedulePage = () => {
                 </Select>
               </div>
             )}
+            <Button type="primary" onClick={() => navigate("/schedule/create")}>
+              Create Schedule
+            </Button>
           </div>
         </div>
 
