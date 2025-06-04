@@ -18,7 +18,7 @@ import {
   SaveOutlined,
   ArrowLeftOutlined,
 } from "@ant-design/icons";
-import { createUser } from "../../services/userService";
+import { createUser, getAllSpecialties } from "../../services/userService";
 import { getAllDepartments } from "../../services/departmentServices";
 import dayjs from "dayjs";
 import {
@@ -310,6 +310,9 @@ const CreateAccountPage = () => {
                       validateStatus={formErrors.fullName ? "error" : ""}
                       help={formErrors.fullName}
                       required
+                      rules={[
+                        { required: true, message: "Full name is required" },
+                      ]}
                     >
                       <Input
                         placeholder="Enter full name"
@@ -410,6 +413,12 @@ const CreateAccountPage = () => {
                       validateStatus={formErrors.phoneNumber ? "error" : ""}
                       help={formErrors.phoneNumber}
                       required
+                      rules={[
+                        {
+                          required: true,
+                          message: "Phone number is required",
+                        },
+                      ]}
                     >
                       <Input
                         placeholder="Enter phone number"
@@ -425,6 +434,12 @@ const CreateAccountPage = () => {
                       validateStatus={formErrors.address ? "error" : ""}
                       help={formErrors.address}
                       required
+                      rules={[
+                        {
+                          required: true,
+                          message: "Address is required",
+                        },
+                      ]}
                       className="md:col-span-2"
                     >
                       <Input
@@ -446,11 +461,19 @@ const CreateAccountPage = () => {
                       validateStatus={formErrors.roleId ? "error" : ""}
                       help={formErrors.roleId}
                       required
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please select a role",
+                        },
+                      ]}
                     >
                       <Select
                         placeholder="Select role"
                         className="rounded-lg"
                         size="large"
+                        allowClear
+                        showSearch
                       >
                         {roleOptions.map((role) => (
                           <Option key={role.value} value={role.value}>
@@ -466,11 +489,18 @@ const CreateAccountPage = () => {
                       validateStatus={formErrors.specialtyId ? "error" : ""}
                       help={formErrors.specialtyId}
                       required
+                      rules={[
+                        {
+                          required: true,
+                          message: "Please select a specialty",
+                        },
+                      ]}
                     >
                       <Select
                         placeholder="Select specialty"
                         loading={loadingSpecialties}
                         showSearch
+                        allowClear
                         optionFilterProp="children"
                         className="rounded-lg"
                         size="large"
@@ -493,6 +523,7 @@ const CreateAccountPage = () => {
                         placeholder="Select department"
                         loading={loadingDepartments}
                         showSearch
+                        allowClear
                         optionFilterProp="children"
                         className="rounded-lg"
                         size="large"

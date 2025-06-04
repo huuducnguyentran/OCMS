@@ -87,10 +87,18 @@ const CreateCoursePage = () => {
   const handleImport = async (file) => {
     try {
       const result = await courseService.importCourse(file);
-      message.success("Course imported successfully!");
-      console.log(result);
+      const { data, message: msgFromRes } = result || {};
+      if (data && data.successCount > 0) {
+        message.success(msgFromRes || "Import successfully!");
+      } else {
+        if (data && Array.isArray(data.errors) && data.errors.length > 0) {
+          message.error(data.errors[0] || "Import failed!");
+        } else {
+          message.error(msgFromRes || "Import failed!");
+        }
+      }
     } catch (error) {
-      message.error("Failed to import course", error);
+      message.error("Import thất bại!" + (error?.message ? `: ${error.message}` : ""));
     }
   };
 

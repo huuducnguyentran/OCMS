@@ -99,19 +99,25 @@ export const getCandidateById = async (id) => {
   }
 };
 
-export const createCandidateAccount = async (id) => {
+export const createCandidateAccount = async (ids) => {
+  // ids: mảng các candidateId
   try {
     const token = sessionStorage.getItem("token");
-    const response = await axiosInstance.post(
-      `/${API.CREATE_CANDIDATE_ACCOUNT}/${id}`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    return response.data;
+    // Gửi lần lượt từng request cho từng id
+    const results = [];
+    for (const id of ids) {
+      const response = await axiosInstance.post(
+        `/${API.CREATE_CANDIDATE_ACCOUNT}/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      results.push(response.data);
+    }
+    return results;
   } catch (error) {
     console.error("Error creating candidate account:", error);
     throw error;

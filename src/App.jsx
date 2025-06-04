@@ -81,6 +81,7 @@ import InstructorAssignmentCreate from "./page/instructor_assignment/InstructorA
 import SubjectSpecialtyPage from "./page/subject_specialty/SubjectSpecialtyPage";
 import SubjectSpecialtyCreate from "./page/subject_specialty/SubjectSpecialtyCreate";
 import ClassroomDetailPage from "./page/classroom/ClassroomDetailPage";
+import CreateSchedulePage from "./page/schedule/CreateSchedule";
 // import SubjectSpecialtyEdit from "./page/subject_specialty/SubjectSpecialtyEdit";
 
 function App() {
@@ -113,6 +114,10 @@ function App() {
                           <Route
                             path="/account/update/:userId"
                             element={<UpdateAccountPage />}
+                          />
+                          <Route
+                            path="/schedule/create"
+                            element={<CreateSchedulePage />}
                           />
                           <Route
                             path="/profile/:userId"

@@ -134,6 +134,7 @@ const EditSpecialtyPage = () => {
               >
                 <Select
                   allowClear
+                  showSearch
                   placeholder="Select parent specialty"
                   className="!h-10 !border-cyan-600 focus:!border-cyan-700 focus:!ring-cyan-700"
                   options={specialties.map((s) => ({

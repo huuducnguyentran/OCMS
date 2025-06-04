@@ -111,6 +111,7 @@ const CreateSpecialtyPage = () => {
               <Form.Item name="parentSpecialtyId" label="Parent Specialty">
                 <Select
                   allowClear
+                  showSearch
                   placeholder="Select parent specialty"
                   className="!h-10 "
                   options={specialties.map((s) => ({

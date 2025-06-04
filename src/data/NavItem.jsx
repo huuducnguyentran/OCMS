@@ -81,7 +81,7 @@ const navItems = [
     label: "Instructor Assignment",
     icon: "BookOutlined",
     path: "/instructor-assignment",
-    roles: ["Training staff", "Instructor"],
+    roles: ["Training staff"],
   },
   {
     key: "23",

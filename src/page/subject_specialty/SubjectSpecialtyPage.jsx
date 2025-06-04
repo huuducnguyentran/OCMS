@@ -216,6 +216,7 @@ const SubjectSpecialtyPage = () => {
                 <Select
                   placeholder="Filter by Specialty"
                   allowClear
+                  showSearch
                   style={{ width: "100%" }}
                   size="large"
                   onChange={(value) => setFilterSpecialty(value)}
@@ -232,6 +233,7 @@ const SubjectSpecialtyPage = () => {
                 <Select
                   placeholder="Filter by Subject"
                   allowClear
+                  showSearch
                   style={{ width: "100%" }}
                   size="large"
                   onChange={(value) => setFilterSubject(value)}

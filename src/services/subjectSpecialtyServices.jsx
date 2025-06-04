@@ -4,10 +4,15 @@ import axiosInstance from "../../utils/axiosInstance";
 // Get all subject specialties
 export const getAllSubjectSpecialties = async () => {
   try {
-    const response = await axiosInstance.get(`/${API.GET_ALL_SUBJECT_SPECIALTY}`);
+    const response = await axiosInstance.get(
+      `/${API.GET_ALL_SUBJECT_SPECIALTY}`
+    );
     return response.data;
   } catch (error) {
-    console.error("Error fetching subject specialties:", error?.response || error.message);
+    console.error(
+      "Error fetching subject specialties:",
+      error?.response || error.message
+    );
     throw error;
   }
 };
@@ -15,16 +20,21 @@ export const getAllSubjectSpecialties = async () => {
 // Get subject specialty by ID
 export const getSubjectSpecialtyById = async (id) => {
   try {
-    const response = await axiosInstance.get(`/${API.GET_SUBJECT_SPECIALTY_BY_ID}/${id}`);
+    const response = await axiosInstance.get(
+      `/${API.GET_SUBJECT_SPECIALTY_BY_ID}/${id}`
+    );
     return response.data;
   } catch (error) {
-    console.error("Error fetching subject specialty:", error?.response || error.message);
+    console.error(
+      "Error fetching subject specialty:",
+      error?.response || error.message
+    );
     throw error;
   }
 };
 
 // Create a new subject specialty
-export const createSubjectSpecialty = async (subjectId,specialtyId) => {
+export const createSubjectSpecialty = async (subjectSpecialtyData) => {
   try {
     const response = await axiosInstance.post(
       `/${API.CREATE_SUBJECT_SPECIALTY}`,
@@ -32,7 +42,10 @@ export const createSubjectSpecialty = async (subjectId,specialtyId) => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error creating subject specialty:", error?.response || error.message);
+    console.error(
+      "Error creating subject specialty:",
+      error?.response || error.message
+    );
     throw error;
   }
 };
@@ -45,7 +58,10 @@ export const deleteSubjectSpecialty = async (id) => {
     );
     return response.data;
   } catch (error) {
-    console.error("Error deleting subject specialty:", error?.response || error.message);
+    console.error(
+      "Error deleting subject specialty:",
+      error?.response || error.message
+    );
     throw error;
   }
 };
@@ -56,7 +72,10 @@ export const getSubjectsForDropdown = async () => {
     const response = await axiosInstance.get(`/${API.GET_ALL_SUBJECTS}`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching subjects for dropdown:", error?.response || error.message);
+    console.error(
+      "Error fetching subjects for dropdown:",
+      error?.response || error.message
+    );
     throw error;
   }
 };
@@ -67,11 +86,13 @@ export const getSpecialtiesForDropdown = async () => {
     const response = await axiosInstance.get(`/${API.GET_ALL_SPECIALTIES}`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching specialties for dropdown:", error?.response || error.message);
+    console.error(
+      "Error fetching specialties for dropdown:",
+      error?.response || error.message
+    );
     throw error;
   }
 };
-
 
 // Get all subjects
 export const getAllSubject = async () => {

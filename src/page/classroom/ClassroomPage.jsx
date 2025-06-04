@@ -388,17 +388,17 @@ const ClassroomPage = () => {
                 <Input />
               </Form.Item>
               <Form.Item
-                label="Course"
+                label="Course ID"
                 name="courseId"
                 rules={[{ required: true, message: "Please select a course" }]}
               >
-                <Select placeholder="Select a course">
+                <Select placeholder="Select a course" showSearch>
                   {courses.map((course) => (
                     <Select.Option
                       key={course.courseId}
                       value={course.courseId}
                     >
-                      {course.courseName} - {course.courseId}
+                      {course.courseName} - ({course.courseId})
                     </Select.Option>
                   ))}
                 </Select>

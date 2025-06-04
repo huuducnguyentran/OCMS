@@ -50,43 +50,55 @@ const SchedulePage = () => {
   const [tableData, setTableData] = useState([]);
 
   // Helper function to add minutes to a time string (format: HH:mm)
-  const addMinutesToTime = (time, minutes) => {
-    try {
-      const [hours, mins] = time.split(":").map(Number);
-      const totalMinutes = hours * 60 + mins + minutes;
-      const newHours = Math.floor(totalMinutes / 60) % 24;
-      const newMins = totalMinutes % 60;
-      return `${String(newHours).padStart(2, "0")}:${String(newMins).padStart(
-        2,
-        "0"
-      )}`;
+  const addMinutesToTime = (timeStr, durationStr) => {
+  try {
+      const [startHours, startMinutes] = timeStr.split(":" ).map(Number);
+      const [durHours, durMinutes, durSeconds = 0] = durationStr.split(":" ).map(Number);
+
+      const startDate = new Date();
+      startDate.setHours(startHours);
+      startDate.setMinutes(startMinutes);
+      startDate.setSeconds(0);
+      startDate.setMilliseconds(0);
+
+      const endDate = new Date(startDate);
+      endDate.setHours(startDate.getHours() + durHours);
+      endDate.setMinutes(startDate.getMinutes() + durMinutes);
+      endDate.setSeconds(startDate.getSeconds() + durSeconds);
+
+      const endHours = endDate.getHours();
+      const endMinutes = endDate.getMinutes();
+
+      return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
     } catch (error) {
       console.error("Error in addMinutesToTime:", error);
-      return time; // Return original time if there's an error
+      return timeStr;
     }
   };
+
+
+
   const [error, setError] = useState(null);
 
   // Initialize current week and generate week options when component mounts
+ 
   useEffect(() => {
-    // Get current week number and set it
     const now = new Date();
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const weekNumber = Math.ceil(
-      ((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7
-    );
+    const year = now.getFullYear();
+    generateWeekOptions(year);
 
-    // Generate week options for the entire year
-    generateWeekOptions(now.getFullYear());
+    const startOfWeek = new Date(now);
+    const day = now.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    startOfWeek.setDate(now.getDate() + diff);
 
-    // Set the current week in format "DD/MM To DD/MM"
-    const currentWeekDates = getWeekDates(weekNumber, now.getFullYear());
-    setCurrentWeek(
-      `${formatDateShort(currentWeekDates.start)} To ${formatDateShort(
-        currentWeekDates.end
-      )}`
-    );
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    setCurrentYear(year);
+    setCurrentWeek(`${formatDateShort(startOfWeek)} To ${formatDateShort(endOfWeek)}`);
   }, []);
+
 
   // Generate week options for dropdown
   const generateWeekOptions = (year) => {
@@ -432,58 +444,57 @@ const SchedulePage = () => {
 
   // Check if a course is active on a specific date
   const isCourseActiveOnDate = (schedule, date) => {
-    if (!schedule?.startDateTime || !schedule?.endDateTime) {
-      console.log("Schedule missing date range:", schedule);
-      return false;
-    }
+  //   if (!schedule?.startDateTime || !schedule?.endDateTime) {
+  //     console.log("Schedule missing date range:", schedule);
+  //     return false;
+  //   }
 
+  //   try {
+  //     // Format dates consistently
+  //     const startDate = new Date(schedule.startDateTime);
+  //     const endDate = new Date(schedule.endDateTime);
+  //     const checkDate = new Date(date);
+
+  //     // Validate dates
+  //     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || isNaN(checkDate.getTime())) {
+  //       console.error("Invalid date in schedule:", { startDate, endDate, checkDate });
+  //       return false;
+  //     }
+
+  //     // Reset time components for accurate date comparison
+  //     startDate.setHours(0, 0, 0, 0);
+  //     endDate.setHours(23, 59, 59, 999);
+  //     checkDate.setHours(12, 0, 0, 0);
+
+  //     const isActive = checkDate >= startDate && checkDate <= endDate;
+      
+  //     // Only log if debugging is needed - too verbose for production
+  //     if (process.env.NODE_ENV === 'development') {
+  //       console.log(
+  //         `Date check for ${schedule.subjectName || 'unknown'}: ${checkDate.toDateString()} is ` +
+  //         `${isActive ? 'within' : 'outside'} range ${startDate.toDateString()} - ${endDate.toDateString()}`
+  //       );
+  //     }
+      
+  //     return isActive;
+  //   } catch (error) {
+  //     console.error('Error checking course active date:', error, 'Schedule:', schedule);
+  //     return false;
+  //   }
+  // };
+   if (!schedule?.startDateTime || !schedule?.endDateTime) return false;
     try {
-      // Format dates consistently
       const startDate = new Date(schedule.startDateTime);
       const endDate = new Date(schedule.endDateTime);
       const checkDate = new Date(date);
 
-      // Validate dates
-      if (
-        isNaN(startDate.getTime()) ||
-        isNaN(endDate.getTime()) ||
-        isNaN(checkDate.getTime())
-      ) {
-        console.error("Invalid date in schedule:", {
-          startDate,
-          endDate,
-          checkDate,
-        });
-        return false;
-      }
-
-      // Reset time components for accurate date comparison
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(23, 59, 59, 999);
       checkDate.setHours(12, 0, 0, 0);
 
-      const isActive = checkDate >= startDate && checkDate <= endDate;
-
-      // Only log if debugging is needed - too verbose for production
-      if (process.env.NODE_ENV === "development") {
-        console.log(
-          `Date check for ${
-            schedule.subjectName || "unknown"
-          }: ${checkDate.toDateString()} is ` +
-            `${
-              isActive ? "within" : "outside"
-            } range ${startDate.toDateString()} - ${endDate.toDateString()}`
-        );
-      }
-
-      return isActive;
+      return checkDate >= startDate && checkDate <= endDate;
     } catch (error) {
-      console.error(
-        "Error checking course active date:",
-        error,
-        "Schedule:",
-        schedule
-      );
+      console.error("Error checking course active date:", error);
       return false;
     }
   };
@@ -573,10 +584,29 @@ const SchedulePage = () => {
 
     console.log("Unique time slots:", uniqueTimeSlots);
 
-    return uniqueTimeSlots.map((timeSlot, timeIndex) => {
+    // return uniqueTimeSlots.map((timeSlot, timeIndex) => {
+    //   const row = {
+    //     key: `timeslot-${timeIndex}`,
+    //     timeFrame: `${timeSlot} - ${addMinutesToTime(timeSlot, 90)}`,
+    //   };
+   return uniqueTimeSlots.map((timeSlot, timeIndex) => {
+    const matchingEntry = filteredData
+  .filter(i => i.classTime?.substring(0, 5) === timeSlot && i.subjectPeriod)
+  .sort((a, b) => {
+    const toMinutes = (str) => {
+      const [h, m, s = 0] = str.split(":" ).map(Number);
+      return h * 60 + m + s / 60;
+    };
+    return toMinutes(b.subjectPeriod) - toMinutes(a.subjectPeriod);
+  })[0];
+
+      const timeFrame = matchingEntry?.subjectPeriod && matchingEntry?.classTime
+        ? `${matchingEntry.classTime.substring(0, 5)} - ${addMinutesToTime(matchingEntry.classTime.substring(0, 5), matchingEntry.subjectPeriod)}`
+        : `${timeSlot} - ${timeSlot}`;
+
       const row = {
         key: `timeslot-${timeIndex}`,
-        timeFrame: `${timeSlot} - ${addMinutesToTime(timeSlot, 90)}`,
+        timeFrame,
       };
 
       const daysOfWeek = [
@@ -1219,7 +1249,14 @@ const SchedulePage = () => {
               </div>
             </div>
 
-            {/* {renderCreateButton()} */}
+            {/* Nút Create Schedule chỉ cho TrainingStaff */}
+            {(userRole === "TrainingStaff" || userRole === "Training staff") && (
+              <Button type="primary" onClick={() => navigate("/schedule/create")}
+                className="bg-cyan-600 hover:bg-cyan-700"
+              >
+                Create Schedule
+              </Button>
+            )}
           </div>
         </div>
 

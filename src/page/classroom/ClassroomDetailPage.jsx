@@ -4,6 +4,7 @@ import {
   getClassSubjectByClassId,
   getClassSubjectDetailsById,
 } from "../../services/classSubjectService";
+import { getUserById } from "../../services/userService";
 import {
   Card,
   Spin,
@@ -35,6 +36,7 @@ const ClassroomDetailPage = () => {
   const [classDetails, setClassDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [traineeUserMap, setTraineeUserMap] = useState({});
 
   useEffect(() => {
     const fetchClassDetails = async () => {
@@ -63,6 +65,27 @@ const ClassroomDetailPage = () => {
               className: className,
               subjects: detailedSubjects.map((ds) => ds.details),
             });
+            // Fetch all trainee user info for all subjects
+            const traineeMap = {};
+            for (const ds of detailedSubjects) {
+              const subject = ds.details;
+              if (subject.traineeAssignments && subject.traineeAssignments.length > 0) {
+                const users = await Promise.all(
+                  subject.traineeAssignments.map(async (ta) => {
+                    try {
+                      const user = await getUserById(ta.traineeId);
+                      return user && user.data ? user.data : user;
+                    } catch {
+                      return { userId: ta.traineeId };
+                    }
+                  })
+                );
+                traineeMap[subject.classSubjectId] = users;
+              } else {
+                traineeMap[subject.classSubjectId] = [];
+              }
+            }
+            setTraineeUserMap(traineeMap);
           } else {
             setError("No subject details found for this class.");
           }
@@ -173,12 +196,12 @@ const ClassroomDetailPage = () => {
                     }
                     key={subject.classSubjectId || index.toString()}
                   >
-                    {renderSubjectDetails(subject, index)}
+                    {renderSubjectDetails(subject, index, traineeUserMap[subject.classSubjectId] || [])}
                   </TabPane>
                 ))}
               </Tabs>
             ) : (
-              renderSubjectDetails(subjects[0], 0)
+              renderSubjectDetails(subjects[0], 0, traineeUserMap[subjects[0].classSubjectId] || [])
             )}
           </div>
         </Card>
@@ -188,7 +211,7 @@ const ClassroomDetailPage = () => {
 };
 
 // Helper function to render details for a single subject
-const renderSubjectDetails = (subject, index) => {
+const renderSubjectDetails = (subject, index, traineeUserData) => {
   const scheduleColumns = [
     {
       title: "Schedule ID",
@@ -241,37 +264,10 @@ const renderSubjectDetails = (subject, index) => {
   ];
 
   const traineeColumns = [
-    {
-      title: "Trainee ID",
-      dataIndex: "traineeId",
-      key: "traineeId",
-    },
-    {
-      title: "Status",
-      dataIndex: "requestStatus",
-      key: "requestStatus",
-      render: (text) => (
-        <Tag color={text === "Pending" ? "orange" : "green"}>
-          {text || "N/A"}
-        </Tag>
-      ),
-    },
-    {
-      title: "Assigned By",
-      dataIndex: "assignByUserId",
-      key: "assignByUserId",
-    },
-    {
-      title: "Assigned Date",
-      dataIndex: "assignDate",
-      key: "assignDate",
-      render: (text) => (text ? new Date(text).toLocaleDateString() : "N/A"),
-    },
-    {
-      title: "Notes",
-      dataIndex: "notes",
-      key: "notes",
-    },
+    { title: "Trainee ID", dataIndex: "userId", key: "userId" },
+    { title: "Full Name", dataIndex: "fullName", key: "fullName" },
+    { title: "Gender", dataIndex: "gender", key: "gender" },
+    { title: "Email", dataIndex: "email", key: "email" },
   ];
 
   return (
@@ -375,11 +371,11 @@ const renderSubjectDetails = (subject, index) => {
         }
         className="!shadow-lg !rounded-lg !border !border-cyan-400"
       >
-        {subject.traineeAssignments && subject.traineeAssignments.length > 0 ? (
+        {traineeUserData && traineeUserData.length > 0 ? (
           <Table
             columns={traineeColumns}
-            dataSource={subject.traineeAssignments}
-            rowKey="traineeAssignId"
+            dataSource={traineeUserData}
+            rowKey="userId"
             pagination={{ pageSize: 3, hideOnSinglePage: true }}
             scroll={{ x: "max-content" }}
             size="small"

@@ -130,7 +130,7 @@ export default function InstructorAssignmentList() {
               <Col xs={24} sm={8}>
                 <Input
                   prefix={<SearchOutlined className="!text-cyan-600" />}
-                  placeholder="Search ID/Instructor/Subject"
+                  placeholder="Search by ID, Instructor, Subject"
                   allowClear
                   onChange={(e) => setSearch(e.target.value)}
                   className="rounded-lg"
@@ -140,6 +140,7 @@ export default function InstructorAssignmentList() {
               <Col xs={24} sm={8}>
                 <Select
                   allowClear
+                  showSearch
                   placeholder="Filter by Subject"
                   onChange={(v) => setFilterCourse(v)}
                   style={{ width: "100%" }}
@@ -157,6 +158,7 @@ export default function InstructorAssignmentList() {
               <Col xs={24} sm={8}>
                 <Select
                   allowClear
+                  showSearch
                   placeholder="Filter by Instructor"
                   onChange={(v) => setFilterInstr(v)}
                   style={{ width: "100%" }}

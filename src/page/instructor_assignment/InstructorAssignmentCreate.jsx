@@ -31,7 +31,7 @@ const InstructorAssignmentCreate = () => {
   const [subjects, setSubjects] = useState([]);
   const [instructors, setInstructors] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [subjectError, setSubjectError] = useState("");
+  // const [subjectError, setSubjectError] = useState("");
 
   useEffect(() => {
     const loadOptions = async () => {
@@ -115,17 +115,8 @@ const InstructorAssignmentCreate = () => {
                     label={
                       <span className="text-cyan-800 font-medium">Subject</span>
                     }
-                    validateTrigger="onChange"
                     rules={[
                       { required: true, message: "Please select a subject" },
-                      {
-                        validator: (_, value) => {
-                          if (value && /^-\d+$/.test(value)) {
-                            return Promise.reject("Subject ID cannot be a negative number");
-                          }
-                          return Promise.resolve();
-                        },
-                      },
                     ]}
                   >
                     <Select
@@ -134,22 +125,14 @@ const InstructorAssignmentCreate = () => {
                       size="large"
                       suffixIcon={<BookOutlined className="!text-cyan-600" />}
                       showSearch
-                      onSearch={value => {
-                        if (/^-?\d+$/.test(value)) {
-                          setSubjectError("Subject ID cannot be a number");
-                        } else {
-                          setSubjectError("");
-                        }
-                      }}
-                      onBlur={() => setSubjectError("")}
+                      optionFilterProp="children"
                     >
                       {subjects.map((s) => (
                         <Option key={s.subjectId} value={s.subjectId}>
-                          {s.subjectName || s.subjectId}
+                          {s.subjectName} - ({s.subjectId})
                         </Option>
                       ))}
                     </Select>
-                    {subjectError && <div style={{ color: "red" }}>{subjectError}</div>}
                   </Form.Item>
                 </Card>
               </Col>
@@ -172,7 +155,9 @@ const InstructorAssignmentCreate = () => {
                       {
                         validator: (_, value) => {
                           if (value && /^-\d+$/.test(value)) {
-                            return Promise.reject("Instructor ID cannot be a negative number");
+                            return Promise.reject(
+                              "Instructor ID cannot be a negative number"
+                            );
                           }
                           return Promise.resolve();
                         },
@@ -195,7 +180,8 @@ const InstructorAssignmentCreate = () => {
                           {i.fullName ||
                             i.username ||
                             i.userId ||
-                            i.instructorId}
+                            i.instructorId}{" "}
+                          - ({i.userId})
                         </Option>
                       ))}
                     </Select>
@@ -211,8 +197,14 @@ const InstructorAssignmentCreate = () => {
                       <span className="!text-cyan-800 font-medium">Notes</span>
                     }
                     rules={[
-                      { required: true, message: "Please enter notes for this assignment" },
-                      { min: 5, message: "Notes must be at least 5 characters" },
+                      {
+                        required: true,
+                        message: "Please enter notes for this assignment",
+                      },
+                      {
+                        min: 5,
+                        message: "Notes must be at least 5 characters",
+                      },
                     ]}
                   >
                     <Input.TextArea

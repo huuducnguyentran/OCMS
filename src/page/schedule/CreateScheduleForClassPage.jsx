@@ -245,6 +245,17 @@ const recurringDayOptions = [
   { label: "Sunday", value: "0", days: [0] },
 ];
 
+// Hàm chuyển đổi từ mảng số sang value string của option
+const getRecurringDayValueFromDays = (daysArr) => {
+  if (!Array.isArray(daysArr)) return daysArr;
+  const found = recurringDayOptions.find(opt =>
+    Array.isArray(opt.days) &&
+    opt.days.length === daysArr.length &&
+    opt.days.every((d, i) => d === daysArr[i])
+  );
+  return found ? found.value : daysArr.join('-');
+};
+
 const CreateScheduleForClassPage = () => {
   const navigate = useNavigate();
   const { classId } = useParams();
@@ -416,6 +427,15 @@ const CreateScheduleForClassPage = () => {
     setConflictWeekOptions(getWeekOptions(conflictYear));
     setConflictWeek(getCurrentWeekNumber());
   }, [conflictYear]);
+
+  useEffect(() => {
+    if (createdClassSubjectId && form.getFieldValue('daysOfWeek')) {
+      const val = form.getFieldValue('daysOfWeek');
+      if (Array.isArray(val)) {
+        form.setFieldsValue({ daysOfWeek: getRecurringDayValueFromDays(val) });
+      }
+    }
+  }, [createdClassSubjectId]);
 
   const fetchAllSubjectSpecialtiesList = async () => {
     setLoading((prev) => ({ ...prev, subjects: true }));
@@ -847,6 +867,12 @@ const CreateScheduleForClassPage = () => {
         return;
       }
       const values = form.getFieldsValue(true);
+      // Convert daysOfWeek value string sang mảng số
+      let daysOfWeekArr = [];
+      const opt = recurringDayOptions.find(o => o.value === values.daysOfWeek);
+      if (opt) daysOfWeekArr = opt.days;
+      else if (Array.isArray(values.daysOfWeek)) daysOfWeekArr = values.daysOfWeek;
+      else if (typeof values.daysOfWeek === 'string') daysOfWeekArr = values.daysOfWeek.split('-').map(Number);
       const classSubjectData = {
         classId,
         subjectSpecialtyId: selectedSubjectSpecialty.subjectSpecialtyId,
@@ -885,7 +911,7 @@ const CreateScheduleForClassPage = () => {
         notes: values.notes,
         startDay: values.startDate?.toISOString(), 
         endDay: values.endDate?.toISOString(), 
-        daysOfWeek: values.daysOfWeek?.map((d) => parseInt(d, 10)) || [],
+        daysOfWeek: daysOfWeekArr,
         classTime: values.classTime?.format("HH:00:00"),
         subjectPeriod: values.subjectPeriod?.format("HH:mm:ss"),
       };
@@ -1393,7 +1419,11 @@ const CreateScheduleForClassPage = () => {
                 loading.instructorSchedules
               }
             >
-                    <Form form={form} layout="vertical" initialValues={{ startDate: dayjs().startOf('day'), endDate: dayjs().add(7, 'day').startOf('day') }} disabled={(isStep1Completed && !isEditingScheduleDetails) || submittingStep1}>
+                    <Form form={form} layout="vertical" initialValues={{
+                      startDate: dayjs().startOf('day'),
+                      endDate: dayjs().add(7, 'day').startOf('day'),
+                      daysOfWeek: recurringDayOptions[0].value
+                    }} disabled={(isStep1Completed && !isEditingScheduleDetails) || submittingStep1}>
                         <Row gutter={24}> 
                             {/* Phần Selection sẽ chiếm toàn bộ chiều rộng */}
                             <Col xs={24} md={24}>
@@ -1605,11 +1635,21 @@ const CreateScheduleForClassPage = () => {
                               required: true,
                               message: "Start date is required",
                             },
+                            {
+                              validator(_, value) {
+                                if (!value) return Promise.resolve();
+                                if (value.isBefore(dayjs(), 'minute')) {
+                                  return Promise.reject(new Error('Start date must be in the future'));
+                                }
+                                return Promise.resolve();
+                              },
+                            },
                           ]}
                         >
                           <DatePicker
                             className="w-full"
-                            format="YYYY-MM-DD"
+                            format="YYYY-MM-DD HH:mm"
+                            showTime={{ format: "HH:mm" }}
                             disabledDate={disabledDate}
                           />
                         </Form.Item>
@@ -1619,23 +1659,26 @@ const CreateScheduleForClassPage = () => {
                           name="endDate"
                           label="End Date"
                           rules={[
-                            { required: true, message: "End date is required" },
-                            ({ getFieldValue }) => ({
-                              validator(_, v) {
-                                if (!v || !getFieldValue("startDate"))
-                                  return Promise.resolve();
-                                if (v.isBefore(getFieldValue("startDate")))
-                                  return Promise.reject(
-                                    new Error("Must be after start")
-                                  );
+                            {
+                              required: true,
+                              message: "End date is required",
+                            },
+                            {
+                              validator(_, value) {
+                                const start = form.getFieldValue('startDate');
+                                if (!value || !start) return Promise.resolve();
+                                if (value.isSameOrBefore(start, 'minute')) {
+                                  return Promise.reject(new Error('End date must be after start date'));
+                                }
                                 return Promise.resolve();
                               },
-                            }),
+                            },
                           ]}
                         >
                           <DatePicker
                             className="w-full"
-                            format="YYYY-MM-DD"
+                            format="YYYY-MM-DD HH:mm"
+                            showTime={{ format: "HH:mm" }}
                             disabledDate={disabledDate}
                           />
                         </Form.Item>
@@ -1675,15 +1718,8 @@ const CreateScheduleForClassPage = () => {
                     >
                       <Select
                         placeholder="Select recurring days"
-                        onChange={val => {
-                          const opt = recurringDayOptions.find(o => o.value === val);
-                          form.setFieldsValue({ daysOfWeek: opt ? opt.days : [] });
-                        }}
-                      >
-                        {recurringDayOptions.map(opt => (
-                          <Option key={opt.value} value={opt.value}>{opt.label}</Option>
-                        ))}
-                      </Select>
+                        options={recurringDayOptions}
+                      />
                     </Form.Item>
                     <Form.Item
                       name="notes"
