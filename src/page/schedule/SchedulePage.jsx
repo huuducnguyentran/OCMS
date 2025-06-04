@@ -51,17 +51,6 @@ const SchedulePage = () => {
 
   // Helper function to add minutes to a time string (format: HH:mm)
   const addMinutesToTime = (timeStr, durationStr) => {
-  //   try {
-  //     const [hours, mins] = time.split(":").map(Number);
-  //     const totalMinutes = hours * 60 + mins + minutes;
-  //     const newHours = Math.floor(totalMinutes / 60) % 24;
-  //     const newMins = totalMinutes % 60;
-  //     return `${String(newHours).padStart(2, "0")}:${String(newMins).padStart(2, "0")}`;
-  //   } catch (error) {
-  //     console.error("Error in addMinutesToTime:", error);
-  //     return time; // Return original time if there's an error
-  //   }
-  // };
    try {
       const [startHours, startMinutes] = timeStr.split(":" ).map(Number);
       const [durHours, durMinutes, durSeconds = 0] = durationStr.split(":" ).map(Number);
@@ -110,17 +99,6 @@ const SchedulePage = () => {
     setCurrentWeek(`${formatDateShort(startOfWeek)} To ${formatDateShort(endOfWeek)}`);
   }, []);
 
-    // Generate week options for the entire year
-  //   generateWeekOptions(now.getFullYear());
-
-  //   // Set the current week in format "DD/MM To DD/MM"
-  //   const currentWeekDates = getWeekDates(weekNumber, now.getFullYear());
-  //   setCurrentWeek(
-  //     `${formatDateShort(currentWeekDates.start)} To ${formatDateShort(
-  //       currentWeekDates.end
-  //     )}`
-  //   );
-  // }, []);
 
   // Generate week options for dropdown
   const generateWeekOptions = (year) => {
