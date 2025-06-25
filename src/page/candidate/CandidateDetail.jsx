@@ -12,7 +12,6 @@ import {
   Empty,
   Typography,
   Modal,
-  Tooltip
 } from "antd";
 import {
   createCandidateAccount,
@@ -23,15 +22,15 @@ import {
   ArrowLeftOutlined,
   CheckOutlined,
   CloseOutlined,
-  DeleteOutlined,
   EditOutlined,
-  MoreOutlined,
   PlusOutlined,
   UserOutlined,
   FileOutlined,
-  EyeOutlined,
 } from "@ant-design/icons";
-import { getExternalCertificatesByCandidateId, deleteExternalCertificate, updateExternalCertificate } from "../../services/externalCertifcateService";
+import {
+  getExternalCertificatesByCandidateId,
+  updateExternalCertificate,
+} from "../../services/externalCertifcateService";
 import { DatePicker, Select } from "antd";
 import dayjs from "dayjs";
 import { CandidateDetailSchema } from "../../../utils/validationSchemas";
@@ -133,19 +132,19 @@ const CandidateDetailPage = () => {
     );
   }
 
-  const handleCreateCertificate = () => {
-    navigate(`/external-certificate/create/${id}`);
-  };
+  // const handleCreateCertificate = () => {
+  //   navigate(`/external-certificate/create/${id}`);
+  // };
 
-  const handleEdit = (cert) => {
-    setEditingCertificate(cert);
-    setEditForm({
-      certificateName: cert.certificateName,
-      certificateCode: cert.certificateCode,
-      certificateProvider: cert.certificateProvider || "",
-    });
-    setEditModalVisible(true);
-  };
+  // const handleEdit = (cert) => {
+  //   setEditingCertificate(cert);
+  //   setEditForm({
+  //     certificateName: cert.certificateName,
+  //     certificateCode: cert.certificateCode,
+  //     certificateProvider: cert.certificateProvider || "",
+  //   });
+  //   setEditModalVisible(true);
+  // };
 
   const handleUpdateCertificate = async () => {
     try {
@@ -163,21 +162,25 @@ const CandidateDetailPage = () => {
         certificateProvider: editForm.certificateProvider?.trim() || "",
         candidateId: id,
         certificateFileURL: editingCertificate.certificateFileURL || "",
-        certificateFileURLWithSas: editingCertificate.certificateFileURLWithSas || "",
-        status: editingCertificate.status || 0 // Thêm status nếu cần
+        certificateFileURLWithSas:
+          editingCertificate.certificateFileURLWithSas || "",
+        status: editingCertificate.status || 0, // Thêm status nếu cần
       };
 
-      console.log('Updating certificate with data:', updateData);
+      console.log("Updating certificate with data:", updateData);
 
       // Gọi API update
-      await updateExternalCertificate(editingCertificate.certificateId, updateData);
+      await updateExternalCertificate(
+        editingCertificate.certificateId,
+        updateData
+      );
       message.success("Certificate updated successfully");
-      
+
       // Refresh certificates list
       const updatedCerts = await getExternalCertificatesByCandidateId(id);
       setCertificates(updatedCerts);
       setEditModalVisible(false);
-      
+
       // Reset form
       setEditForm({
         certificateName: "",
@@ -185,43 +188,45 @@ const CandidateDetailPage = () => {
         certificateProvider: "",
       });
       setEditingCertificate(null);
-
     } catch (error) {
       console.error("Error updating certificate:", error);
       console.error("Error response:", error.response);
-      
+
       if (error.response?.status === 400) {
-        message.error(error.response?.data?.message || "Invalid request data. Please check your input.");
+        message.error(
+          error.response?.data?.message ||
+            "Invalid request data. Please check your input."
+        );
       } else {
         message.error("Failed to update certificate. Please try again.");
       }
     }
   };
 
-  const handleDelete = (cert) => {
-    Modal.confirm({
-      title: "Delete Certificate",
-      content: "Are you sure you want to delete this certificate? This action cannot be undone.",
-      okText: "Yes, Delete",
-      okType: "danger",
-      cancelText: "No",
-      okButtonProps: {
-        className: "bg-red-500 hover:bg-red-600",
-      },
-      onOk: async () => {
-        try {
-          await deleteExternalCertificate(cert.certificateId);
-          message.success("Certificate deleted successfully");
-          // Refresh certificates list
-          const updatedCerts = await getExternalCertificatesByCandidateId(id);
-          setCertificates(updatedCerts);
-        } catch (error) {
-          console.error("Error deleting certificate:", error);
-          message.error("Failed to delete certificate");
-        }
-      },
-    });
-  };
+  // const handleDelete = (cert) => {
+  //   Modal.confirm({
+  //     title: "Delete Certificate",
+  //     content: "Are you sure you want to delete this certificate? This action cannot be undone.",
+  //     okText: "Yes, Delete",
+  //     okType: "danger",
+  //     cancelText: "No",
+  //     okButtonProps: {
+  //       className: "bg-red-500 hover:bg-red-600",
+  //     },
+  //     onOk: async () => {
+  //       try {
+  //         await deleteExternalCertificate(cert.certificateId);
+  //         message.success("Certificate deleted successfully");
+  //         // Refresh certificates list
+  //         const updatedCerts = await getExternalCertificatesByCandidateId(id);
+  //         setCertificates(updatedCerts);
+  //       } catch (error) {
+  //         console.error("Error deleting certificate:", error);
+  //         message.error("Failed to delete certificate");
+  //       }
+  //     },
+  //   });
+  // };
 
   const handleSaveEdit = async () => {
     if (!editingField) return;
@@ -407,9 +412,7 @@ const CandidateDetailPage = () => {
               <Title level={2} className="mb-0">
                 Candidate Profile
               </Title>
-              <Text type="secondary">
-                ID: {candidate?.candidateId}
-              </Text>
+              <Text type="secondary">ID: {candidate?.candidateId}</Text>
             </div>
             {!isHeadMaster && (
               <Space>
@@ -430,7 +433,7 @@ const CandidateDetailPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Personal Information */}
           <div className="lg:col-span-2 space-y-6">
-            <Card 
+            <Card
               className="shadow-sm"
               title={
                 <div className="flex items-center space-x-2">
@@ -466,7 +469,7 @@ const CandidateDetailPage = () => {
           </div>
 
           {/* Right Column - Status Information */}
-          <Card 
+          <Card
             className="shadow-sm h-fit"
             title={
               <div className="flex items-center space-x-2">
@@ -475,8 +478,8 @@ const CandidateDetailPage = () => {
               </div>
             }
           >
-            <Descriptions 
-              column={1} 
+            <Descriptions
+              column={1}
               bordered
               labelStyle={{
                 fontWeight: "600",
@@ -516,20 +519,24 @@ const CandidateDetailPage = () => {
         </div>
 
         {/* External Certificates Section */}
-        <Card 
+        <Card
           className="shadow-sm"
           title={
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-2">
                 <FileOutlined className="text-blue-500" />
-                <span className="text-xl font-semibold">External Certificates</span>
+                <span className="text-xl font-semibold">
+                  External Certificates
+                </span>
               </div>
               {!isHeadMaster && (
                 <Space>
                   <Button
                     type="primary"
                     icon={<PlusOutlined />}
-                    onClick={() => navigate(`/external-certificate/create/${id}`)}
+                    onClick={() =>
+                      navigate(`/external-certificate/create/${id}`)
+                    }
                     className="bg-blue-500 hover:bg-blue-600"
                   >
                     Add Certificate
@@ -551,10 +558,7 @@ const CandidateDetailPage = () => {
               <Spin size="large" />
             </div>
           ) : certificates.length === 0 ? (
-            <Empty
-              description="No certificates found"
-              className="py-8"
-            />
+            <Empty description="No certificates found" className="py-8" />
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {certificates.map((cert, index) => (
@@ -570,8 +574,13 @@ const CandidateDetailPage = () => {
                     }
                     description={
                       <div className="space-y-2">
-                        <p><strong>Code:</strong> {cert.certificateCode}</p>
-                        <p><strong>Provider:</strong> {cert.certificateProvider || "-"}</p>
+                        <p>
+                          <strong>Code:</strong> {cert.certificateCode}
+                        </p>
+                        <p>
+                          <strong>Provider:</strong>{" "}
+                          {cert.certificateProvider || "-"}
+                        </p>
                       </div>
                     }
                   />
@@ -581,12 +590,15 @@ const CandidateDetailPage = () => {
                         src={cert.certificateFileURLWithSas}
                         alt="Certificate"
                         className="w-full h-48 object-cover rounded-lg border border-gray-200 hover:opacity-90 transition cursor-pointer"
-                        onClick={() => window.open(cert.certificateFileURLWithSas, '_blank')}
+                        onClick={() =>
+                          window.open(cert.certificateFileURLWithSas, "_blank")
+                        }
                         onError={(e) => {
                           e.target.style.display = "none";
                           const errorText = document.createElement("p");
                           errorText.className = "text-red-500 text-sm mt-2";
-                          errorText.innerText = "Certificate image not available";
+                          errorText.innerText =
+                            "Certificate image not available";
                           e.target.parentNode.appendChild(errorText);
                         }}
                       />
